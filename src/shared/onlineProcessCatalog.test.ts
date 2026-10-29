@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ONLINE_CATEGORY_ORDER, ONLINE_PROCESSES, findOnlineProcesses, onlineKind, sameEndpoint } from './onlineProcessCatalog';
+import { ONLINE_CATEGORY_ORDER, ONLINE_PROCESSES, ORDER_LOG, findOnlineProcesses, isMapped, onlineKind, sameEndpoint } from './onlineProcessCatalog';
 
 describe('catálogo dos processos online do PDVOmni', () => {
   it('os 12 endpoints do levantamento, ids únicos e categorias conhecidas', () => {
@@ -27,5 +27,12 @@ describe('catálogo dos processos online do PDVOmni', () => {
     expect(findOnlineProcesses('get', '/winthor/varejo/v1/credito-cliente/list?codcli=1').map((p) => p.id)).toEqual(['EndpointCreditoConsulta']);
     expect(findOnlineProcesses('GET', '/API/stock-vtex/v1/available/pdv-sync/').map((p) => p.id)).toEqual(['EndpointEstoqueConsulta']);
     expect(findOnlineProcesses('DELETE', '/winthor/varejo/v1/credito-cliente')).toEqual([]);
+  });
+
+  it('envio e atualização da pré-venda gravam o log na PCLOGPEDIDOAPI', () => {
+    expect(ONLINE_PROCESSES.filter(isMapped).map((p) => [p.id, p.oracleTables])).toEqual([
+      ['EndpointPreVendaEnvio', [ORDER_LOG]],
+      ['EndpointPreVendaAtualiza', [ORDER_LOG]]
+    ]);
   });
 });

@@ -8,6 +8,7 @@ import {
   sameEndpoint,
   type OnlineProcess
 } from '../../../../../shared/onlineProcessCatalog';
+import { OnlineOrderLogPanel } from './OnlineOrderLogPanel';
 
 const METHOD_CLASS: Record<OnlineProcess['method'], string> = {
   GET: 'bg-info/10 text-info',
@@ -46,8 +47,8 @@ const ProcessRow: React.FC<{ process: OnlineProcess }> = ({ process }) => {
 };
 
 /**
- * Processos online do PDVOmni: o que o PDV chama direto no WTA, sem o WSH. Por enquanto, o catálogo e como mapear
- * as tabelas de cada processo; a consulta do resultado vem quando o mapeamento estiver feito.
+ * Processos online do PDVOmni: o que o PDV chama direto no WTA, sem o WSH. A busca dos pedidos na PCLOGPEDIDOAPI e o
+ * catálogo dos processos, com as tabelas já mapeadas e como mapear as que faltam.
  */
 export const OnlineProcessesView: React.FC = () => {
   const mapped = ONLINE_PROCESSES.filter(isMapped).length;
@@ -70,6 +71,8 @@ export const OnlineProcessesView: React.FC = () => {
           </ol>
         </details>
       </section>
+
+      <OnlineOrderLogPanel />
 
       {ONLINE_CATEGORY_ORDER.map((category) => (
         <section key={category} className="border border-border rounded-xl px-3 py-2 bg-card" aria-label={category}>

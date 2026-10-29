@@ -1,8 +1,8 @@
 /**
  * Processos online do PDVOmni (levantamento WORKFLOW_PDVSYNC, seção 4): chamadas em tempo real que o PDV faz direto
  * ao WTA, sem passar pelo WSH. Por isso não ficam na PCINTEGRACAOCORE e o Monitor do WSH não as vê.
- * As tabelas Oracle de cada processo ainda não foram mapeadas: o mapeamento é pela captura do Statement Tracer
- * (DB Studio) durante uma operação real no PDV.
+ * As tabelas Oracle de cada processo são mapeadas pela captura do Statement Tracer (DB Studio) durante uma operação
+ * real no PDV. Já mapeado: os pedidos gravam o log na PCLOGPEDIDOAPI.
  */
 
 export type OnlineMethod = 'GET' | 'POST' | 'PUT';
@@ -26,11 +26,14 @@ const ORDERS = '/winthor/varejo/matcon/v1/orders/pdvsync';
 const STOCK = '/api/stock-vtex/v1/available/pdv-sync';
 const CREDIT = '/winthor/varejo/v1/credito-cliente';
 
+/** Log do WTA para cada inclusão (I), alteração (A) ou cancelamento (C) de pedido, com o status (aceito, rejeitado, processando). */
+export const ORDER_LOG = 'PCLOGPEDIDOAPI';
+
 const online = (p: OnlineProcess) => p;
 
 export const ONLINE_PROCESSES: OnlineProcess[] = [
-  online({ id: 'EndpointPreVendaEnvio', name: 'Envio da pré-venda', category: 'Pré-venda e pedidos', method: 'POST', apiPath: ORDERS, apiProject: 'winthor-integracao-matcon' }),
-  online({ id: 'EndpointPreVendaAtualiza', name: 'Atualização da pré-venda', category: 'Pré-venda e pedidos', method: 'PUT', apiPath: ORDERS, apiProject: 'winthor-integracao-matcon' }),
+  online({ id: 'EndpointPreVendaEnvio', name: 'Envio da pré-venda', category: 'Pré-venda e pedidos', method: 'POST', apiPath: ORDERS, apiProject: 'winthor-integracao-matcon', oracleTables: [ORDER_LOG] }),
+  online({ id: 'EndpointPreVendaAtualiza', name: 'Atualização da pré-venda', category: 'Pré-venda e pedidos', method: 'PUT', apiPath: ORDERS, apiProject: 'winthor-integracao-matcon', oracleTables: [ORDER_LOG] }),
   online({ id: 'EndpointPreVendaConsultaPedido', name: 'Consulta de um pedido', category: 'Pré-venda e pedidos', method: 'GET', apiPath: `${ORDERS}/consulta`, apiProject: 'winthor-integracao-matcon' }),
   online({ id: 'EndpointPreVendaConsultaListaPedido', name: 'Consulta da lista de pedidos', category: 'Pré-venda e pedidos', method: 'GET', apiPath: `${ORDERS}/consulta`, apiProject: 'winthor-integracao-matcon' }),
   online({ id: 'EndpointCreditoConsumo', name: 'Consumo de crédito', category: 'Crédito do cliente', method: 'POST', apiPath: CREDIT, apiProject: 'winthor-integracao-varejo' }),

@@ -51,7 +51,9 @@ export function getIntegrationTraceFaq(onNavigate?: (tab: string) => void): FaqI
               <strong className="text-foreground">O que não aparece:</strong> a abertura e o fechamento do lote e a baixa nas lojas não ficam
               na PCINTEGRACAOCORE; no percurso animado esses passos aparecem como <em>sem evidência</em>. Os processos online do PDVOmni
               (pré-venda, crédito, estoque) vão direto ao WinThor, sem o WSH: estão na aba <em>Online do PDV</em>, com o endpoint de cada um e
-              como mapear as tabelas que ele usa pelo Statement Tracer do Banco de Dados.
+              como mapear as tabelas que ele usa pelo Statement Tracer do Banco de Dados. Lá também se busca um pedido na PCLOGPEDIDOAPI:
+              cada inclusão, alteração ou cancelamento vindo do PDV, se foi aceito ou rejeitado (com o motivo do WinThor na linha), o envio que ficou
+              sem resposta e o JSON gravado.
             </li>
           </ul>
           <p>

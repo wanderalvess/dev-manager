@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron';
 import type { IntegrationBatchTraceRequest } from '../../../shared/integrationTypes';
 import type { WshLayoutRequest, WshSearchRequest } from '../../../shared/wshMonitorTypes';
+import type { OnlineOrderLogRequest } from '../../../shared/onlineOrderLog';
 import type { IpcContext } from '../ipcContext';
 
 /** Rastreio de Integração ponta a ponta (decisão 0003). Canais: integration:* */
@@ -23,4 +24,6 @@ export function registerIntegrationHandlers(ctx: IpcContext): void {
   ipcMain.handle('integration:wsh-dependencies', (_, route: string) => integrationTraceService.checkWshDependencies(route));
   ipcMain.handle('integration:wsh-layout', (_, request: WshLayoutRequest) => integrationTraceService.explainWshLayout(request));
   ipcMain.handle('integration:wsh-schedule', (_, route: string) => integrationTraceService.checkWshSchedule(route));
+  // Online do PDV: só leitura na PCLOGPEDIDOAPI
+  ipcMain.handle('integration:online-orders', (_, request: OnlineOrderLogRequest) => integrationTraceService.searchOnlineOrders(request));
 }

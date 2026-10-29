@@ -15,6 +15,7 @@ import type {
   WshSearchRequest,
   WshSearchResponse
 } from '../../../../shared/wshMonitorTypes';
+import type { OnlineOrderLogRequest, OnlineOrderLogResponse } from '../../../../shared/onlineOrderLog';
 import type { ElectronAPI } from '../../../../preload/index';
 import type { BridgeDeps } from './core';
 
@@ -55,6 +56,9 @@ export function createIntegrationApi({ apiFetch }: BridgeDeps) {
 
     integrationWshLayout: (request: WshLayoutRequest): Promise<WshLayoutResponse> => post('/api/integration/wsh/layout', request),
 
-    integrationWshSchedule: (route: string): Promise<WshScheduleResponse> => post('/api/integration/wsh/schedule', { route })
+    integrationWshSchedule: (route: string): Promise<WshScheduleResponse> => post('/api/integration/wsh/schedule', { route }),
+
+    integrationOnlineOrders: (request: OnlineOrderLogRequest): Promise<OnlineOrderLogResponse> =>
+      post('/api/integration/online/orders', request)
   } satisfies Partial<ElectronAPI>;
 }

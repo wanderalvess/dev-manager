@@ -62,5 +62,10 @@ export function createIntegrationRouter(integrationTraceService: IntegrationTrac
     res.json(await integrationTraceService.checkWshSchedule(String(req.body?.route ?? '')));
   });
 
+  // Online do PDV: só leitura na PCLOGPEDIDOAPI
+  router.post('/online/orders', async (req: Request, res: Response) => {
+    res.json(await integrationTraceService.searchOnlineOrders(req.body ?? {}));
+  });
+
   return router;
 }

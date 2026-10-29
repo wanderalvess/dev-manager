@@ -390,6 +390,15 @@ credencial do PDVSync:
   entrada e reserva de estoque são o mesmo `POST .../orders/pdvsync`: no log, só o corpo diferencia. O APM não está de pé no ambiente,
   então a leitura do resultado virá do Oracle: as tabelas de cada processo serão mapeadas pela captura do Statement Tracer durante
   uma operação real, e depois a aba consulta por pedido ou cliente, só leitura.
+- **Pedidos online: PCLOGPEDIDOAPI.** O envio (`POST`) e a atualização (`PUT`) da pré-venda gravam uma linha por chamada na
+  `PCLOGPEDIDOAPI` (`DATA`, `NUMPED`, `POSICAO`, `OPERACAO`, `STATUS`, `JSON`), informado pelo usuário no ambiente. `OPERACAO`: I
+  inclusão, A alteração, C cancelamento. `STATUS`: A aceito, R rejeitado, P processando. A aba *Online do PDV* busca nela por pedido
+  (todo o histórico do `NUMPED`) ou por período, com filtro de status, pela mesma conexão Oracle da camada WinThor. O `JSON` entra
+  cortado (3800 caracteres) e só é mostrado ao abrir a linha. Cada chamada grava um P (o JSON é o pedido como chegou do PDV) e logo
+  depois um A (o pedido gravado, já com `POSICAO`) ou um R, cujo `JSON` é o motivo em texto (`(WT-IM-0000239) -> ... { [] }`): a
+  aba mostra o código e a mensagem na própria linha. Cada A ou R fecha um único P do mesmo pedido; o P que sobra há mais de 5 minutos
+  aparece como *Sem resposta* (reenvio que o WinThor não concluiu). Ainda não conferido: se a reserva de estoque e a nota de entrada, que usam
+  o mesmo `POST`, também gravam nela.
 
 ### Decisões da vista animada e do modo ao vivo
 

@@ -16,6 +16,7 @@ import type {
   WshSearchRequest,
   WshSearchResponse
 } from '../shared/wshMonitorTypes';
+import type { OnlineOrderLogRequest, OnlineOrderLogResponse } from '../shared/onlineOrderLog';
 
 /** Canais integration:* do preload (Rastreio de Integração ponta a ponta), isolados para não crescer o index.ts. */
 export const integrationApi = {
@@ -31,5 +32,7 @@ export const integrationApi = {
   integrationWshSearch: (request: WshSearchRequest): Promise<WshSearchResponse> => ipcRenderer.invoke('integration:wsh-search', request),
   integrationWshDependencies: (route: string): Promise<WshDependenciesResponse> => ipcRenderer.invoke('integration:wsh-dependencies', route),
   integrationWshLayout: (request: WshLayoutRequest): Promise<WshLayoutResponse> => ipcRenderer.invoke('integration:wsh-layout', request),
-  integrationWshSchedule: (route: string): Promise<WshScheduleResponse> => ipcRenderer.invoke('integration:wsh-schedule', route)
+  integrationWshSchedule: (route: string): Promise<WshScheduleResponse> => ipcRenderer.invoke('integration:wsh-schedule', route),
+  integrationOnlineOrders: (request: OnlineOrderLogRequest): Promise<OnlineOrderLogResponse> =>
+    ipcRenderer.invoke('integration:online-orders', request)
 };

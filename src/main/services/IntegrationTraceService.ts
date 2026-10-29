@@ -12,7 +12,6 @@ import {
   type IntegrationTraceResult
 } from '../../shared/integrationTypes';
 import type { ApmFilter, TraceSummary } from '../../shared/types';
-import { checkPortOpen } from '../utils/network';
 import { isInsideDir, isLogFilePath } from '../utils/security';
 import { getAppDataDir, type ConfigService } from './ConfigService';
 import type { DatabaseService } from './DatabaseService';
@@ -24,7 +23,7 @@ import { validateBatchRequest } from '../../shared/integrationBatchRequest';
 import { runBatchTrace, type BatchTraceDeps } from './integration/batchTrace';
 import { runPlannedCheck, type ReadinessDeps } from './integration/readinessChecks';
 import { deriveLayerStatus, planLayerChecks } from './integration/readinessPlan';
-import { checkPdvSyncLogin, lookupBatch, PdvSyncClient } from './integration/pdvSyncClient';
+import { lookupBatch, PdvSyncClient } from './integration/pdvSyncClient';
 import { toPdvSyncSettings } from '../../shared/pdvSyncConfig';
 import { TraceHistoryStore } from './integration/traceHistoryStore';
 import { effectiveLayer, hubDefaultsFrom } from '../../shared/integrationInheritance';
@@ -42,6 +41,9 @@ import {
 import { buildDependencyQuery, dependencyFlows, toDependencies } from './integration/wshDependencyQuery';
 import { buildLayoutQuery, toRouteLayouts, validateLayoutRequest } from './integration/wshLayoutQuery';
 import { FLOW_STEPS_SQL, SCHEDULE_FLOWS_SQL, SCHEDULE_MAX_ROWS, SCHEDULES_SQL, toScheduleInfo } from './integration/wshScheduleQuery';
+import type { OnlineOrderLogRequest, OnlineOrderLogResponse } from '../../shared/onlineOrderLog';
+import { searchOrderLog } from './integration/onlineOrderLogQuery';
+import { createReadinessDeps } from './integration/readinessDeps';
 
 /**
  * Fonte dos traces do APM. No app e no servidor web é o próprio `ApmService` (síncrono); no MCP, que
@@ -102,27 +104,8 @@ export class IntegrationTraceService {
   }
 
   private createReadinessDeps(): ReadinessDeps {
-    return {
-      getServiceState: (name) => this.windowsService.getServiceStatus(name),
-      isProcessRunning: (name) => this.windowsService.isProcessRunning(name),
-      isPortOpen: (host, port) => checkPortOpen(port, host, 1500),
-      checkHealth: (url) => this.networkService.checkHttpHealth(url, 5000),
-      testDb: async (connectionId) => {
-        const connection = this.configService.getSettings().databaseConnections?.find((c) => c.id === connectionId);
-        return connection ? this.databaseService.testConnection(connection) : null;
-      },
-      loginWinthor: (url, user, password) =>
-        this.httpClientService.loginWinThor({ loginUrl: url, login: user, senha: password }),
-      loginPdvSync: (credentials) => checkPdvSyncLogin(credentials),
-      statLog: async (filePath) => {
-        try {
-          const stat = await fs.promises.stat(filePath);
-          return { exists: stat.isFile(), modifiedAt: stat.mtimeMs, sizeBytes: stat.size };
-        } catch {
-          return { exists: false };
-        }
-      }
-    };
+    const { configService, databaseService, networkService, windowsService, httpClientService } = this;
+    return createReadinessDeps({ configService, databaseService, networkService, windowsService, httpClientService });
   }
 
   // --- Rastreio parcial de um lote ---
@@ -273,6 +256,15 @@ export class IntegrationTraceService {
     const failed = [steps, schedules, links].find((result) => !result.success);
     if (failed) return { success: false, error: failed.error || 'Falha ao ler o agendamento do WSH.' };
     return { success: true, info: toScheduleInfo(route, steps.rows ?? [], schedules.rows ?? [], links.rows ?? []) };
+  }
+
+  // --- Online do PDV: o que o WTA gravou ao receber os pedidos do PDVOmni, no mesmo Oracle ---
+
+  /** Linhas da PCLOGPEDIDOAPI por pedido, status e período: inclusão, alteração e cancelamento, aceito ou rejeitado. Só leitura. */
+  public searchOnlineOrders(request: Partial<OnlineOrderLogRequest>): Promise<OnlineOrderLogResponse> {
+    const connection = this.wshConnection();
+    if (!connection) return Promise.resolve({ success: false, error: IntegrationTraceService.NO_WSH_CONNECTION });
+    return searchOrderLog(request, (sql, maxRows, binds) => this.databaseService.executeQuery(connection, sql, maxRows, binds), Date.now());
   }
 
   // --- Histórico ---
