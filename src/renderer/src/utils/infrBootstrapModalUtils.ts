@@ -1,4 +1,4 @@
-export type InfrBootstrapTab = 'oracle' | 'wta' | 'wsh' | 'scripts';
+export type InfrBootstrapTab = 'oracle' | 'wta' | 'wsh' | 'newVersion' | 'scripts';
 
 // Vazio = o backend detecta a pasta INFR-Docker a partir do diretório de projetos configurado
 export const INFR_DEFAULT_CUSTOM_PATH = '';

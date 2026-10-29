@@ -82,6 +82,112 @@ export function buildWtaSetupCommand({ container, port, version, distro = INFR_D
   );
 }
 
+const ENV_NAME = /^[a-zA-Z0-9_.-]{1,40}$/;
+const WSL_FILE = /^\/[a-zA-Z0-9_./-]+$/;
+
+/** Nome de ambiente aceito nos scripts (master, develop, suport...): vira sufixo dos containers. */
+export function isValidEnvName(name: string | undefined): name is string {
+  return typeof name === 'string' && ENV_NAME.test(name.trim());
+}
+
+export type InfrDbMode = 'clone' | 'existing' | 'empty';
+
+export interface NewVersionEnvInput {
+  version?: string;
+  name?: string;
+  from?: string;
+  wshJar?: string;
+  /** clone: RMAN de dbSource em dbContainer; existing: usa dbContainer; empty: dbContainer vazio */
+  dbMode?: InfrDbMode;
+  dbSource?: string;
+  dbContainer?: string;
+  wtaFrom?: string;
+  wshFrom?: string;
+  oraclePort?: number;
+  wtaPort?: number;
+  wshPort?: number;
+}
+
+const validPort = (p: number | undefined) => p === undefined || (Number.isInteger(p) && p > 0 && p <= 65535);
+
+/**
+ * Comando rodado em `linux-winthor/scripts` que monta o ambiente novo de uma versão a partir de
+ * outro (imagem, banco, wta.env/.env da versão, WTA e WSH). Só vão as opções que o usuário mudou
+ * do padrão do script. Null se algo for inválido.
+ */
+export function buildNewVersionEnvCommand(input: NewVersionEnvInput): string | null {
+  const { version, name, from, wshJar, dbMode = 'clone' } = input;
+  if (!isValidWinthorVersion(version) || !isValidEnvName(name) || !isValidEnvName(from)) return null;
+  if (name.trim() === from.trim()) return null;
+  if (!['clone', 'existing', 'empty'].includes(dbMode)) return null;
+  const jar = wshJar?.trim();
+  if (jar && !WSL_FILE.test(jar)) return null;
+  const containers = [input.dbSource, input.dbContainer, input.wtaFrom, input.wshFrom].map((c) => c?.trim());
+  if (containers.some((c) => c && !ENV_NAME.test(c))) return null;
+  if (![input.oraclePort, input.wtaPort, input.wshPort].every(validPort)) return null;
+  const [dbSource, dbContainer, wtaFrom, wshFrom] = containers;
+  const opt = (flag: string, value: string | number | undefined) => (value ? ` ${flag} ${value}` : '');
+  return (
+    `./new_version_env.sh --version ${version.trim()} --name ${name.trim()} --from ${from.trim()}` +
+    (dbMode !== 'clone' ? ` --db-mode ${dbMode}` : '') +
+    opt('--db-source', dbMode === 'clone' ? dbSource : undefined) +
+    opt('--db-container', dbContainer) +
+    opt('--wta-from', wtaFrom) +
+    opt('--wsh-from', wshFrom) +
+    opt('--oracle-port', input.oraclePort) +
+    opt('--wta-port', input.wtaPort) +
+    opt('--wsh-port', input.wshPort) +
+    opt('--wsh-jar', jar)
+  );
+}
+
+export interface InfrContainerInfo {
+  name: string;
+  image: string;
+  state: string;
+  ports: string;
+}
+
+export interface InfrEnvironment {
+  name: string;
+  oracle?: InfrContainerInfo;
+  wta?: InfrContainerInfo;
+  wsh?: InfrContainerInfo;
+}
+
+/** O que existe na distro para montar uma versão nova: ambientes, Oracles e jars do WSH em /opt. */
+export interface InfrEnvironmentsResult {
+  success: boolean;
+  error?: string;
+  distro?: string;
+  environments: InfrEnvironment[];
+  oracles: InfrContainerInfo[];
+  wshJars: string[];
+}
+
+/**
+ * Ambientes da distro pelo padrão de nome <tipo>-<ambiente> (oracle-master, wta-master, wsh-master),
+ * a partir de linhas `nome|imagem|estado|portas` do `docker ps -a`. Também devolve todos os Oracles
+ * (pelo nome ou pela imagem), para escolher um banco que não siga o padrão.
+ */
+export function groupInfrEnvironments(lines: string[]): { environments: InfrEnvironment[]; oracles: InfrContainerInfo[] } {
+  const byName = new Map<string, InfrEnvironment>();
+  const oracles: InfrContainerInfo[] = [];
+  for (const line of lines) {
+    const [name, image = '', state = '', ports = ''] = line.trim().split('|');
+    if (!name) continue;
+    const info = { name, image, state, ports };
+    if (/oracle/i.test(name) || /oracle/i.test(image)) oracles.push(info);
+    const m = /^(oracle|wta|wsh)-(.+)$/.exec(name);
+    if (!m) continue;
+    const env = byName.get(m[2]) ?? { name: m[2] };
+    env[m[1] as 'oracle' | 'wta' | 'wsh'] = info;
+    byName.set(m[2], env);
+  }
+  const environments = [...byName.values()].filter((e) => e.wta).sort((a, b) => a.name.localeCompare(b.name));
+  return { environments, oracles: oracles.sort((a, b) => a.name.localeCompare(b.name)) };
+}
+
 /** Comando rodado em `wsh-winthor`: com versão, usa o `.env.<versão>` (jar e portas daquela versão). */
 export function buildWshSetupCommand(version?: string): string {
   return isValidWinthorVersion(version) ? `./wsh_setup.sh .env.${version.trim()}` : './wsh_setup.sh';

@@ -20,6 +20,7 @@ import { BackupSchedulerService } from '../main/services/BackupSchedulerService'
 import { mergeBackupConfig, validateBackupConfig } from '../main/utils/backupConfigUtils';
 import { DockerService } from '../main/services/DockerService';
 import { wslService } from '../main/services/WslService';
+import { InfrVersionService } from '../main/services/infr/InfrVersionService';
 import { NetworkService } from '../main/services/NetworkService';
 import { DeployService } from '../main/services/DeployService';
 import { LogWatcherService } from '../main/services/LogWatcherService';
@@ -1375,6 +1376,33 @@ app.post('/api/infr/run-script', async (req, res) => {
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ success: false, output: err.message });
+  }
+});
+
+// Nova versão do WinThor a partir de outro ambiente (Assistente INFR → Nova versão)
+const infrVersionService = new InfrVersionService(wslService, routine801Service);
+
+app.get('/api/infr/version/environments', async (req, res) => {
+  try {
+    res.json(await infrVersionService.listEnvironments(req.query.distro as string | undefined));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message, environments: [], oracles: [], wshJars: [] });
+  }
+});
+
+app.post('/api/infr/version/preview', async (req, res) => {
+  try {
+    res.json(await infrVersionService.preview(req.body || {}));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/infr/version/save', async (req, res) => {
+  try {
+    res.json(infrVersionService.saveManifest(req.body || {}));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

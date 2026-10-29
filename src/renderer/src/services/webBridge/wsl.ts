@@ -10,6 +10,8 @@ import type {
   InfrDockerScriptStatus
 } from '../../../../shared/types';
 import type { ElectronAPI } from '../../../../preload/index';
+import type { InfrManifestSaveResult, InfrVersionPreview, InfrVersionPreviewRequest } from '../../../../shared/infrVersionManifest';
+import type { InfrEnvironmentsResult } from '../../../../shared/infrWinthorVersion';
 import type { BridgeDeps } from './core';
 
 /** Adaptador web (REST/WebSocket) dos canais: WSL & Container Environments. */
@@ -168,7 +170,7 @@ export function createWslApi({ apiFetch, wsManager }: BridgeDeps) {
         return [];
       }
     },
-    runInfrSetupScript: async (scriptType: 'oracle' | 'wta' | 'wsh', options: any): Promise<{ success: boolean; output: string }> => {
+    runInfrSetupScript: async (scriptType: 'oracle' | 'wta' | 'wsh' | 'version', options: any): Promise<{ success: boolean; output: string }> => {
       try {
         return await apiFetch<{ success: boolean; output: string }>('/api/infr/run-script', {
           method: 'POST',
@@ -176,6 +178,28 @@ export function createWslApi({ apiFetch, wsManager }: BridgeDeps) {
         });
       } catch (err: any) {
         return { success: false, output: err.message };
+      }
+    },
+    listInfrEnvironments: async (distro?: string): Promise<InfrEnvironmentsResult> => {
+      try {
+        const query = distro ? `?distro=${encodeURIComponent(distro)}` : '';
+        return await apiFetch<InfrEnvironmentsResult>(`/api/infr/version/environments${query}`);
+      } catch (err: any) {
+        return { success: false, error: err.message, environments: [], oracles: [], wshJars: [] };
+      }
+    },
+    previewInfrVersion: async (req: InfrVersionPreviewRequest): Promise<InfrVersionPreview> => {
+      try {
+        return await apiFetch<InfrVersionPreview>('/api/infr/version/preview', { method: 'POST', body: JSON.stringify(req) });
+      } catch (err: any) {
+        return { success: false, error: err.message };
+      }
+    },
+    saveInfrVersionManifest: async (req: { infrPath?: string; targetVersion: string; manifestText: string }): Promise<InfrManifestSaveResult> => {
+      try {
+        return await apiFetch<InfrManifestSaveResult>('/api/infr/version/save', { method: 'POST', body: JSON.stringify(req) });
+      } catch (err: any) {
+        return { success: false, error: err.message };
       }
     },
     setDockerTargetWslDistro: async (distro: string | null): Promise<DockerDaemonStatus> => {
