@@ -8,6 +8,7 @@ import { InfrOracleTab } from '../infr/InfrOracleTab';
 import { InfrWtaTab } from '../infr/InfrWtaTab';
 import { InfrWshTab } from '../infr/InfrWshTab';
 import { InfrScriptsTab } from '../infr/InfrScriptsTab';
+import { InfrVersionField } from '../infr/InfrVersionField';
 import { Modal } from '../../ui/Modal';
 
 export interface InfrBootstrapModalProps {
@@ -24,6 +25,7 @@ export interface InfrBootstrapModalProps {
       oraclePort: number;
       wtaContainer: string;
       wtaPort: number;
+      winthorVersion: string;
     }
   ) => void;
   isExecutingInfr: boolean;
@@ -62,6 +64,10 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
       />
 
       <div className="flex-1 overflow-auto p-5 space-y-4 scrollbar-thin">
+        {state.activeTab !== 'scripts' && (
+          <InfrVersionField version={state.winthorVersion} onChange={state.setWinthorVersion} />
+        )}
+
         {state.activeTab === 'oracle' && (
           <InfrOracleTab
             container={state.oracleContainer}
@@ -77,6 +83,7 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
           <InfrWtaTab
             container={state.wtaContainer}
             port={state.wtaPort}
+            version={state.winthorVersion}
             isExecuting={isExecutingInfr}
             onContainerChange={state.setWtaContainer}
             onPortChange={state.setWtaPort}
@@ -85,7 +92,11 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
         )}
 
         {state.activeTab === 'wsh' && (
-          <InfrWshTab isExecuting={isExecutingInfr} onRun={() => state.handleRun('wsh')} />
+          <InfrWshTab
+            version={state.winthorVersion}
+            isExecuting={isExecutingInfr}
+            onRun={() => state.handleRun('wsh')}
+          />
         )}
 
         {state.activeTab === 'scripts' && (
