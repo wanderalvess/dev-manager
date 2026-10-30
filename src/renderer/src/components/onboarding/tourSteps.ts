@@ -16,12 +16,17 @@ export const TOUR_STEPS: TourStep[] = [
   {
     target: 'nav-infra',
     title: 'Infraestrutura & Ambiente',
-    desc: 'Serviços e esteira do ambiente, containers, deploy, logs em tempo real e APM.'
+    desc: 'Serviços e esteira do ambiente, containers, WinThor e WSL, catálogo de rotinas, deploy e Karaf.'
+  },
+  {
+    target: 'nav-obs',
+    title: 'Observabilidade & Diagnóstico',
+    desc: 'Logs em tempo real, APM e traces, e o rastreio da integração de ponta a ponta.'
   },
   {
     target: 'nav-data',
-    title: 'Banco de Dados & Rotinas',
-    desc: 'SQL runner e backups de Oracle, MySQL e Postgres, e o catálogo de rotinas WinThor.'
+    title: 'Banco de Dados & Backups',
+    desc: 'SQL runner de Oracle, MySQL e Postgres, e os backups com agendamento e webhooks.'
   },
   {
     target: 'nav-dev',
