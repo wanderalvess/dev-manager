@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { MarkdownReader } from '../components/MarkdownReader';
 import { DocSettingsModal } from '../components/DocSettingsModal';
+import type { SettingsTab } from '../components/settings/settingsSearchData';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { DOCS_TOUR_STEPS, DOCS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/docsTour';
@@ -17,11 +18,9 @@ import { useDocsSync } from '../hooks/docs/useDocsSync';
 import { useDocsSearch } from '../hooks/docs/useDocsSearch';
 import { filterDocFiles } from '../utils/docsPageUtils';
 import { resolveActiveLlmProvider } from '../utils/llmProviderUtils';
-import type { SettingsTab } from '../components/settings/settingsSearchData';
 
 interface DocsPageProps {
-  /** Sem aba, abre IA & LLM (motor das respostas da busca). */
-  onNavigateToSettings?: (tab?: SettingsTab) => void;
+  onNavigateToSettings?: (tab: SettingsTab) => void;
   settingsVersion?: number;
 }
 
@@ -97,10 +96,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings, settin
       {/* Resultados e Catálogo de Documentos */}
       <div className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1">
         {!hasIndex && !index.isIndexing && (
-          <DocsEmptyIndex
-            hasFolders={settings.docFolders.length > 0}
-            onNavigateToSettings={onNavigateToSettings && (() => onNavigateToSettings('dirs'))}
-          />
+          <DocsEmptyIndex hasFolders={settings.docFolders.length > 0} onNavigateToSettings={onNavigateToSettings && (() => onNavigateToSettings('dirs'))} />
         )}
 
         {/* MODO BUSCA ATIVA */}
@@ -117,7 +113,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings, settin
             activeLlmProvider={activeLlmProvider}
             onAskLlm={search.handleAskLlm}
             onClearSearch={search.clearSearch}
-            onNavigateToSettings={onNavigateToSettings}
+            onNavigateToSettings={onNavigateToSettings && (() => onNavigateToSettings('ai'))}
             onOpenPreview={search.handleOpenPreview}
             onOpenInEditor={search.handleOpenInEditor}
             onOpenInFolder={search.handleOpenInFolder}
@@ -200,7 +196,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings, settin
           onNavigateToSettings
             ? () => {
                 setShowDocSettingsModal(false);
-                onNavigateToSettings();
+                onNavigateToSettings('ai');
               }
             : undefined
         }

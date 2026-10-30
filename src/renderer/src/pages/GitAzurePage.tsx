@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import type { GitProjectInfo } from '../../../shared/types';
-import type { SettingsTab } from '../components/settings/settingsSearchData';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { GIT_TOUR_STEPS, GIT_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/gitAzureTour';
@@ -41,8 +40,7 @@ interface GitAzurePageProps {
   projects: GitProjectInfo[];
   onRefreshProjects: () => void | Promise<void>;
   isRefreshing: boolean;
-  /** Sem aba, abre Azure & Git. */
-  onNavigateToSettings?: (tab?: SettingsTab) => void;
+  onNavigateToSettings?: () => void;
   settingsVersion?: number;
 }
 
@@ -203,10 +201,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
               {gitOutput && <GitOutputConsole output={gitOutput} isError={gitOutputIsError} />}
             </>
           ) : (
-            <GitEmptyState
-              hasProjects={projects.length > 0}
-              onNavigateToSettings={onNavigateToSettings && (() => onNavigateToSettings('dirs'))}
-            />
+            <GitEmptyState hasProjects={projects.length > 0} onNavigateToSettings={onNavigateToSettings} />
           )}
         </div>
       </div>

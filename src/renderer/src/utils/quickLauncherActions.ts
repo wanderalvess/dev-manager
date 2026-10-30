@@ -14,7 +14,7 @@ import {
   Box,
   ScrollText,
   Database,
-  GitCompareArrows,
+  FlaskConical,
   FileSearch,
   Activity,
   CheckCheck,
@@ -173,7 +173,7 @@ const NAVIGATION_ACTIONS: NavigationActionSpec[] = [
     tab: 'quality-regression',
     title: 'Validador Regressivo',
     subtitle: 'Validação de dados Oracle com templates, asserções e payloads de API',
-    icon: GitCompareArrows
+    icon: FlaskConical
   },
   {
     id: 'act-quality-runners',

@@ -1684,6 +1684,10 @@ app.post('/api/network/health', async (req, res) => {
   res.json(result);
 });
 
+app.post('/api/network/probe', async (req, res) => {
+  res.json(await networkService.probeHttpEndpoint(req.body || {}));
+});
+
 // 11. Métricas do Sistema
 app.get('/api/system/metrics', async (_req, res) => {
   const metrics = await networkService.getSystemMetrics();

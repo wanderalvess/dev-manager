@@ -32,25 +32,26 @@ export const HelpModulesTab: React.FC<HelpModulesTabProps> = ({
   copiedItem
 }) => {
   return (
+    // Mesma ordem dos grupos do menu lateral (header/headerNavConfig.ts); Integrações e MCP fecham a lista.
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <EnvironmentModuleCard debugPort={debugPort} onNavigate={onNavigate} />
-      <DatabaseModuleCard onNavigate={onNavigate} />
       <ContainersModuleCard onNavigate={onNavigate} />
-      <DeployModuleCard onNavigate={onNavigate} />
-      <GitModuleCard onNavigate={onNavigate} />
       <RoutinesModuleCard onNavigate={onNavigate} />
-      <DocsRagModuleCard onNavigate={onNavigate} />
+      <DeployModuleCard onNavigate={onNavigate} />
+      <LogsModuleCard onNavigate={onNavigate} />
       <ApmModuleCard onNavigate={onNavigate} />
+      <IntegrationTraceModuleCard onNavigate={onNavigate} />
+      <DatabaseModuleCard onNavigate={onNavigate} />
+      <GitModuleCard onNavigate={onNavigate} />
+      <DocsRagModuleCard onNavigate={onNavigate} />
+      <HttpClientModuleCard onNavigate={onNavigate} />
+      <QualityModuleCard onNavigate={onNavigate} />
+      <IntegrationsModuleCard onNavigate={onNavigate} />
       <McpModuleCard
         handleOpenMcpDocs={handleOpenMcpDocs}
         copyToClipboard={copyToClipboard}
         copiedItem={copiedItem}
       />
-      <LogsModuleCard onNavigate={onNavigate} />
-      <QualityModuleCard onNavigate={onNavigate} />
-      <HttpClientModuleCard onNavigate={onNavigate} />
-      <IntegrationsModuleCard onNavigate={onNavigate} />
-      <IntegrationTraceModuleCard onNavigate={onNavigate} />
     </div>
   );
 };

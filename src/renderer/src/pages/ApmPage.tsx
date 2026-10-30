@@ -26,6 +26,7 @@ import {
 
 interface ApmPageProps {
   isActive?: boolean;
+  onNavigateToSettings?: () => void;
   onNavigateToDatabase?: () => void;
 }
 

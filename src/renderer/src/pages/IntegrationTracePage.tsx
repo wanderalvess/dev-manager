@@ -5,9 +5,9 @@ import { IntegrationTraceTabs, type IntegrationTraceTab } from '../components/in
 import { ReadinessView } from '../components/integrationtrace/ReadinessView';
 import { WshMonitorView } from '../components/integrationtrace/wsh/WshMonitorView';
 import { OnlineProcessesView } from '../components/integrationtrace/online/OnlineProcessesView';
+import { requestSettingsTab } from '../utils/settingsDeepLink';
 
 interface IntegrationTracePageProps {
-  /** Abre as Configurações já na aba Integração. */
   onNavigateToSettings: () => void;
   settingsVersion?: number;
 }
@@ -20,7 +20,10 @@ export const IntegrationTracePage: React.FC<IntegrationTracePageProps> = ({ onNa
   // O monitor do WSH abre primeiro: é por ele que se descobre por que um dado não chegou ao PDV
   const [tab, setTab] = useState<IntegrationTraceTab>('wsh');
 
-  const openSettings = () => onNavigateToSettings();
+  const openSettings = () => {
+    requestSettingsTab('integration');
+    onNavigateToSettings();
+  };
 
   return (
     <div className="h-full w-full flex flex-col px-5 pt-4 pb-4 md:px-6 gap-3 overflow-hidden">

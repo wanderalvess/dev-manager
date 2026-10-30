@@ -59,7 +59,7 @@ const TAB_GROUPS: TabGroup[] = [
     title: 'Recursos',
     tabs: [
       { id: 'automation', label: 'Automação', icon: Zap },
-      { id: 'backup', label: 'Backup', icon: HardDriveDownload },
+      { id: 'backup', label: 'Banco & Backup', icon: HardDriveDownload },
       { id: 'ai', label: 'IA & LLM', icon: Bot },
       { id: 'quality', label: 'Qualidade & QA', icon: CheckCheck },
       { id: 'integration', label: 'Integração ponta a ponta', icon: Route },

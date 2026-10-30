@@ -7,7 +7,8 @@ import type { ThemeVariant } from '../../context/ThemeContext';
 export const SPLASH_BOOT_LINES = [
   'iniciando o cockpit…',
   'carregando Infraestrutura & Ambiente',
-  'carregando Banco de Dados & Rotinas',
+  'carregando Observabilidade & Diagnóstico',
+  'carregando Banco de Dados & Backups',
   'carregando Desenvolvimento & DevOps',
   'carregando Qualidade & Homologação',
   'servidor MCP pronto'
@@ -133,7 +134,7 @@ export function buildEnvSections(settings: Partial<AppSettings> | null): EnvSect
       id: 'azure',
       title: 'Azure & Git',
       rows: [
-        row('Azure DevOps', 'Personal Access Token', text(s.azureDevOpsToken) ? 'configurado' : ''),
+        row('Azure DevOps', 'Personal Access Token', text(s.azureDevOpsToken) || s.hasAzureDevOpsToken ? 'configurado' : ''),
         row('Banco de Dados', 'conexões salvas', count(s.databaseConnections, 'conexão(ões)'))
       ]
     },

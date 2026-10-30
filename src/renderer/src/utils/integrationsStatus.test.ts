@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MCP_TOOL_COUNT } from '../../../shared/mcpCatalog';
-import { buildIntegrations, filterIntegrations } from './integrationsStatus';
+import { buildIntegrations, countIntegrationsByFilter, filterIntegrations } from './integrationsStatus';
 
 const byId = (items: ReturnType<typeof buildIntegrations>, id: string) => items.find((i) => i.id === id)!;
 
@@ -37,5 +37,28 @@ describe('integrationsStatus', () => {
     expect(filterIntegrations(items, 'active').map((i) => i.id)).toContain('azure');
     expect(filterIntegrations(items, 'unconfigured').map((i) => i.id)).not.toContain('azure');
     expect(filterIntegrations(items, 'all')).toHaveLength(items.length);
+  });
+
+  it('reconhece token do Azure e cookie da CCW salvos mesmo com o valor sanitizado', () => {
+    const items = buildIntegrations({ azureDevOpsToken: '', hasAzureDevOpsToken: true, ccwAuthCookie: '', hasCcwAuthCookie: true });
+    expect(byId(items, 'azure')).toMatchObject({ status: 'active', statusLabel: 'Token salvo' });
+    expect(byId(items, 'ccw')).toMatchObject({ status: 'active', statusLabel: 'Cookie salvo' });
+  });
+
+  it('usa o estado real do receptor OTLP', () => {
+    expect(byId(buildIntegrations({}), 'otlp').status).toBe('none');
+    const listening = buildIntegrations({}, [], { apmReceiver: { listening: true, port: 4319 } });
+    expect(byId(listening, 'otlp')).toMatchObject({ status: 'active', statusLabel: 'Recebendo na porta 4319' });
+    const down = buildIntegrations({}, [], { apmReceiver: { listening: false, port: 4318, error: 'EADDRINUSE' } });
+    expect(byId(down, 'otlp')).toMatchObject({ status: 'error', detail: 'EADDRINUSE' });
+    expect(filterIntegrations(down, 'attention').map((i) => i.id)).toEqual(['otlp']);
+  });
+
+  it('conta os cartões de cada filtro', () => {
+    const items = buildIntegrations({ azureDevOpsToken: 'x' }, [], { apmReceiver: { listening: false, port: 4318 } });
+    const counts = countIntegrationsByFilter(items);
+    expect(counts.all).toBe(items.length);
+    expect(counts.attention).toBe(1);
+    expect(counts.active + counts.attention + counts.unconfigured).toBeLessThanOrEqual(items.length);
   });
 });

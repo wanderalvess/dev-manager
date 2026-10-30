@@ -3,8 +3,8 @@ import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { ENV_TOUR_STEPS, ENV_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/environmentTour';
 import { ServiceStatus, AutomationProfile, getWebPort, getWebUrl } from '../../../shared/types';
-import type { SettingsTab } from '../components/settings/settingsSearchData';
 import { ProfileEditorModal } from '../components/ProfileEditorModal';
+import type { SettingsTab } from '../components/settings/settingsSearchData';
 import { EnvironmentConfigWarning } from '../components/environment/EnvironmentConfigWarning';
 import { EnvironmentCockpitPanel } from '../components/environment/EnvironmentCockpitPanel';
 import { PortsMonitor } from '../components/environment/PortsMonitor';
@@ -22,8 +22,7 @@ import { useEnvironmentServiceActions } from '../hooks/environment/useEnvironmen
 interface EnvironmentPageProps {
   services: ServiceStatus[];
   onRefreshServices: () => void;
-  /** Sem aba, abre Diretórios & IDE (caminhos que o aviso de configuração incompleta cobra). */
-  onNavigateToSettings?: (tab?: SettingsTab) => void;
+  onNavigateToSettings?: (tab: SettingsTab) => void;
   onNavigateToHelp?: (search?: string) => void;
   isActive?: boolean;
   settingsVersion?: number;
@@ -81,7 +80,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
     <div className="h-full flex flex-col px-4 py-3 md:px-5 md:py-4 space-y-3 overflow-y-auto lg:overflow-hidden max-w-full overflow-x-hidden">
       <EnvironmentConfigWarning
         missingPaths={profilesState.missingRequiredPaths}
-        onNavigateToSettings={onNavigateToSettings}
+        onNavigateToSettings={onNavigateToSettings && (() => onNavigateToSettings('dirs'))}
       />
 
       <EnvironmentCockpitPanel
