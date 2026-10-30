@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Corrigido
+- **Nova versão: catálogo da 801 vazio no WTA 40**: o WTA mais novo só devolve o catálogo de atualizações quando a consulta traz a versão do WinThor (`versaoWinthor=40.00&versaoWinthorMinima=37.00`), como faz a tela da própria 801; sem isso, respondia vazio. A Nova versão agora manda a versão alvo. Quando o catálogo traz várias versões da mesma feature (ex.: 1.40.4.2 e 1.40.4.1), o Hub escolhe a mais nova que cabe na linha alvo; antes ficava com a última da lista, e uma 41 no catálogo fazia pular a 40 que também estava lá.
+
 ## [1.49.1] - 2026-10-30
 ### Adicionado
 - **Nova versão: registro da leitura**: o passo *Revisar e gerar* ganhou o painel *Registro da leitura*, com o horário de cada passo da prévia: distro e pasta usadas, scripts encontrados, cada comando no WSL (tempo, código de saída e as últimas linhas do que ele disse), a URL do WTA de origem, se há usuário do WTA configurado, cada requisição ao catálogo da 801 (status, content-type, tempo e começo do corpo), o login automático e as contagens. Abre sozinho quando a leitura falha e tem botão *Copiar* para mandar a quem está ajudando. Senha e token não aparecem.

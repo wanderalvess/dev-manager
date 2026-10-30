@@ -14,7 +14,8 @@ import {
   buildKarafInstallCommands,
   normalizeRoutine801Catalog,
   findRepositoryForFeature,
-  describeNonJsonCatalog
+  describeNonJsonCatalog,
+  routine801VersionQuery
 } from '../utils/routine801Utils';
 
 export class Routine801Service {
@@ -238,8 +239,8 @@ export class Routine801Service {
   }
 
   /** Obtém a lista de atualizações disponíveis para os pacotes instalados. */
-  public fetchUpdates(customUrl?: string, trace?: (line: string) => void): Promise<Routine801CatalogResponse> {
-    return this.fetchCatalog('atualizacao', 'atualizações', customUrl, trace);
+  public fetchUpdates(customUrl?: string, trace?: (line: string) => void, winthorVersion?: number): Promise<Routine801CatalogResponse> {
+    return this.fetchCatalog(`atualizacao${routine801VersionQuery(winthorVersion)}`, 'atualizações', customUrl, trace);
   }
 
   /**

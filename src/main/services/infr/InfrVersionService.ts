@@ -149,7 +149,7 @@ export class InfrVersionService {
     if (!url) return { success: false, error: `Porta 8080 do ${container} não publicada; informe a URL do WTA de origem.` };
     let catalog;
     try {
-      catalog = await this.routine801.fetchUpdates(url, trace);
+      catalog = await this.routine801.fetchUpdates(url, trace, parseInt(target, 10));
       trace(`Catálogo da 801: ${catalog.funcionalidades.length} features, ${catalog.repositorios.length} repositórios`);
     } catch (err: any) {
       const msg = String(err?.message || err);

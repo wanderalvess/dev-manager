@@ -275,8 +275,9 @@ export function describeNonJsonCatalog(body: string, baseUrl: string, contentTyp
   const text = body.trim();
   if (!text) {
     return (
-      'O WTA respondeu sem conteúdo (corpo vazio). Como resolver: o catálogo vem do servidor de atualizações da TOTVS ' +
-      `pelo WTA; confira se o WTA de origem tem acesso à internet e se a rotina 801 lista as atualizações em ${baseUrl}.`
+      'O WTA respondeu sem conteúdo (corpo vazio). WTAs mais novos só devolvem o catálogo com a versão do WinThor na ' +
+      'consulta (versaoWinthor); se ela já foi, o WTA não alcançou o servidor de atualizações da TOTVS. Como resolver: confira ' +
+      `se o WTA tem acesso à internet e se a rotina 801 lista as atualizações em ${baseUrl}.`
     );
   }
   if (/^<(!doctype|html|head|body)/i.test(text) || /text\/html/i.test(contentType || '')) {
@@ -288,4 +289,17 @@ export function describeNonJsonCatalog(body: string, baseUrl: string, contentTyp
   }
   const start = text.replace(/\s+/g, ' ').slice(0, 160);
   return `A resposta não é JSON${contentType ? ` (${contentType})` : ''}. Começo da resposta: ${start}${text.length > 160 ? '…' : ''}`;
+}
+
+/** Versão mínima que a tela da rotina 801 manda junto com a versão do WinThor. */
+export const ROUTINE801_MIN_WINTHOR_VERSION = 37;
+
+/**
+ * Query da versão do WinThor no catálogo `/atualizacao`. WTAs mais novos só devolvem o catálogo com
+ * `versaoWinthor` e `versaoWinthorMinima` (formato `40.00`), como a própria 801 faz; sem elas, a resposta vem vazia.
+ */
+export function routine801VersionQuery(winthorVersion?: number): string {
+  if (!winthorVersion || !Number.isInteger(winthorVersion) || winthorVersion <= 0) return '';
+  const min = Math.min(ROUTINE801_MIN_WINTHOR_VERSION, winthorVersion);
+  return `?versaoWinthor=${winthorVersion}.00&versaoWinthorMinima=${min}.00`;
 }

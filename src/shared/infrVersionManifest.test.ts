@@ -104,3 +104,22 @@ describe('manifesto de versão do INFR-Docker', () => {
     expect(compareManifests(existing, preview)).toEqual({ newer: 1, older: 1, onlyExisting: 1, onlyPreview: 1 });
   });
 });
+
+describe('upgradeManifestFromCatalog com várias versões da mesma feature', () => {
+  const origin = parseVersionManifest('feature winthor-core-servico 1.40.3.1\n');
+  const item = (versao: string, status = 'HOMOLOGACAO') =>
+    ({ nome: 'winthor-core-servico', versao, status, comando: 'UPDATE', codigoRotina: 0, codigoModulo: 0, tipoProjeto: 'SERVICO', descricao: '', dependencias: [] }) as any;
+
+  it('escolhe a mais nova, em qualquer ordem do catálogo (a 801 do WTA 40 manda 1.40.4.2 antes de 1.40.4.1)', () => {
+    const up = upgradeManifestFromCatalog(origin, { repositorios: [], funcionalidades: [item('1.40.4.2'), item('1.40.4.1')] }, 40);
+    expect(up.changes).toEqual([{ name: 'winthor-core-servico', from: '1.40.3.1', to: '1.40.4.2' }]);
+    const reversed = upgradeManifestFromCatalog(origin, { repositorios: [], funcionalidades: [item('1.40.4.1'), item('1.40.4.2')] }, 40);
+    expect(reversed.changes[0].to).toBe('1.40.4.2');
+  });
+
+  it('com uma 41 e uma 40 no catálogo, sobe para a 40 em vez de pular', () => {
+    const up = upgradeManifestFromCatalog(origin, { repositorios: [], funcionalidades: [item('1.41.0.1'), item('1.40.4.1'), item('1.40.5.0', 'BLOQUEADO')] }, 40);
+    expect(up.changes).toEqual([{ name: 'winthor-core-servico', from: '1.40.3.1', to: '1.40.4.1' }]);
+    expect(up.skipped).toEqual([]);
+  });
+});

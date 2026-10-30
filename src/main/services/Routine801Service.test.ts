@@ -350,10 +350,10 @@ describe('Routine801Service', () => {
         buffer: async () => Buffer.from('')
       } as any);
       const log: string[] = [];
-      await routine801Service.fetchUpdates('http://localhost:8086', (l) => log.push(l)).catch(() => undefined);
+      await routine801Service.fetchUpdates('http://localhost:8086', (l) => log.push(l), 40).catch(() => undefined);
       const text = log.join('\n');
       expect(text).toContain('Usuário WTA nas Configurações: configurado; token salvo: sim');
-      expect(text).toContain('GET http://localhost:8086/winthor/ferramenta/servidor/v1/atualizacao');
+      expect(text).toContain('GET http://localhost:8086/winthor/ferramenta/servidor/v1/atualizacao?versaoWinthor=40.00&versaoWinthorMinima=37.00');
       expect(text).toContain('HTTP 200 OK');
       expect(text).toContain('content-type: text/html');
       expect(text).toContain('<html><title>WinThor</title></html>');

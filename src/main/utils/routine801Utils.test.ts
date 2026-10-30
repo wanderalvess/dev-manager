@@ -7,7 +7,8 @@ import {
   buildKarafInstallCommands,
   inferFeatureMavenUrl,
   extractVersionFamilies,
-  describeNonJsonCatalog
+  describeNonJsonCatalog,
+  routine801VersionQuery
 } from './routine801Utils';
 import { Routine801Feature, Routine801RepositoryUpdate } from '../../shared/types';
 
@@ -281,5 +282,46 @@ describe('describeNonJsonCatalog', () => {
     const msg = describeNonJsonCatalog('x'.repeat(200), url, 'text/plain');
     expect(msg).toContain('(text/plain)');
     expect(msg).toContain(`${'x'.repeat(160)}…`);
+  });
+});
+
+describe('routine801VersionQuery e o formato do catálogo do WTA 40', () => {
+  it('manda a versão como a tela da 801 (40.00, mínima 37.00); sem versão, nada', () => {
+    expect(routine801VersionQuery(40)).toBe('?versaoWinthor=40.00&versaoWinthorMinima=37.00');
+    expect(routine801VersionQuery(36)).toBe('?versaoWinthor=36.00&versaoWinthorMinima=36.00');
+    expect(routine801VersionQuery(undefined)).toBe('');
+    expect(routine801VersionQuery(NaN)).toBe('');
+  });
+
+  it('lê as funcionalidades aninhadas em "funcionalidade" e os repositórios em "repositorio"', () => {
+    const cat = normalizeRoutine801Catalog({
+      repositorios: [
+        {
+          comando: 'INSTALL',
+          repositorio: {
+            groupId: 'br.com.totvs.integracao',
+            artifactId: 'winthor-integracao-config-service',
+            version: '1.40.0.1',
+            featureMavenUrl: 'mvn:br.com.totvs.integracao/winthor-integracao-config-service/1.40.0.1/xml/features'
+          }
+        }
+      ],
+      funcionalidades: [
+        {
+          funcionalidade: { nome: 'winthor-core-servico', versao: '1.40.4.2', dependencias: [], id: 'winthor-core-servico/1.40.4.2' },
+          versao: '1.40.4.2',
+          comando: 'UPDATE',
+          codigoRotina: 0,
+          codigoModulo: 0,
+          tipoProjeto: 'SERVICO',
+          descricao: 'Núcleo de integridade do WTA',
+          status: 'HOMOLOGACAO',
+          funcionalidadeAnterior: { nome: 'winthor-core-servico', versao: '1.40.3.1' },
+          nome: 'winthor-core-servico'
+        }
+      ]
+    });
+    expect(cat.repositorios[0].repositorio.version).toBe('1.40.0.1');
+    expect(cat.funcionalidades[0]).toMatchObject({ nome: 'winthor-core-servico', versao: '1.40.4.2', versaoAnterior: '1.40.3.1', status: 'HOMOLOGACAO' });
   });
 });

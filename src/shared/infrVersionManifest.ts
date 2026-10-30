@@ -201,18 +201,25 @@ export function upgradeManifestFromCatalog(
   const repos = [...origin.repos];
   const changes: ManifestChange[] = [];
   const skipped: ManifestSkip[] = [];
-  const byName = new Map(catalog.funcionalidades.map((f) => [f.nome, f]));
+  // O catálogo pode trazer várias versões da mesma feature (ex.: 1.40.4.2 e 1.40.4.1), em qualquer ordem
+  const byName = new Map<string, Routine801CatalogResponse['funcionalidades']>();
+  for (const f of catalog.funcionalidades) {
+    if (f.nome && f.versao) byName.set(f.nome, [...(byName.get(f.nome) || []), f]);
+  }
+  const whyNot = (f: Routine801CatalogResponse['funcionalidades'][number]): string | null => {
+    if (BLOCKED_STATUS.has(String(f.status).toUpperCase())) return `status ${f.status} na rotina 801`;
+    const line = winthorLineOf(f.versao);
+    return line !== undefined && line > target ? `linha ${line}, acima da ${target}` : null;
+  };
 
   const features = origin.features.map((feature) => {
-    const update = byName.get(feature.name);
-    if (!update || !update.versao || compareVersions(update.versao, feature.version) <= 0) return feature;
-    const line = winthorLineOf(update.versao);
-    if (BLOCKED_STATUS.has(String(update.status).toUpperCase())) {
-      skipped.push({ name: feature.name, version: update.versao, reason: `status ${update.status} na rotina 801` });
-      return feature;
-    }
-    if (line !== undefined && line > target) {
-      skipped.push({ name: feature.name, version: update.versao, reason: `linha ${line}, acima da ${target}` });
+    const newer = (byName.get(feature.name) || [])
+      .filter((f) => compareVersions(f.versao, feature.version) > 0)
+      .sort((a, b) => compareVersions(b.versao, a.versao));
+    if (newer.length === 0) return feature;
+    const update = newer.find((f) => !whyNot(f));
+    if (!update) {
+      skipped.push({ name: feature.name, version: newer[0].versao, reason: whyNot(newer[0]) as string });
       return feature;
     }
     const repo =
