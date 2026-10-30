@@ -22,6 +22,7 @@ import { DockerService } from '../main/services/DockerService';
 import { wslService } from '../main/services/WslService';
 import { InfrVersionService } from '../main/services/infr/InfrVersionService';
 import { InfrEnvCheckService } from '../main/services/infr/InfrEnvCheckService';
+import { InfrOriginCheckService } from '../main/services/infr/InfrOriginCheckService';
 import { NetworkService } from '../main/services/NetworkService';
 import { DeployService } from '../main/services/DeployService';
 import { LogWatcherService } from '../main/services/LogWatcherService';
@@ -1395,6 +1396,15 @@ app.post('/api/infr/run-script', async (req, res) => {
 // Nova versão do WinThor a partir de outro ambiente (Assistente INFR → Nova versão)
 const infrVersionService = new InfrVersionService(wslService, routine801Service);
 const infrEnvCheckService = new InfrEnvCheckService(wslService);
+const infrOriginCheckService = new InfrOriginCheckService(wslService, routine801Service);
+
+app.post('/api/infr/origin-check', async (req, res) => {
+  try {
+    res.json(await infrOriginCheckService.check(req.body || {}));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message, items: [] });
+  }
+});
 
 app.post('/api/infr/env-check', async (req, res) => {
   try {

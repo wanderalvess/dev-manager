@@ -3,6 +3,7 @@ import { wslService } from '../../services/WslService';
 import { InfrVersionService } from '../../services/infr/InfrVersionService';
 import type { InfrEnvSaveRequest, InfrManifestSaveRequest, InfrVersionPreviewRequest } from '../../../shared/infrVersionManifest';
 import { InfrEnvCheckService } from '../../services/infr/InfrEnvCheckService';
+import { InfrOriginCheckService } from '../../services/infr/InfrOriginCheckService';
 import type { InfrCheckCommandId } from '../../../shared/infrEnvCheck';
 import type { IpcContext } from '../ipcContext';
 
@@ -11,6 +12,11 @@ export function registerWslHandlers(ctx: IpcContext): void {
   const { dockerService } = ctx;
   const infrVersionService = new InfrVersionService(wslService, ctx.routine801Service);
   const infrEnvCheckService = new InfrEnvCheckService(wslService);
+  const infrOriginCheckService = new InfrOriginCheckService(wslService, ctx.routine801Service);
+
+  ipcMain.handle('infr:origin-check', async (_, req: { distro?: string; infrPath?: string; fromEnv: string }) => {
+    return await infrOriginCheckService.check(req);
+  });
 
   ipcMain.handle('infr:version-environments', async (_, distro?: string) => {
     return await infrVersionService.listEnvironments(distro);

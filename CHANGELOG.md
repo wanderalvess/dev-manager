@@ -4,6 +4,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Alterado
+- **Nova versão confere a origem logo no passo 1**: antes, pasta, WTA e login só eram testados no passo 4, depois de a pessoa preencher tudo. Agora, ao escolher a origem, o Hub confere três coisas e só libera o *Próximo* quando as três passam:
+  - a pasta do INFR-Docker, que precisa ter os scripts da Nova versão;
+  - o `wta-<origem>`, que precisa estar rodando e respondendo;
+  - o login no WTA com o usuário das Configurações, num login de verdade.
+
+  Sem usuário, ou com o login recusado (a resposta do WTA aparece), o próprio passo 1 pede usuário e senha. *Salvar e testar* grava em Configurações → Rotinas WinThor, criptografado, e confere de novo. A senha não volta para a tela. Um WTA parado ou ainda subindo aparece em vermelho, com o que fazer, e há o botão *Conferir de novo*.
+
 ## [1.49.4] - 2026-10-30
 ### Adicionado
 - **Assistente INFR: Verificar ambiente**: aba nova, aberta sozinha depois do Gerar, que mostra se o ambiente subiu. Para `oracle-`, `wta-` e `wsh-<nome>` mostra:
