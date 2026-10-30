@@ -361,7 +361,8 @@ export interface ElectronAPI {
   saveDbBackupConfig: (config: BackupConfig) => Promise<{ success: boolean; message: string }>;
   restoreDbBackup: (config: DatabaseConnectionConfig, filePath: string) => Promise<BackupResult>;
   listDbBackupHistory: (connectionId?: string) => Promise<BackupHistoryEntry[]>;
-  runDbRestoreDrill: (scratchConnection: DatabaseConnectionConfig, filePath: string) => Promise<BackupResult>;
+  /** `sourceConnectionId`: conexão que gerou o backup; o drill recusa rodar sobre ela. */
+  runDbRestoreDrill: (scratchConnection: DatabaseConnectionConfig, filePath: string, sourceConnectionId?: string) => Promise<BackupResult>;
   testBackupWebhook: (webhook: BackupWebhookConfig) => Promise<{ success: boolean; message: string }>;
   onBackupScheduleResult: (callback: (data: { connectionName: string; result: BackupResult }) => void) => () => void;
 

@@ -157,8 +157,8 @@ Orquestração fina de rede.
 ## 9. Backup de Banco e Observador de Logs
 Gestão de backup/restore agendado e leitura pontual de arquivos de log locais.
 
-*   **`db_run_backup` / `db_list_backups` / `db_restore_backup` / `db_run_restore_drill`**: Executa backup manual, lista arquivos existentes, restaura um backup e testa a restaurabilidade contra uma conexão "scratch" descartável.
-*   **`db_save_backup_config` / `db_list_backup_history`**: Salva o agendamento (cron) de backup/restore drill de uma conexão e consulta o histórico persistido de execuções.
+*   **`db_run_backup` / `db_list_backups` / `db_restore_backup` / `db_run_restore_drill`**: Executa backup manual, lista arquivos existentes, restaura um backup e testa a restaurabilidade contra uma conexão "scratch" descartável. Restauração e drill são destrutivas (pedem confirmação), exigem `connectionId` ou `config` explícito (não caem na conexão padrão) e recusam conexão marcada como produção. O drill também recusa a conexão de origem do backup (`sourceConnectionId`, ou deduzida pelo nome do arquivo).
+*   **`db_save_backup_config` / `db_list_backup_history`**: Salva o agendamento (cron) de backup/restore drill de uma conexão e consulta o histórico persistido de execuções. Salvar é destrutiva: a configuração pode agendar um comando personalizado.
 *   **`backup_test_webhook`**: Envia um payload de teste para um webhook de notificação de backup (Slack/Discord/Teams/genérico).
 *   **`logs_check_file` / `logs_read_last_lines` / `logs_clear_file`**: Verifica o status de um arquivo de log, lê suas últimas N linhas sob demanda (sem observação contínua — isso é exclusivo da UI via WebSocket) e zera seu conteúdo.
 
@@ -363,9 +363,9 @@ Ajuda a saber, na máquina local, em qual ponta da cadeia de integração está 
 
 O servidor MCP roda via stdio com o mesmo poder do Cockpit na sua máquina, então ele ajuda o cliente a pedir confirmação antes do que é perigoso:
 
-*   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `docker_remove_container`, `delphi_build`, `delphi_run_pipeline`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
+*   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `db_run_restore_drill`, `db_save_backup_config`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `docker_remove_container`, `delphi_build`, `delphi_run_pipeline`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
 *   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (95 das 178) são registradas. As demais nem aparecem para o cliente. No Claude Code: `claude mcp add dev-manager --scope user -e HUB_MCP_MODE=readonly -- cmd /c C:\DevManager\mcp\dev-manager-mcp.cmd`. Nos arquivos JSON, use o campo `env`.
-*   **Contagem por risco**: das 178 tools, 95 são de leitura, 56 de escrita e 27 destrutivas. Os números ficam em `src/shared/mcpCatalog.ts`, e um teste falha se divergirem das tools registradas.
+*   **Contagem por risco**: das 178 tools, 95 são de leitura, 54 de escrita e 29 destrutivas. Os números ficam em `src/shared/mcpCatalog.ts`, e um teste falha se divergirem das tools registradas.
 *   **Produção protegida**: `db_execute_query` recusa qualquer comando que não seja de leitura (`SELECT`, `EXPLAIN`, `SHOW`, `DESCRIBE`) em conexão marcada como **produção** no Database Studio, inclusive quando a conexão é informada inline e aponta para o mesmo destino de uma conexão de produção salva.
 *   **Arquivos de log**: `logs_clear_file` só zera arquivos com extensão de log (`.log`, `.out`, `.err`, `.txt`, `.trace`), e nenhuma tool de log lê a pasta de dados do app (onde ficam o `config.json` e a chave de criptografia).
 

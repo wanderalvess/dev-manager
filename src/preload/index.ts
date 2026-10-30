@@ -609,8 +609,8 @@ const electronAPI = {
     ipcRenderer.invoke('db:restore-backup', config, filePath),
   listDbBackupHistory: (connectionId?: string): Promise<BackupHistoryEntry[]> =>
     ipcRenderer.invoke('db:list-backup-history', connectionId),
-  runDbRestoreDrill: (scratchConnection: DatabaseConnectionConfig, filePath: string): Promise<BackupResult> =>
-    ipcRenderer.invoke('db:run-restore-drill', scratchConnection, filePath),
+  runDbRestoreDrill: (scratchConnection: DatabaseConnectionConfig, filePath: string, sourceConnectionId?: string): Promise<BackupResult> =>
+    ipcRenderer.invoke('db:run-restore-drill', scratchConnection, filePath, sourceConnectionId),
   testBackupWebhook: (webhook: BackupWebhookConfig): Promise<{ success: boolean; message: string }> =>
     ipcRenderer.invoke('backup:test-webhook', webhook),
   onBackupScheduleResult: (callback: (data: { connectionName: string; result: BackupResult }) => void) => {
