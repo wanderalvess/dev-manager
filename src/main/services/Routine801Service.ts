@@ -1,6 +1,7 @@
 import { ConfigService } from './ConfigService';
 import { KarafService } from './KarafService';
 import { httpRequest } from '../utils/httpRequest';
+import { encodeWtaPassword } from './authLockout/wtaPassword';
 import { isSafeKarafCommand, isSafeUrl } from '../utils/security';
 import {
   Routine801CatalogResponse,
@@ -77,7 +78,8 @@ export class Routine801Service {
           'Content-Type': 'application/json',
           Accept: 'application/json'
         },
-        body: JSON.stringify({ login, senha }),
+        // O WTA só aceita o MD5 da senha em hexadecimal maiúsculo; um hash colado vai como está
+        body: JSON.stringify({ login, senha: encodeWtaPassword(senha) }),
         timeout: 5000
       });
 

@@ -321,6 +321,9 @@ describe('Routine801Service', () => {
       const token = await routine801Service.renewWtaAuth('http://localhost:8889');
       expect(token).toBe('newToken999');
       expect(configService.saveSettings).toHaveBeenCalledWith({ wtaAuthToken: 'newToken999' });
+      // O WTA só aceita o MD5 maiúsculo da senha
+      const body = JSON.parse(String(vi.mocked(httpRequest).mock.calls.at(-1)?.[1]?.body));
+      expect(body).toEqual({ login: 'PCADMIN', senha: 'C4CA4238A0B923820DCC509A6F75849B' });
     });
 
     it('catálogo recusado traz o motivo do login que falhou, sem a senha', async () => {
