@@ -24,12 +24,11 @@ import { LogsModalsHost } from '../components/logs/LogsModalsHost';
 import { LogFontSize } from '../components/logs/LogLine';
 
 interface LogsPageProps {
-  onNavigateToSettings?: () => void;
   isActive?: boolean;
   settingsVersion?: number;
 }
 
-export const LogsPage: React.FC<LogsPageProps> = ({ onNavigateToSettings: _onNavigateToSettings, isActive, settingsVersion }) => {
+export const LogsPage: React.FC<LogsPageProps> = ({ isActive, settingsVersion }) => {
   const tour = usePageTour(LOGS_TOUR_STORAGE_KEY);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [initialLinesCount, setInitialLinesCount] = useState<number>(500);

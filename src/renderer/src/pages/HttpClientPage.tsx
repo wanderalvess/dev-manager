@@ -11,7 +11,6 @@ import { HttpCurlModal } from '../components/http/HttpCurlModal';
 import { HttpAiDiagnosticModal } from '../components/http/HttpAiDiagnosticModal';
 
 interface HttpClientPageProps {
-  onNavigateToSettings?: () => void;
   onNavigateToQaRegression?: (rawJson: string) => void;
   settingsVersion?: number;
   isActive?: boolean;

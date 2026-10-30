@@ -2,6 +2,8 @@ import React, { Suspense, lazy } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { ServiceStatus, GitProjectInfo } from '../../../../shared/types';
 import { QualityValidationProvider } from '../../hooks/quality/page/QualityValidationContext';
+import type { SettingsTab } from '../settings/settingsSearchData';
+import { requestSettingsTab } from '../../utils/settingsDeepLink';
 
 // Code-split cada página: cada aba só baixa/parseia seu próprio bundle na primeira
 // vez que é visitada (visitedTabs em conjunto com isso evita tanto o parse quanto o
@@ -87,7 +89,14 @@ export const AppPageHost: React.FC<AppPageHostProps> = ({
   onRestartTour,
   onResetPageTours
 }) => {
-  const goSettings = () => setActiveTab('settings');
+  // Cada tela abre as Configurações na sua aba; um aviso pode pedir outra (ex.: Portas no Cockpit).
+  // O `typeof` cobre o botão que repassa o próprio onClick e manda o evento no lugar da aba.
+  const goSettings =
+    (pageTab: SettingsTab) =>
+    (tab?: SettingsTab): void => {
+      requestSettingsTab(typeof tab === 'string' ? tab : pageTab);
+      setActiveTab('settings');
+    };
   const slot = { activeTab, visitedTabs };
 
   return (
@@ -97,7 +106,7 @@ export const AppPageHost: React.FC<AppPageHostProps> = ({
           <EnvironmentPage
             services={services}
             onRefreshServices={fetchServices}
-            onNavigateToSettings={goSettings}
+            onNavigateToSettings={goSettings('dirs')}
             onNavigateToHelp={navigateToHelp}
             isActive={activeTab === 'env'}
             settingsVersion={settingsVersion}
@@ -106,7 +115,7 @@ export const AppPageHost: React.FC<AppPageHostProps> = ({
         <PageSlot id="database" {...slot}>
           <DatabasePage
             settingsVersion={settingsVersion}
-            onNavigateToSettings={goSettings}
+            onNavigateToSettings={goSettings('backup')}
             onNavigateToBackups={() => setActiveTab('db-backups')}
           />
         </PageSlot>
@@ -126,7 +135,7 @@ export const AppPageHost: React.FC<AppPageHostProps> = ({
         <PageSlot id="deploy" {...slot}>
           <DeployPage
             projects={projects}
-            onNavigateToSettings={goSettings}
+            onNavigateToSettings={goSettings('karaf')}
             onNavigateToKaraf={() => setActiveTab('karaf')}
             settingsVersion={settingsVersion}
           />
@@ -139,44 +148,35 @@ export const AppPageHost: React.FC<AppPageHostProps> = ({
             projects={projects}
             onRefreshProjects={fetchProjects}
             isRefreshing={isRefreshing}
-            onNavigateToSettings={goSettings}
+            onNavigateToSettings={goSettings('azure')}
             settingsVersion={settingsVersion}
           />
         </PageSlot>
         <PageSlot id="routines" {...slot}>
           <RoutinesPage
-            onNavigateToSettings={goSettings}
+            onNavigateToSettings={goSettings('routines')}
             onNavigateToEnv={() => setActiveTab('env')}
             settingsVersion={settingsVersion}
           />
         </PageSlot>
         <PageSlot id="docs" {...slot}>
-          <DocsPage onNavigateToSettings={goSettings} settingsVersion={settingsVersion} />
+          <DocsPage onNavigateToSettings={goSettings('ai')} settingsVersion={settingsVersion} />
         </PageSlot>
         <PageSlot id="http-client" {...slot}>
           <HttpClientPage
-            onNavigateToSettings={goSettings}
             onNavigateToQaRegression={() => setActiveTab('quality-regression')}
             isActive={activeTab === 'http-client'}
             settingsVersion={settingsVersion}
           />
         </PageSlot>
         <PageSlot id="logs" {...slot}>
-          <LogsPage
-            onNavigateToSettings={goSettings}
-            isActive={activeTab === 'logs'}
-            settingsVersion={settingsVersion}
-          />
+          <LogsPage isActive={activeTab === 'logs'} settingsVersion={settingsVersion} />
         </PageSlot>
         <PageSlot id="apm" {...slot}>
-          <ApmPage
-            isActive={activeTab === 'apm'}
-            onNavigateToSettings={goSettings}
-            onNavigateToDatabase={() => setActiveTab('database')}
-          />
+          <ApmPage isActive={activeTab === 'apm'} onNavigateToDatabase={() => setActiveTab('database')} />
         </PageSlot>
         <PageSlot id="integration-trace" {...slot}>
-          <IntegrationTracePage onNavigateToSettings={goSettings} settingsVersion={settingsVersion} />
+          <IntegrationTracePage onNavigateToSettings={goSettings('integration')} settingsVersion={settingsVersion} />
         </PageSlot>
         <QualityValidationProvider>
           <PageSlot id="quality" {...slot}>

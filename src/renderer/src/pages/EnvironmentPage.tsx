@@ -3,6 +3,7 @@ import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { ENV_TOUR_STEPS, ENV_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/environmentTour';
 import { ServiceStatus, AutomationProfile, getWebPort, getWebUrl } from '../../../shared/types';
+import type { SettingsTab } from '../components/settings/settingsSearchData';
 import { ProfileEditorModal } from '../components/ProfileEditorModal';
 import { EnvironmentConfigWarning } from '../components/environment/EnvironmentConfigWarning';
 import { EnvironmentCockpitPanel } from '../components/environment/EnvironmentCockpitPanel';
@@ -21,7 +22,8 @@ import { useEnvironmentServiceActions } from '../hooks/environment/useEnvironmen
 interface EnvironmentPageProps {
   services: ServiceStatus[];
   onRefreshServices: () => void;
-  onNavigateToSettings?: () => void;
+  /** Sem aba, abre Diretórios & IDE (caminhos que o aviso de configuração incompleta cobra). */
+  onNavigateToSettings?: (tab?: SettingsTab) => void;
   onNavigateToHelp?: (search?: string) => void;
   isActive?: boolean;
   settingsVersion?: number;
@@ -132,7 +134,7 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
           <PortsMonitor
             ports={ports}
             isChecking={status.isCheckingPorts}
-            onNavigateToSettings={onNavigateToSettings}
+            onNavigateToSettings={onNavigateToSettings && (() => onNavigateToSettings('ports'))}
             onNavigateToHelp={onNavigateToHelp}
           />
 

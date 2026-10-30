@@ -17,9 +17,11 @@ import { useDocsSync } from '../hooks/docs/useDocsSync';
 import { useDocsSearch } from '../hooks/docs/useDocsSearch';
 import { filterDocFiles } from '../utils/docsPageUtils';
 import { resolveActiveLlmProvider } from '../utils/llmProviderUtils';
+import type { SettingsTab } from '../components/settings/settingsSearchData';
 
 interface DocsPageProps {
-  onNavigateToSettings?: () => void;
+  /** Sem aba, abre IA & LLM (motor das respostas da busca). */
+  onNavigateToSettings?: (tab?: SettingsTab) => void;
   settingsVersion?: number;
 }
 
@@ -95,7 +97,10 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings, settin
       {/* Resultados e Catálogo de Documentos */}
       <div className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1">
         {!hasIndex && !index.isIndexing && (
-          <DocsEmptyIndex hasFolders={settings.docFolders.length > 0} onNavigateToSettings={onNavigateToSettings} />
+          <DocsEmptyIndex
+            hasFolders={settings.docFolders.length > 0}
+            onNavigateToSettings={onNavigateToSettings && (() => onNavigateToSettings('dirs'))}
+          />
         )}
 
         {/* MODO BUSCA ATIVA */}
