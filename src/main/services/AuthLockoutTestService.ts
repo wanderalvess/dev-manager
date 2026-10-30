@@ -8,6 +8,7 @@ import type {
   AuthLockoutRunResult
 } from '../../shared/authLockoutTypes';
 import type { ConfigService } from './ConfigService';
+import { ScenarioHistoryService } from './ScenarioHistoryService';
 import { authLockoutDefaults, normalizeLockoutRequest } from './authLockout/lockoutConfig';
 import { LockoutAbortedError, LockoutRun } from './authLockout/lockoutRun';
 import {
@@ -36,7 +37,10 @@ import { logPreflightStart, logRunEnd, logRunStart } from './authLockout/lockout
 export class AuthLockoutTestService {
   private current: LockoutRun | null = null;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly history: ScenarioHistoryService = new ScenarioHistoryService(configService)
+  ) {}
 
   getDefaults(): AuthLockoutDefaults {
     return authLockoutDefaults(this.configService.getSettings());
@@ -68,7 +72,9 @@ export class AuthLockoutTestService {
     } finally {
       this.current = null;
     }
-    return this.buildResult(run, error);
+    const result = this.buildResult(run, error);
+    await this.history.saveLockout(result);
+    return result;
   }
 
   private async execute(run: LockoutRun): Promise<void> {

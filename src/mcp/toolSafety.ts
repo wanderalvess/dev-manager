@@ -40,6 +40,7 @@ const DESTRUCTIVE_TOOLS = new Set([
   'qa_delete_template',
   // Bloqueia contas de teste de propósito (e o nome termina em _test, que parece leitura)
   'qa_run_auth_lockout_test',
+  'qa_delete_api_scenario',
   'deploy_run_profile',
   'delphi_build',
   'delphi_run_pipeline'

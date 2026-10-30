@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Hub Manager expõe **172 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Hub Manager expõe **178 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -250,6 +250,33 @@ As mesmas 12 checagens da aba **Validação de Cenários → Bloqueio de Login**
 > "Rode o teste de bloqueio de login rápido com os usuários TESTE_A e TESTE_B (senhas a seguir) e me diga quais regras falharam."
 > "Rode só a duração do bloqueio e a janela de contagem com o usuário TESTE_A e me diga se o bloqueio é de 4 ou de 5 minutos."
 
+
+### 13.2. Validação de API (status, tempo, cabeçalho, corpo, JSON e banco)
+Os cenários da aba **Validação de Cenários → Validação de API**: uma requisição e o que a resposta precisa ter. Ficam em `api-scenarios.json`, ao lado do `config.json`, sem nenhum segredo.
+
+*   **`qa_list_api_scenarios`**: Lista os cenários salvos (nome, método, URL com `{{wtaUrl}}`, autenticação e regras).
+*   **`qa_run_api_scenario`**: Roda um cenário salvo (`scenarioId`) ou uma definição avulsa (`scenario`, sem salvar) e confronta a resposta com cada regra (`kind`): `status` (`equals`, `not-equals`, `in` com lista `200, 201` ou faixa `2xx`), `duration` em ms (`less`, `greater`), `header` (`exists`, `not-exists`, `equals`, `contains`), `body` (`contains`, `not-contains`, `matches` com regex de até 300 caracteres), `json` por caminho (`equals`, `not-equals`, `contains`, `exists`, `not-exists`, `not-empty`, `greater`, `less`, `length-equals`) e `db`, que compara um campo da resposta com a primeira coluna de uma consulta SELECT numa conexão do DB Studio (`connectionId`, `sql` e, opcionalmente, `bindPath`, o campo da resposta que entra como `:valor`). Para exceções não mapeadas: `leak` (a resposta não pode expor stack trace, erro ORA-/SQL, string de conexão, senha ou token) e `log` (o texto em `expected`, padrão `{{requestId}}`, precisa aparecer nas linhas novas do `winthor.log` e/ou na API de logs; `logSource` = `file`, `api` ou `any`). Cada execução devolve um `requestId`, enviado em `X-Request-Id`/`X-Correlation-Id` e usável como `{{requestId}}` na URL, nos cabeçalhos e no corpo. Devolve esperado, obtido e se passou em cada regra, a resposta com tokens mascarados, o passo a passo e o relatório em Markdown. Com `auth: "settings-wta"`, entra antes no WTA com o login de Configurações (senha em MD5).
+*   **`qa_save_api_scenario`**: Cria ou atualiza (com `id`) um cenário, que aparece na tela.
+*   **`qa_delete_api_scenario`** (destrutiva, pede confirmação): Apaga um cenário pelo id.
+
+**Exemplo de como pedir à IA:**
+> "Chame {{wtaUrl}}/winthor/ferramenta/servidor/v1/logs com o login do WTA e confira se o status é 200 e se $.itens não está vazio."
+> "Salve um cenário de Validação de API para a rota de filiais que confira status 2xx e $.total maior que 0."
+> "Rode todos os cenários de Validação de API e me diga quais regras falharam, com o esperado e o obtido."
+> "Chame a API de filiais e confira se $.nome bate com SELECT FANTASIA FROM PCFILIAL WHERE CODIGO = :valor na conexão Oracle de homologação, usando $.codigo como :valor."
+> "Confira se a API de logs responde em menos de 2 segundos, com content-type JSON e sem a palavra Exception no corpo."
+> "Mande um POST para {{wtaUrl}}/winthor/pedidos com um campo que não existe e confira se volta 4xx em JSON, sem stack trace nem SQL, e se o erro aparece no winthor.log pelo requestId."
+
+### 13.3. Histórico de execuções da Validação de Cenários
+As últimas 50 execuções do Bloqueio de Login e da Validação de API, rodadas pela tela, pelo modo Web ou pelo MCP. Ficam em `scenario-runs/`, ao lado do `config.json`, um arquivo por execução, com senhas e tokens já mascarados. Na tela, o botão **Histórico** da página abre, baixa (.md) e apaga cada uma.
+
+*   **`qa_list_scenario_runs`**: Lista as execuções, mais recentes primeiro (id, tipo, nome, início, duração, veredito e resumo). `kind` filtra por `auth-lockout` ou `api`.
+*   **`qa_get_scenario_run`**: Devolve uma execução completa pelo id: regras com esperado e obtido, evidências, passo a passo, requisição enviada (credenciais mascaradas) e o relatório em Markdown.
+
+**Exemplo de como pedir à IA:**
+> "Liste as últimas execuções da Validação de API e me diga quais falharam."
+> "Abra a última execução do Bloqueio de Login e resuma o que reprovou, com as evidências."
+
 ---
 
 ## 14. Test Runners & Automação de Testes (Maven, Playwright, Cypress, Newman)
@@ -337,8 +364,8 @@ Ajuda a saber, na máquina local, em qual ponta da cadeia de integração está 
 O servidor MCP roda via stdio com o mesmo poder do Cockpit na sua máquina, então ele ajuda o cliente a pedir confirmação antes do que é perigoso:
 
 *   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `db_run_restore_drill`, `db_save_backup_config`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `docker_remove_container`, `delphi_build`, `delphi_run_pipeline`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
-*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (92 das 172) são registradas. As demais nem aparecem para o cliente. No Claude Code: `claude mcp add dev-manager --scope user -e HUB_MCP_MODE=readonly -- cmd /c C:\DevManager\mcp\dev-manager-mcp.cmd`. Nos arquivos JSON, use o campo `env`.
-*   **Contagem por risco**: das 172 tools, 92 são de leitura, 52 de escrita e 28 destrutivas. Os números ficam em `src/shared/mcpCatalog.ts`, e um teste falha se divergirem das tools registradas.
+*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (95 das 178) são registradas. As demais nem aparecem para o cliente. No Claude Code: `claude mcp add dev-manager --scope user -e HUB_MCP_MODE=readonly -- cmd /c C:\DevManager\mcp\dev-manager-mcp.cmd`. Nos arquivos JSON, use o campo `env`.
+*   **Contagem por risco**: das 178 tools, 95 são de leitura, 54 de escrita e 29 destrutivas. Os números ficam em `src/shared/mcpCatalog.ts`, e um teste falha se divergirem das tools registradas.
 *   **Produção protegida**: `db_execute_query` recusa qualquer comando que não seja de leitura (`SELECT`, `EXPLAIN`, `SHOW`, `DESCRIBE`) em conexão marcada como **produção** no Database Studio, inclusive quando a conexão é informada inline e aponta para o mesmo destino de uma conexão de produção salva.
 *   **Arquivos de log**: `logs_clear_file` só zera arquivos com extensão de log (`.log`, `.out`, `.err`, `.txt`, `.trace`), e nenhuma tool de log lê a pasta de dados do app (onde ficam o `config.json` e a chave de criptografia).
 

@@ -15,9 +15,9 @@ const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   if (typeof __DEV_MANAGER_VERSION__ === 'string') return __DEV_MANAGER_VERSION__;
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.46.0';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.47.0';
   } catch {
-    return '1.46.0';
+    return '1.47.0';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -50,6 +50,10 @@ import { HttpClientService } from '../main/services/HttpClientService';
 import { IntegrationTraceService } from '../main/services/IntegrationTraceService';
 import { registerIntegrationTools } from './tools/integrationTools';
 import { registerAuthLockoutTools } from './tools/authLockoutTools';
+import { registerApiScenarioTools } from './tools/apiScenarioTools';
+import { registerScenarioHistoryTools } from './tools/scenarioHistoryTools';
+import { ScenarioHistoryService } from '../main/services/ScenarioHistoryService';
+import { ApiScenarioService } from '../main/services/ApiScenarioService';
 import { AuthLockoutTestService } from '../main/services/AuthLockoutTestService';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { UsageMetricsService } from '../main/services/UsageMetricsService';
@@ -2503,6 +2507,10 @@ registerIntegrationTools(server, { integrationTraceService, ok, fail });
 
 // --- Teste de bloqueio de login do WinThor (homologação) ---
 registerAuthLockoutTools(server, { authLockoutTestService: new AuthLockoutTestService(configService), ok, fail });
+
+// --- Validação de API: status e campos do JSON confrontados com o esperado ---
+registerApiScenarioTools(server, { apiScenarioService: new ApiScenarioService(configService, databaseService), ok, fail });
+registerScenarioHistoryTools(server, { scenarioHistoryService: new ScenarioHistoryService(configService), ok, fail });
 
 // --- Rotina 801: Catálogo Oficial e Instalação de Serviços Web ---
 server.registerTool(
