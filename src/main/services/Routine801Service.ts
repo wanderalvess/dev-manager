@@ -63,7 +63,11 @@ export class Routine801Service {
     const login = settings.wtaLogin?.trim();
     const senha = settings.wtaPassword?.trim();
 
-    if (!login || !senha) return null;
+    this.lastAuthError = null;
+    if (!login || !senha) {
+      this.lastAuthError = 'sem usuário e senha do WTA nas Configurações';
+      return null;
+    }
 
     try {
       const loginUrl = `${baseUrl}/winthor/autenticacao/v1/login`;
@@ -91,12 +95,25 @@ export class Routine801Service {
           this.configService.saveSettings({ wtaAuthToken: token });
           return token;
         }
+        this.lastAuthError = `o login de ${login} não devolveu accessToken`;
+      } else {
+        let reason = res.statusText || 'recusado';
+        try {
+          const data = JSON.parse(await res.text());
+          if (data && typeof data.mensagem === 'string') reason = data.mensagem;
+        } catch {
+          // corpo sem JSON: fica o status
+        }
+        this.lastAuthError = `login de ${login} recusado pelo WTA (HTTP ${res.status}): ${reason}`;
       }
-    } catch {
-      // Ignora erro de renovação automática
+    } catch (err: any) {
+      this.lastAuthError = `login no WTA falhou: ${err?.message || err}`;
     }
     return null;
   }
+
+  /** Por que o último login automático no WTA não deu token (nunca traz a senha). */
+  private lastAuthError: string | null = null;
 
   /**
    * Checa se o serviço HTTP da ferramenta servidor está acessível na porta configurada.
@@ -184,7 +201,8 @@ export class Routine801Service {
       res = await request();
     }
     if (!res.ok) {
-      throw new Error(`Falha ao obter lista de ${label} (HTTP ${res.status}): ${res.statusText || 'Erro no servidor'}`);
+      const auth = (res.status === 401 || res.status === 403) && this.lastAuthError ? `; ${this.lastAuthError}` : '';
+      throw new Error(`Falha ao obter lista de ${label} (HTTP ${res.status}): ${res.statusText || 'Erro no servidor'}${auth}`);
     }
 
     try {

@@ -114,9 +114,11 @@ export class InfrVersionService {
       catalog = await this.routine801.fetchUpdates(url);
     } catch (err: any) {
       const msg = String(err?.message || err);
-      const howTo = /HTTP 40[13]/.test(msg)
-        ? ' Como resolver: o WTA pede login para o catálogo. Informe o usuário e a senha do WinThor em Configurações → Rotinas WinThor → Usuário WTA (Login Automático); o Hub entra no WTA de origem com eles.'
-        : '';
+      const howTo = /recusado pelo WTA/.test(msg)
+        ? ' Como resolver: confira o usuário e a senha em Configurações → Rotinas WinThor → Usuário WTA (Login Automático). O usuário precisa existir no banco do ambiente de origem, com a senha que entra no WinThor.'
+        : /HTTP 40[13]/.test(msg)
+          ? ' Como resolver: o WTA pede login para o catálogo. Informe o usuário e a senha do WinThor em Configurações → Rotinas WinThor → Usuário WTA (Login Automático); o Hub entra no WTA de origem com eles.'
+          : '';
       return { success: false, error: `Catálogo da rotina 801 em ${url}: ${msg}.${howTo}`, originWtaUrl: url };
     }
 
