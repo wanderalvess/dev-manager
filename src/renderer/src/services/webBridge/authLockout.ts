@@ -9,7 +9,7 @@ import type { BridgeDeps } from './core';
 
 const POLL_MS = 3000;
 
-/** Adaptador web (REST/WebSocket) dos canais auth-lockout:* (Homologação → Bloqueio de Login). */
+/** Adaptador web (REST/WebSocket) dos canais auth-lockout:* (Validação de Cenários → Bloqueio de Login). */
 export function createAuthLockoutApi({ apiFetch, wsManager }: BridgeDeps) {
   const post = <T>(url: string, body: unknown) => apiFetch<T>(url, { method: 'POST', body: JSON.stringify(body) });
   return {

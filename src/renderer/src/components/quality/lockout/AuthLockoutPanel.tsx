@@ -1,24 +1,23 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { ClipboardCopy, Loader2, ShieldAlert } from 'lucide-react';
 import { AUTH_LOCKOUT_STATUS_LABELS } from '../../../../../shared/authLockoutReport';
 import type { AuthLockoutCheckStatus } from '../../../../../shared/authLockoutTypes';
 import { useAuthLockoutRun } from '../../../hooks/quality/lockout/useAuthLockoutRun';
 import { STATUS_TONE, summarizeChecks } from '../../../utils/authLockoutView';
 import { TONE_BADGE } from '../../integrationtrace/toneClasses';
+import { reportFileName } from '../../../../../shared/scenarioExports';
+import { lockoutRunName } from '../../../../../shared/scenarioHistoryTypes';
+import { DownloadMdButton } from '../scenarios/CopyButton';
+import { AuthLockoutActivityLog } from './AuthLockoutActivityLog';
 import { AuthLockoutChecksList } from './AuthLockoutChecksList';
 import { AuthLockoutConfigForm } from './AuthLockoutConfigForm';
 
 const SUMMARY_ORDER: AuthLockoutCheckStatus[] = ['failed', 'warning', 'manual', 'info', 'passed', 'skipped'];
 
-/** Homologação → Bloqueio de Login: regras de bloqueio do login do WinThor validadas com tentativas controladas. */
+/** Validação de Cenários → Bloqueio de Login: regras de bloqueio do login do WinThor validadas com tentativas controladas. */
 export const AuthLockoutPanel: React.FC = () => {
   const lockout = useAuthLockoutRun();
-  const activityRef = useRef<HTMLDivElement>(null);
   const counts = summarizeChecks(lockout.checks);
-
-  useEffect(() => {
-    activityRef.current?.scrollTo({ top: activityRef.current.scrollHeight });
-  }, [lockout.activity.length]);
 
   if (!lockout.form) {
     return (
@@ -53,15 +52,22 @@ export const AuthLockoutPanel: React.FC = () => {
               </span>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={lockout.copyReport}
-            disabled={!lockout.result?.markdown || lockout.running}
-            className="h-8 px-3 bg-muted hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed text-foreground border border-border text-xs font-medium rounded-[10px] flex items-center gap-1.5"
-          >
-            <ClipboardCopy className="w-3.5 h-3.5" />
-            Copiar relatório (Jira)
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <DownloadMdButton
+              disabled={!lockout.result?.markdown || lockout.running}
+              fileName={lockout.result ? reportFileName(lockoutRunName(lockout.result), lockout.result.startedAt) : 'bloqueio-de-login.md'}
+              getText={() => lockout.result?.markdown ?? ''}
+            />
+            <button
+              type="button"
+              onClick={lockout.copyReport}
+              disabled={!lockout.result?.markdown || lockout.running}
+              className="h-8 px-3 bg-muted hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed text-foreground border border-border text-xs font-medium rounded-[10px] flex items-center gap-1.5"
+            >
+              <ClipboardCopy className="w-3.5 h-3.5" />
+              Copiar relatório (Jira)
+            </button>
+          </div>
         </div>
 
         {lockout.error && (
@@ -72,20 +78,7 @@ export const AuthLockoutPanel: React.FC = () => {
 
         <AuthLockoutChecksList checks={lockout.checks} running={lockout.running} />
 
-        {lockout.activity.length > 0 && (
-          <div className="bg-card border border-border rounded-xl">
-            <div className="px-3 py-2 border-b border-border text-xs font-semibold text-foreground">
-              Atividade {lockout.result ? `(${lockout.result.attempts.length} requisições)` : ''}
-            </div>
-            <div ref={activityRef} className="max-h-64 overflow-y-auto p-3 space-y-0.5 text-2xs font-mono text-muted-foreground">
-              {lockout.activity.map((line, i) => (
-                <div key={i} className="break-all">
-                  <span className="text-foreground/60">{new Date(line.at).toLocaleTimeString()}</span> {line.message}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <AuthLockoutActivityLog lines={lockout.activity} requestsCount={lockout.result?.attempts.length} />
       </div>
     </div>
   );

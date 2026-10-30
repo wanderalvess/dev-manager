@@ -1201,6 +1201,8 @@ export interface BackupHelp {
   snippets?: { label: string; code: string }[];
   /** Linhas de erro originais do utilitário (ORA-, UDE-, LRM-...). */
   detail?: string;
+  /** Título do bloco com `detail` (ex.: "Saída do Oracle"); sem ele, "Saída do comando". */
+  detailLabel?: string;
 }
 
 /** Metadados de um arquivo de backup já existente na pasta de destino. */

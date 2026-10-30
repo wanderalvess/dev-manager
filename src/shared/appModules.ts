@@ -19,7 +19,8 @@ export const APP_MODULE_IDS = [
   'quality',
   'quality-regression',
   'quality-runners',
-  'quality-taut'
+  'quality-taut',
+  'quality-scenarios'
 ] as const;
 
 export type AppModuleId = (typeof APP_MODULE_IDS)[number];

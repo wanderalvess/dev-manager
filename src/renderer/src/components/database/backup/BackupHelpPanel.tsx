@@ -7,7 +7,7 @@ interface BackupHelpPanelProps {
   help: BackupHelp;
 }
 
-/** Como resolver uma falha de backup/restauração: passos, comandos para copiar e a saída original do Oracle. */
+/** Como resolver uma falha de backup/restauração: passos, comandos para copiar e a saída original do utilitário. */
 export const BackupHelpPanel: React.FC<BackupHelpPanelProps> = ({ help }) => {
   const { copy, copiedKey } = useCopyToClipboard();
   const hasSteps = help.steps.length > 0;
@@ -38,6 +38,7 @@ export const BackupHelpPanel: React.FC<BackupHelpPanelProps> = ({ help }) => {
               <button
                 type="button"
                 onClick={() => copy(snippet.code, key)}
+                aria-label={`Copiar: ${snippet.label}`}
                 className="flex items-center gap-1 text-2xs text-muted-foreground hover:text-foreground transition cursor-pointer"
               >
                 {copiedKey === key ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
@@ -51,7 +52,7 @@ export const BackupHelpPanel: React.FC<BackupHelpPanelProps> = ({ help }) => {
 
       {help.detail && (
         <details className="text-2xs">
-          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Saída do Oracle</summary>
+          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">{help.detailLabel || 'Saída do comando'}</summary>
           <pre className="mt-1.5 font-mono whitespace-pre-wrap break-all opacity-90">{help.detail}</pre>
         </details>
       )}

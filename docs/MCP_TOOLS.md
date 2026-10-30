@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Hub Manager expõe **172 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Hub Manager expõe **178 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -157,8 +157,8 @@ Orquestração fina de rede.
 ## 9. Backup de Banco e Observador de Logs
 Gestão de backup/restore agendado e leitura pontual de arquivos de log locais.
 
-*   **`db_run_backup` / `db_list_backups` / `db_restore_backup` / `db_run_restore_drill`**: Executa backup manual, lista arquivos existentes, restaura um backup e testa a restaurabilidade contra uma conexão "scratch" descartável.
-*   **`db_save_backup_config` / `db_list_backup_history`**: Salva o agendamento (cron) de backup/restore drill de uma conexão e consulta o histórico persistido de execuções.
+*   **`db_run_backup` / `db_list_backups` / `db_restore_backup` / `db_run_restore_drill`**: Executa backup manual, lista arquivos existentes, restaura um backup e testa a restaurabilidade contra uma conexão "scratch" descartável. Restauração e drill são destrutivas (pedem confirmação), exigem `connectionId` ou `config` explícito (não caem na conexão padrão) e recusam conexão marcada como produção. O drill também recusa a conexão de origem do backup (`sourceConnectionId`, ou deduzida pelo nome do arquivo).
+*   **`db_save_backup_config` / `db_list_backup_history`**: Salva o agendamento (cron) de backup/restore drill de uma conexão e consulta o histórico persistido de execuções. Salvar é destrutiva: a configuração pode agendar um comando personalizado.
 *   **`backup_test_webhook`**: Envia um payload de teste para um webhook de notificação de backup (Slack/Discord/Teams/genérico).
 *   **`logs_check_file` / `logs_read_last_lines` / `logs_clear_file`**: Verifica o status de um arquivo de log, lê suas últimas N linhas sob demanda (sem observação contínua — isso é exclusivo da UI via WebSocket) e zera seu conteúdo.
 
@@ -240,15 +240,43 @@ Automação de homologação regressiva para equipes de QA e desenvolvedores: ex
 > "Exclua o template de teste temporário 'temp-homolog-123'."
 
 ### 13.1. Teste de bloqueio de login do WinThor (homologação)
-As mesmas 12 checagens da aba **Homologação → Bloqueio de Login**, com tentativas controladas contra o login do WTA (`/winthor/autenticacao/v1/login`) e a correlação com o `winthor.log` e a API `/winthor/ferramenta/servidor/v1/logs`.
+As mesmas 12 checagens da aba **Validação de Cenários → Bloqueio de Login**, com tentativas controladas contra o login do WTA (`/winthor/autenticacao/v1/login`) e a correlação com o `winthor.log` e a API `/winthor/ferramenta/servidor/v1/logs`.
 
 *   **`qa_list_auth_lockout_checks`**: Lista as 12 checagens (limiar, senha certa durante o bloqueio, troca de cliente, bloqueio por usuário, logoff, concorrência, duração, janela de contagem, exceções de APIs, exposição de erro, registro de logs e falha do destino de logs), com a tentativa e o que precisa ser verdade, e os padrões (URL do WTA, API de logs, `winthor.log`, limiar 5, janela 60 s, durações candidatas 4 e 5 min).
-*   **`qa_run_auth_lockout_test`** (destrutiva, pede confirmação): **bloqueia as contas de teste de propósito**. Recebe login e senha dos usuários A e B e, sem `checks`, roda as checagens rápidas (~2 min); `includeSlow` acrescenta a duração do bloqueio e a janela de contagem (~8 min). Devolve o status de cada checagem (`passed`, `failed`, `warning`, `info`, `manual`, `skipped`), as evidências e o relatório em Markdown com senhas e tokens mascarados. A checagem do destino de logs só roda com `logSinkUnavailableConfirmed`, depois que a pessoa derrubou o log por um mecanismo autorizado.
+*   **`qa_run_auth_lockout_test`** (destrutiva, pede confirmação): **bloqueia as contas de teste de propósito**. Recebe login e senha dos usuários A e B (a senha vai como MD5 em maiúsculas, como o WTA espera; `passwordEncoding: "plain"` manda o texto puro) e, sem `checks`, roda as checagens rápidas (~2 min); `includeSlow` acrescenta a duração do bloqueio e a janela de contagem (~8 min). Devolve o status de cada checagem (`passed`, `failed`, `warning`, `info`, `manual`, `skipped`), como cada uma foi testada (`plan`), as evidências, o passo a passo (`log`: cada etapa explicada e cada requisição com o esperado) e o relatório em Markdown com senhas e tokens mascarados. A checagem do destino de logs só roda com `logSinkUnavailableConfirmed`, depois que a pessoa derrubou o log por um mecanismo autorizado.
 
 **Exemplo de como pedir à IA:**
 > "Liste as checagens do teste de bloqueio de login e os padrões que ele usa."
 > "Rode o teste de bloqueio de login rápido com os usuários TESTE_A e TESTE_B (senhas a seguir) e me diga quais regras falharam."
 > "Rode só a duração do bloqueio e a janela de contagem com o usuário TESTE_A e me diga se o bloqueio é de 4 ou de 5 minutos."
+
+
+### 13.2. Validação de API (status, tempo, cabeçalho, corpo, JSON e banco)
+Os cenários da aba **Validação de Cenários → Validação de API**: uma requisição e o que a resposta precisa ter. Ficam em `api-scenarios.json`, ao lado do `config.json`, sem nenhum segredo.
+
+*   **`qa_list_api_scenarios`**: Lista os cenários salvos (nome, método, URL com `{{wtaUrl}}`, autenticação e regras).
+*   **`qa_run_api_scenario`**: Roda um cenário salvo (`scenarioId`) ou uma definição avulsa (`scenario`, sem salvar) e confronta a resposta com cada regra (`kind`): `status` (`equals`, `not-equals`, `in` com lista `200, 201` ou faixa `2xx`), `duration` em ms (`less`, `greater`), `header` (`exists`, `not-exists`, `equals`, `contains`), `body` (`contains`, `not-contains`, `matches` com regex de até 300 caracteres), `json` por caminho (`equals`, `not-equals`, `contains`, `exists`, `not-exists`, `not-empty`, `greater`, `less`, `length-equals`) e `db`, que compara um campo da resposta com a primeira coluna de uma consulta SELECT numa conexão do DB Studio (`connectionId`, `sql` e, opcionalmente, `bindPath`, o campo da resposta que entra como `:valor`). Para exceções não mapeadas: `leak` (a resposta não pode expor stack trace, a mensagem crua da exceção, como `For input string: "NUMERO"`, `Failed to convert value of type [java.lang.String]` ou `nested exception is`, erro ORA-/SQL, string de conexão, senha ou token; o obtido traz o trecho que vazou) e `log` (o texto em `expected`, padrão `{{requestId}}`, precisa aparecer nas linhas novas do `winthor.log` e/ou na API de logs; `logSource` = `file`, `api` ou `any`). Cada execução devolve um `requestId`, enviado em `X-Request-Id`/`X-Correlation-Id` e usável como `{{requestId}}` na URL, nos cabeçalhos e no corpo. Devolve esperado, obtido e se passou em cada regra, a resposta com tokens mascarados, o passo a passo e o relatório em Markdown. Com `auth: "settings-wta"`, entra antes no WTA com o login de Configurações (senha em MD5).
+*   **`qa_save_api_scenario`**: Cria ou atualiza (com `id`) um cenário, que aparece na tela.
+*   **`qa_delete_api_scenario`** (destrutiva, pede confirmação): Apaga um cenário pelo id.
+
+**Exemplo de como pedir à IA:**
+> "Chame {{wtaUrl}}/winthor/ferramenta/servidor/v1/logs com o login do WTA e confira se o status é 200 e se $.itens não está vazio."
+> "Salve um cenário de Validação de API para a rota de filiais que confira status 2xx e $.total maior que 0."
+> "Rode todos os cenários de Validação de API e me diga quais regras falharam, com o esperado e o obtido."
+> "Chame a API de filiais e confira se $.nome bate com SELECT FANTASIA FROM PCFILIAL WHERE CODIGO = :valor na conexão Oracle de homologação, usando $.codigo como :valor."
+> "Confira se a API de logs responde em menos de 2 segundos, com content-type JSON e sem a palavra Exception no corpo."
+> "Chame {{wtaUrl}}/winthor/pedidos?numero=NUMERO e confira se o erro não volta como UNK-ERR nem com a mensagem crua da exceção."
+> "Mande um POST para {{wtaUrl}}/winthor/pedidos com um campo que não existe e confira se volta 4xx em JSON, sem stack trace nem SQL, e se o erro aparece no winthor.log pelo requestId."
+
+### 13.3. Histórico de execuções da Validação de Cenários
+As últimas 50 execuções do Bloqueio de Login e da Validação de API, rodadas pela tela, pelo modo Web ou pelo MCP. Ficam em `scenario-runs/`, ao lado do `config.json`, um arquivo por execução, com senhas e tokens já mascarados. Na tela, o botão **Histórico** da página abre, baixa (.md) e apaga cada uma.
+
+*   **`qa_list_scenario_runs`**: Lista as execuções, mais recentes primeiro (id, tipo, nome, início, duração, veredito e resumo). `kind` filtra por `auth-lockout` ou `api`.
+*   **`qa_get_scenario_run`**: Devolve uma execução completa pelo id: regras com esperado e obtido, evidências, passo a passo, requisição enviada (credenciais mascaradas) e o relatório em Markdown.
+
+**Exemplo de como pedir à IA:**
+> "Liste as últimas execuções da Validação de API e me diga quais falharam."
+> "Abra a última execução do Bloqueio de Login e resuma o que reprovou, com as evidências."
 
 ---
 
@@ -336,9 +364,9 @@ Ajuda a saber, na máquina local, em qual ponta da cadeia de integração está 
 
 O servidor MCP roda via stdio com o mesmo poder do Cockpit na sua máquina, então ele ajuda o cliente a pedir confirmação antes do que é perigoso:
 
-*   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `docker_remove_container`, `delphi_build`, `delphi_run_pipeline`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
-*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (92 das 172) são registradas. As demais nem aparecem para o cliente. No Claude Code: `claude mcp add dev-manager --scope user -e HUB_MCP_MODE=readonly -- cmd /c C:\DevManager\mcp\dev-manager-mcp.cmd`. Nos arquivos JSON, use o campo `env`.
-*   **Contagem por risco**: das 172 tools, 92 são de leitura, 54 de escrita e 26 destrutivas. Os números ficam em `src/shared/mcpCatalog.ts`, e um teste falha se divergirem das tools registradas.
+*   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `db_run_restore_drill`, `db_save_backup_config`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `docker_remove_container`, `delphi_build`, `delphi_run_pipeline`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
+*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (95 das 178) são registradas. As demais nem aparecem para o cliente. No Claude Code: `claude mcp add dev-manager --scope user -e HUB_MCP_MODE=readonly -- cmd /c C:\DevManager\mcp\dev-manager-mcp.cmd`. Nos arquivos JSON, use o campo `env`.
+*   **Contagem por risco**: das 178 tools, 95 são de leitura, 54 de escrita e 29 destrutivas. Os números ficam em `src/shared/mcpCatalog.ts`, e um teste falha se divergirem das tools registradas.
 *   **Produção protegida**: `db_execute_query` recusa qualquer comando que não seja de leitura (`SELECT`, `EXPLAIN`, `SHOW`, `DESCRIBE`) em conexão marcada como **produção** no Database Studio, inclusive quando a conexão é informada inline e aponta para o mesmo destino de uma conexão de produção salva.
 *   **Arquivos de log**: `logs_clear_file` só zera arquivos com extensão de log (`.log`, `.out`, `.err`, `.txt`, `.trace`), e nenhuma tool de log lê a pasta de dados do app (onde ficam o `config.json` e a chave de criptografia).
 

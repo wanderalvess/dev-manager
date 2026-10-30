@@ -20,15 +20,17 @@ function withQuery(url: string, params: Record<string, string>): string {
 
 /** Quatro falhas diferentes ao mesmo tempo, cada uma com um marcador; nenhuma resposta pode trazer o marcador de outra. */
 export async function checkApiExceptions(run: LockoutRun): Promise<void> {
-  const started = Date.now();
+  const started = run.beginCheck('api-exceptions');
   const { loginUrl, logsUrl, baseUrl } = run.config;
   const evidence: string[] = [];
   const problems: { status: AuthLockoutCheckStatus; text: string }[] = [];
   for (let round = 1; round <= ROUNDS; round++) {
+    run.note(`Rodada ${round} de ${ROUNDS}: 4 requisições com erro disparadas ao mesmo tempo, cada uma com o seu marcador.`);
+    const before = problems.length;
     const markers = [0, 1, 2, 3].map((i) => `mk${run.runId.replace(/\W/g, '')}r${round}i${i}`);
     const requests: CallOptions[] = [
       { checkId: 'api-exceptions', label: `Rodada ${round}: login com JSON malformado`, kind: 'probe', method: 'POST', url: loginUrl, headers: { 'Content-Type': 'application/json' }, body: `{"login":"${markers[0]}","senha":` },
-      { checkId: 'api-exceptions', label: `Rodada ${round}: login de usuário inexistente`, kind: 'login-wrong', user: `devmgr-${markers[1]}`, method: 'POST', url: loginUrl, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: `devmgr-${markers[1]}`, senha: run.nextWrongPassword() }) },
+      { checkId: 'api-exceptions', label: `Rodada ${round}: login de usuário inexistente`, kind: 'login-wrong', user: `devmgr-${markers[1]}`, method: 'POST', url: loginUrl, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: `devmgr-${markers[1]}`, senha: run.encodePassword(run.nextWrongPassword()) }) },
       { checkId: 'api-exceptions', label: `Rodada ${round}: API de logs com parâmetro inválido`, kind: 'probe', method: 'GET', url: withQuery(logsUrl, { pagina: '-1', limite: 'abc', ref: markers[2] }), withAuth: false },
       { checkId: 'api-exceptions', label: `Rodada ${round}: rota inexistente`, kind: 'probe', method: 'GET', url: `${baseUrl}/winthor/ferramenta/servidor/v1/${markers[3]}` }
     ];
@@ -40,6 +42,9 @@ export async function checkApiExceptions(run: LockoutRun): Promise<void> {
       if (r.attempt.status === 0) problems.push({ status: 'failed', text: `#${r.attempt.seq} ficou sem resposta (${r.attempt.error}).` });
       else if (r.attempt.status >= 500) problems.push({ status: 'warning', text: `#${r.attempt.seq} respondeu ${r.attempt.status}: a falha do cliente virou erro do servidor.` });
     });
+    const found = problems.slice(before);
+    if (found.length) found.forEach((p) => run.note(p.text, p.status === 'failed' ? 'error' : 'action'));
+    else run.note(`Rodada ${round}: cada resposta trouxe só o próprio marcador, sem 5xx e sem ficar sem resposta.`);
   }
   const status = problems.length ? worstStatus(problems.map((p) => p.status)) : 'passed';
   const summary = problems.length
@@ -50,8 +55,9 @@ export async function checkApiExceptions(run: LockoutRun): Promise<void> {
 
 /** Varre tudo o que voltou na execução. O conteúdo da API de logs com autenticação é avaliado na checagem de logs. */
 export async function checkErrorExposure(run: LockoutRun): Promise<void> {
-  const started = Date.now();
+  const started = run.beginCheck('error-exposure');
   const { loginUrl, logsUrl } = run.config;
+  run.note('Mais duas requisições que costumam vazar detalhe interno: login com Content-Type errado e API de logs sem token.');
   await run.call({ checkId: 'error-exposure', label: 'Login com Content-Type text/plain', kind: 'probe', method: 'POST', url: loginUrl, headers: { 'Content-Type': 'text/plain' }, body: 'login=x&senha=y' });
   await run.call({ checkId: 'error-exposure', label: 'API de logs sem autenticação', kind: 'logs', method: 'GET', url: logsUrl, withAuth: false });
   const inspected = run.attempts.filter((a) => a.status > 0 && !(a.kind === 'logs' && a.withAuth && a.status < 300));
@@ -62,6 +68,8 @@ export async function checkErrorExposure(run: LockoutRun): Promise<void> {
     if (hard.length) blocking.push(`#${a.seq} ${a.label} (HTTP ${a.status}): ${hard.map((f) => EXPOSURE_LABELS[f]).join(', ')}`);
     if (a.exposure.includes('server-version')) soft.push(`#${a.seq} ${a.label}: ${EXPOSURE_LABELS['server-version']}`);
   }
+  run.note(`Revisadas ${inspected.length} respostas (status, corpo e cabeçalhos).`);
+  blocking.forEach((line) => run.note(`Exposição encontrada: ${line}`, 'error'));
   const evidence = [...blocking, ...soft.slice(0, 5)];
   if (blocking.length) run.setCheck('error-exposure', 'failed', `${blocking.length} resposta(s) expuseram detalhe interno ou segredo.`, evidence, started);
   else if (soft.length) run.setCheck('error-exposure', 'warning', `Nenhum segredo nem stack trace em ${inspected.length} respostas, mas o servidor anuncia a versão no cabeçalho.`, evidence, started);
@@ -73,45 +81,54 @@ function expectedFailures(run: LockoutRun, login: string): number {
 }
 
 export async function checkLogCorrelation(run: LockoutRun, logOffset: number | undefined, logsAuth: Record<string, string> | undefined): Promise<void> {
-  const started = Date.now();
+  const started = run.beginCheck('log-correlation');
   const { logsUrl, logFilePath, userA, userB } = run.config;
   const parts: { status: AuthLockoutCheckStatus; text: string }[] = [];
   const evidence: string[] = [];
   const users = [userA, ...(userB ? [userB] : [])];
+  const add = (status: AuthLockoutCheckStatus, text: string) => {
+    parts.push({ status, text });
+    run.note(text, status === 'failed' ? 'error' : 'action');
+  };
+
+  run.note('Consultando a API de logs sem token: tem de recusar com 401 ou 403.');
 
   const open = await run.call({ checkId: 'log-correlation', label: 'API de logs sem autenticação', kind: 'logs', method: 'GET', url: logsUrl, withAuth: false });
   evidence.push(`#${open.attempt.seq} sem autenticação: ${describeAttempt(open.attempt)}`);
-  if (open.attempt.status >= 200 && open.attempt.status < 300) parts.push({ status: 'failed', text: 'A API de logs respondeu sem autenticação.' });
-  else if (open.attempt.status === 404) parts.push({ status: 'warning', text: 'A API de logs não foi encontrada (404); confira a URL.' });
-  else if (open.attempt.status === 401 || open.attempt.status === 403) parts.push({ status: 'passed', text: `Acesso sem autenticação recusado (${open.attempt.status}).` });
-  else parts.push({ status: 'warning', text: `Sem autenticação a API respondeu ${open.attempt.status || 'nada'}; esperado 401 ou 403.` });
+  if (open.attempt.status >= 200 && open.attempt.status < 300) add('failed', 'A API de logs respondeu sem autenticação.');
+  else if (open.attempt.status === 404) add('warning', 'A API de logs não foi encontrada (404); confira a URL.');
+  else if (open.attempt.status === 401 || open.attempt.status === 403) add('passed', `Acesso sem autenticação recusado (${open.attempt.status}).`);
+  else add('warning', `Sem autenticação a API respondeu ${open.attempt.status || 'nada'}; esperado 401 ou 403.`);
 
   const sources: { name: string; lines: string[] }[] = [];
   let authed: CallResult | undefined;
   if (logsAuth) {
+    run.note('Consultando a API de logs com token, para ler o que o servidor registrou durante o teste.');
     authed = await run.call({ checkId: 'log-correlation', label: 'API de logs com autenticação', kind: 'logs', method: 'GET', url: logsUrl, headers: logsAuth, withAuth: true });
     evidence.push(`#${authed.attempt.seq} com autenticação: ${describeAttempt(authed.attempt)}`);
     if (authed.attempt.status >= 200 && authed.attempt.status < 300) sources.push({ name: 'API de logs', lines: logsApiLines(authed.body) });
-    else parts.push({ status: 'warning', text: `A API de logs recusou o token administrativo (${describeAttempt(authed.attempt)}).` });
+    else add('warning', `A API de logs recusou o token administrativo (${describeAttempt(authed.attempt)}).`);
   } else {
-    parts.push({ status: 'warning', text: 'Sem credencial para consultar a API de logs (configure login e senha do WTA em Configurações).' });
+    add('warning', 'Sem credencial para consultar a API de logs (configure login e senha do WTA em Configurações).');
   }
 
   const file = readLogSince(logFilePath, logOffset);
   if (file.found) {
     sources.push({ name: 'winthor.log', lines: file.lines });
+    run.note(`Lendo o ${logFilePath}: ${file.lines.length} linha(s) escritas durante o teste.`);
     evidence.push(`winthor.log: ${file.lines.length} linha(s) novas durante a execução${file.rotated ? ' (o arquivo foi rotacionado e lido do começo)' : ''}${file.truncated ? ' (só os últimos 8 MB)' : ''}.`);
   } else {
-    parts.push({ status: 'warning', text: logFilePath ? `Log local não encontrado: ${logFilePath}.` : 'Log local não configurado (pasta do Karaf).' });
+    add('warning', logFilePath ? `Log local não encontrado: ${logFilePath}.` : 'Log local não configurado (pasta do Karaf).');
   }
 
   for (const source of sources) {
     for (const user of users) {
       const verdict = evaluateMentions(`${source.name} / ${user.login}`, countLoginFailureMentions(source.lines, user.login), expectedFailures(run, user.login));
-      parts.push({ status: verdict.status, text: verdict.summary });
+      add(verdict.status, verdict.summary);
     }
     const leaked = secretsFoundIn(source.lines, run.secrets);
-    if (leaked.length) parts.push({ status: 'failed', text: `${source.name} registrou ${leaked.length} segredo(s) da execução (senha digitada ou token).` });
+    if (!leaked.length) run.note(`${source.name}: nenhuma das ${run.secrets.size} senhas e tokens da execução (digitados ou em MD5) aparece registrada.`);
+    if (leaked.length) add('failed', `${source.name} registrou ${leaked.length} segredo(s) da execução (senha digitada ou token).`);
   }
 
   const status = worstStatus(parts.map((p) => p.status));
@@ -121,7 +138,7 @@ export async function checkLogCorrelation(run: LockoutRun, logOffset: number | u
 
 /** Só roda com a confirmação de que o destino de logs foi derrubado por um mecanismo autorizado. */
 export async function checkLogSinkFailure(run: LockoutRun): Promise<void> {
-  const started = Date.now();
+  const started = run.beginCheck('log-sink-failure');
   const { loginUrl, logsUrl, logSinkUnavailableConfirmed } = run.config;
   if (!logSinkUnavailableConfirmed) {
     run.setCheck(
@@ -132,13 +149,15 @@ export async function checkLogSinkFailure(run: LockoutRun): Promise<void> {
     return;
   }
   const ghost = `devmgr-sink-${run.runId}`;
+  run.note(`Com o destino de logs indisponível: ${SINK_BURST} falhas simultâneas do usuário inexistente ${ghost} (nenhuma conta real é bloqueada).`);
   const burst = await Promise.all(
     Array.from({ length: SINK_BURST }, (_, i) =>
-      run.call({ checkId: 'log-sink-failure', label: `Falha ${i + 1}/${SINK_BURST} com o log indisponível`, kind: 'login-wrong', user: ghost, method: 'POST', url: loginUrl, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: ghost, senha: run.nextWrongPassword() }) })
+      run.call({ checkId: 'log-sink-failure', label: `Falha ${i + 1}/${SINK_BURST} com o log indisponível`, kind: 'login-wrong', user: ghost, method: 'POST', url: loginUrl, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: ghost, senha: run.encodePassword(run.nextWrongPassword()) }) })
     )
   );
+  run.note('Conferindo se o serviço continua respondendo: um login e a API de logs.');
   const health = [
-    await run.call({ checkId: 'log-sink-failure', label: 'Serviço respondendo depois do lote (login)', kind: 'login-wrong', user: ghost, method: 'POST', url: loginUrl, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: ghost, senha: run.nextWrongPassword() }) }),
+    await run.call({ checkId: 'log-sink-failure', label: 'Serviço respondendo depois do lote (login)', kind: 'login-wrong', user: ghost, method: 'POST', url: loginUrl, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: ghost, senha: run.encodePassword(run.nextWrongPassword()) }) }),
     await run.call({ checkId: 'log-sink-failure', label: 'Serviço respondendo depois do lote (logs)', kind: 'logs', method: 'GET', url: logsUrl, withAuth: false })
   ];
   const all = [...burst, ...health];

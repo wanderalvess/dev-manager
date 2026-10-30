@@ -4,6 +4,8 @@ import type {
   AuthLockoutCheckResult,
   AuthLockoutCheckStatus,
   AuthLockoutDefaults,
+  AuthLockoutLogEntry,
+  AuthLockoutPasswordEncoding,
   AuthLockoutRunRequest
 } from '../../../shared/authLockoutTypes';
 import type { ReadinessTone } from './integrationReadinessView';
@@ -21,6 +23,7 @@ export interface AuthLockoutForm {
   userAPassword: string;
   userBLogin: string;
   userBPassword: string;
+  passwordEncoding: AuthLockoutPasswordEncoding;
   threshold: string;
   windowSeconds: string;
   lockMinutes: string;
@@ -43,6 +46,7 @@ export function formFromDefaults(defaults: AuthLockoutDefaults): AuthLockoutForm
     userAPassword: '',
     userBLogin: '',
     userBPassword: '',
+    passwordEncoding: defaults.passwordEncoding,
     threshold: String(defaults.threshold),
     windowSeconds: String(defaults.windowSeconds),
     lockMinutes: defaults.lockMinutesCandidates.join(', '),
@@ -67,6 +71,8 @@ export function mergeStoredForm(base: AuthLockoutForm, raw: string | null): Auth
       const value = stored[key];
       if (key === 'checks') {
         if (Array.isArray(value)) merged.checks = value.filter((id): id is AuthLockoutCheckId => AUTH_LOCKOUT_CHECK_IDS.includes(id as AuthLockoutCheckId));
+      } else if (key === 'passwordEncoding') {
+        if (value === 'md5' || value === 'plain') merged.passwordEncoding = value;
       } else if (typeof value === 'string') {
         (merged as Record<string, unknown>)[key] = value;
       }
@@ -100,6 +106,7 @@ export function buildRunRequest(form: AuthLockoutForm): AuthLockoutRunRequest {
     logFilePath: form.logFilePath.trim(),
     userA: { login: form.userALogin.trim(), password: form.userAPassword },
     ...(hasB ? { userB: { login: form.userBLogin.trim(), password: form.userBPassword } } : {}),
+    passwordEncoding: form.passwordEncoding,
     threshold: toNumber(form.threshold),
     windowSeconds: toNumber(form.windowSeconds),
     lockMinutesCandidates: parseMinutesList(form.lockMinutes),
@@ -147,4 +154,25 @@ export const STATUS_TONE: Record<AuthLockoutCheckStatus, ReadinessTone> = {
 
 export function summarizeChecks(checks: readonly AuthLockoutCheckResult[]): Partial<Record<AuthLockoutCheckStatus, number>> {
   return checks.reduce<Partial<Record<AuthLockoutCheckStatus, number>>>((acc, c) => ({ ...acc, [c.status]: (acc[c.status] ?? 0) + 1 }), {});
+}
+
+const MAX_ACTIVITY = 600;
+
+/** Só a linha da atividade, sem o resultado da checagem e a tentativa que vêm junto no progresso. */
+export function progressToEntry(progress: AuthLockoutLogEntry): AuthLockoutLogEntry {
+  return {
+    at: progress.at,
+    level: progress.level,
+    message: progress.message,
+    ...(progress.detail ? { detail: progress.detail } : {}),
+    ...(progress.asExpected !== undefined ? { asExpected: progress.asExpected } : {}),
+    ...(progress.status ? { status: progress.status } : {})
+  };
+}
+
+/** A contagem regressiva de uma espera substitui a linha anterior, em vez de empilhar uma a cada 15 s. */
+export function appendActivity(lines: AuthLockoutLogEntry[], entry: AuthLockoutLogEntry): AuthLockoutLogEntry[] {
+  const last = lines[lines.length - 1];
+  if (entry.level === 'wait' && last?.level === 'wait') return [...lines.slice(0, -1), entry];
+  return [...lines, entry].slice(-MAX_ACTIVITY);
 }

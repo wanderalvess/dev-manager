@@ -2,7 +2,7 @@ import React from 'react';
 import { Terminal, Check, AlertCircle, Copy, Eye, EyeOff } from 'lucide-react';
 import type { DatabaseConnectionConfig } from '../../../../../shared/types';
 import type { BackupFormState } from '../../../hooks/database/useBackupForm';
-import { hasBackupFileTag } from '../../../utils/backupModalUtils';
+import { getCustomCommandProblem, hasBackupFileTag } from '../../../utils/backupModalUtils';
 import { BackupCommandPresets, BackupVariableChips } from './BackupCustomCommandHelpers';
 
 interface BackupCustomCommandPanelProps {
@@ -21,6 +21,7 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
     copyCommandPreview,
     previewBackupCommandResolved
   } = form;
+  const commandProblem = getCustomCommandProblem(customBackupCommand);
 
   return (
     <div className="space-y-4 pt-1">
@@ -43,15 +44,18 @@ export const BackupCustomCommandPanel: React.FC<BackupCustomCommandPanelProps> =
           </div>
 
           <div className="flex items-center gap-2">
-            {hasBackupFileTag(customBackupCommand) ? (
-              <span className="px-2 py-0.5 rounded-full text-2xs font-mono bg-success/10 text-success flex items-center gap-1">
-                <Check className="w-3 h-3" />
-                <span>Sintaxe Válida</span>
+            {commandProblem ? (
+              <span
+                className="px-2 py-0.5 rounded-full text-2xs font-mono bg-warning/10 text-warning flex items-center gap-1"
+                title={commandProblem}
+              >
+                <AlertCircle className="w-3 h-3" aria-hidden="true" />
+                <span>{hasBackupFileTag(customBackupCommand) ? 'Caractere não permitido' : `Requer ${'{filePath}'}`}</span>
               </span>
             ) : (
-              <span className="px-2 py-0.5 rounded-full text-2xs font-mono bg-warning/10 text-warning flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" />
-                <span>Requer {'{filePath}'}</span>
+              <span className="px-2 py-0.5 rounded-full text-2xs font-mono bg-success/10 text-success flex items-center gap-1">
+                <Check className="w-3 h-3" aria-hidden="true" />
+                <span>Sintaxe Válida</span>
               </span>
             )}
 

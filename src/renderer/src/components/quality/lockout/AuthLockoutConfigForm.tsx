@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AlertTriangle, ChevronDown, ChevronRight, Loader2, Lock, Square } from 'lucide-react';
 import type { AuthLockoutForm } from '../../../utils/authLockoutView';
 import { AuthLockoutCheckPicker } from './AuthLockoutCheckPicker';
-import { SectionTitle, TextField } from './lockoutFormFields';
+import { FIELD_CLASS, SectionTitle, TextField } from './lockoutFormFields';
 
 interface AuthLockoutConfigFormProps {
   form: AuthLockoutForm;
@@ -47,6 +47,23 @@ export const AuthLockoutConfigForm: React.FC<AuthLockoutConfigFormProps> = ({ fo
         <TextField id="lk-b-pass" label="Senha de B" type="password" value={form.userBPassword} onChange={text('userBPassword')} />
       </div>
       <p className="text-2xs text-muted-foreground">A fica bloqueado durante quase todo o teste; B é usado no bloqueio por usuário e na concorrência. As senhas não são salvas.</p>
+      <div className="space-y-1">
+        <label htmlFor="lk-encoding" className="text-xs font-bold text-foreground block">
+          Senha enviada ao WTA
+        </label>
+        <select
+          id="lk-encoding"
+          value={form.passwordEncoding}
+          onChange={(e) => update('passwordEncoding', e.target.value === 'plain' ? 'plain' : 'md5')}
+          className={FIELD_CLASS}
+        >
+          <option value="md5">MD5 em maiúsculas (padrão do WinThor)</option>
+          <option value="plain">Texto puro</option>
+        </select>
+        <p className="text-2xs text-muted-foreground">
+          Digite a senha normal: o Dev Manager envia o MD5 (senha 1 → C4CA4238…). Também aceita o hash já pronto.
+        </p>
+      </div>
 
       <AuthLockoutCheckPicker selected={form.checks} onChange={(checks) => update('checks', checks)} />
 

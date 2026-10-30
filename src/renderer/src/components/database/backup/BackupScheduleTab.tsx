@@ -50,6 +50,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
           <select
             value={backupCron}
             onChange={(e) => setBackupCron(e.target.value)}
+            aria-label="Frequência do backup automático"
             className="flex-1 bg-background border border-input rounded-[10px] px-3 py-2.5 text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring font-mono text-sm"
           >
             <option value="">Sem agendamento (somente manual)</option>
@@ -65,6 +66,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
             type="text"
             value={backupCron}
             onChange={(e) => setBackupCron(e.target.value)}
+            aria-label="Expressão cron do backup"
             placeholder="cron: 0 2 * * *"
             className="w-full sm:w-44 bg-background border border-input rounded-[10px] px-3 py-2.5 text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring font-mono text-sm"
           />
@@ -87,14 +89,15 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
           <SlidersHorizontal className="w-4 h-4 text-primary" /> Política de Retenção de Backups
         </span>
         <p className="text-2xs text-muted-foreground">
-          Os arquivos mais antigos são limpos automaticamente após cada execução conforme as regras abaixo:
+          Após cada backup desta conexão, os arquivos dela mais antigos nesta pasta são apagados conforme as regras abaixo. Backups de outras conexões e outros arquivos da pasta não são tocados.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-foreground">Manter quantidade máxima</label>
+            <label htmlFor="backup-retention-count" className="text-xs font-semibold text-foreground">Manter quantidade máxima</label>
             <div className="flex items-center gap-2">
               <input
+                id="backup-retention-count"
                 type="number"
                 min={1}
                 value={backupRetentionCount}
@@ -107,9 +110,10 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-foreground">Idade máxima dos arquivos</label>
+            <label htmlFor="backup-retention-days" className="text-xs font-semibold text-foreground">Idade máxima dos arquivos</label>
             <div className="flex items-center gap-2">
               <input
+                id="backup-retention-days"
                 type="number"
                 min={1}
                 value={backupRetentionDays}
@@ -138,6 +142,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
             <select
               value={drillCron}
               onChange={(e) => setDrillCron(e.target.value)}
+              aria-label="Frequência do teste de restauração"
               className="flex-1 bg-background border border-input rounded-[10px] px-3 py-2.5 text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring font-mono text-sm"
             >
               <option value="">Sem drill agendado</option>
@@ -163,6 +168,7 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
             <select
               value={drillScratchConnectionId}
               onChange={(e) => setDrillScratchConnectionId(e.target.value)}
+              aria-label="Conexão descartável do teste de restauração"
               className="w-full bg-background border border-input rounded-[10px] px-3 py-2.5 text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring text-sm"
             >
               <option value="">Conexão scratch...</option>
@@ -174,6 +180,16 @@ export const BackupScheduleTab: React.FC<BackupScheduleTabProps> = ({
             </select>
           </div>
         </div>
+        {drillCron.trim() && drillScheduleEnabled && !drillScratchConnectionId && (
+          <p className="text-2xs text-warning">
+            Escolha a conexão descartável: sem ela o teste agendado não roda.
+          </p>
+        )}
+        {connections.length === 0 && (
+          <p className="text-2xs text-muted-foreground">
+            Nenhuma outra conexão do mesmo tipo de banco, fora de produção, está cadastrada para receber o teste.
+          </p>
+        )}
       </div>
 
       </div>

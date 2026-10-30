@@ -228,10 +228,10 @@ export function createDatabaseApi({ apiFetch, wsManager }: BridgeDeps) {
       });
     },
 
-    runDbRestoreDrill: async (scratchConnection: DatabaseConnectionConfig, filePath: string): Promise<BackupResult> => {
+    runDbRestoreDrill: async (scratchConnection: DatabaseConnectionConfig, filePath: string, sourceConnectionId?: string): Promise<BackupResult> => {
       return apiFetch('/api/db/restore-drill', {
         method: 'POST',
-        body: JSON.stringify({ scratchConnection, filePath })
+        body: JSON.stringify({ scratchConnection, filePath, sourceConnectionId })
       });
     },
 

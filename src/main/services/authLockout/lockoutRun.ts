@@ -1,17 +1,28 @@
 import { randomBytes } from 'crypto';
 import { authLockoutCheckDefinition } from '../../../shared/authLockoutCatalog';
 import { classifyLoginResponse, detectExposure, maskSecrets, type HeaderBag } from '../../../shared/authLockoutAnalysis';
+import {
+  attemptLine,
+  checkPlan,
+  describeResponse,
+  durationProbeOffsets,
+  meetsExpectation,
+  type LoginExpectation
+} from '../../../shared/authLockoutNarrative';
+import { AUTH_LOCKOUT_STATUS_LABELS, STATUS_ICON } from '../../../shared/authLockoutReport';
 import type {
   AuthLockoutAttempt,
   AuthLockoutAttemptKind,
   AuthLockoutCheckId,
   AuthLockoutCheckResult,
   AuthLockoutCheckStatus,
+  AuthLockoutLogEntry,
   AuthLockoutProgress,
   AuthLockoutUser
 } from '../../../shared/authLockoutTypes';
 import { httpRequest } from '../../utils/httpRequest';
 import type { LockoutConfig } from './lockoutConfig';
+import { encodeWtaPassword } from './wtaPassword';
 
 export class LockoutAbortedError extends Error {
   constructor() {
@@ -29,6 +40,8 @@ export interface CallOptions {
   headers?: Record<string, string>;
   body?: string;
   withAuth?: boolean;
+  /** O que a requisição precisa dar: a linha da atividade marca ✔ ou ✘. */
+  expect?: LoginExpectation;
 }
 
 export interface CallResult {
@@ -51,6 +64,9 @@ export class LockoutRun {
   readonly secrets = new Set<string>();
   readonly wrongPasswords: string[] = [];
   readonly tokens = new Map<string, string>();
+  /** Passo a passo que vai para o resultado e o relatório. A contagem regressiva das esperas fica só na tela. */
+  readonly log: AuthLockoutLogEntry[] = [];
+  private readonly plans = new Map<AuthLockoutCheckId, string>();
   private aborted = false;
   private wrongSeq = 0;
 
@@ -58,8 +74,8 @@ export class LockoutRun {
     readonly config: LockoutConfig,
     private readonly emit: (progress: AuthLockoutProgress) => void
   ) {
-    this.secrets.add(config.userA.password);
-    if (config.userB) this.secrets.add(config.userB.password);
+    this.addPasswordSecret(config.userA.password);
+    if (config.userB) this.addPasswordSecret(config.userB.password);
   }
 
   get isAborted(): boolean {
@@ -78,12 +94,47 @@ export class LockoutRun {
     return Date.now() - this.startedAt.getTime();
   }
 
-  log(message: string): void {
-    this.emit({ runId: this.runId, at: new Date().toISOString(), message });
+  /** Registra uma linha da atividade e a envia para a tela. `keep: false` só aparece ao vivo. */
+  note(message: string, level: AuthLockoutLogEntry['level'] = 'action', extra: Partial<AuthLockoutProgress> = {}, keep = true): void {
+    const { check, attempt, ...rest } = extra;
+    const entry: AuthLockoutLogEntry = { at: new Date().toISOString(), level, message, ...rest };
+    if (keep) this.log.push(entry);
+    this.emit({ runId: this.runId, ...entry, ...(check ? { check } : {}), ...(attempt ? { attempt } : {}) });
+  }
+
+  /** Começa uma checagem: explica na atividade o que vai ser feito e devolve o instante de início. */
+  beginCheck(id: AuthLockoutCheckId): number {
+    const { config } = this;
+    const plan = checkPlan(id, {
+      userA: config.userA.login,
+      userB: config.userB?.login,
+      threshold: config.threshold,
+      windowSeconds: config.windowSeconds,
+      lockMinutes: config.lockMinutesCandidates,
+      concurrency: config.concurrency,
+      logsUrl: config.logsUrl,
+      logFilePath: config.logFilePath,
+      logoffPath: config.logoffUrl ? safePath(config.logoffUrl) : undefined,
+      probeOffsets: durationProbeOffsets(config.lockMinutesCandidates)
+    });
+    this.plans.set(id, plan);
+    this.note(`▶ ${authLockoutCheckDefinition(id).title}`, 'step', { detail: plan });
+    return Date.now();
   }
 
   throwIfAborted(): void {
     if (this.aborted) throw new LockoutAbortedError();
+  }
+
+  /** Como a senha vai no corpo do login do WTA (MD5 maiúsculo por padrão). */
+  encodePassword(password: string): string {
+    return encodeWtaPassword(password, this.config.passwordEncoding);
+  }
+
+  /** Guarda a senha digitada e a forma enviada ao WTA: o servidor pode registrar qualquer uma das duas. */
+  addPasswordSecret(password: string): void {
+    this.secrets.add(password);
+    this.secrets.add(this.encodePassword(password));
   }
 
   /** Senha errada única por tentativa: se aparecer no log, prova que o servidor registra a senha digitada. */
@@ -91,7 +142,7 @@ export class LockoutRun {
     this.wrongSeq += 1;
     const password = `Errada#${this.runId}-${this.wrongSeq}`;
     this.wrongPasswords.push(password);
-    this.secrets.add(password);
+    this.addPasswordSecret(password);
     return password;
   }
 
@@ -102,19 +153,23 @@ export class LockoutRun {
       status,
       summary,
       evidence,
-      ...(startedMs !== undefined ? { durationMs: Date.now() - startedMs } : {})
+      ...(startedMs !== undefined ? { durationMs: Date.now() - startedMs } : {}),
+      ...(this.plans.has(id) ? { plan: this.plans.get(id) } : {})
     };
     this.results.set(id, check);
-    this.emit({ runId: this.runId, at: new Date().toISOString(), message: `${check.title}: ${summary}`, check });
+    this.note(`${STATUS_ICON[status]} ${check.title} — ${AUTH_LOCKOUT_STATUS_LABELS[status]}: ${summary}`, 'result', { status, check });
   }
 
   /** Espera interrompível, avisando o tempo restante para a tela não parecer travada. */
   async sleep(ms: number, reason: string): Promise<void> {
     const until = Date.now() + Math.max(0, ms);
+    let first = true;
     while (Date.now() < until) {
       this.throwIfAborted();
       const remaining = until - Date.now();
-      this.log(`${reason} — faltam ${Math.ceil(remaining / 1000)}s`);
+      // Só a primeira linha de cada espera vai para o passo a passo; as seguintes são a contagem regressiva da tela
+      this.note(`⏳ ${reason} — ${first ? 'esperando' : 'faltam'} ${Math.ceil(remaining / 1000)}s`, 'wait', {}, first);
+      first = false;
       await new Promise((resolve) => setTimeout(resolve, Math.min(PROGRESS_TICK_MS, remaining)));
     }
     this.throwIfAborted();
@@ -172,20 +227,34 @@ export class LockoutRun {
     };
     if (token) this.secrets.add(token);
     this.attempts.push(attempt);
-    this.emit({ runId: this.runId, at: attempt.at, message: `${attempt.label}: ${describeAttempt(attempt)}`, attempt });
+    const expect = options.expect ?? (options.kind === 'login-wrong' ? 'refuse' : undefined);
+    const asExpected = meetsExpectation(attempt, expect);
+    this.note(attemptLine(attempt, expect), 'attempt', {
+      attempt,
+      ...(attempt.bodySnippet ? { detail: `Resposta: ${attempt.bodySnippet.slice(0, 200)}` } : {}),
+      ...(asExpected !== undefined ? { asExpected } : {})
+    });
     return { attempt, body, headers, ...(token ? { token } : {}) };
   }
 
-  login(checkId: CallOptions['checkId'], user: AuthLockoutUser, password: string, label: string, headers?: Record<string, string>) {
+  login(
+    checkId: CallOptions['checkId'],
+    user: AuthLockoutUser,
+    password: string,
+    label: string,
+    headers?: Record<string, string>,
+    expect?: LoginExpectation
+  ) {
     return this.call({
       checkId,
       label,
+      ...(expect ? { expect } : {}),
       kind: password === user.password ? 'login-correct' : 'login-wrong',
       user: user.login,
       method: 'POST',
       url: this.config.loginUrl,
       headers: { 'Content-Type': 'application/json', ...headers },
-      body: JSON.stringify({ login: user.login, senha: password })
+      body: JSON.stringify({ login: user.login, senha: this.encodePassword(password) })
     });
   }
 
@@ -200,8 +269,7 @@ export class LockoutRun {
 }
 
 export function describeAttempt(a: AuthLockoutAttempt): string {
-  if (a.status === 0) return `sem resposta (${a.error ?? 'erro'})`;
-  return `HTTP ${a.status}${a.outcome ? ` → ${a.outcome}` : ''} em ${a.durationMs} ms`;
+  return a.status === 0 ? describeResponse(a) : `${describeResponse(a)} em ${a.durationMs} ms`;
 }
 
 function safePath(url: string): string {

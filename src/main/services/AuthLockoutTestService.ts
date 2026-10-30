@@ -8,6 +8,7 @@ import type {
   AuthLockoutRunResult
 } from '../../shared/authLockoutTypes';
 import type { ConfigService } from './ConfigService';
+import { ScenarioHistoryService } from './ScenarioHistoryService';
 import { authLockoutDefaults, normalizeLockoutRequest } from './authLockout/lockoutConfig';
 import { LockoutAbortedError, LockoutRun } from './authLockout/lockoutRun';
 import {
@@ -19,12 +20,14 @@ import {
   checkPerUser,
   checkThreshold,
   lockAccountA,
+  preflightFailureReason,
   preflightUser,
   type AccountState
 } from './authLockout/lockoutAccountChecks';
 import { checkCountWindow, checkLockDuration } from './authLockout/lockoutTimingChecks';
 import { checkApiExceptions, checkErrorExposure, checkLogCorrelation, checkLogSinkFailure } from './authLockout/lockoutSurfaceChecks';
 import { logFileSize } from './authLockout/lockoutLogSources';
+import { logPreflightStart, logRunEnd, logRunStart } from './authLockout/lockoutStory';
 
 /**
  * Teste de bloqueio de login do WinThor: executa as tentativas controladas contra o login do WTA (homologação),
@@ -34,7 +37,10 @@ import { logFileSize } from './authLockout/lockoutLogSources';
 export class AuthLockoutTestService {
   private current: LockoutRun | null = null;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly history: ScenarioHistoryService = new ScenarioHistoryService(configService)
+  ) {}
 
   getDefaults(): AuthLockoutDefaults {
     return authLockoutDefaults(this.configService.getSettings());
@@ -66,7 +72,9 @@ export class AuthLockoutTestService {
     } finally {
       this.current = null;
     }
-    return this.buildResult(run, error);
+    const result = this.buildResult(run, error);
+    await this.history.saveLockout(result);
+    return result;
   }
 
   private async execute(run: LockoutRun): Promise<void> {
@@ -75,23 +83,28 @@ export class AuthLockoutTestService {
     const state: AccountState = { bReady: false };
     const needsA = A_LOCK_CHECKS.some((id) => run.selected(id)) || run.selected('threshold') || run.selected('count-window');
     const needsB = run.selected('per-user') || run.selected('concurrency');
+    logRunStart(run, logOffset);
 
+    if (needsA || (needsB && config.userB)) logPreflightStart(run);
     if (needsA) {
       const a = await preflightUser(run, config.userA, 'usuário A');
       if (a.attempt.outcome !== 'authenticated') {
         throw new Error(
-          `O usuário A (${config.userA.login}) não entrou com a senha informada (${a.attempt.status ? `HTTP ${a.attempt.status}` : a.attempt.error}). Confira a senha ou aguarde o fim de um bloqueio anterior.`
+          `O usuário A (${config.userA.login}) não entrou com a senha informada: ${preflightFailureReason(a)}`
         );
       }
     }
     if (needsB && config.userB) {
-      state.bReady = (await preflightUser(run, config.userB, 'usuário B')).attempt.outcome === 'authenticated';
+      const b = await preflightUser(run, config.userB, 'usuário B');
+      state.bReady = b.attempt.outcome === 'authenticated';
+      if (!state.bReady) state.bFailure = preflightFailureReason(b);
     }
 
     if (run.selected('threshold')) await checkThreshold(run, state);
     else if (A_LOCK_CHECKS.some((id) => run.selected(id))) await lockAccountA(run, state);
 
     if (state.aLockedAtMs !== undefined) {
+      run.note(`${config.userA.login} está bloqueado: as próximas checagens aproveitam esse mesmo bloqueio.`);
       if (run.selected('correct-password-while-locked')) await checkCorrectPasswordWhileLocked(run);
       if (run.selected('client-switch')) await checkClientSwitch(run);
       // Por usuário antes do logoff: se o logoff limpar o bloqueio, B entraria mesmo com o defeito de bloqueio por origem
@@ -130,12 +143,25 @@ export class AuthLockoutTestService {
     const login = settings.wtaLogin?.trim();
     let token: string | undefined;
     if (login && settings.wtaPassword && !testLogins.includes(login.toLowerCase())) {
-      run.secrets.add(settings.wtaPassword);
-      const r = await run.login('log-correlation', { login, password: settings.wtaPassword }, settings.wtaPassword, `Login do WTA de Configurações (${login}) para ler a API de logs`);
+      run.note(`Para ler a API de logs, entrando com o login do WTA de Configurações (${login}), que costuma ter permissão de administrador.`);
+      run.addPasswordSecret(settings.wtaPassword);
+      const r = await run.login(
+        'log-correlation',
+        { login, password: settings.wtaPassword },
+        settings.wtaPassword,
+        `Login do WTA de Configurações (${login}) para ler a API de logs`,
+        undefined,
+        'enter'
+      );
       token = r.token;
     }
-    token ??= settings.wtaAuthToken?.trim().replace(/^suukie=/, '') || undefined;
-    token ??= (run.config.userB && run.tokens.get(run.config.userB.login)) || run.tokens.get(run.config.userA.login);
+    const saved = settings.wtaAuthToken?.trim().replace(/^suukie=/, '') || undefined;
+    if (!token && saved) run.note('Para ler a API de logs, usando o token do WTA salvo em Configurações.');
+    token ??= saved;
+    if (!token) {
+      token = (run.config.userB && run.tokens.get(run.config.userB.login)) || run.tokens.get(run.config.userA.login);
+      if (token) run.note('Para ler a API de logs, usando o token de um usuário de teste obtido no pré-voo (pode não ter permissão).');
+    }
     if (!token) return undefined;
     run.secrets.add(token);
     return { Authorization: `Bearer ${token}`, Cookie: `suukie=${token}` };
@@ -152,6 +178,7 @@ export class AuthLockoutTestService {
           evidence: []
         }
     );
+    logRunEnd(run, checks, error);
     const base = {
       success: !error,
       ...(error ? { error } : {}),
@@ -163,7 +190,8 @@ export class AuthLockoutTestService {
       logsUrl: run.config.logsUrl,
       ...(run.config.logFilePath ? { logFilePath: run.config.logFilePath } : {}),
       checks,
-      attempts: run.attempts
+      attempts: run.attempts,
+      log: run.log
     };
     return { ...base, markdown: buildAuthLockoutMarkdown(base) };
   }
@@ -180,7 +208,8 @@ export class AuthLockoutTestService {
       baseUrl: defaults.baseUrl,
       logsUrl: defaults.logsUrl,
       checks: [],
-      attempts: []
+      attempts: [],
+      log: []
     };
     return { ...base, markdown: buildAuthLockoutMarkdown(base) };
   }

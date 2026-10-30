@@ -32,6 +32,19 @@ export function hasBackupFileTag(command: string): boolean {
   return command.includes('{filePath}') || command.includes('{fileName}');
 }
 
+/** Mesmos caracteres que o BackupService recusa no comando customizado (encadeamento/redirecionamento de shell). */
+const FORBIDDEN_COMMAND_CHARS = /[\0\r\n;&|<>`]/;
+
+/** Por que o comando customizado não vai rodar, ou null quando está pronto. */
+export function getCustomCommandProblem(command: string): string | null {
+  if (!command.trim()) return 'O comando personalizado está em branco.';
+  if (!hasBackupFileTag(command)) return 'Inclua a tag {filePath} ou {fileName} no comando.';
+  if (FORBIDDEN_COMMAND_CHARS.test(command)) {
+    return 'O comando não pode ter ; & | < > ` nem quebra de linha: ele roda sem shell, então redirecionamento e encadeamento não funcionam.';
+  }
+  return null;
+}
+
 export interface BackupCommandPreset {
   label: string;
   command: string;
@@ -43,12 +56,12 @@ export function getBackupCommandPresets(type: DatabaseType): BackupCommandPreset
     return [
       {
         label: 'expdp (Padrão)',
-        command: 'expdp {user}@{connectString} directory={directory} dumpfile={fileName} logfile={logFileName} schemas={user}'
+        command: 'expdp {user}/{password}@{connectString} directory={directory} dumpfile={fileName} logfile={logFileName} schemas={user}'
       },
       {
         label: 'expdp (Compatível 11g + Sem Estatísticas)',
         command:
-          'expdp {user}@{connectString} directory={directory} dumpfile={fileName} logfile={logFileName} schemas={user} version=11.2 exclude=statistics',
+          'expdp {user}/{password}@{connectString} directory={directory} dumpfile={fileName} logfile={logFileName} schemas={user} version=11.2 exclude=statistics',
         title: 'Compatível com Oracle 11g e desabilita estatísticas para acelerar'
       },
       {
@@ -156,7 +169,8 @@ export function normalizeWebhook(editing: Partial<BackupWebhookConfig>, nowMs: n
     authHeader: editing.authHeader?.trim() || undefined,
     authValue: editing.authValue?.trim() || undefined,
     enabled: editing.enabled !== undefined ? editing.enabled : true,
-    events: editing.events && editing.events.length > 0 ? editing.events : undefined,
+    // [] = nenhum evento (webhook mudo); undefined dispararia nos dois.
+    events: editing.events,
     platform: editing.platform || 'generic'
   };
 }

@@ -1,5 +1,5 @@
 /**
- * Teste de bloqueio de login do WinThor (Homologação → Bloqueio de Login): tentativas controladas contra o
+ * Teste de bloqueio de login do WinThor (Validação de Cenários → Bloqueio de Login): tentativas controladas contra o
  * login do WTA, correlacionadas com o winthor.log e com a API de logs do ferramenta-servidor.
  */
 
@@ -26,7 +26,17 @@ export type LoginOutcome = 'authenticated' | 'locked' | 'rejected' | 'error';
 export type AuthLockoutAttemptKind = 'login-wrong' | 'login-correct' | 'logoff' | 'logs' | 'probe';
 
 /** O que apareceu numa resposta e não deveria (status, corpo ou cabeçalhos). */
-export type ExposureFinding = 'stack-trace' | 'password' | 'token' | 'connection-string' | 'sql-error' | 'server-version';
+export type ExposureFinding =
+  | 'stack-trace'
+  | 'exception-message'
+  | 'password'
+  | 'token'
+  | 'connection-string'
+  | 'sql-error'
+  | 'server-version';
+
+/** `md5` = MD5 em hexadecimal maiúsculo, como o login do WTA espera; `plain` = a senha como foi digitada. */
+export type AuthLockoutPasswordEncoding = 'md5' | 'plain';
 
 export interface AuthLockoutUser {
   login: string;
@@ -44,6 +54,8 @@ export interface AuthLockoutRunRequest {
   /** Padrão: `<pasta do Karaf>/data/log/winthor.log`. */
   logFilePath?: string;
   userA: AuthLockoutUser;
+  /** Como a senha vai no corpo do login (padrão `md5`). */
+  passwordEncoding?: AuthLockoutPasswordEncoding;
   /** Necessário para "Bloqueio por usuário" e "Concorrência". */
   userB?: AuthLockoutUser;
   /** Falhas que bloqueiam a conta (padrão 5). */
@@ -96,6 +108,23 @@ export interface AuthLockoutCheckResult {
   summary: string;
   evidence: string[];
   durationMs?: number;
+  /** Como a checagem foi feita, com os números desta execução (usuários, limiar, janela). */
+  plan?: string;
+}
+
+/** Tipo de linha da atividade: o passo começando, uma ação dentro dele, uma requisição, uma espera ou o resultado. */
+export type AuthLockoutLogLevel = 'step' | 'action' | 'attempt' | 'wait' | 'result' | 'error';
+
+export interface AuthLockoutLogEntry {
+  at: string;
+  level: AuthLockoutLogLevel;
+  message: string;
+  /** Complemento da linha (ex.: o trecho mascarado da resposta do WTA). */
+  detail?: string;
+  /** Na linha de requisição: o resultado bateu com o esperado? */
+  asExpected?: boolean;
+  /** Na linha de resultado: o status da checagem. */
+  status?: AuthLockoutCheckStatus;
 }
 
 export interface AuthLockoutRunResult {
@@ -110,14 +139,14 @@ export interface AuthLockoutRunResult {
   logFilePath?: string;
   checks: AuthLockoutCheckResult[];
   attempts: AuthLockoutAttempt[];
+  /** Passo a passo da execução (sem a contagem regressiva das esperas). */
+  log: AuthLockoutLogEntry[];
   /** Relatório pronto para colar no Jira. */
   markdown: string;
 }
 
-export interface AuthLockoutProgress {
+export interface AuthLockoutProgress extends AuthLockoutLogEntry {
   runId: string;
-  at: string;
-  message: string;
   check?: AuthLockoutCheckResult;
   attempt?: AuthLockoutAttempt;
 }
@@ -133,4 +162,5 @@ export interface AuthLockoutDefaults {
   lockMinutesCandidates: number[];
   concurrency: number;
   lockedPattern: string;
+  passwordEncoding: AuthLockoutPasswordEncoding;
 }

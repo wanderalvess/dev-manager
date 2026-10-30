@@ -5,6 +5,8 @@ import { karafInstallApi } from './karafInstallApi';
 import { remoteControlApi } from './remoteControlApi';
 import { integrationApi } from './integrationApi';
 import { authLockoutApi } from './authLockoutApi';
+import { apiScenarioApi } from './apiScenarioApi';
+import { scenarioHistoryApi } from './scenarioHistoryApi';
 import type { DeployQueueProject } from '../shared/deployQueue';
 import type {
   InfrEnvSaveRequest,
@@ -366,6 +368,8 @@ const electronAPI = {
   ...remoteControlApi,
   ...integrationApi,
   ...authLockoutApi,
+  ...apiScenarioApi,
+  ...scenarioHistoryApi,
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
   runDeployProfile: (
@@ -605,8 +609,8 @@ const electronAPI = {
     ipcRenderer.invoke('db:restore-backup', config, filePath),
   listDbBackupHistory: (connectionId?: string): Promise<BackupHistoryEntry[]> =>
     ipcRenderer.invoke('db:list-backup-history', connectionId),
-  runDbRestoreDrill: (scratchConnection: DatabaseConnectionConfig, filePath: string): Promise<BackupResult> =>
-    ipcRenderer.invoke('db:run-restore-drill', scratchConnection, filePath),
+  runDbRestoreDrill: (scratchConnection: DatabaseConnectionConfig, filePath: string, sourceConnectionId?: string): Promise<BackupResult> =>
+    ipcRenderer.invoke('db:run-restore-drill', scratchConnection, filePath, sourceConnectionId),
   testBackupWebhook: (webhook: BackupWebhookConfig): Promise<{ success: boolean; message: string }> =>
     ipcRenderer.invoke('backup:test-webhook', webhook),
   onBackupScheduleResult: (callback: (data: { connectionName: string; result: BackupResult }) => void) => {

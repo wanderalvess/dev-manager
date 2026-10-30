@@ -5,7 +5,13 @@ import {
   authLockoutBaseDefaults
 } from '../../../shared/authLockoutCatalog';
 import { compileLockedPattern } from '../../../shared/authLockoutAnalysis';
-import type { AuthLockoutCheckId, AuthLockoutDefaults, AuthLockoutRunRequest, AuthLockoutUser } from '../../../shared/authLockoutTypes';
+import type {
+  AuthLockoutCheckId,
+  AuthLockoutDefaults,
+  AuthLockoutPasswordEncoding,
+  AuthLockoutRunRequest,
+  AuthLockoutUser
+} from '../../../shared/authLockoutTypes';
 import { karafServicesLogPath } from '../../../shared/integrationInheritance';
 import type { AppSettings } from '../../../shared/types';
 import { isLogFilePath, isSafeUrl } from '../../utils/security';
@@ -18,6 +24,7 @@ export interface LockoutConfig {
   logFilePath?: string;
   userA: AuthLockoutUser;
   userB?: AuthLockoutUser;
+  passwordEncoding: AuthLockoutPasswordEncoding;
   threshold: number;
   windowSeconds: number;
   lockMinutesCandidates: number[];
@@ -98,6 +105,7 @@ export function normalizeLockoutRequest(
       logFilePath,
       userA,
       userB,
+      passwordEncoding: request.passwordEncoding === 'plain' ? 'plain' : 'md5',
       threshold: clamp(request.threshold, defaults.threshold, 2, AUTH_LOCKOUT_LIMITS.maxThreshold),
       windowSeconds: clamp(request.windowSeconds, defaults.windowSeconds, 10, AUTH_LOCKOUT_LIMITS.maxWindowSeconds),
       lockMinutesCandidates: candidates,

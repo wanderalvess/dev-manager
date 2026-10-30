@@ -7,7 +7,7 @@ import fs from 'fs';
 import os from 'os';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
-import { ConfigService } from '../main/services/ConfigService';
+import { ConfigService, getAppDataDir } from '../main/services/ConfigService';
 import { KarafService } from '../main/services/KarafService';
 import { WindowsService } from '../main/services/WindowsService';
 import { GitAzureService } from '../main/services/GitAzureService';
@@ -44,6 +44,10 @@ import { HttpClientService } from '../main/services/HttpClientService';
 import { IntegrationTraceService } from '../main/services/IntegrationTraceService';
 import { createIntegrationRouter } from './routes/integrationRoutes';
 import { createAuthLockoutRouter } from './routes/authLockoutRoutes';
+import { createApiScenarioRouter } from './routes/apiScenarioRoutes';
+import { createScenarioHistoryRouter } from './routes/scenarioHistoryRoutes';
+import { ScenarioHistoryService } from '../main/services/ScenarioHistoryService';
+import { ApiScenarioService } from '../main/services/ApiScenarioService';
 import { AuthLockoutTestService } from '../main/services/AuthLockoutTestService';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { UsageMetricsService } from '../main/services/UsageMetricsService';
@@ -157,7 +161,12 @@ const karafService = new KarafService(configService);
 const databaseService = new DatabaseService(configService);
 const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
 const backupService = new BackupService(configService, databaseService);
-const backupSchedulerService = new BackupSchedulerService(configService, backupService);
+// Mesma trava do app desktop: se os dois estiverem abertos, só um agenda os backups.
+const backupSchedulerService = new BackupSchedulerService(
+  configService,
+  backupService,
+  path.join(getAppDataDir(), 'backup-scheduler.lock')
+);
 backupSchedulerService.onResult = (connectionName, result) => {
   broadcastWs('backup:schedule-result', { connectionName, result });
 };
@@ -1183,8 +1192,11 @@ app.post('/api/db/backup-history', async (req, res) => {
 
 app.post('/api/db/restore-drill', async (req, res) => {
   try {
-    const { scratchConnection, filePath } = req.body;
-    const result = await backupSchedulerService.runRestoreDrill(scratchConnection, filePath);
+    const { scratchConnection, filePath, sourceConnectionId } = req.body;
+    const source = sourceConnectionId
+      ? (configService.getSettings().databaseConnections || []).find((c) => c.id === sourceConnectionId)
+      : undefined;
+    const result = await backupSchedulerService.runRestoreDrill(scratchConnection, filePath, 'manual', source);
     res.json(result);
   } catch (err: any) {
     // 200 com success:false: status de erro faria o apiFetch do renderer descartar o corpo
@@ -2305,6 +2317,8 @@ app.use(
   )
 );
 app.use('/api/azure-pipelines', createAzurePipelineRouter(new AzurePipelineService(configService)));
+app.use('/api/scenario-history', createScenarioHistoryRouter(new ScenarioHistoryService(configService)));
+app.use('/api/api-scenarios', createApiScenarioRouter(new ApiScenarioService(configService, databaseService), broadcastWs));
 app.use('/api/auth-lockout', createAuthLockoutRouter(new AuthLockoutTestService(configService), broadcastWs, usageMetricsService));
 
 // Servir Frontend SPA estático se compilado

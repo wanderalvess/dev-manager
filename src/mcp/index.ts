@@ -15,9 +15,9 @@ const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   if (typeof __DEV_MANAGER_VERSION__ === 'string') return __DEV_MANAGER_VERSION__;
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.43.0';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.48.0';
   } catch {
-    return '1.43.0';
+    return '1.48.0';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -50,6 +50,10 @@ import { HttpClientService } from '../main/services/HttpClientService';
 import { IntegrationTraceService } from '../main/services/IntegrationTraceService';
 import { registerIntegrationTools } from './tools/integrationTools';
 import { registerAuthLockoutTools } from './tools/authLockoutTools';
+import { registerApiScenarioTools } from './tools/apiScenarioTools';
+import { registerScenarioHistoryTools } from './tools/scenarioHistoryTools';
+import { ScenarioHistoryService } from '../main/services/ScenarioHistoryService';
+import { ApiScenarioService } from '../main/services/ApiScenarioService';
 import { AuthLockoutTestService } from '../main/services/AuthLockoutTestService';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { UsageMetricsService } from '../main/services/UsageMetricsService';
@@ -2243,8 +2247,16 @@ server.registerTool(
     }
   },
   async ({ connectionId, config, filePath }) => {
+    // Restauração sobrescreve o destino: nunca cai na conexão padrão por omissão.
+    if (!connectionId && !config) return fail('Informe connectionId ou config da conexão de destino da restauração.');
     const targetConfig = resolveDbConfig(connectionId, config);
     if (!targetConfig) return fail('Nenhuma conexão configurada ou encontrada. Informe connectionId ou config.');
+    if (connectionId && !config && targetConfig.id !== connectionId && targetConfig.name.toLowerCase() !== connectionId.toLowerCase()) {
+      return fail(`Conexão ${connectionId} não encontrada.`);
+    }
+    if (isProductionConnection(targetConfig)) {
+      return fail(`A conexão ${targetConfig.name} está marcada como produção: restaure pela tela de Backups, que pede confirmação.`);
+    }
     if (!isSafeLocalPath(filePath)) return fail('Caminho de arquivo inválido ou remoto não permitido.');
     const result = await backupSchedulerService.runManualRestore(targetConfig, filePath);
     return ok(result);
@@ -2255,18 +2267,33 @@ server.registerTool(
   'db_run_restore_drill',
   {
     title: 'Testar restauração de backup (drill)',
-    description: 'Restaura um backup contra uma conexão "scratch" descartável, sem afetar a conexão de origem — usado para validar que o backup é restaurável.',
+    description:
+      'Restaura um backup numa conexão "scratch" descartável (connectionId/config), sobrescrevendo-a, para validar que o backup é restaurável. Recusa a própria conexão de origem (sourceConnectionId ou deduzida pelo nome do arquivo) e conexões de produção.',
     inputSchema: {
       connectionId: z.string().optional(),
       config: DatabaseConnectionConfigSchema.optional(),
-      filePath: z.string()
+      filePath: z.string(),
+      sourceConnectionId: z.string().optional()
     }
   },
-  async ({ connectionId, config, filePath }) => {
+  async ({ connectionId, config, filePath, sourceConnectionId }) => {
+    // O drill sobrescreve o destino: nunca cai na conexão padrão (que costuma ser a de origem) por omissão.
+    if (!connectionId && !config) return fail('Informe connectionId ou config da conexão scratch (descartável) do teste.');
     const scratchConfig = resolveDbConfig(connectionId, config);
     if (!scratchConfig) return fail('Nenhuma conexão scratch configurada ou encontrada. Informe connectionId ou config.');
+    if (connectionId && !config && scratchConfig.id !== connectionId && scratchConfig.name.toLowerCase() !== connectionId.toLowerCase()) {
+      return fail(`Conexão ${connectionId} não encontrada.`);
+    }
+    if (isProductionConnection(scratchConfig)) {
+      return fail(`A conexão ${scratchConfig.name} está marcada como produção e não pode ser destino do teste de restauração.`);
+    }
     if (!isSafeLocalPath(filePath)) return fail('Caminho de arquivo inválido ou remoto não permitido.');
-    const result = await backupSchedulerService.runRestoreDrill(scratchConfig, filePath, 'manual');
+    const source = sourceConnectionId
+      ? (configService.getSettings().databaseConnections || []).find(
+          (c) => c.id === sourceConnectionId || c.name.toLowerCase() === sourceConnectionId.toLowerCase()
+        )
+      : undefined;
+    const result = await backupSchedulerService.runRestoreDrill(scratchConfig, filePath, 'manual', source);
     return ok(result);
   }
 );
@@ -2480,6 +2507,10 @@ registerIntegrationTools(server, { integrationTraceService, ok, fail });
 
 // --- Teste de bloqueio de login do WinThor (homologação) ---
 registerAuthLockoutTools(server, { authLockoutTestService: new AuthLockoutTestService(configService), ok, fail });
+
+// --- Validação de API: status e campos do JSON confrontados com o esperado ---
+registerApiScenarioTools(server, { apiScenarioService: new ApiScenarioService(configService, databaseService), ok, fail });
+registerScenarioHistoryTools(server, { scenarioHistoryService: new ScenarioHistoryService(configService), ok, fail });
 
 // --- Rotina 801: Catálogo Oficial e Instalação de Serviços Web ---
 server.registerTool(

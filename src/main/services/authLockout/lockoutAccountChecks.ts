@@ -1,4 +1,5 @@
-import type { AuthLockoutCheckId, AuthLockoutUser, LoginOutcome } from '../../../shared/authLockoutTypes';
+import type { AuthLockoutCheckId, AuthLockoutUser } from '../../../shared/authLockoutTypes';
+import { describeResponse } from '../../../shared/authLockoutNarrative';
 import { describeAttempt, type CallResult, type LockoutRun } from './lockoutRun';
 
 /** Senha certa recusada = bloqueada. Sem resposta ou 5xx não prova nada. */
@@ -12,21 +13,30 @@ export interface AccountState {
   /** Momento (epoch ms) da falha que bloqueou A; ausente se A não bloqueou. */
   aLockedAtMs?: number;
   bReady: boolean;
+  /** Por que o pré-voo de B falhou, para as checagens que dependem dele dizerem. */
+  bFailure?: string;
 }
 
 /** Limiar: N-1 falhas não bloqueiam; numa execução independente, N falhas em menos da janela bloqueiam. */
 export async function checkThreshold(run: LockoutRun, state: AccountState): Promise<void> {
-  const started = Date.now();
+  const started = run.beginCheck('threshold');
   const { userA, threshold, windowSeconds } = run.config;
+  run.note(`Execução 1: errando a senha de ${userA.login} ${threshold - 1} vezes seguidas, cada vez com uma senha errada diferente.`);
   const first = await run.failTimes('threshold', userA, threshold - 1, 'Execução 1');
-  const probe1 = await run.login('threshold', userA, userA.password, `Execução 1 ${userA.login}: senha certa após ${threshold - 1} falhas`);
-  await run.sleep((windowSeconds + 5) * 1000, `Limiar: aguardando a janela de ${windowSeconds}s para a execução independente`);
+  run.note(`Conferindo com a senha certa: depois de ${threshold - 1} falhas, ${userA.login} ainda tem de entrar.`);
+  const probe1 = await run.login('threshold', userA, userA.password, `Execução 1 ${userA.login}: senha certa após ${threshold - 1} falhas`, undefined, 'enter');
+  await run.sleep(
+    (windowSeconds + 5) * 1000,
+    `Esperando a contagem de falhas de ${userA.login} recomeçar (janela de ${windowSeconds}s + 5s de folga), para a execução 2 não somar com a 1`
+  );
 
+  run.note(`Execução 2: errando ${threshold} vezes seguidas, todas dentro de ${windowSeconds}s.`);
   const seriesStart = Date.now();
   const second = await run.failTimes('threshold', userA, threshold, 'Execução 2');
   state.aLockedAtMs = Date.now();
   const seriesSeconds = (state.aLockedAtMs - seriesStart) / 1000;
-  const probe2 = await run.login('threshold', userA, userA.password, `Execução 2 ${userA.login}: senha certa após ${threshold} falhas`);
+  run.note(`As ${threshold} falhas levaram ${seriesSeconds.toFixed(1)}s. Conferindo com a senha certa: agora ${userA.login} tem de ser recusado (bloqueado).`);
+  const probe2 = await run.login('threshold', userA, userA.password, `Execução 2 ${userA.login}: senha certa após ${threshold} falhas`, undefined, 'refuse');
 
   const evidence = [...first, probe1, ...second, probe2].map(evidenceOf);
   const earlyIndex = firstLocked(first);
@@ -65,6 +75,9 @@ export async function checkThreshold(run: LockoutRun, state: AccountState): Prom
 export async function lockAccountA(run: LockoutRun, state: AccountState): Promise<void> {
   const { userA, threshold } = run.config;
   const owner = A_LOCK_CHECKS.find((id) => run.selected(id)) ?? 'correct-password-while-locked';
+  run.note(`▶ Bloqueando ${userA.login}`, 'step', {
+    detail: `As checagens seguintes precisam de ${userA.login} bloqueado: ${threshold} senhas erradas seguidas.`
+  });
   await run.failTimes(owner, userA, threshold, 'Bloqueio de A');
   state.aLockedAtMs = Date.now();
 }
@@ -80,15 +93,15 @@ function verdictWhileLocked(results: CallResult[]): { status: 'passed' | 'failed
 }
 
 export async function checkCorrectPasswordWhileLocked(run: LockoutRun): Promise<void> {
-  const started = Date.now();
+  const started = run.beginCheck('correct-password-while-locked');
   const { userA } = run.config;
-  const r = await run.login('correct-password-while-locked', userA, userA.password, `${userA.login} bloqueado: senha certa`);
+  const r = await run.login('correct-password-while-locked', userA, userA.password, `${userA.login} bloqueado: senha certa`, undefined, 'refuse');
+  if (r.attempt.issuedToken || r.attempt.setSessionCookie) run.note('O WTA devolveu token ou cookie de sessão com a conta bloqueada: isso reprova a regra.', 'error');
   const v = verdictWhileLocked([r]);
-  const outcome: LoginOutcome | undefined = r.attempt.outcome;
   run.setCheck(
     'correct-password-while-locked',
     v.status,
-    v.reason || `Recusou (HTTP ${r.attempt.status}, ${outcome}) sem token e sem cookie de sessão.`,
+    v.reason || `${describeResponse(r.attempt)}, sem token e sem cookie de sessão.`,
     [evidenceOf(r)],
     started
   );
@@ -96,21 +109,31 @@ export async function checkCorrectPasswordWhileLocked(run: LockoutRun): Promise<
 
 /** Outro cliente HTTP: sem cookie e com outro User-Agent; e reaproveitando o cookie da sessão aberta antes do bloqueio. */
 export async function checkClientSwitch(run: LockoutRun): Promise<void> {
-  const started = Date.now();
+  const started = run.beginCheck('client-switch');
   const { userA } = run.config;
+  run.note('Tentativa 1: como outro programa, com outro User-Agent, nova conexão e sem nenhum cookie.');
   const results = [
-    await run.login('client-switch', userA, userA.password, `${userA.login} bloqueado: outro cliente, sem cookie`, {
-      'User-Agent': 'DevManager-LockoutTest-OutroCliente/2.0',
-      Connection: 'close'
-    })
+    await run.login(
+      'client-switch',
+      userA,
+      userA.password,
+      `${userA.login} bloqueado: outro cliente, sem cookie`,
+      { 'User-Agent': 'DevManager-LockoutTest-OutroCliente/2.0', Connection: 'close' },
+      'refuse'
+    )
   ];
   const oldToken = run.tokens.get(userA.login);
   if (oldToken) {
+    run.note('Tentativa 2: reaproveitando o token e o cookie (suukie) da sessão aberta no pré-voo, antes do bloqueio.');
     results.push(
-      await run.login('client-switch', userA, userA.password, `${userA.login} bloqueado: com o cookie da sessão anterior`, {
-        Cookie: `suukie=${oldToken}`,
-        Authorization: `Bearer ${oldToken}`
-      })
+      await run.login(
+        'client-switch',
+        userA,
+        userA.password,
+        `${userA.login} bloqueado: com o cookie da sessão anterior`,
+        { Cookie: `suukie=${oldToken}`, Authorization: `Bearer ${oldToken}` },
+        'refuse'
+      )
     );
   }
   const v = verdictWhileLocked(results);
@@ -121,7 +144,7 @@ export async function checkClientSwitch(run: LockoutRun): Promise<void> {
 
 /** Devolve se A continua bloqueada: se o logoff limpou o bloqueio, quem vem depois precisa bloquear de novo. */
 export async function checkLogoffBypass(run: LockoutRun): Promise<boolean> {
-  const started = Date.now();
+  const started = run.beginCheck('logoff-bypass');
   const { userA, logoffUrl } = run.config;
   const token = run.tokens.get(userA.login);
   if (!logoffUrl) {
@@ -129,11 +152,14 @@ export async function checkLogoffBypass(run: LockoutRun): Promise<boolean> {
     return true;
   }
   const auth: Record<string, string> = token ? { Authorization: `Bearer ${token}`, Cookie: `suukie=${token}` } : {};
+  run.note(token ? `Chamando o logoff com o token de ${userA.login} guardado no pré-voo.` : 'Chamando o logoff sem token (o pré-voo não devolveu token).');
   let logoff = await run.call({ checkId: 'logoff-bypass', label: `Logoff de ${userA.login}`, kind: 'logoff', user: userA.login, method: 'POST', url: logoffUrl, headers: auth, withAuth: !!token });
   if (logoff.attempt.status === 405) {
+    run.note('O logoff não aceita POST (HTTP 405); tentando com GET.');
     logoff = await run.call({ checkId: 'logoff-bypass', label: `Logoff de ${userA.login} (GET)`, kind: 'logoff', user: userA.login, method: 'GET', url: logoffUrl, headers: auth, withAuth: !!token });
   }
-  const after = await run.login('logoff-bypass', userA, userA.password, `${userA.login}: senha certa depois do logoff`);
+  run.note(`Tentando a senha certa de ${userA.login} depois do logoff: tem de continuar recusada.`);
+  const after = await run.login('logoff-bypass', userA, userA.password, `${userA.login}: senha certa depois do logoff`, undefined, 'refuse');
   const evidence = [evidenceOf(logoff), evidenceOf(after)];
   const v = verdictWhileLocked([after]);
   if (v.status === 'failed') {
@@ -147,13 +173,13 @@ export async function checkLogoffBypass(run: LockoutRun): Promise<boolean> {
 }
 
 export async function checkPerUser(run: LockoutRun, state: AccountState): Promise<void> {
-  const started = Date.now();
+  const started = run.beginCheck('per-user');
   const { userA, userB } = run.config;
   if (!userB || !state.bReady) {
-    run.setCheck('per-user', 'skipped', userB ? 'O usuário B não autenticou no pré-voo.' : 'Informe o usuário de teste B.', [], started);
+    run.setCheck('per-user', 'skipped', userB ? `O usuário B não autenticou no pré-voo: ${state.bFailure ?? 'sem detalhe'}` : 'Informe o usuário de teste B.', [], started);
     return;
   }
-  const r = await run.login('per-user', userB, userB.password, `${userB.login}: senha certa com ${userA.login} bloqueado`);
+  const r = await run.login('per-user', userB, userB.password, `${userB.login}: senha certa com ${userA.login} bloqueado`, undefined, 'enter');
   const evidence = [evidenceOf(r)];
   if (r.attempt.outcome === 'authenticated') {
     run.setCheck('per-user', 'passed', `${userB.login} entrou normalmente com ${userA.login} bloqueado na mesma origem.`, evidence, started);
@@ -166,19 +192,23 @@ export async function checkPerUser(run: LockoutRun, state: AccountState): Promis
 
 /** Lote de N falhas simultâneas em B: tem de bloquear (nenhum incremento perdido) e nada pode entrar enquanto isso. */
 export async function checkConcurrency(run: LockoutRun, state: AccountState): Promise<void> {
-  const started = Date.now();
+  const started = run.beginCheck('concurrency');
   const { userB, threshold, concurrency } = run.config;
   if (!userB || !state.bReady) {
-    run.setCheck('concurrency', 'skipped', userB ? 'O usuário B não autenticou no pré-voo.' : 'Informe o usuário de teste B (a conta A está ocupada com o bloqueio).', [], started);
+    run.setCheck('concurrency', 'skipped', userB ? `O usuário B não autenticou no pré-voo: ${state.bFailure ?? 'sem detalhe'}` : 'Informe o usuário de teste B (a conta A está ocupada com o bloqueio).', [], started);
     return;
   }
-  run.log(`Concorrência: ${threshold} falhas simultâneas em ${userB.login}`);
+  run.note(`Disparando ${threshold} senhas erradas para ${userB.login} ao mesmo tempo (as respostas podem chegar fora de ordem).`);
   const burst = await Promise.all(
     Array.from({ length: threshold }, (_, i) => run.login('concurrency', userB, run.nextWrongPassword(), `${userB.login}: falha simultânea ${i + 1}/${threshold}`))
   );
-  const probe = await run.login('concurrency', userB, userB.password, `${userB.login}: senha certa depois do lote`);
+  run.note(`Conferindo com a senha certa: se ${userB.login} entrar, alguma das ${threshold} falhas se perdeu na corrida.`);
+  const probe = await run.login('concurrency', userB, userB.password, `${userB.login}: senha certa depois do lote`, undefined, 'refuse');
+  run.note(`Disparando ${concurrency} logins simultâneos com a senha certa: nenhum pode entrar.`);
   const race = await Promise.all(
-    Array.from({ length: concurrency }, (_, i) => run.login('concurrency', userB, userB.password, `${userB.login}: senha certa simultânea ${i + 1}/${concurrency}`))
+    Array.from({ length: concurrency }, (_, i) =>
+      run.login('concurrency', userB, userB.password, `${userB.login}: senha certa simultânea ${i + 1}/${concurrency}`, undefined, 'refuse')
+    )
   );
   const evidence = [...burst, probe, ...race].map(evidenceOf);
   evidence.push(`${userB.login} fica bloqueado até o fim do prazo de bloqueio.`);
@@ -197,7 +227,20 @@ export async function checkConcurrency(run: LockoutRun, state: AccountState): Pr
 export const A_LOCK_CHECKS: readonly AuthLockoutCheckId[] = ['correct-password-while-locked', 'client-switch', 'per-user', 'logoff-bypass', 'lock-duration'];
 
 export async function preflightUser(run: LockoutRun, user: AuthLockoutUser, name: string): Promise<CallResult> {
-  const r = await run.login('preflight', user, user.password, `Pré-voo: ${name} (${user.login}) com a senha certa`);
+  const r = await run.login('preflight', user, user.password, `Pré-voo: ${name} (${user.login}) com a senha certa`, undefined, 'enter');
   if (r.token) run.tokens.set(user.login, r.token);
   return r;
+}
+
+/** Motivo do pré-voo recusado, com o que o WTA respondeu (já mascarado) para a pessoa saber se é senha ou bloqueio. */
+export function preflightFailureReason(r: CallResult): string {
+  const a = r.attempt;
+  if (a.status === 0) return `o WTA não respondeu (${a.error ?? 'sem resposta'}). Confira a URL do WTA.`;
+  const hint =
+    a.outcome === 'locked'
+      ? 'A conta parece bloqueada: aguarde o fim do bloqueio antes de rodar.'
+      : a.outcome === 'error'
+        ? 'Erro do servidor: confira se o WTA está de pé.'
+        : 'Confira login e senha (o WinThor pode diferenciar maiúsculas) ou se a conta já está bloqueada por um teste anterior.';
+  return `HTTP ${a.status}${a.bodySnippet ? `, resposta do WTA: ${a.bodySnippet.slice(0, 200)}` : ''}. ${hint}`;
 }
