@@ -49,7 +49,7 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
     const res = await service().preview({ fromEnv: 'master', targetVersion: '40', wshJar: '/opt/wsh/40/winthor-integracao-core.jar' });
     expect(res.success).toBe(true);
     expect(res.originWtaUrl).toBe('http://localhost:8086');
-    expect(routine801.fetchUpdates).toHaveBeenCalledWith('http://localhost:8086', expect.any(Function));
+    expect(routine801.fetchUpdates).toHaveBeenCalledWith('http://localhost:8086', expect.any(Function), 40);
     expect(res.log?.some((l) => l.includes('export_features.sh --version 40'))).toBe(true);
     expect(res.log?.at(-1)).toMatch(/Prévia concluída$/);
     expect(res.upgrade?.changes).toEqual([{ name: 'winthor-core-data', from: '1.39.0.1', to: '1.40.0.3' }]);
