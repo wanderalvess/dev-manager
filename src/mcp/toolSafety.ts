@@ -32,6 +32,9 @@ const DESTRUCTIVE_TOOLS = new Set([
   'db_execute_query',
   'db_restore_backup',
   'db_run_backup',
+  // O drill é uma restauração completa no destino; salvar a config pode agendar um comando livre
+  'db_run_restore_drill',
+  'db_save_backup_config',
   'db_clear_oracle_capture',
   'logs_clear_file',
   'qa_delete_template',

@@ -165,9 +165,15 @@ export function registerDatabaseHandlers(ctx: IpcContext): void {
     return backupSchedulerService.getHistory(connectionId);
   });
 
-  ipcMain.handle('db:run-restore-drill', async (_, scratchConnection: DatabaseConnectionConfig, filePath: string) => {
-    return await backupSchedulerService.runRestoreDrill(scratchConnection, filePath);
-  });
+  ipcMain.handle(
+    'db:run-restore-drill',
+    async (_, scratchConnection: DatabaseConnectionConfig, filePath: string, sourceConnectionId?: string) => {
+      const source = sourceConnectionId
+        ? (configService.getSettings().databaseConnections || []).find((c) => c.id === sourceConnectionId)
+        : undefined;
+      return await backupSchedulerService.runRestoreDrill(scratchConnection, filePath, 'manual', source);
+    }
+  );
 
   ipcMain.handle('backup:test-webhook', async (_, webhook: BackupWebhookConfig) => {
     return await backupSchedulerService.testWebhook(webhook);

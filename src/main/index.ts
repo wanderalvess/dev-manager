@@ -2,7 +2,7 @@ import { app, BrowserWindow, Tray, Menu, nativeImage, shell, session, Notificati
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { ConfigService } from './services/ConfigService';
+import { ConfigService, getAppDataDir } from './services/ConfigService';
 import { safeSend } from './utils/ipcSend';
 import { WindowsService } from './services/WindowsService';
 import { KarafService } from './services/KarafService';
@@ -123,7 +123,11 @@ function createWindow() {
   });
   const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
   const backupService = new BackupService(configService, databaseService);
-  const backupSchedulerService = new BackupSchedulerService(configService, backupService);
+  const backupSchedulerService = new BackupSchedulerService(
+    configService,
+    backupService,
+    path.join(getAppDataDir(), 'backup-scheduler.lock')
+  );
   backupSchedulerService.onResult = (connectionName, result) => {
     safeSend(mainWindow, 'backup:schedule-result', { connectionName, result });
     // Notificação do sistema operacional: garante visibilidade mesmo com a janela

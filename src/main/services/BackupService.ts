@@ -29,6 +29,9 @@ import { buildOracleParfileContent, writeTempOracleParfile } from './database/or
 /** Tempo máximo de um dump/restore MySQL via spawn (os execFile dos demais bancos já têm timeout). */
 const SPAWN_TIMEOUT_MS = 20 * 60 * 1000;
 
+/** Tempo máximo do expdp/impdp. Schemas reais passam fácil de 10 minutos. */
+const ORACLE_DATAPUMP_TIMEOUT_MS = 60 * 60 * 1000;
+
 /** Margem mínima de espaço livre exigida na pasta de destino antes de iniciar um backup local. */
 const MIN_FREE_DISK_BYTES = 200 * 1024 * 1024;
 
@@ -50,6 +53,8 @@ export interface BackupOptions {
   useCustomCommand?: boolean;
   /** Template do comando customizado a ser executado para esta conexão (requer placeholder {filePath}). */
   customCommand?: string;
+  /** Oracle: schema gravado no dump, quando difere do usuário de destino (drill num usuário scratch). Vira remap_schema no impdp. */
+  oracleSourceSchema?: string;
 }
 
 export interface BackupPlaceholders {
@@ -127,27 +132,89 @@ export function interpolateBackupTemplate(
   template: string,
   placeholders: BackupPlaceholders
 ): string {
-  let result = template;
   const map: Record<string, string> = {
-    '{user}': placeholders.user,
-    '{password}': placeholders.password || '',
-    '{host}': placeholders.host,
-    '{port}': placeholders.port,
-    '{database}': placeholders.database,
-    '{connectString}': placeholders.connectString,
-    '{directory}': placeholders.directory,
-    '{folder}': placeholders.folder,
-    '{fileName}': placeholders.fileName,
-    '{filePath}': placeholders.filePath,
-    '{logFileName}': placeholders.logFileName,
-    '{logPath}': placeholders.logPath,
-    '{timestamp}': placeholders.timestamp
+    user: placeholders.user,
+    password: placeholders.password || '',
+    host: placeholders.host,
+    port: placeholders.port,
+    database: placeholders.database,
+    connectString: placeholders.connectString,
+    directory: placeholders.directory,
+    folder: placeholders.folder,
+    fileName: placeholders.fileName,
+    filePath: placeholders.filePath,
+    logFileName: placeholders.logFileName,
+    logPath: placeholders.logPath,
+    timestamp: placeholders.timestamp
   };
 
-  for (const [key, val] of Object.entries(map)) {
-    result = result.split(key).join(val);
+  // Uma passada só: um valor que contenha "{filePath}" (ex.: na senha) não é substituído de novo.
+  return template.replace(/\{(\w+)\}/g, (match, key: string) =>
+    Object.prototype.hasOwnProperty.call(map, key) ? map[key] : match
+  );
+}
+
+/** Parte do nome de arquivo derivada de um texto livre, do jeito que os backups a gravam. */
+function safeFileNamePart(value: string): string {
+  return value.replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+/** Sufixo de todo arquivo de backup gerado pelo Dev Manager: o timestamp ISO e a extensão. */
+const BACKUP_FILE_SUFFIX = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z\.(sql(\.gz)?|dump|dmp)$/i;
+
+/**
+ * Indica se o arquivo foi gerado por um backup desta conexão (`<conexão>_<banco ou usuário>_<timestamp>.<ext>`).
+ * Retenção e drill só mexem nesses arquivos: a pasta pode ser compartilhada com outras conexões ou ter scripts do usuário.
+ */
+export function isBackupFileOfConnection(fileName: string, config: Pick<DatabaseConnectionConfig, 'name' | 'database' | 'user'>): boolean {
+  const middles = new Set(
+    [config.database, config.user].filter((v): v is string => !!v).map(safeFileNamePart)
+  );
+  if (middles.size === 0) middles.add('backup');
+  // Prefixo = nome da conexão; sem nome, cada backup cai no banco (Postgres/MySQL) ou no usuário (Oracle).
+  const connNames = new Set(
+    [config.name || config.database || config.user, config.name || config.user]
+      .filter((v): v is string => !!v)
+      .map(safeFileNamePart)
+  );
+  for (const conn of connNames) {
+    for (const middle of middles) {
+      const prefix = `${conn}_${middle}_`;
+      if (fileName.startsWith(prefix) && BACKUP_FILE_SUFFIX.test(fileName.slice(prefix.length))) return true;
+    }
   }
-  return result;
+  return false;
+}
+
+/**
+ * Ambiente do pg_dump/psql/pg_restore. LC_MESSAGES=C deixa as mensagens do próprio cliente em
+ * inglês, que é o que a ajuda "Como resolver" reconhece com certeza (as do servidor seguem o idioma dele).
+ */
+function postgresToolEnv(config: DatabaseConnectionConfig): NodeJS.ProcessEnv {
+  return { ...process.env, PGPASSWORD: config.password || '', LC_MESSAGES: 'C' };
+}
+
+/** Extensões de backup que cada tipo de banco sabe restaurar. */
+const RESTORABLE_EXTENSIONS: Record<DatabaseConnectionConfig['type'], RegExp> = {
+  postgres: /\.(sql|dump)$/i,
+  oracle: /\.dmp$/i,
+  mysql: /\.sql(\.gz)?$/i
+};
+
+const RESTORABLE_EXTENSION_LABELS: Record<DatabaseConnectionConfig['type'], string> = {
+  postgres: '.sql ou .dump',
+  oracle: '.dmp',
+  mysql: '.sql ou .sql.gz'
+};
+
+/** Mesmo banco físico: mesmo id, ou mesmo host, porta e banco (e usuário, no Oracle, onde o schema é o usuário). */
+export function isSameDatabaseTarget(a: DatabaseConnectionConfig, b: DatabaseConnectionConfig): boolean {
+  if (a.id && b.id && a.id === b.id) return true;
+  const sameHost = (a.host || '').toLowerCase() === (b.host || '').toLowerCase();
+  const samePort = String(a.port || '') === String(b.port || '');
+  const sameDb = (a.database || '').toLowerCase() === (b.database || '').toLowerCase();
+  if (!(sameHost && samePort && sameDb && a.type === b.type)) return false;
+  return a.type === 'oracle' ? (a.user || '').toLowerCase() === (b.user || '').toLowerCase() : true;
 }
 
 /**
@@ -240,13 +307,15 @@ export class BackupService {
       return config;
     }
     const settings = this.configService.getSettings();
+    // Só preenche a senha salva quando o destino é o mesmo da conexão salva: casar só pelo id
+    // deixaria quem chama (MCP/HTTP) mandar a senha de uma conexão para outro host.
     const saved = settings.databaseConnections?.find(
       (c) =>
-        (config.id && c.id === config.id) ||
-        (c.host === config.host &&
-          c.port === config.port &&
-          c.user === config.user &&
-          c.database === config.database)
+        String(c.host) === String(config.host) &&
+        String(c.port) === String(config.port) &&
+        c.user === config.user &&
+        c.database === config.database &&
+        (!config.id || c.id === config.id || !settings.databaseConnections?.some((o) => o.id === config.id))
     );
     if (saved?.password) {
       return { ...config, password: saved.password };
@@ -406,6 +475,8 @@ export class BackupService {
             PGPASSWORD: config.password || '',
             MYSQL_PWD: config.password || ''
           },
+          // Um comando que usa só {fileName} grava relativo à pasta atual: que seja a de destino.
+          cwd: destinationFolder,
           maxBuffer: 20 * 1024 * 1024,
           timeout: 20 * 60 * 1000
         },
@@ -415,6 +486,8 @@ export class BackupService {
           const maskedStdout = maskSensitiveText(stdout || '', config.password);
 
           if (error) {
+            // Dump pela metade não pode ficar na pasta: entraria na retenção e no drill como se fosse válido.
+            fs.promises.unlink(targetFilePath).catch(() => {});
             const maskedErrMessage = maskSensitiveText(error.message || '', config.password);
             const detail = maskedStderr.trim() || maskedStdout.trim() || maskedErrMessage;
             const fallback = `Falha ao executar comando personalizado (${path.basename(binary)}): ${detail}`;
@@ -478,14 +551,40 @@ export class BackupService {
   public async runRestoreDrill(
     scratchConfig: DatabaseConnectionConfig,
     filePath: string,
-    options?: BackupOptions
+    options?: BackupOptions,
+    /** Conexão que gerou o backup; o drill recusa rodar sobre ela. */
+    sourceConfig?: DatabaseConnectionConfig
   ): Promise<BackupResult> {
     scratchConfig = this.resolveConnectionConfig(scratchConfig);
+    const refusal = this.restoreDrillRefusal(scratchConfig, filePath, sourceConfig);
+    if (refusal) return { success: false, message: refusal };
+
     const result = await this.restoreBackup(scratchConfig, filePath, options);
     if (result.success) {
       result.checksumSha256 = await this.computeChecksum(filePath).catch(() => undefined);
     }
     return result;
+  }
+
+  /**
+   * Motivo para não rodar o drill, ou null. O drill sobrescreve o destino, então nunca roda sobre
+   * a conexão de origem (informada, ou reconhecida pelo nome do arquivo) nem sobre uma de produção.
+   */
+  private restoreDrillRefusal(
+    scratch: DatabaseConnectionConfig,
+    filePath: string,
+    source?: DatabaseConnectionConfig
+  ): string | null {
+    if (scratch.isProduction) {
+      return `A conexão ${scratch.name} está marcada como produção e não pode ser usada como destino do teste de restauração.`;
+    }
+    if ((source && isSameDatabaseTarget(source, scratch)) || isBackupFileOfConnection(path.basename(filePath), scratch)) {
+      return `A conexão ${scratch.name} é a origem deste backup. Escolha uma conexão descartável, de outro banco, para o teste de restauração.`;
+    }
+    if (source && source.type !== scratch.type) {
+      return `O backup é de ${source.type} e a conexão ${scratch.name} é ${scratch.type}: escolha uma conexão do mesmo tipo.`;
+    }
+    return null;
   }
 
   /** Calcula o SHA-256 de um arquivo via streaming, sem carregá-lo inteiro em memória. */
@@ -513,6 +612,14 @@ export class BackupService {
       return { success: false, message: 'Arquivo de backup não encontrado.' };
     }
 
+    const restorable = RESTORABLE_EXTENSIONS[config.type];
+    if (restorable && !restorable.test(filePath)) {
+      return {
+        success: false,
+        message: `O arquivo ${path.basename(filePath)} não é um backup que a conexão ${config.name} (${config.type}) restaure. Esperado: ${RESTORABLE_EXTENSION_LABELS[config.type]}.`
+      };
+    }
+
     if (!this.acquireLock(config.id)) {
       return { success: false, message: 'Já existe um backup ou restauração em andamento para esta conexão.' };
     }
@@ -522,7 +629,7 @@ export class BackupService {
         case 'postgres':
           return await this.restorePostgres(config, filePath, options?.psqlPath, options?.pgRestorePath);
         case 'oracle':
-          return await this.restoreOracle(config, filePath, options?.impdpPath, options?.oracleDirectory);
+          return await this.restoreOracle(config, filePath, options?.impdpPath, options?.oracleDirectory, options?.oracleSourceSchema);
         case 'mysql':
           return await this.restoreMysql(config, filePath, options?.mysqlPath);
         default:
@@ -564,12 +671,22 @@ export class BackupService {
 
   /**
    * Lista os arquivos de backup (.sql / .dump / .dmp) já existentes em uma pasta, mais recentes primeiro.
+   * Com `connection`, só os gerados por backups dessa conexão (a pasta pode ser compartilhada).
+   * A data é a de modificação: a de criação muda quando o arquivo é copiado para a pasta.
    */
-  public async listBackups(destinationFolder: string): Promise<BackupFileInfo[]> {
+  public async listBackups(
+    destinationFolder: string,
+    connection?: Pick<DatabaseConnectionConfig, 'name' | 'database' | 'user'>
+  ): Promise<BackupFileInfo[]> {
     if (!isSafeLocalPath(destinationFolder) || !fs.existsSync(destinationFolder)) return [];
 
     const entries = await fs.promises.readdir(destinationFolder, { withFileTypes: true });
-    const files = entries.filter((e) => e.isFile() && /\.(sql(\.gz)?|dump|dmp)$/i.test(e.name));
+    const files = entries.filter(
+      (e) =>
+        e.isFile() &&
+        /\.(sql(\.gz)?|dump|dmp)$/i.test(e.name) &&
+        (!connection || isBackupFileOfConnection(e.name, connection))
+    );
 
     const infos: BackupFileInfo[] = [];
     for (const file of files) {
@@ -580,7 +697,7 @@ export class BackupService {
           fileName: file.name,
           filePath,
           sizeBytes: stat.size,
-          createdAt: stat.birthtime.toISOString()
+          createdAt: stat.mtime.toISOString()
         });
       } catch {
         // Ignora arquivos que sumiram entre o readdir e o stat
@@ -593,12 +710,18 @@ export class BackupService {
   /**
    * Apaga backups antigos da pasta: mantém só os `retentionCount` mais recentes (quando informado)
    * e/ou remove qualquer backup com mais de `retentionDays` dias (quando informado). Os dois critérios
-   * são independentes — um arquivo é apagado se violar qualquer um deles.
+   * são independentes — um arquivo é apagado se violar qualquer um deles. Só considera os backups
+   * gerados por `connection`: outras conexões na mesma pasta e scripts do usuário ficam intactos.
    */
-  public async applyRetention(destinationFolder: string, retentionCount?: number, retentionDays?: number): Promise<number> {
+  public async applyRetention(
+    destinationFolder: string,
+    connection: Pick<DatabaseConnectionConfig, 'name' | 'database' | 'user'>,
+    retentionCount?: number,
+    retentionDays?: number
+  ): Promise<number> {
     if (!retentionCount && !retentionDays) return 0;
 
-    const files = await this.listBackups(destinationFolder);
+    const files = await this.listBackups(destinationFolder, connection);
     const maxAgeMs = retentionDays && retentionDays > 0 ? retentionDays * 24 * 60 * 60 * 1000 : undefined;
     const now = Date.now();
 
@@ -665,7 +788,7 @@ export class BackupService {
         binary,
         args,
         {
-          env: { ...process.env, PGPASSWORD: config.password || '' },
+          env: postgresToolEnv(config),
           maxBuffer: 20 * 1024 * 1024,
           timeout: 10 * 60 * 1000
         },
@@ -735,6 +858,8 @@ export class BackupService {
           '--no-password',
           '--clean',
           '--if-exists',
+          // Tudo ou nada: um erro no meio não deixa o banco com os DROP feitos e metade recriada.
+          '--single-transaction',
           filePath
         ]
       : [
@@ -742,16 +867,19 @@ export class BackupService {
           '-p', String(config.port || 5432),
           '-U', config.user,
           '-d', config.database,
+          '--no-password',
+          '--no-psqlrc',
+          '--single-transaction',
           '-f', filePath,
           '-v', 'ON_ERROR_STOP=1'
         ];
 
     return new Promise<BackupResult>((resolve) => {
-      execFile(
+      const child = execFile(
         binary,
         args,
         {
-          env: { ...process.env, PGPASSWORD: config.password || '' },
+          env: postgresToolEnv(config),
           maxBuffer: 20 * 1024 * 1024,
           timeout: 10 * 60 * 1000
         },
@@ -766,6 +894,9 @@ export class BackupService {
           resolve({ success: true, message: `Restauração concluída a partir de ${filePath}`, durationMs });
         }
       );
+
+      // Sem stdin: se o servidor ainda pedir senha, falha na hora em vez de esperar o timeout.
+      child.stdin?.end();
     });
   }
 
@@ -1067,7 +1198,7 @@ export class BackupService {
         {
           env: { ...buildOracleToolEnv(binary), ...buildOracleConnectEnv(config) },
           maxBuffer: 20 * 1024 * 1024,
-          timeout: 10 * 60 * 1000
+          timeout: ORACLE_DATAPUMP_TIMEOUT_MS
         },
         (error, stdout, stderr) => {
           const durationMs = Date.now() - startTime;
@@ -1117,7 +1248,8 @@ export class BackupService {
     config: DatabaseConnectionConfig,
     filePath: string,
     impdpPath?: string,
-    oracleDirectory?: string
+    oracleDirectory?: string,
+    sourceSchema?: string
   ): Promise<BackupResult> {
     const startTime = Date.now();
 
@@ -1134,12 +1266,19 @@ export class BackupService {
     const logFileName = `restore_${Date.now()}.log`;
 
     const binary = impdpPath && impdpPath.trim() ? impdpPath.trim() : 'impdp';
+    const source = sourceSchema?.trim();
+    if (source && !isValidIdentifier(source)) {
+      return { success: false, message: 'Schema de origem do dump inválido.' };
+    }
+    // Dump de outro schema (drill num usuário scratch): filtra pelo schema do dump e remapeia para o destino.
+    const remap = !!source && source.toUpperCase() !== config.user.toUpperCase();
     const params = [
       `directory=${directory}`,
       `dumpfile=${dumpFileName}`,
       `logfile=${logFileName}`,
-      `schemas=${config.user}`
+      `schemas=${remap ? source : config.user}`
     ];
+    if (remap) params.push(`remap_schema=${source}:${config.user}`);
 
     const parfile = await this.prepareOracleParfile(config, params);
     if ('message' in parfile) return parfile;
@@ -1151,7 +1290,7 @@ export class BackupService {
         {
           env: { ...buildOracleToolEnv(binary), ...buildOracleConnectEnv(config) },
           maxBuffer: 20 * 1024 * 1024,
-          timeout: 10 * 60 * 1000
+          timeout: ORACLE_DATAPUMP_TIMEOUT_MS
         },
         (error, stdout, stderr) => {
           const durationMs = Date.now() - startTime;
@@ -1208,11 +1347,29 @@ export class BackupService {
   private async oracleCliFailure(
     config: DatabaseConnectionConfig,
     binary: string,
-    error: { code?: string | number | null; message?: string },
+    error: { code?: string | number | null; message?: string; killed?: boolean },
     stdout: string | undefined,
     stderr: string | undefined,
     ctx: Omit<OracleFailureContext, 'user' | 'database' | 'oracleMode' | 'directories'>
   ): Promise<BackupResult> {
+    if (error.killed) {
+      const tool = path.basename(binary).replace(/\.exe$/i, '');
+      const minutes = ORACLE_DATAPUMP_TIMEOUT_MS / 60000;
+      return {
+        success: false,
+        message: `O ${tool} passou de ${minutes} minutos e foi interrompido, mas o job do Data Pump pode continuar rodando no servidor.`,
+        help: {
+          steps: [
+            'Matar o cliente não para o job: ele segue no servidor, segurando a tabela de controle e talvez gravando o dump.',
+            'Veja os jobs ativos com o SQL abaixo e, se for o caso, conecte-se a ele e pare com KILL_JOB.'
+          ],
+          snippets: [
+            { label: 'Jobs do Data Pump em andamento', code: 'SELECT owner_name, job_name, operation, state FROM dba_datapump_jobs;' },
+            { label: `Parar o job (troque pelo job_name)`, code: `${tool} ${config.user} attach=<job_name>\nKILL_JOB` }
+          ]
+        }
+      };
+    }
     if (error.code === 'ENOENT') {
       const help: BackupHelp = {
         steps: [

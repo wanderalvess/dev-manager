@@ -96,7 +96,7 @@ export function explainPostgresFailure(output: string, ctx: PostgresFailureConte
     });
   }
 
-  if (/password authentication failed|autenticação do tipo password falhou|autenticação password falhou/i.test(output)) {
+  if (/password authentication failed|autenticação do tipo (senha|password) falhou|autenticação password falhou/i.test(output)) {
     return result({
       message: `Usuário ou senha incorretos para ${ctx.user} no PostgreSQL ${target}.`,
       help: {
@@ -167,7 +167,7 @@ export function explainPostgresFailure(output: string, ctx: PostgresFailureConte
   }
 
   if (
-    /could not connect|connection refused|connection timed out|could not translate host name|ECONNREFUSED|não foi possível conectar|conexão recusada/i.test(
+    /could not connect|connection refused|connection timed out|could not translate host name|ECONNREFUSED|não foi possível conectar|não pôde conectar|conexão com (o )?servidor .* falhou|conexão recusada/i.test(
       output
     )
   ) {
