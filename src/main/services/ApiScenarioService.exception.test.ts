@@ -9,6 +9,10 @@ import { ApiScenarioService } from './ApiScenarioService';
 import type { ConfigService } from './ConfigService';
 import { newExceptionScenario } from '../../renderer/src/utils/apiScenarioView';
 
+const UNK_NUMERO = 'For input string: "NUMERO"';
+const UNK_DATA =
+  "Failed to convert value of type [java.lang.String] to required type [java.time.LocalDateTime]; nested exception is org.springframework.core.convert.ConversionFailedException: Failed to convert from type [java.lang.String] to type [@org.springframework.format.annotation.DateTimeFormat @org.springframework.web.bind.annotation.RequestParam java.time.LocalDateTime] for value 'NAO-E-DATA'; nested exception is java.lang.IllegalArgumentException: Parse attempt failed for value [NAO-E-DATA]";
+
 /**
  * Exceção não mapeada: o QA força a API a cair num erro que o código não trata. /tratado responde 400 com mensagem
  * e grava a linha no winthor.log (com o X-Request-Id); /vaza responde 500 com stack trace, ORA- e JDBC e não grava nada.
@@ -24,7 +28,13 @@ function startFakeApi(logFile: string) {
         fs.appendFileSync(logFile, `${line}\n`);
         logged.push(line);
         res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'Campo desconhecido: campoQueNaoExiste' }));
+        res.end(JSON.stringify({ code: 'PED-001', message: 'Campo desconhecido: campoQueNaoExiste', detailedMessage: '', details: [] }));
+        return;
+      }
+      // Os dois formatos que o WTA devolve quando nenhum tratador reconhece a exceção
+      if (req.url?.startsWith('/winthor/unk-numero') || req.url?.startsWith('/winthor/unk-data')) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ code: 'UNK-ERR', message: 'Erro de Requisição', detailedMessage: req.url.includes('numero') ? UNK_NUMERO : UNK_DATA, details: [] }));
         return;
       }
       if (req.url?.startsWith('/winthor/vaza')) {
@@ -81,14 +91,15 @@ describe('Validação de API: exceção não mapeada', () => {
     const result = await run(exception('tratado'));
     expect(result.rules.map((r) => [r.label, r.passed])).toEqual([
       ['Status um destes 4xx', true],
+      ['Campo $.code diferente de UNK-ERR', true],
       ['Cabeçalho content-type contém json', true],
       ['Corpo casa com a expressão "(message|mensagem|erro|error)"\\s*:', true],
-      ['Resposta sem stack trace, erro ORA-/SQL, string de conexão, senha ou token', true],
+      ['Resposta sem stack trace, mensagem interna da exceção, erro ORA-/SQL, string de conexão, senha ou token', true],
       ['winthor.log ou API de logs registra "{{requestId}}"', true]
     ]);
     expect(result.success).toBe(true);
     expect(result.requestId).toMatch(/^dm-/);
-    expect(result.rules[4].actual).toContain(result.requestId);
+    expect(result.rules[5].actual).toContain(result.requestId);
   });
 
   it('exceção vazada: 500, stack trace, ORA- e JDBC expostos e nada no log', async () => {
@@ -96,12 +107,33 @@ describe('Validação de API: exceção não mapeada', () => {
     const byKind = Object.fromEntries(result.rules.map((r, i) => [i, r]));
     expect(result.success).toBe(false);
     expect(byKind[0]).toMatchObject({ passed: false, actual: '500' });
-    expect(byKind[3].passed).toBe(false);
-    expect(byKind[3].actual).toBe('expôs stack trace, string de conexão, erro de SQL do banco');
+    // Sem o campo code a regra do UNK-ERR não passa: ela fala de um código que precisa existir
+    expect(byKind[1]).toMatchObject({ passed: false });
     expect(byKind[4].passed).toBe(false);
-    expect(byKind[4].actual).toContain('não apareceu nas 0 linha(s) novas do winthor.log');
+    expect(byKind[4].actual).toMatch(/^expôs stack trace \(.*java\.lang\.NullPointerException.*\); string de conexão; erro de SQL do banco \(.*ORA-00942/);
+    expect(byKind[4].actual).not.toContain('mensagem interna');
+    expect(byKind[5].passed).toBe(false);
+    expect(byKind[5].actual).toContain('não apareceu nas 0 linha(s) novas do winthor.log');
     expect(result.exposure).toEqual(expect.arrayContaining(['stack-trace', 'sql-error', 'connection-string']));
     expect(result.markdown).toContain('A resposta expõe: stack trace');
+  });
+
+  it('UNK-ERR com a mensagem crua da exceção: reprova o código e o vazamento, mostrando o trecho', async () => {
+    const numero = await run(exception('unk-numero'));
+    expect(numero.success).toBe(false);
+    expect(numero.rules[0]).toMatchObject({ passed: true, actual: '400' });
+    expect(numero.rules[1]).toMatchObject({ label: 'Campo $.code diferente de UNK-ERR', passed: false, actual: '"UNK-ERR"' });
+    expect(numero.rules[4].passed).toBe(false);
+    expect(numero.rules[4].actual).toContain('mensagem interna da exceção (Java/Spring) (');
+    expect(numero.rules[4].actual).toContain('For input string: "NUMERO"');
+    expect(numero.exposure).toEqual(['exception-message']);
+
+    const data = await run(exception('unk-data'));
+    expect(data.rules[1].passed).toBe(false);
+    expect(data.rules[4].passed).toBe(false);
+    expect(data.rules[4].actual).toContain('stack trace (');
+    expect(data.rules[4].actual).toContain('ConversionFailedException');
+    expect(data.exposure).toEqual(expect.arrayContaining(['stack-trace', 'exception-message']));
   });
 
   it('linhas antigas do log não contam: só o que foi escrito depois da chamada', async () => {

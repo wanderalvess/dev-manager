@@ -1,4 +1,4 @@
-import { EXPOSURE_LABELS, detectExposure, isBlockingExposure } from '../../../shared/authLockoutAnalysis';
+import { EXPOSURE_LABELS, detectExposure, exposureExcerpts, isBlockingExposure } from '../../../shared/authLockoutAnalysis';
 import type { ExposureFinding } from '../../../shared/authLockoutTypes';
 import { describeRule } from '../../../shared/apiRuleText';
 import type { ApiRule, ApiRuleResult } from '../../../shared/apiScenarioTypes';
@@ -13,18 +13,28 @@ const LOG_ATTEMPTS = 3;
 const LOG_RETRY_MS = 1000;
 export const DEFAULT_LOGS_PATH = '/winthor/ferramenta/servidor/v1/logs';
 
-/** Exceção não mapeada: a resposta não pode trazer detalhe interno. Versão do servidor no cabeçalho não reprova. */
-export function evaluateLeakRule(rule: ApiRule, exposure: ExposureFinding[], status: number): ApiRuleResult {
-  const base = { ruleId: rule.id, label: describeRule(rule), expected: 'nenhum vazamento' };
-  if (status === 0) return { ...base, passed: false, actual: 'sem resposta' };
-  const blocking = exposure.filter(isBlockingExposure);
-  const soft = exposure.includes('server-version') ? ` (atenção: ${EXPOSURE_LABELS['server-version']})` : '';
-  if (blocking.length === 0) return { ...base, passed: true, actual: `nenhum vazamento${soft}` };
-  return { ...base, passed: false, actual: `expôs ${blocking.map((f) => EXPOSURE_LABELS[f]).join(', ')}` };
+export interface ResponseExposure {
+  findings: ExposureFinding[];
+  /** O trecho que denunciou cada achado técnico (ver `exposureExcerpts`). */
+  excerpts: Partial<Record<ExposureFinding, string>>;
 }
 
-export function responseExposure(body: string, headers: Record<string, string>, secrets: string[]): ExposureFinding[] {
-  return detectExposure({ body, headers, secrets });
+/** Exceção não mapeada: a resposta não pode trazer detalhe interno. Versão do servidor no cabeçalho não reprova. */
+export function evaluateLeakRule(rule: ApiRule, exposure: ResponseExposure, status: number): ApiRuleResult {
+  const base = { ruleId: rule.id, label: describeRule(rule), expected: 'nenhum vazamento' };
+  if (status === 0) return { ...base, passed: false, actual: 'sem resposta' };
+  const blocking = exposure.findings.filter(isBlockingExposure);
+  const soft = exposure.findings.includes('server-version') ? ` (atenção: ${EXPOSURE_LABELS['server-version']})` : '';
+  if (blocking.length === 0) return { ...base, passed: true, actual: `nenhum vazamento${soft}` };
+  // Cada achado com o trecho que o denunciou: o QA vê na hora o que a API devolveu
+  const parts = blocking.map((f) => (exposure.excerpts[f] ? `${EXPOSURE_LABELS[f]} (${exposure.excerpts[f]})` : EXPOSURE_LABELS[f]));
+  return { ...base, passed: false, actual: `expôs ${parts.join('; ')}` };
+}
+
+export function responseExposure(body: string, headers: Record<string, string>, secrets: string[]): ResponseExposure {
+  const input = { body, headers, secrets };
+  const findings = detectExposure(input);
+  return { findings, excerpts: findings.length ? exposureExcerpts(input) : {} };
 }
 
 /** Onde o winthor.log estava antes da chamada: só o que for escrito depois conta. */

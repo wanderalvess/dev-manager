@@ -73,10 +73,16 @@ export function getApiScenarioFaq(): FaqItem[] {
           </p>
           <ul className="list-disc pl-4 space-y-1.5">
             <li>{strong('Status um destes 4xx:')} o erro forçado precisa voltar como erro tratado, não como 500.</li>
+            <li>
+              {strong('Campo $.code diferente de UNK-ERR:')} {code('UNK-ERR')} é o código que o WTA dá à exceção que nenhum tratador reconheceu
+              (ex.: {code('"code": "UNK-ERR", "message": "Erro de Requisição"')}). O erro forçado precisa voltar com um código próprio.
+            </li>
             <li>{strong('Cabeçalho e corpo:')} a resposta é JSON e tem o formato de erro ({code('message')}, {code('mensagem')} ou {code('erro')}).</li>
             <li>
-              {strong('Sem vazamento de erro:')} reprova se a resposta (corpo ou cabeçalhos) trouxer stack trace Java, erro ORA- ou de SQL,
-              string de conexão, a senha usada ou token. Mesmo sem essa regra, o passo a passo avisa quando algo vaza.
+              {strong('Sem vazamento de erro:')} reprova se a resposta (corpo ou cabeçalhos) trouxer stack trace Java, a mensagem crua da
+              exceção (ex.: {code('For input string: "NUMERO"')}, {code('Failed to convert value of type [java.lang.String]')},{' '}
+              {code('nested exception is')}), erro ORA- ou de SQL, string de conexão, a senha usada ou token. O resultado mostra o trecho que
+              vazou. Mesmo sem essa regra, o passo a passo avisa quando algo vaza.
             </li>
             <li>
               {strong('Registrado no log:')} cada execução tem um identificador novo ({code('{{requestId}}')}, ex.: {code('dm-mf3k2a-1b2c3d')}),

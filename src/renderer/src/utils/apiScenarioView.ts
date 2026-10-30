@@ -75,6 +75,8 @@ export function newExceptionScenario(): ApiScenario {
     auth: 'settings-wta',
     rules: [
       { ...newRule('status'), operator: 'in', expected: '4xx' },
+      // UNK-ERR é o código que o WTA dá à exceção que nenhum tratador reconheceu
+      { ...newRule('json'), path: '$.code', operator: 'not-equals', expected: 'UNK-ERR' },
       newRule('header'),
       { ...newRule('body'), operator: 'matches', expected: '"(message|mensagem|erro|error)"\\s*:' },
       newRule('leak'),

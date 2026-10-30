@@ -108,8 +108,8 @@ export async function runApiScenario(
 
   const json = response.isJson ? safeParse(response.rawBody) : undefined;
   const evaluated = { status: response.status, isJson: response.isJson, json, durationMs: response.durationMs, headers: response.rawHeaders, bodyText: response.rawBody };
-  const exposure = response.status > 0 ? responseExposure(response.rawBody, response.rawHeaders, secrets) : [];
-  if (exposure.some((f) => f !== 'server-version') && !scenario.rules.some((r) => r.kind === 'leak')) {
+  const exposure = response.status > 0 ? responseExposure(response.rawBody, response.rawHeaders, secrets) : { findings: [], excerpts: {} };
+  if (exposure.findings.some((f) => f !== 'server-version') && !scenario.rules.some((r) => r.kind === 'leak')) {
     note('A resposta expõe detalhe interno. Acrescente a regra "Sem vazamento de erro" para reprovar o cenário por isso.', 'error');
   }
   const rules: ApiRuleResult[] = [];
@@ -143,7 +143,7 @@ export async function runApiScenario(
     isJson: response.isJson,
     ...(response.error ? { error: response.error } : {})
   };
-  return finish({ success, rules, response: snapshot, exposure });
+  return finish({ success, rules, response: snapshot, exposure: exposure.findings });
 }
 
 /** Authorization guarda o esquema ("Bearer ***") e Cookie os nomes ("suukie=***"): dá para saber o que foi enviado sem o valor. */
