@@ -52,7 +52,7 @@ function derive(form: InfrNewVersionForm, edited: Set<Derived>): InfrNewVersionF
 const toPort = (v: string) => (v.trim() ? parseInt(v, 10) : undefined);
 
 /** Aba Nova versão do Assistente INFR: escolhas do usuário, prévia pelo catálogo da 801 e geração. */
-export function useInfrNewVersion(distro?: string, infrPath?: string) {
+export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerated?: (name: string) => void) {
   const [form, setForm] = useState<InfrNewVersionForm>(EMPTY);
   const [edited, setEdited] = useState<Set<Derived>>(new Set());
   const [envs, setEnvs] = useState<InfrEnvironmentsResult | null>(null);
@@ -219,6 +219,7 @@ export function useInfrNewVersion(distro?: string, infrPath?: string) {
       }
       const res = await api.runInfrSetupScript('version', { distro, infrPath, winthorVersion: form.version, newEnv });
       setMessage(`Manifesto: ${saved.path}. Configuração: ${env?.path ?? '—'}. ${res.output}`);
+      if (res.success) onGenerated?.(form.name.trim());
     } finally {
       setBusy(null);
     }
