@@ -96,6 +96,8 @@ export interface InfrVersionPreview {
   manifestText?: string;
   /** Manifesto da versão que já existe: a geração só o substitui se o usuário escolher */
   existing?: ExistingVersionManifest;
+  /** Registro de cada passo (comandos, respostas HTTP, login sem senha), para mostrar e copiar */
+  log?: string[];
 }
 
 /** Gravação de `versions/<versão>.features`; sem `overwrite`, não substitui um manifesto existente. */

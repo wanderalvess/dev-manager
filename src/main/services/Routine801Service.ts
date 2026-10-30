@@ -190,18 +190,30 @@ export class Routine801Service {
   }
 
   /** Consulta um catálogo do servidor da Rotina 801, renovando o login do WTA se a sessão expirou. */
-  private async fetchCatalog(path: string, label: string, customUrl?: string): Promise<Routine801CatalogResponse> {
+  private async fetchCatalog(path: string, label: string, customUrl?: string, trace?: (line: string) => void): Promise<Routine801CatalogResponse> {
     const baseUrl = this.getServerUrl(customUrl);
     if (!isSafeUrl(baseUrl)) {
       throw new Error(`URL de servidor inválida: ${baseUrl}`);
     }
 
     const targetUrl = `${baseUrl}/winthor/ferramenta/servidor/v1/${path}`;
-    const request = () => httpRequest(targetUrl, { method: 'GET', headers: this.getAuthHeaders(), timeout: 15000 });
+    const settings = this.configService.getSettings();
+    // Só diz se há token e login; token e senha nunca vão para o registro
+    trace?.(`Usuário WTA nas Configurações: ${settings.wtaLogin?.trim() ? 'configurado' : 'não configurado'}; token salvo: ${settings.wtaAuthToken ? 'sim' : 'não'}`);
+    const request = async () => {
+      trace?.(`GET ${targetUrl}`);
+      const started = Date.now();
+      const r = await httpRequest(targetUrl, { method: 'GET', headers: this.getAuthHeaders(), timeout: 15000 });
+      trace?.(`HTTP ${r.status} ${r.statusText || ''} em ${Date.now() - started} ms; content-type: ${r.headers?.['content-type'] || '(nenhum)'}`);
+      return r;
+    };
 
     let res = await request();
-    if ((res.status === 401 || res.status === 403) && (await this.renewWtaAuth(baseUrl))) {
-      res = await request();
+    if (res.status === 401 || res.status === 403) {
+      trace?.('Sessão recusada; tentando login automático no WTA');
+      const renewed = await this.renewWtaAuth(baseUrl);
+      trace?.(renewed ? 'Login automático: token novo recebido' : `Login automático falhou: ${this.lastAuthError || 'sem motivo'}`);
+      if (renewed) res = await request();
     }
     if (!res.ok) {
       const auth = (res.status === 401 || res.status === 403) && this.lastAuthError ? `; ${this.lastAuthError}` : '';
@@ -209,6 +221,7 @@ export class Routine801Service {
     }
 
     const body = await res.text();
+    trace?.(`Corpo: ${body.length} caracteres; começo: ${body.trim().replace(/\s+/g, ' ').slice(0, 200) || '(vazio)'}`);
     let data: unknown;
     try {
       data = JSON.parse(body);
@@ -225,8 +238,8 @@ export class Routine801Service {
   }
 
   /** Obtém a lista de atualizações disponíveis para os pacotes instalados. */
-  public fetchUpdates(customUrl?: string): Promise<Routine801CatalogResponse> {
-    return this.fetchCatalog('atualizacao', 'atualizações', customUrl);
+  public fetchUpdates(customUrl?: string, trace?: (line: string) => void): Promise<Routine801CatalogResponse> {
+    return this.fetchCatalog('atualizacao', 'atualizações', customUrl, trace);
   }
 
   /**
