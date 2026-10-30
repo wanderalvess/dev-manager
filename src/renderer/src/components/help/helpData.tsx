@@ -12,6 +12,7 @@ import {
   Copy,
   RotateCcw,
   Activity,
+  Compass,
   LucideIcon
 } from 'lucide-react';
 import { getModulesFaq } from './faq/modulesFaq';
@@ -26,7 +27,7 @@ import { getInfrVersionFaq } from './faq/infrVersionFaq';
 import { McpSafetyNote } from './modules/McpSafetyNote';
 import { MCP_TOOL_COUNT } from '../../../../shared/mcpCatalog';
 
-export type HelpCategory = 'overview' | 'modules' | 'shortcuts' | 'faq' | 'about';
+export type HelpCategory = 'overview' | 'modules' | 'guides' | 'shortcuts' | 'faq' | 'about';
 
 export interface HelpCategoryItem {
   id: HelpCategory;
@@ -1780,6 +1781,7 @@ export function getHelpCategories(faqCount: number, appVersion: string = '1.48.0
   return [
     { id: 'overview', label: 'Visão Geral & Início', icon: Rocket, badge: 'Launchpad' },
     { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '14 Módulos' },
+    { id: 'guides', label: 'Guias', icon: Compass, badge: 'WinThor no Docker' },
     { id: 'shortcuts', label: 'Atalhos & Dicas Pro', icon: Zap, badge: 'Produtividade' },
     { id: 'faq', label: 'FAQ & Resolução de Dúvidas', icon: LifeBuoy, badge: `${faqCount}` },
     { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appVersion}` }

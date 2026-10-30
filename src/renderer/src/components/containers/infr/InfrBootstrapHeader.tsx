@@ -1,5 +1,5 @@
 import React from 'react';
-import { Server, X } from 'lucide-react';
+import { BookOpen, Server, X } from 'lucide-react';
 import type { InfrFolderStatus } from '../../../utils/infrBootstrapModalUtils';
 
 const Chip: React.FC<{ ok: boolean | null; title: string; children: React.ReactNode; onClick?: () => void }> = ({ ok, title, children, onClick }) => {
@@ -28,7 +28,9 @@ export const InfrBootstrapHeader: React.FC<{
   detectedDistro?: string;
   folder: InfrFolderStatus;
   onOpenScripts: () => void;
-}> = ({ onClose, distro, detectedDistro, folder, onOpenScripts }) => (
+  /** Abre o guia "Ambientes WinThor no Docker" (o mesmo da Central de Ajuda → Guias) */
+  onOpenGuide: () => void;
+}> = ({ onClose, distro, detectedDistro, folder, onOpenScripts, onOpenGuide }) => (
   <div className="px-5 py-4 border-b border-border/80 flex items-start gap-3">
     <div className="flex-1 min-w-0 flex flex-wrap items-start gap-x-4 gap-y-3">
       <div className="flex items-start gap-3 min-w-0 flex-1 basis-72">
@@ -56,6 +58,13 @@ export const InfrBootstrapHeader: React.FC<{
           {folder.folder ? `Pasta ${folder.folder}` : 'Pasta do INFR-Docker não encontrada'}
           {folder.missing > 0 && ` · faltam ${folder.missing} scripts`}
         </Chip>
+        <button
+          type="button"
+          onClick={onOpenGuide}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-primary/40 text-2xs font-semibold text-primary hover:bg-primary/10 cursor-pointer"
+        >
+          <BookOpen className="w-3.5 h-3.5" /> Como funciona
+        </button>
       </div>
     </div>
 

@@ -45,6 +45,11 @@ export function getInfrVersionFaq(): FaqItem[] {
               sobe, o que ficou na versão anterior e o que o WSH cobraria.
             </li>
             <li>
+              <strong className="text-foreground">Guia completo:</strong> o que é cada projeto (oracle-winthor, linux-winthor, wsh-winthor e o Hub), por que
+              existe, como um ambiente sobe, o que o Hub faz por você e os problemas conhecidos estão em Central de Ajuda → <strong className="text-foreground">Guias</strong>,
+              e no botão <strong className="text-foreground">Como funciona</strong> do Assistente INFR.
+            </li>
+            <li>
               <strong className="text-foreground">Como a tela guia:</strong> o assistente tem uma navegação lateral (Banco Oracle, WTA, WSH,
               Nova versão, Scripts e pasta), cada item com o que faz, e o cabeçalho mostra a distro e a pasta do INFR-Docker em uso (vermelho
               quando faltam scripts). A Nova versão vai em quatro passos (origem e versão, banco, WTA/WSH e portas, revisar e gerar), com o

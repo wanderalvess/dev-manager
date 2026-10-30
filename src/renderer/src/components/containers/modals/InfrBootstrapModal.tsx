@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { InfrDockerGuide } from '../../help/guides/InfrDockerGuide';
 import type { InfrDockerScriptStatus } from '../../../../../shared/types';
 import { useInfrBootstrapModalState } from '../../../hooks/containers/useInfrBootstrapModalState';
 import { InfrBootstrapHeader } from '../infr/InfrBootstrapHeader';
@@ -49,6 +50,7 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
 }) => {
   const state = useInfrBootstrapModalState({ onLoadInfrScripts, onRunInfrScript });
   const newVersion = useInfrNewVersion(distro, state.customPath || undefined);
+  const [guideOpen, setGuideOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -69,7 +71,21 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
         detectedDistro={newVersion.envs?.distro}
         folder={infrFolderStatus(state.customPath, infrScripts)}
         onOpenScripts={state.openScriptsTab}
+        onOpenGuide={() => setGuideOpen(true)}
       />
+
+      {guideOpen && (
+        <Modal
+          open
+          onClose={() => setGuideOpen(false)}
+          size="xl"
+          title="Como funciona"
+          description="Ambientes WinThor no Docker: INFR-Docker e Hub. O mesmo guia está na Central de Ajuda → Guias."
+          zIndexClass="z-[70]"
+        >
+          <InfrDockerGuide openLink={(url) => window.electronAPI?.openExternal?.(url)} />
+        </Modal>
+      )}
 
       <div className="flex-1 min-h-0 flex flex-col md:flex-row">
         <InfrAssistantNav activeTab={state.activeTab} onSelect={selectTab} />

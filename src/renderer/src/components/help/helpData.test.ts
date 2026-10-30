@@ -58,12 +58,12 @@ describe('helpData', () => {
   });
 
   describe('getHelpCategories', () => {
-    it('should return 5 main navigation categories with proper badges', () => {
+    it('should return 6 main navigation categories with proper badges', () => {
       const categories = getHelpCategories(33, '1.23.0');
-      expect(categories.length).toBe(5);
+      expect(categories.length).toBe(6);
 
       const ids = categories.map((c) => c.id);
-      expect(ids).toEqual(['overview', 'modules', 'shortcuts', 'faq', 'about']);
+      expect(ids).toEqual(['overview', 'modules', 'guides', 'shortcuts', 'faq', 'about']);
 
       const faqCat = categories.find((c) => c.id === 'faq');
       expect(faqCat?.badge).toBe('33');
