@@ -71,6 +71,17 @@ describe('detectExposure', () => {
     expect(found).toEqual(['server-version']);
   });
 
+  it('stack trace dentro de JSON (quebras escapadas) e nome de exceção Java sem ":" também contam', () => {
+    const body = JSON.stringify({ error: 'java.lang.NullPointerException\n\tat br.com.pcsist.winthor.Estoque.baixar(Estoque.java:87)' });
+    expect(detectExposure({ body, secrets: [] })).toContain('stack-trace');
+    expect(detectExposure({ body: '{"erro":"br.com.pcsist.winthor.RegraNegocioException"}', secrets: [] })).toContain('stack-trace');
+  });
+
+  it('palavras comuns não viram falso positivo', () => {
+    expect(detectExposure({ body: '{"message":"Erro ao salvar: Exception tratada pelo sistema, tente de novo"}', secrets: [] })).toEqual([]);
+    expect(detectExposure({ body: '{"site":"www.pcsist.com.br","email":"suporte@totvs.com.br"}', secrets: [] })).toEqual([]);
+  });
+
   it('erro limpo não expõe nada', () => {
     expect(detectExposure({ body: '{"message":"Usuário ou senha inválidos"}', secrets: ['Errada#1'] })).toEqual([]);
   });

@@ -6,7 +6,6 @@ import type {
   AuthLockoutDefaults,
   AuthLockoutLogEntry,
   AuthLockoutPasswordEncoding,
-  AuthLockoutProgress,
   AuthLockoutRunRequest
 } from '../../../shared/authLockoutTypes';
 import type { ReadinessTone } from './integrationReadinessView';
@@ -160,7 +159,7 @@ export function summarizeChecks(checks: readonly AuthLockoutCheckResult[]): Part
 const MAX_ACTIVITY = 600;
 
 /** Só a linha da atividade, sem o resultado da checagem e a tentativa que vêm junto no progresso. */
-export function progressToEntry(progress: AuthLockoutProgress): AuthLockoutLogEntry {
+export function progressToEntry(progress: AuthLockoutLogEntry): AuthLockoutLogEntry {
   return {
     at: progress.at,
     level: progress.level,
