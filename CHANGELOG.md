@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Corrigido
+- **Gerar (e os scripts do Assistente INFR) abriam várias janelas no Windows Terminal**: o `wt.exe` usa `;` para separar os próprios comandos, mesmo dentro do comando passado ao bash. O `...; echo ''; echo 'Pressione Enter...'; read -r` do fim virava uma janela por pedaço, e a janela do script fechava sem esperar o Enter. Agora o `;` vai escapado (`\;`) e o comando chega inteiro ao bash. A mesma correção vale para o Karaf em modo debug no WSL, o Karaf Client do WTA e as etapas em abas do Windows Terminal.
+
 ## [1.49.3] - 2026-10-30
 ### Corrigido
 - **Catálogo da 801 vazio sem login**: o WTA 40 responde *200 com corpo vazio* (não 401) quando a consulta vem sem login, e o Hub só entrava no WTA depois de um 401. Agora, sem token salvo e com usuário configurado, o Hub entra antes de pedir o catálogo. Se um token vencido também voltar vazio, renova uma vez e pede de novo. O Registro da leitura mostra cada tentativa.
