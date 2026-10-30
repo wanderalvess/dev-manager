@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   infrBootstrapModalParsePort,
   infrBootstrapModalPreviewCommand,
-  infrBootstrapModalTabClass
+  infrFolderStatus,
+  INFR_ASSISTANT_NAV
 } from './infrBootstrapModalUtils';
 
 describe('infrBootstrapModalUtils', () => {
@@ -22,8 +23,19 @@ describe('infrBootstrapModalUtils', () => {
     );
   });
 
-  it('diferencia aba ativa e inativa', () => {
-    expect(infrBootstrapModalTabClass(true)).toContain('border-warning');
-    expect(infrBootstrapModalTabClass(false)).toContain('border-transparent');
+  it('navegação cobre cada aba uma vez, com o que ela faz', () => {
+    const items = INFR_ASSISTANT_NAV.flatMap((g) => g.items);
+    expect(items.map((i) => i.tab).sort()).toEqual(['newVersion', 'oracle', 'scripts', 'wsh', 'wta']);
+    expect(items.every((i) => i.hint.length > 10)).toBe(true);
+  });
+
+  it('pasta do INFR-Docker: a digitada vence a detectada; faltando script não está ok', () => {
+    const scripts = [
+      { path: 'C:\\Users\\a\\Projetos\\INFR-Docker\\oracle-winthor\\oracle_setup.sh', exists: true },
+      { path: 'C:\\Users\\a\\Projetos\\INFR-Docker\\wsh-winthor\\wsh_setup.sh', exists: false }
+    ];
+    expect(infrFolderStatus('', scripts)).toEqual({ folder: 'C:\\Users\\a\\Projetos\\INFR-Docker', ok: false, missing: 1 });
+    expect(infrFolderStatus(' D:\\Projeto\\INFR-Docker ', [{ ...scripts[0] }])).toEqual({ folder: 'D:\\Projeto\\INFR-Docker', ok: true, missing: 0 });
+    expect(infrFolderStatus('', [])).toEqual({ folder: '', ok: false, missing: 0 });
   });
 });

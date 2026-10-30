@@ -1,182 +1,136 @@
 import React, { useEffect } from 'react';
-import { GitBranchPlus, RotateCw, Search, Play } from 'lucide-react';
-import type { InfrContainerInfo, InfrDbMode } from '../../../../../shared/infrWinthorVersion';
-import type { InfrNewVersionState } from '../../../hooks/containers/useInfrNewVersion';
-import { InfrNewVersionPreview } from './InfrNewVersionPreview';
-import { InfrEnvConfigSection } from './InfrEnvConfigSection';
-import { InfrManifestChoice } from './InfrManifestChoice';
+import { ArrowLeft, ArrowRight, Check, Play, RotateCw } from 'lucide-react';
+import type { InfrNewVersionState, InfrNewVersionStep } from '../../../hooks/containers/useInfrNewVersion';
+import { StepDatabase, StepOrigin, StepRuntime } from './InfrNewVersionSteps';
+import { InfrNewVersionReview } from './InfrNewVersionReview';
+import { InfrNewVersionSummary } from './InfrNewVersionSummary';
 
-const INPUT =
-  'w-full bg-background border border-input/80 rounded-[10px] px-2.5 py-2 text-sm text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-warning';
-const LABEL = 'text-2xs font-semibold text-muted-foreground block mb-1';
-const BOX = 'p-4 bg-card border border-border/80 rounded-xl space-y-3';
-
-const DB_MODES: { mode: InfrDbMode; label: string; hint: string }[] = [
-  { mode: 'clone', label: 'Clonar um banco', hint: 'Backup RMAN do Oracle escolhido restaurado num Oracle novo.' },
-  { mode: 'existing', label: 'Usar um Oracle existente', hint: 'O ambiente novo aponta para um Oracle que já roda.' },
-  { mode: 'empty', label: 'Oracle vazio', hint: 'Cria o Oracle sem dados; você importa o dump da versão depois.' }
+const STEPS: { step: InfrNewVersionStep; title: string; intro: string }[] = [
+  { step: 1, title: 'Origem e versão', intro: 'De qual ambiente partir, para qual versão do WinThor e com que nome.' },
+  { step: 2, title: 'Banco', intro: 'De onde vem o banco do ambiente novo. Cada versão roda com o seu.' },
+  { step: 3, title: 'WTA, WSH e portas', intro: 'Portas no Windows, o jar do WSH e a configuração copiada da origem (editável).' },
+  { step: 4, title: 'Revisar e gerar', intro: 'O Hub leu a origem e o catálogo da 801. O que estiver em vermelho impede o ambiente de subir.' }
 ];
 
-const StateDot: React.FC<{ c?: InfrContainerInfo; label: string }> = ({ c, label }) => (
-  <span className="inline-flex items-center gap-1 text-2xs text-muted-foreground">
-    <span className={`w-1.5 h-1.5 rounded-full ${!c ? 'bg-muted-foreground/30' : c.state === 'running' ? 'bg-success' : 'bg-danger'}`} />
-    {c ? `${c.name} (${c.state})` : `sem ${label}`}
-  </span>
-);
-
-/** Aba Nova versão: escolhe a origem, a versão, o banco, as portas e o WSH, e gera pelo catálogo da 801. */
-export const InfrNewVersionTab: React.FC<{ s: InfrNewVersionState }> = ({ s }) => {
-  const { form, update, envs } = s;
-  const { loadEnvironments } = s;
+/** Nova versão a partir de um ambiente: quatro passos, o resumo do que será criado e o Gerar no fim. */
+export const InfrNewVersionTab: React.FC<{ s: InfrNewVersionState; onClose: () => void }> = ({ s, onClose }) => {
+  const { envs, loadEnvironments, step } = s;
   useEffect(() => {
     if (!envs) loadEnvironments();
   }, [envs, loadEnvironments]);
-  const origin = envs?.environments.find((e) => e.name === form.from);
+
+  const current = STEPS[step - 1];
+  const issue = s.stepIssue[step];
+  const canGenerate = !!s.command && !!s.preview?.success && !s.blocked && s.busy === null;
+  const footerNote =
+    step < 4
+      ? issue || `Passo ${step} de 4 · nada é criado até você clicar em Gerar`
+      : s.blocked
+        ? 'Resolva o que está em vermelho para gerar'
+        : 'Grava a configuração e abre o terminal com o new_version_env.sh';
+  const noteIsProblem = (step < 4 && !!issue) || (step === 4 && s.blocked);
 
   return (
-    <div className="space-y-4">
-      <div className="bg-warning/5 border border-warning/20 rounded-xl p-3 flex items-start gap-3 text-xs leading-relaxed text-muted-foreground">
-        <GitBranchPlus className="w-4 h-4 text-warning shrink-0 mt-0.5" />
-        <div>
-          <strong className="text-foreground font-semibold block mb-0.5">Nova versão a partir de um ambiente</strong>
-          Lê as features do WTA de origem, sobe cada uma pelo catálogo de atualizações da rotina 801 até a versão nova (sem passar dela) e confere
-          com o que o WSH escolhido exige (versão mínima: o WSH de produção serve para a versão nova). Ao gerar, grava <code className="font-mono text-foreground">versions/&lt;versão&gt;.features</code> e abre o
-          terminal com o <code className="font-mono text-foreground">new_version_env.sh</code>: imagem, banco, WTA e WSH.
-        </div>
-      </div>
-
-      <div className={BOX}>
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-foreground">Origem {envs?.distro && <span className="text-muted-foreground font-normal">· {envs.distro}</span>}</span>
-          <button onClick={loadEnvironments} className="text-2xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 cursor-pointer">
-            <RotateCw className={`w-3 h-3 ${s.loadingEnvs ? 'animate-spin' : ''}`} /> Atualizar
-          </button>
-        </div>
-        {envs && !envs.success && <p className="text-2xs text-danger">{envs.error}</p>}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="sm:col-span-1">
-            <label className={LABEL}>Ambiente de origem</label>
-            <select value={form.from} onChange={(e) => update('from', e.target.value)} className={INPUT}>
-              {!envs?.environments.length && <option value="">{s.loadingEnvs ? 'Carregando...' : 'Nenhum ambiente wta-*'}</option>}
-              {envs?.environments.map((e) => (
-                <option key={e.name} value={e.name}>{e.name} · {e.wta?.image}</option>
-              ))}
-            </select>
-          </div>
+    <div className="flex-1 min-w-0 min-h-0 flex">
+      <div className="flex-1 min-w-0 flex flex-col">
+        <div className="flex-1 min-h-0 overflow-auto p-5 md:p-6 space-y-5 scrollbar-thin">
           <div>
-            <label className={LABEL}>Versão nova</label>
-            <input value={form.version} onChange={(e) => update('version', e.target.value)} placeholder="40" inputMode="numeric" className={INPUT} />
+            <h3 className="text-lg font-bold text-foreground">Nova versão a partir de um ambiente</h3>
+            <p className="text-sm text-foreground/80 mt-1 leading-relaxed max-w-2xl">
+              Escolha um ambiente que já funciona e a versão do WinThor que você quer. O Hub monta um ambiente novo ao lado, com banco, WTA
+              e WSH próprios. O ambiente de origem não é alterado.
+            </p>
           </div>
-          <div>
-            <label className={LABEL}>Nome do ambiente novo</label>
-            <input value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="develop" className={INPUT} />
-          </div>
-        </div>
-        {origin && (
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <StateDot c={origin.oracle} label="Oracle" />
-            <StateDot c={origin.wta} label="WTA" />
-            <StateDot c={origin.wsh} label="WSH" />
-          </div>
-        )}
-      </div>
 
-      <div className={BOX}>
-        <span className="text-xs font-semibold text-foreground">Banco do ambiente novo</span>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          {DB_MODES.map((m) => (
-            <label key={m.mode} className={`p-2.5 rounded-lg border cursor-pointer text-2xs ${form.dbMode === m.mode ? 'border-warning bg-warning/5' : 'border-border/70'}`}>
-              <input type="radio" className="mr-1.5" checked={form.dbMode === m.mode} onChange={() => update('dbMode', m.mode)} />
-              <strong className="text-foreground">{m.label}</strong>
-              <span className="block text-muted-foreground mt-0.5">{m.hint}</span>
-            </label>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {form.dbMode === 'clone' && (
+          <ol aria-label="Passos" className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {STEPS.map((st) => {
+              const active = st.step === step;
+              const done = st.step < step;
+              const reachable = s.canReach(st.step);
+              return (
+                <li key={st.step}>
+                  <button
+                    type="button"
+                    onClick={() => s.goTo(st.step)}
+                    disabled={!reachable}
+                    aria-current={active ? 'step' : undefined}
+                    className={`w-full h-full flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left transition ${
+                      active ? 'border-warning/60 bg-warning/10' : 'border-border/80 hover:bg-muted/40'
+                    } disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer`}
+                  >
+                    <span
+                      className={`w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-2xs font-bold ${
+                        active ? 'bg-warning text-white' : done ? 'bg-success text-white' : 'border border-border text-muted-foreground'
+                      }`}
+                    >
+                      {done ? <Check className="w-3.5 h-3.5" /> : st.step}
+                    </span>
+                    <span className={`text-xs leading-tight ${active ? 'font-semibold text-foreground' : 'text-foreground/80'}`}>{st.title}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+
+          <section className="space-y-4">
             <div>
-              <label className={LABEL}>Clonar de</label>
-              <select value={form.dbSource} onChange={(e) => update('dbSource', e.target.value)} className={INPUT}>
-                {!envs?.oracles.some((o) => o.name === form.dbSource) && <option value={form.dbSource}>{form.dbSource || '—'}</option>}
-                {envs?.oracles.map((o) => <option key={o.name} value={o.name}>{o.name} ({o.state})</option>)}
-              </select>
+              <h4 className="text-base font-bold text-foreground">
+                {step}. {current.title}
+              </h4>
+              <p className="text-xs text-muted-foreground mt-0.5">{current.intro}</p>
             </div>
-          )}
-          <div>
-            <label className={LABEL}>{form.dbMode === 'existing' ? 'Oracle a usar' : 'Oracle novo'}</label>
-            {form.dbMode === 'existing' ? (
-              <select value={form.dbContainer} onChange={(e) => update('dbContainer', e.target.value)} className={INPUT}>
-                <option value="">Escolha...</option>
-                {envs?.oracles.map((o) => <option key={o.name} value={o.name}>{o.name} ({o.state})</option>)}
-              </select>
-            ) : (
-              <input value={form.dbContainer} onChange={(e) => update('dbContainer', e.target.value)} placeholder="oracle-develop" className={INPUT} />
-            )}
-          </div>
-          {form.dbMode !== 'existing' && (
-            <div>
-              <label className={LABEL}>Porta do Oracle</label>
-              <input value={form.oraclePort} onChange={(e) => update('oraclePort', e.target.value)} className={INPUT} />
+            {step === 1 && <StepOrigin s={s} />}
+            {step === 2 && <StepDatabase s={s} />}
+            {step === 3 && <StepRuntime s={s} />}
+            {step === 4 && <InfrNewVersionReview s={s} />}
+          </section>
+
+          <details className="xl:hidden rounded-xl border border-border/80 bg-muted/15 px-4 py-3">
+            <summary className="text-xs font-bold text-foreground cursor-pointer">O que será criado</summary>
+            <div className="mt-3">
+              <InfrNewVersionSummary s={s} />
             </div>
-          )}
+          </details>
         </div>
-      </div>
 
-      <div className={BOX}>
-        <span className="text-xs font-semibold text-foreground">WTA e WSH</span>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className={LABEL}>Porta do WTA</label>
-            <input value={form.wtaPort} onChange={(e) => update('wtaPort', e.target.value)} className={INPUT} />
-          </div>
-          <div>
-            <label className={LABEL}>Jar do WSH (o de produção serve)</label>
-            <select value={form.wshJar} onChange={(e) => update('wshJar', e.target.value)} className={INPUT}>
-              <option value="">Sem WSH (criar depois)</option>
-              {envs?.wshJars.map((j) => <option key={j} value={j}>{j}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className={LABEL}>Porta do WSH</label>
-            <input value={form.wshPort} onChange={(e) => update('wshPort', e.target.value)} disabled={!form.wshJar} className={`${INPUT} disabled:opacity-50`} />
-          </div>
-        </div>
-        <div>
-          <label className={LABEL}>URL do WTA de origem (catálogo da 801) — vazio usa a porta publicada do wta-{form.from || '<origem>'}</label>
-          <input value={form.originWtaUrl} onChange={(e) => update('originWtaUrl', e.target.value)} placeholder="http://localhost:8086" className={INPUT} />
-        </div>
-      </div>
-
-      <InfrEnvConfigSection s={s} />
-
-      <button
-        onClick={s.runPreview}
-        disabled={!s.canPreview}
-        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-warning text-warning rounded-lg text-xs font-bold transition cursor-pointer disabled:opacity-50"
-      >
-        {s.busy === 'preview' ? <RotateCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-        <span>{s.busy === 'preview' ? 'Lendo a origem e o catálogo da 801...' : 'Pré-visualizar a versão nova'}</span>
-      </button>
-
-      {s.preview && <InfrNewVersionPreview preview={s.preview} version={form.version} />}
-      {s.preview?.success && <InfrManifestChoice s={s} />}
-
-      {s.preview?.success && (
-        <div className={BOX}>
-          <div className="p-3 bg-[#090D14] rounded-lg border border-border/60 text-xs font-mono text-emerald-400 break-all">
-            {s.command || 'Preencha o nome do ambiente novo (diferente da origem) para gerar.'}
-          </div>
+        <footer className="shrink-0 border-t border-border/80 px-5 md:px-6 py-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span className={`basis-full md:basis-0 md:flex-1 min-w-0 text-xs ${noteIsProblem ? 'text-danger' : 'text-muted-foreground'}`}>{footerNote}</span>
           <button
-            onClick={s.generate}
-            disabled={!s.command || s.busy !== null}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-warning text-white rounded-lg text-xs font-bold transition cursor-pointer disabled:opacity-50"
+            type="button"
+            onClick={() => (step === 1 ? onClose() : s.setStep((step - 1) as InfrNewVersionStep))}
+            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg border border-border bg-card text-sm font-semibold text-foreground hover:bg-muted cursor-pointer"
           >
-            {s.busy === 'generate' ? <RotateCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-current" />}
-            <span>Gerar versão {form.version} ({form.name || '...'})</span>
+            {step > 1 && <ArrowLeft className="w-4 h-4" />}
+            {step === 1 ? 'Cancelar' : 'Voltar'}
           </button>
-          {s.message && <p className="text-2xs text-muted-foreground break-all">{s.message}</p>}
-        </div>
-      )}
+          {step < 4 ? (
+            <button
+              type="button"
+              onClick={() => s.goTo((step + 1) as InfrNewVersionStep)}
+              disabled={!!issue}
+              className="flex-[2] sm:flex-none inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg bg-warning text-white text-sm font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Próximo: {STEPS[step].title}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={s.generate}
+              disabled={!canGenerate}
+              className="flex-[2] sm:flex-none inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg bg-warning text-white text-sm font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {s.busy === 'generate' ? <RotateCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-current" />}
+              Gerar ambiente {s.form.name || ''}
+            </button>
+          )}
+        </footer>
+      </div>
+
+      <aside aria-label="O que será criado" className="hidden xl:block w-72 shrink-0 border-l border-border/70 bg-muted/15 p-5 overflow-y-auto scrollbar-thin">
+        <h4 className="text-2xs font-bold uppercase tracking-wider text-foreground/80 mb-3">O que será criado</h4>
+        <InfrNewVersionSummary s={s} />
+      </aside>
     </div>
   );
 };

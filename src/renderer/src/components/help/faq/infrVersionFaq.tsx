@@ -45,6 +45,19 @@ export function getInfrVersionFaq(): FaqItem[] {
               sobe, o que ficou na versão anterior e o que o WSH cobraria.
             </li>
             <li>
+              <strong className="text-foreground">Guia completo:</strong> o que é cada projeto (oracle-winthor, linux-winthor, wsh-winthor e o Hub), por que
+              existe, como um ambiente sobe, o que o Hub faz por você e os problemas conhecidos estão em Central de Ajuda → <strong className="text-foreground">Guias</strong>,
+              e no botão <strong className="text-foreground">Como funciona</strong> do Assistente INFR.
+            </li>
+            <li>
+              <strong className="text-foreground">Como a tela guia:</strong> o assistente tem uma navegação lateral (Banco Oracle, WTA, WSH,
+              Nova versão, Scripts e pasta), cada item com o que faz, e o cabeçalho mostra a distro e a pasta do INFR-Docker em uso (vermelho
+              quando faltam scripts). A Nova versão vai em quatro passos (origem e versão, banco, WTA/WSH e portas, revisar e gerar), com o
+              resumo do que será criado ao lado; no último passo cada conferência fica verde, amarela ou vermelha, e o vermelho desliga o
+              Gerar. Um clone de banco que não vai funcionar (Oracle que não é o XE do INFR-Docker) oferece as saídas: usar aquele Oracle
+              direto ou subir um vazio.
+            </li>
+            <li>
               <strong className="text-foreground">Manifesto que já existe:</strong> se o INFR-Docker já tem{' '}
               <code className={C}>versions/40.features</code>, a prévia o compara com a lista nova (quantas features ficariam acima, abaixo
               ou só num dos dois) e a geração usa o existente por padrão. Substituir pelo da prévia é uma escolha explícita, porque o

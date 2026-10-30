@@ -8,6 +8,10 @@ import {
   type InfrEnvironmentsResult
 } from '../../../../shared/infrWinthorVersion';
 import type { InfrEnvTemplate, InfrManifestSource, InfrVersionPreview } from '../../../../shared/infrVersionManifest';
+import { reviewBlocks, reviewNewVersion, type InfrReviewFix } from '../../../../shared/infrNewVersionReview';
+
+/** Passos da Nova versão: 1 origem e versão, 2 banco, 3 WTA/WSH e portas, 4 revisar e gerar. */
+export type InfrNewVersionStep = 1 | 2 | 3 | 4;
 
 export interface InfrNewVersionForm {
   from: string;
@@ -114,6 +118,56 @@ export function useInfrNewVersion(distro?: string, infrPath?: string) {
   const command = buildNewVersionEnvCommand({ ...newEnv, version: form.version });
   const canPreview = isValidWinthorVersion(form.version) && isValidEnvName(form.from) && !busy;
 
+  const [step, setStep] = useState<InfrNewVersionStep>(1);
+  const isPort = (v: string) => /^\d{2,5}$/.test(v.trim());
+  // O que falta em cada passo para seguir (vazio = pode seguir)
+  const stepIssue: Record<InfrNewVersionStep, string> = {
+    1: !form.from
+      ? 'Escolha o ambiente de origem.'
+      : !isValidWinthorVersion(form.version)
+        ? 'Informe a versão nova (ex.: 40).'
+        : !isValidEnvName(form.name) || form.name === form.from
+          ? 'Dê um nome ao ambiente novo, diferente da origem.'
+          : '',
+    2: !isValidEnvName(form.dbContainer)
+      ? 'Escolha o Oracle do ambiente novo.'
+      : form.dbMode === 'clone' && !isValidEnvName(form.dbSource)
+        ? 'Escolha o Oracle de onde clonar.'
+        : form.dbMode !== 'existing' && !isPort(form.oraclePort)
+          ? 'Informe a porta do Oracle.'
+          : '',
+    3: !isPort(form.wtaPort) ? 'Informe a porta do WTA.' : form.wshJar && !isPort(form.wshPort) ? 'Informe a porta do WSH.' : '',
+    4: ''
+  };
+  const canReach = (target: InfrNewVersionStep) => ([1, 2, 3] as const).filter((s) => s < target).every((s) => !stepIssue[s]);
+
+  const sourceImage = envs?.oracles.find((o) => o.name === form.dbSource)?.image;
+  const review = preview
+    ? reviewNewVersion({
+        preview,
+        manifestSource,
+        version: form.version,
+        from: form.from,
+        dbMode: form.dbMode,
+        dbSource: form.dbSource,
+        dbSourceImage: sourceImage,
+        dbContainer: form.dbContainer,
+        wshJar: form.wshJar || undefined
+      })
+    : [];
+  const blocked = reviewBlocks(review);
+
+  /** Saídas do passo 4 quando o clone não serve: usar o Oracle de origem direto ou subir um vazio. */
+  const applyFix = (fix: InfrReviewFix) => {
+    if (fix === 'useSourceOracle') {
+      const next = new Set(edited).add('dbContainer');
+      setEdited(next);
+      setForm((f) => derive({ ...f, dbMode: 'existing', dbContainer: f.dbSource }, next));
+    } else {
+      setForm((f) => derive({ ...f, dbMode: 'empty' }, edited));
+    }
+  };
+
   const runPreview = async () => {
     if (!window.electronAPI?.previewInfrVersion || !canPreview) return;
     setBusy('preview');
@@ -170,9 +224,18 @@ export function useInfrNewVersion(distro?: string, infrPath?: string) {
     }
   };
 
+  /** Vai a um passo já liberado; o passo 4 lê a origem e o catálogo na hora, se ainda não leu. */
+  const goTo = (target: InfrNewVersionStep) => {
+    if (!canReach(target)) return;
+    setStep(target);
+    if (target === 4 && !preview) runPreview();
+  };
+
   return {
+    goTo,
     form, update, envs, loadingEnvs, loadEnvironments, preview, busy, message, command, canPreview, runPreview, generate,
-    envTemplate, edits, editEnv, manifestSource, setManifestSource
+    envTemplate, edits, editEnv, manifestSource, setManifestSource,
+    step, setStep, stepIssue, canReach, review, blocked, applyFix
   };
 }
 

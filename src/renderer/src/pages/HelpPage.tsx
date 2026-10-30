@@ -18,6 +18,7 @@ import { HelpPageCategoryNav } from '../components/help/page/HelpPageCategoryNav
 import { HelpOverviewTab } from '../components/help/tabs/HelpOverviewTab';
 import { HelpModulesTab } from '../components/help/tabs/HelpModulesTab';
 import { HelpShortcutsTab } from '../components/help/tabs/HelpShortcutsTab';
+import { HelpGuidesTab } from '../components/help/tabs/HelpGuidesTab';
 import { HelpFaqTab } from '../components/help/tabs/HelpFaqTab';
 import { HelpAboutTab } from '../components/help/tabs/HelpAboutTab';
 
@@ -159,6 +160,8 @@ export const HelpPage: React.FC<HelpPageProps> = ({
             copiedItem={copiedItem}
           />
         )}
+
+        {activeCategory === 'guides' && <HelpGuidesTab openLink={handleOpenLink} />}
 
         {activeCategory === 'shortcuts' && (
           <HelpShortcutsTab
