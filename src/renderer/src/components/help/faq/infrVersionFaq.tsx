@@ -64,6 +64,12 @@ export function getInfrVersionFaq(): FaqItem[] {
               &quot;Não foi possível ler a origem&quot; e pede para rodar <code className={C}>git checkout feature/imagem-por-versao</code> na pasta.
             </li>
             <li>
+              <strong className="text-foreground">Conferência no passo 1:</strong> ao escolher a origem, o assistente confere três coisas: se a pasta do
+              INFR-Docker tem os scripts, se o <code className={C}>wta-&lt;origem&gt;</code> está rodando e responde, e se o login do WTA entra. O Próximo só
+              libera com as três em verde. Sem usuário, ou com a senha recusada, o próprio passo 1 pede usuário e senha. Salvar e testar grava em
+              Configurações → Rotinas WinThor e confere de novo.
+            </li>
+            <li>
               <strong className="text-foreground">O ambiente subiu?</strong> Depois do Gerar, o assistente abre <strong className="text-foreground">Verificar ambiente</strong>{' '}
               (também no menu do assistente). Ele mostra o estado de <code className={C}>oracle-</code>, <code className={C}>wta-</code> e{' '}
               <code className={C}>wsh-&lt;nome&gt;</code>, o fim do log de cada um e se o WTA responde, e repete a leitura a cada 15 s enquanto o

@@ -19,6 +19,7 @@ import type {
   InfrVersionPreviewRequest
 } from '../../../../shared/infrVersionManifest';
 import type { InfrCheckCommandId, InfrEnvCheck } from '../../../../shared/infrEnvCheck';
+import type { InfrOriginCheck } from '../../../../shared/infrOriginCheck';
 import type { InfrEnvironmentsResult } from '../../../../shared/infrWinthorVersion';
 import type { BridgeDeps } from './core';
 
@@ -223,6 +224,13 @@ export function createWslApi({ apiFetch, wsManager }: BridgeDeps) {
         return await apiFetch<InfrManifestSaveResult>('/api/infr/version/save', { method: 'POST', body: JSON.stringify(req) });
       } catch (err: any) {
         return { success: false, error: err.message };
+      }
+    },
+    checkInfrOrigin: async (req: { distro?: string; infrPath?: string; fromEnv: string }): Promise<InfrOriginCheck> => {
+      try {
+        return await apiFetch<InfrOriginCheck>('/api/infr/origin-check', { method: 'POST', body: JSON.stringify(req) });
+      } catch (err: any) {
+        return { success: false, error: err.message, items: [] };
       }
     },
     checkInfrEnvironment: async (params: { distro?: string; name: string }): Promise<InfrEnvCheck> => {
