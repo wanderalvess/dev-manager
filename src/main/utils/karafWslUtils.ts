@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { spawn } from 'child_process';
+import { wtArg } from './windowsTerminal';
 import { AppSettings } from '../../shared/types';
 import { execFileAsync, isValidIdentifier } from './security';
 
@@ -173,7 +174,7 @@ export function launchWslServerDebug(
         '-w', 'dev-manager', 'new-tab',
         '--title', title,
         'wsl.exe', '-d', distro, '--',
-        'bash', '-c', `${bashCmd}; echo ''; echo 'Sessão encerrada. Pressione Enter para fechar...'; read -r`
+        'bash', '-c', wtArg(`${bashCmd}; echo ''; echo 'Sessão encerrada. Pressione Enter para fechar...'; read -r`)
       ];
 
       const wtProc = spawn('wt.exe', wtArgs, { detached: true, stdio: 'ignore' });

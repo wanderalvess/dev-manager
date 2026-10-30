@@ -12,6 +12,8 @@ import { InfrScriptsTab } from '../infr/InfrScriptsTab';
 import { InfrVersionField } from '../infr/InfrVersionField';
 import { InfrNewVersionTab } from '../infr/InfrNewVersionTab';
 import { useInfrNewVersion } from '../../../hooks/containers/useInfrNewVersion';
+import { useInfrEnvCheck } from '../../../hooks/containers/useInfrEnvCheck';
+import { InfrVerifyTab } from '../infr/InfrVerifyTab';
 import { Modal } from '../../ui/Modal';
 
 export interface InfrBootstrapModalProps {
@@ -49,7 +51,13 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
   distro
 }) => {
   const state = useInfrBootstrapModalState({ onLoadInfrScripts, onRunInfrScript });
-  const newVersion = useInfrNewVersion(distro, state.customPath || undefined);
+  const [verifyName, setVerifyName] = useState('');
+  // Depois do Gerar, abre a verificação do ambiente novo
+  const newVersion = useInfrNewVersion(distro, state.customPath || undefined, (name) => {
+    setVerifyName(name);
+    state.setActiveTab('verify');
+  });
+  const verify = useInfrEnvCheck(distro || newVersion.envs?.distro, verifyName);
   const [guideOpen, setGuideOpen] = useState(false);
 
   if (!isOpen) return null;
@@ -61,7 +69,7 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border/80 rounded-xl shadow-lg w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border/80 rounded-xl shadow-lg w-full max-w-[min(1680px,96vw)] h-[92vh] flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >
@@ -92,6 +100,8 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
 
         {state.activeTab === 'newVersion' ? (
           <InfrNewVersionTab s={newVersion} onClose={onClose} />
+        ) : state.activeTab === 'verify' ? (
+          <InfrVerifyTab v={verify} envNames={newVersion.envs?.environments.map((e) => e.name) ?? []} />
         ) : (
           <div className="flex-1 min-w-0 overflow-auto p-5 space-y-4 scrollbar-thin">
             {state.activeTab !== 'scripts' && (

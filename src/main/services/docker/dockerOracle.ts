@@ -1,4 +1,5 @@
 import { spawn } from 'child_process';
+import { wtArg } from '../../utils/windowsTerminal';
 import type { OracleDataPumpParams, OracleMaintenanceResult } from '../../../shared/types';
 import { execFileAsync } from '../../utils/security';
 import type { DockerContext } from './dockerContext';
@@ -131,7 +132,7 @@ export async function openWtaKarafClient(ctx: DockerContext, containerName: stri
         '-w', '0', 'nt',
         '--title', `WTA Karaf Client: ${cleanContainer}`,
         'wsl.exe', '-d', distro, '--',
-        'docker', 'exec', '-it', cleanContainer, 'bash', '-c', clientCmd
+        'docker', 'exec', '-it', cleanContainer, 'bash', '-c', wtArg(clientCmd)
       ];
 
       const wtChild = spawn('wt.exe', wtArgs, { detached: true, stdio: 'ignore' });

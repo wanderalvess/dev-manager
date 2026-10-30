@@ -119,6 +119,16 @@ export class Routine801Service {
   /** Por que o último login automático no WTA não deu token (nunca traz a senha). */
   private lastAuthError: string | null = null;
 
+  /** Testa o login do WTA com o usuário das Configurações (sempre um login novo); nunca devolve a senha. */
+  public async testWtaLogin(baseUrl: string): Promise<{ ok: boolean; user?: string; error?: string; needsCredentials?: boolean }> {
+    const settings = this.configService.getSettings();
+    const user = settings.wtaLogin?.trim();
+    if (!user || !settings.wtaPassword?.trim()) return { ok: false, needsCredentials: true, error: 'sem usuário e senha do WTA nas Configurações' };
+    if (!isSafeUrl(baseUrl)) return { ok: false, user, error: `URL do WTA inválida: ${baseUrl}` };
+    const token = await this.renewWtaAuth(baseUrl);
+    return token ? { ok: true, user } : { ok: false, user, error: this.lastAuthError ?? 'login recusado' };
+  }
+
   /**
    * Checa se o serviço HTTP da ferramenta servidor está acessível na porta configurada.
    */

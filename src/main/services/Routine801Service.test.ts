@@ -326,6 +326,24 @@ describe('Routine801Service', () => {
       expect(body).toEqual({ login: 'PCADMIN', senha: 'C4CA4238A0B923820DCC509A6F75849B' });
     });
 
+    it('testWtaLogin: sem usuário pede credenciais; recusado traz o motivo, nunca a senha', async () => {
+      vi.mocked(configService.getSettings).mockReturnValue({} as any);
+      expect(await routine801Service.testWtaLogin('http://localhost:8087')).toMatchObject({ ok: false, needsCredentials: true });
+
+      vi.mocked(configService.getSettings).mockReturnValue({ wtaLogin: 'PCADMIN', wtaPassword: 'segredo' } as any);
+      vi.mocked(httpRequest).mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+        text: async () => JSON.stringify({ mensagem: 'Credenciais inválidas' }),
+        buffer: async () => Buffer.from('')
+      });
+      const res = await routine801Service.testWtaLogin('http://localhost:8087');
+      expect(res).toMatchObject({ ok: false, user: 'PCADMIN' });
+      expect(res.error).toContain('Credenciais inválidas');
+      expect(JSON.stringify(res)).not.toContain('segredo');
+    });
+
     const ok = (body: string) => ({ ok: true, status: 200, statusText: 'OK', headers: {}, text: async () => body, buffer: async () => Buffer.from('') }) as any;
     const catalogo = JSON.stringify({ repositorios: [], funcionalidades: [{ nome: 'winthor-core-servico', versao: '1.40.4.2' }] });
 

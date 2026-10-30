@@ -2,12 +2,21 @@ import { ipcMain } from 'electron';
 import { wslService } from '../../services/WslService';
 import { InfrVersionService } from '../../services/infr/InfrVersionService';
 import type { InfrEnvSaveRequest, InfrManifestSaveRequest, InfrVersionPreviewRequest } from '../../../shared/infrVersionManifest';
+import { InfrEnvCheckService } from '../../services/infr/InfrEnvCheckService';
+import { InfrOriginCheckService } from '../../services/infr/InfrOriginCheckService';
+import type { InfrCheckCommandId } from '../../../shared/infrEnvCheck';
 import type { IpcContext } from '../ipcContext';
 
 /** WSL, snapshots e INFR-Docker. Canais: infr:*, wsl:* */
 export function registerWslHandlers(ctx: IpcContext): void {
   const { dockerService } = ctx;
   const infrVersionService = new InfrVersionService(wslService, ctx.routine801Service);
+  const infrEnvCheckService = new InfrEnvCheckService(wslService);
+  const infrOriginCheckService = new InfrOriginCheckService(wslService, ctx.routine801Service);
+
+  ipcMain.handle('infr:origin-check', async (_, req: { distro?: string; infrPath?: string; fromEnv: string }) => {
+    return await infrOriginCheckService.check(req);
+  });
 
   ipcMain.handle('infr:version-environments', async (_, distro?: string) => {
     return await infrVersionService.listEnvironments(distro);
@@ -27,6 +36,14 @@ export function registerWslHandlers(ctx: IpcContext): void {
 
   ipcMain.handle('infr:version-save', async (_, req: InfrManifestSaveRequest) => {
     return infrVersionService.saveManifest(req);
+  });
+
+  ipcMain.handle('infr:env-check', async (_, { distro, name }: { distro?: string; name: string }) => {
+    return await infrEnvCheckService.check(distro, name);
+  });
+
+  ipcMain.handle('infr:env-check-terminal', async (_, req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }) => {
+    return await infrEnvCheckService.openCheckTerminal(req.distro, req.name, req.id, req.wtaPort);
   });
 
   ipcMain.handle('wsl:list-distros', async () => {

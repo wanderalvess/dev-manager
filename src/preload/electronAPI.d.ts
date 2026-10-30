@@ -6,6 +6,8 @@ import type {
   InfrVersionPreview,
   InfrVersionPreviewRequest
 } from '../shared/infrVersionManifest';
+import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
+import type { InfrOriginCheck } from '../shared/infrOriginCheck';
 import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
 import type {
   AppSettings,
@@ -393,6 +395,9 @@ export interface ElectronAPI {
   saveInfrEnvFiles?: (req: InfrEnvSaveRequest) => Promise<InfrManifestSaveResult>;
   previewInfrVersion?: (req: InfrVersionPreviewRequest) => Promise<InfrVersionPreview>;
   saveInfrVersionManifest?: (req: InfrManifestSaveRequest) => Promise<InfrManifestSaveResult>;
+  checkInfrEnvironment?: (params: { distro?: string; name: string }) => Promise<InfrEnvCheck>;
+  checkInfrOrigin?: (req: { distro?: string; infrPath?: string; fromEnv: string }) => Promise<InfrOriginCheck>;
+  openInfrCheckTerminal?: (req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }) => Promise<{ success: boolean; output: string }>;
   setDockerTargetWslDistro?: (distro: string | null) => Promise<DockerDaemonStatus>;
   getContainerEnvironments?: () => Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }>;
   saveContainerEnvironment?: (env: ContainerEnvironment) => Promise<boolean>;

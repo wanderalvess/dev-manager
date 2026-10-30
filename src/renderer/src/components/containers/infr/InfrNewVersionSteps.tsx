@@ -3,6 +3,7 @@ import { CheckCircle2, RotateCw } from 'lucide-react';
 import type { InfrContainerInfo, InfrDbMode } from '../../../../../shared/infrWinthorVersion';
 import type { InfrNewVersionState } from '../../../hooks/containers/useInfrNewVersion';
 import { InfrEnvConfigSection } from './InfrEnvConfigSection';
+import { InfrOriginCheckPanel } from './InfrOriginCheckPanel';
 
 export const NV_INPUT =
   'w-full bg-background border border-input rounded-[10px] px-3 py-2.5 text-sm text-foreground font-mono focus:outline-hidden focus:ring-2 focus:ring-warning/60';
@@ -52,6 +53,7 @@ export const StepOrigin: React.FC<{ s: InfrNewVersionState }> = ({ s }) => {
           </div>
         )}
       </div>
+      <InfrOriginCheckPanel o={s.origin} from={form.from} />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label htmlFor="nv-versao" className={LABEL}>Versão nova do WinThor</label>
