@@ -134,7 +134,7 @@ export function buildEnvSections(settings: Partial<AppSettings> | null): EnvSect
       id: 'azure',
       title: 'Azure & Git',
       rows: [
-        row('Azure DevOps', 'Personal Access Token', text(s.azureDevOpsToken) ? 'configurado' : ''),
+        row('Azure DevOps', 'Personal Access Token', text(s.azureDevOpsToken) || s.hasAzureDevOpsToken ? 'configurado' : ''),
         row('Banco de Dados', 'conexões salvas', count(s.databaseConnections, 'conexão(ões)'))
       ]
     },

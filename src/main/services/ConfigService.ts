@@ -769,6 +769,7 @@ export class ConfigService {
         authValue: ''
       }));
     }
+    sanitized.hasCcwAuthCookie = Boolean(settings.ccwAuthCookie && settings.ccwAuthCookie.trim().length > 0);
     if (sanitized.ccwAuthCookie) {
       sanitized.ccwAuthCookie = '';
     }
@@ -776,6 +777,7 @@ export class ConfigService {
     sanitized.hasWtaAuthToken = Boolean(settings.wtaAuthToken && settings.wtaAuthToken.trim().length > 0);
     sanitized.wtaPassword = '';
     sanitized.wtaAuthToken = '';
+    sanitized.hasAzureDevOpsToken = Boolean(settings.azureDevOpsToken && settings.azureDevOpsToken.trim().length > 0);
     if (sanitized.azureDevOpsToken) {
       sanitized.azureDevOpsToken = '';
     }
