@@ -6,7 +6,13 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 
 ## [Não lançado]
 ### Adicionado
+- **Monitorar uma API (tela Integrações)**: informe a URL (GET ou HEAD, cabeçalhos opcionais) e veja status, tempo, tamanho, cabeçalhos e o corpo da resposta (JSON indentado, com botão Copiar). *Monitorar* repete a checagem a cada 15 s, 30 s, 1 min ou 5 min e mostra o histórico das últimas 30, com disponibilidade e latência média/pior. Redirect não é seguido (mostra o destino), o corpo é cortado em 64 KB e os cabeçalhos não ficam salvos. Funciona também no modo Web/Docker (`POST /api/network/probe`).
+- **Tela Integrações mais confiável**: botão *Atualizar* com horário da última leitura, contagem em cada filtro, novo filtro *Com problema*, esqueleto durante o carregamento e aviso com *Tentar de novo* quando as configurações não carregam (antes tudo aparecia como "Não configurado").
 - **Validação de API: UNK-ERR e mensagem crua da exceção**: o modelo **Exceção** ganhou a regra *Campo $.code diferente de UNK-ERR*, o código que o WTA dá à exceção que nenhum tratador reconheceu. A regra *Sem vazamento de erro* passa a reprovar também a mensagem original da exceção, mesmo sem o nome da classe: `For input string: "NUMERO"` (número inválido), `Failed to convert value of type [java.lang.String] to required type [java.time.LocalDateTime]`, `nested exception is`, `Parse attempt failed`, `Text '...' could not be parsed`, `No enum constant`, `Cannot invoke "..." because`, `Index N out of bounds`, as do Jackson (`JSON parse error`, `Cannot deserialize value of type`, `Unrecognized field`), as do Spring MVC (`Required request parameter ...`) e do Hibernate (`could not execute statement`), além de tipos internos como `java.lang.String`. O *Obtido* mostra o trecho que vazou, sem os escapes do JSON (ex.: *expôs mensagem interna da exceção (Java/Spring) (…"detailedMessage": "For input string: "NUMERO""…)*). Vale também para a checagem de exposição de erro do Bloqueio de Login.
+
+### Corrigido
+- **Integrações: Azure DevOps e WinThor CCW apareciam sempre como "Não configurado"**: o token vem vazio do `settings:get` (sanitizado). Agora o app envia `hasAzureDevOpsToken`/`hasCcwAuthCookie` e os cartões mostram *Token salvo* / *Cookie salvo*; o checklist do onboarding também reconhece o PAT do Azure.
+- **Integrações: OpenTelemetry mostra o estado real do receptor**: antes o cartão ficava sempre "ativo"; agora diz *Recebendo na porta N* ou, em vermelho, *Parado na porta N* com o motivo (ex.: porta ocupada).
 
 ## [1.48.0] - 2026-10-30
 ### Adicionado

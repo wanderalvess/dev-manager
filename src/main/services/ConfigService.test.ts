@@ -425,6 +425,21 @@ describe('ConfigService', () => {
       expect(sanitized.hasWtaAuthToken).toBe(true);
     });
 
+    it('sanitizeSecrets esconde o PAT do Azure e o cookie da CCW e sinaliza que existem', () => {
+      const service = new ConfigService();
+      service.saveSettings({ azureDevOpsToken: 'pat-azure-333', ccwAuthCookie: 'cookie-ccw-444' });
+
+      const sanitized = service.sanitizeSecrets(service.getSettings());
+      expect(sanitized.azureDevOpsToken).toBe('');
+      expect(sanitized.ccwAuthCookie).toBe('');
+      expect(sanitized.hasAzureDevOpsToken).toBe(true);
+      expect(sanitized.hasCcwAuthCookie).toBe(true);
+
+      const empty = new ConfigService().sanitizeSecrets({ ...service.getSettings(), azureDevOpsToken: '', ccwAuthCookie: '' });
+      expect(empty.hasAzureDevOpsToken).toBe(false);
+      expect(empty.hasCcwAuthCookie).toBe(false);
+    });
+
     it('preserva os segredos quando o save volta vazio, mas não os leva para outra wtaUrl', () => {
       const service = new ConfigService();
       service.saveSettings({ wtaUrl: 'https://wta.corp', wtaPassword: 'senha-wta-111', wtaAuthToken: 'cookie-wta-222' });
