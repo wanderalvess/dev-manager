@@ -50,10 +50,24 @@ export function useBackupPanel({
   activeConnectionRef.current = activeConnection;
   const activeConnectionId = activeConnection?.id ?? null;
 
-  // Inicializa valores ao abrir o modal com base na conexão ativa
+  // A página fica montada (escondida) ao trocar de tela: voltar a ela não pode apagar o que o
+  // usuário editou. O formulário só é recarregado da config salva quando a conexão muda.
+  const initializedConnectionId = useRef<string | null>(null);
+  const backupFolderRef = useRef(form.backupFolder);
+  backupFolderRef.current = form.backupFolder;
+
   useEffect(() => {
     const connection = activeConnectionRef.current;
     if (!isActive || !connection) return;
+
+    if (initializedConnectionId.current === connection.id) {
+      // Mesma conexão: só atualiza a lista de arquivos e o histórico, que podem ter mudado fora daqui.
+      const folder = backupFolderRef.current.trim();
+      if (folder) refreshBackupFiles(folder);
+      refreshBackupHistory(connection.id);
+      return;
+    }
+    initializedConnectionId.current = connection.id;
 
     loadWebhooks(settingsRef.current?.backupWebhooks || []);
     const folder = resetFormFromSettings(connection, settingsRef.current);

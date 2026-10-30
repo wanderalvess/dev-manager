@@ -13,6 +13,7 @@ import type { ElectronAPI } from '../../../../preload/index';
 import type {
   InfrEnvSaveRequest,
   InfrEnvTemplate,
+  InfrManifestSaveRequest,
   InfrManifestSaveResult,
   InfrVersionPreview,
   InfrVersionPreviewRequest
@@ -216,7 +217,7 @@ export function createWslApi({ apiFetch, wsManager }: BridgeDeps) {
         return { success: false, error: err.message };
       }
     },
-    saveInfrVersionManifest: async (req: { infrPath?: string; targetVersion: string; manifestText: string }): Promise<InfrManifestSaveResult> => {
+    saveInfrVersionManifest: async (req: InfrManifestSaveRequest): Promise<InfrManifestSaveResult> => {
       try {
         return await apiFetch<InfrManifestSaveResult>('/api/infr/version/save', { method: 'POST', body: JSON.stringify(req) });
       } catch (err: any) {

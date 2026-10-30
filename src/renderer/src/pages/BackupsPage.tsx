@@ -23,8 +23,10 @@ export const BackupsPage: React.FC<BackupsPageProps> = ({ isActive, settingsVers
   const { connections, setActiveConnectionId } = conn;
 
   // Vindo do Studio SQL: abre já na conexão que estava ativa lá.
+  // Espera as conexões carregarem: na primeira visita a página monta antes delas, e ler o pedido
+  // nessa hora o consumia sem ter em que conexão aplicá-lo.
   useEffect(() => {
-    if (!isActive) return;
+    if (!isActive || connections.length === 0) return;
     const pending = takePendingBackupConnection();
     if (pending && connections.some((c) => c.id === pending)) setActiveConnectionId(pending);
   }, [isActive, connections, setActiveConnectionId]);

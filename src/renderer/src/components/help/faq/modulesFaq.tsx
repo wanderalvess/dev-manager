@@ -1,5 +1,6 @@
 import React from 'react';
 import type { FaqItem } from '../helpData';
+import { requestSettingsTab } from '../../../utils/settingsDeepLink';
 
 // Fora de helpData.tsx (que já passa do teto de linhas): FAQ de ligar/desligar módulos da navegação.
 export function getModulesFaq(onNavigate?: (tab: string) => void): FaqItem[] {
@@ -13,7 +14,7 @@ export function getModulesFaq(onNavigate?: (tab: string) => void): FaqItem[] {
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
             Em <strong className="text-foreground">Configurações → Módulos</strong>, ligue ou desligue cada página, agrupada pelos
-            mesmos 4 grupos do cabeçalho, e clique em <strong className="text-foreground">Salvar</strong>. Use{' '}
+            mesmos 5 grupos do menu lateral, e clique em <strong className="text-foreground">Salvar</strong>. Use{' '}
             <strong className="text-foreground">Ligar todos</strong> para voltar ao padrão.
           </p>
           <p>
@@ -32,12 +33,50 @@ export function getModulesFaq(onNavigate?: (tab: string) => void): FaqItem[] {
           {onNavigate && (
             <button
               type="button"
-              onClick={() => onNavigate('settings')}
+              onClick={() => {
+                requestSettingsTab('modules');
+                onNavigate('settings');
+              }}
               className="text-2xs font-semibold text-primary hover:underline cursor-pointer"
             >
-              Abrir Configurações
+              Abrir Configurações → Módulos
             </button>
           )}
+        </div>
+      )
+    },
+    {
+      id: 'modules-menu-groups',
+      question: 'Onde foram parar o Catálogo de Rotinas, os Logs e o APM no menu?',
+      category: 'Configurações',
+      tags: ['menu', 'menu lateral', 'grupos', 'observabilidade', 'rotinas', 'logs', 'apm', 'rastreio', 'onde fica', 'mudou de lugar'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>O menu lateral tem 5 grupos:</p>
+          <ul className="list-disc pl-4 space-y-1">
+            <li>
+              <strong className="text-foreground">Infraestrutura</strong>: Ambiente Dev, Containers, WinThor &amp; WSL, Catálogo de
+              Rotinas, Deploy &amp; Esteiras e Karaf &amp; OSGi.
+            </li>
+            <li>
+              <strong className="text-foreground">Observabilidade</strong>: Logs em Tempo Real, APM &amp; Traces e Rastreio de
+              Integração.
+            </li>
+            <li>
+              <strong className="text-foreground">Banco de Dados</strong>: Banco de Dados e Backups de Banco.
+            </li>
+            <li>
+              <strong className="text-foreground">Desenvolvimento</strong>: Git &amp; DevOps, Documentação Semântica e API Studio.
+            </li>
+            <li>
+              <strong className="text-foreground">Qualidade</strong>: Homologação, Validador Regressivo, Test Runners, TAUT e
+              Validação de Cenários.
+            </li>
+          </ul>
+          <p>
+            Os atalhos não mudaram: Alt+6 continua abrindo o Catálogo de Rotinas, Alt+8 os Logs e Alt+0 o APM. A busca rápida
+            (Ctrl+K) encontra qualquer página pelo nome.
+          </p>
         </div>
       )
     }

@@ -1,3 +1,6 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { BackupSchedulerService, buildWebhookPayload, WebhookContext } from './BackupSchedulerService';
 import { ConfigService } from './ConfigService';
@@ -181,7 +184,8 @@ describe('BackupSchedulerService', () => {
       const result = await service.runManualBackup(makeConnection(), 'C:\\backups', { retentionCount: 5 } as any);
 
       expect(result.success).toBe(true);
-      expect(backupService.applyRetention).toHaveBeenCalledWith('C:\\backups', undefined, undefined);
+      // Sem configuração salva não há retenção a aplicar
+      expect(backupService.applyRetention).not.toHaveBeenCalled();
       expect(settings.backupConfigs?.[0]).toMatchObject({
         connectionId: 'conn-1',
         destinationFolder: 'C:\\backups',
@@ -206,7 +210,112 @@ describe('BackupSchedulerService', () => {
 
       await service.runManualBackup(makeConnection(), 'C:\\backups');
 
-      expect(backupService.applyRetention).toHaveBeenCalledWith('C:\\backups', 10, 30);
+      expect(backupService.applyRetention).toHaveBeenCalledWith(
+        'C:\\backups',
+        expect.objectContaining({ id: 'conn-1' }),
+        10,
+        30
+      );
+    });
+
+    it('não aplica a retenção quando o backup avulso vai para outra pasta', async () => {
+      settings.backupConfigs = [
+        { connectionId: 'conn-1', destinationFolder: 'C:\\backups', retentionCount: 1 } as BackupConfig
+      ];
+
+      await service.runManualBackup(makeConnection(), 'D:\\outra');
+
+      expect(backupService.applyRetention).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('disparo agendado', () => {
+    it('usa a conexão atual (senha trocada depois do agendamento) e pula a que foi excluída', async () => {
+      settings.databaseConnections = [makeConnection({ password: 'antiga' })];
+      settings.backupConfigs = [
+        { connectionId: 'conn-1', destinationFolder: 'C:\\backups', cronExpression: '0 2 * * *' } as BackupConfig
+      ];
+      service.rescheduleAll();
+
+      settings.databaseConnections = [makeConnection({ password: 'nova' })];
+      await (service as any).runScheduledBackup('conn-1');
+      expect(backupService.runBackup).toHaveBeenCalledWith(
+        expect.objectContaining({ password: 'nova' }),
+        'C:\\backups',
+        expect.anything()
+      );
+
+      vi.mocked(backupService.runBackup).mockClear();
+      settings.databaseConnections = [];
+      await (service as any).runScheduledBackup('conn-1');
+      expect(backupService.runBackup).not.toHaveBeenCalled();
+      expect(settings.backupConfigs).toHaveLength(1);
+    });
+
+    it('um erro inesperado vira falha no histórico em vez de sumir', async () => {
+      settings.databaseConnections = [makeConnection()];
+      settings.backupConfigs = [{ connectionId: 'conn-1', destinationFolder: 'C:\\backups', cronExpression: '0 2 * * *' } as BackupConfig];
+      backupService.runBackup = vi.fn(async () => {
+        throw new Error('EACCES');
+      });
+      const onResult = vi.fn();
+      service.onResult = onResult;
+
+      await (service as any).runScheduledBackup('conn-1');
+
+      expect(service.getHistory()[0]).toMatchObject({ success: false, trigger: 'scheduled' });
+      expect(service.getHistory()[0].message).toContain('EACCES');
+      expect(onResult).toHaveBeenCalledWith('Oracle Prod', expect.objectContaining({ success: false }));
+    });
+
+    it('o drill agendado testa o backup mais recente da própria conexão, com o DIRECTORY e o schema dela', async () => {
+      const source = makeConnection();
+      const scratch = makeConnection({ id: 'scratch', name: 'Scratch', user: 'drill' });
+      settings.databaseConnections = [source, scratch];
+      settings.backupConfigs = [
+        {
+          connectionId: 'conn-1',
+          destinationFolder: 'C:\\backups',
+          oracleDirectory: 'BKP_DIR',
+          restoreDrillCronExpression: '0 4 * * *',
+          restoreDrillScratchConnectionId: 'scratch'
+        } as BackupConfig
+      ];
+      backupService.listBackups = vi.fn(async () => [
+        { fileName: 'x.dmp', filePath: 'C:\\backups\\x.dmp', sizeBytes: 1, createdAt: '2026-10-29T00:00:00.000Z' }
+      ]);
+
+      await (service as any).runScheduledRestoreDrill('conn-1');
+
+      expect(backupService.listBackups).toHaveBeenCalledWith('C:\\backups', expect.objectContaining({ id: 'conn-1' }));
+      expect(backupService.runRestoreDrill).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'scratch' }),
+        'C:\\backups\\x.dmp',
+        expect.objectContaining({ oracleDirectory: 'BKP_DIR', oracleSourceSchema: 'system' }),
+        expect.objectContaining({ id: 'conn-1' })
+      );
+      expect(service.getHistory()[0]).toMatchObject({ connectionId: 'conn-1', action: 'restore-drill', trigger: 'scheduled' });
+    });
+  });
+
+  describe('trava entre processos', () => {
+    it('não agenda quando outro processo vivo já é o dono do agendador', () => {
+      const lockFile = path.join(os.tmpdir(), `backup-scheduler-${Date.now()}.lock`);
+      fs.writeFileSync(lockFile, String(process.ppid));
+      const other = new BackupSchedulerService(configService, backupService, lockFile);
+      settings.databaseConnections = [makeConnection()];
+      settings.backupConfigs = [{ connectionId: 'conn-1', destinationFolder: 'C:\\backups', cronExpression: '0 2 * * *' } as BackupConfig];
+
+      other.rescheduleAll();
+      expect((other as any).jobs.size).toBe(0);
+
+      fs.writeFileSync(lockFile, '999999999');
+      other.rescheduleAll();
+      expect((other as any).jobs.size).toBe(1);
+      expect(fs.readFileSync(lockFile, 'utf-8')).toBe(String(process.pid));
+
+      other.stopAll();
+      expect(fs.existsSync(lockFile)).toBe(false);
     });
 
     it('registra uma entrada no histórico após cada backup', async () => {
@@ -313,6 +422,19 @@ describe('BackupSchedulerService', () => {
     it('retorna sucesso quando o endpoint responde normalmente', async () => {
       const res = await service.testWebhook({ id: 'wh-1', name: 'Teste', endpointUrl: 'https://x.example/hook', enabled: true });
       expect(res.success).toBe(true);
+    });
+
+    it('trata resposta HTTP de erro (URL revogada) como falha', async () => {
+      vi.mocked(httpRequest).mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        text: async () => '',
+        buffer: async () => Buffer.alloc(0)
+      } as any);
+      const res = await service.testWebhook({ id: 'wh-1', name: 'Teste', endpointUrl: 'https://x.example/hook', enabled: true });
+      expect(res.success).toBe(false);
+      expect(res.message).toContain('HTTP 404');
     });
 
     it('retorna falha com a mensagem do erro quando o endpoint não responde', async () => {

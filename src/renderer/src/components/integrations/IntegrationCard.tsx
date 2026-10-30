@@ -32,6 +32,7 @@ const STATUS_CLASS: Record<IntegrationStatus, string> = {
   active: 'bg-success/10 text-success',
   detected: 'bg-info/10 text-info',
   unconfigured: 'bg-muted text-muted-foreground',
+  error: 'bg-danger/10 text-danger',
   none: 'bg-muted text-muted-foreground'
 };
 
@@ -65,6 +66,9 @@ export const IntegrationCard: React.FC<IntegrationCardProps> = ({ item, onOpen }
         </div>
       </div>
       <p className="text-sm text-muted-foreground leading-relaxed flex-1">{item.description}</p>
+      {item.status === 'error' && item.detail && (
+        <p className="text-[13px] text-danger leading-relaxed break-words">{item.detail}</p>
+      )}
       <button
         type="button"
         onClick={() => onOpen(item)}

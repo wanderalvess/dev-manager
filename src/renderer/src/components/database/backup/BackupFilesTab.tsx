@@ -1,8 +1,8 @@
 import React from 'react';
 import { FileArchive, RotateCw, RotateCcw, FlaskConical } from 'lucide-react';
 import type { BackupFileInfo, BackupResult, DatabaseConnectionConfig } from '../../../../../shared/types';
-import { backupResultToneClass, formatBytes } from '../../../utils/backupModalUtils';
-import { BackupHelpPanel } from './BackupHelpPanel';
+import { formatBytes } from '../../../utils/backupModalUtils';
+import { BackupResultBox } from './BackupResultBox';
 
 interface BackupFilesTabProps {
   connections: DatabaseConnectionConfig[];
@@ -48,6 +48,8 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
         <select
           value={scratchConnectionId}
           onChange={(e) => onScratchConnectionChange(e.target.value)}
+          aria-label="Conexão descartável para o teste de restauração"
+          title={connections.length === 0 ? 'Cadastre outra conexão do mesmo tipo de banco, fora de produção, para testar a restauração.' : undefined}
           className="bg-background border border-border/80 rounded-lg p-1.5 text-xs text-foreground focus:outline-hidden focus:border-primary"
         >
           <option value="">Conexão scratch para teste...</option>
@@ -70,23 +72,16 @@ export const BackupFilesTab: React.FC<BackupFilesTabProps> = ({
       </div>
     </div>
 
-    {restoreResult && (
-      <div className={`p-3 rounded-xl border text-xs ${backupResultToneClass(restoreResult.success)}`}>
-        {restoreResult.message}
-        {!restoreResult.success && restoreResult.help && <BackupHelpPanel help={restoreResult.help} />}
-      </div>
-    )}
+    {restoreResult && <BackupResultBox result={restoreResult} />}
 
     {drillResult && (
-      <div className={`p-3 rounded-xl border text-xs ${backupResultToneClass(drillResult.success)}`}>
-        {drillResult.message}
-        {!drillResult.success && drillResult.help && <BackupHelpPanel help={drillResult.help} />}
-        {drillResult.success && drillResult.checksumSha256 && (
-          <p className="text-2xs font-mono opacity-80 mt-1 truncate">
+      <BackupResultBox result={drillResult}>
+        {drillResult.checksumSha256 && (
+          <p className="text-2xs font-mono opacity-80 mt-1 truncate" title={drillResult.checksumSha256}>
             SHA-256: {drillResult.checksumSha256}
           </p>
         )}
-      </div>
+      </BackupResultBox>
     )}
 
     {backupFiles.length === 0 ? (

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { AlertTriangle, FileText, Layers, ListTree, Package, Pencil, RotateCcw, Terminal } from 'lucide-react';
-import { useKarafQuickCommands } from '../../hooks/karafConsole/useKarafQuickCommands';
-import { DeployDiagCommandButton } from './DeployDiagButtons';
-import { DeployQuickCommandsEditor } from './DeployQuickCommandsEditor';
+import { useKarafQuickCommands } from '../../../hooks/karafConsole/useKarafQuickCommands';
+import { KarafDiagCommandButton } from './KarafDiagButtons';
+import { KarafQuickCommandsEditor } from './KarafQuickCommandsEditor';
 
-interface DeployDiagQuickTabProps {
+interface KarafDiagQuickTabProps {
   disabled: boolean;
   onRun: (cmd: string, label: string) => void;
 }
@@ -22,13 +22,13 @@ function iconFor(command: string) {
 }
 
 /** Atalhos de comandos Karaf que o desenvolvedor personaliza (a lista vale também para o menu do console). */
-export const DeployDiagQuickTab: React.FC<DeployDiagQuickTabProps> = ({ disabled, onRun }) => {
+export const KarafDiagQuickTab: React.FC<KarafDiagQuickTabProps> = ({ disabled, onRun }) => {
   const { commands, save, reset } = useKarafQuickCommands();
   const [editing, setEditing] = useState(false);
 
   if (editing) {
     return (
-      <DeployQuickCommandsEditor
+      <KarafQuickCommandsEditor
         commands={commands}
         onSave={save}
         onRestoreDefaults={reset}
@@ -46,7 +46,7 @@ export const DeployDiagQuickTab: React.FC<DeployDiagQuickTabProps> = ({ disabled
       ) : (
         <div className="grid grid-cols-2 gap-2">
           {commands.map((c) => (
-            <DeployDiagCommandButton
+            <KarafDiagCommandButton
               key={c.id}
               icon={iconFor(c.command)}
               label={c.label}

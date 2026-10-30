@@ -30,6 +30,7 @@ export const USAGE_BASELINE_DEFINITIONS: readonly UsageBaselineDefinition[] = [
   { key: 'qa/regression-execute', module: 'qa', label: 'Regressão de QA', defaultMinutes: 30 },
   { key: 'qa/test-runner-execute', module: 'qa', label: 'Rodar suíte de testes', defaultMinutes: 10 },
   { key: 'qa/taut-run-tests', module: 'qa', label: 'Rodar testes Cypress (TAUT)', defaultMinutes: 10 },
+  { key: 'qa/api-scenario-run', module: 'qa', label: 'Chamar uma API à mão e conferir status e campos da resposta', defaultMinutes: 5 },
   { key: 'qa/auth-lockout-run', module: 'qa', label: 'Testar à mão o bloqueio de login do WinThor e conferir os logs', defaultMinutes: 60 },
   { key: 'git/create-task-branch', module: 'git', label: 'Criar branch da tarefa', defaultMinutes: 3 },
   { key: 'integration/readiness-check', module: 'integration', label: 'Conferir à mão as camadas da integração (WinThor, WSH, CH e PDV)', defaultMinutes: 10 },
@@ -57,6 +58,7 @@ export const MCP_TOOL_TO_BASELINE_KEY: Readonly<Record<string, string>> = {
   test_runner_execute: 'qa/test-runner-execute',
   taut_run_tests: 'qa/taut-run-tests',
   qa_run_auth_lockout_test: 'qa/auth-lockout-run',
+  qa_run_api_scenario: 'qa/api-scenario-run',
   git_create_task_branch: 'git/create-task-branch',
   integration_check_readiness: 'integration/readiness-check',
   integration_check_batch: 'integration/batch-trace'

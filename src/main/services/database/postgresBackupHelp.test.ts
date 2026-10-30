@@ -85,6 +85,15 @@ describe('postgresBackupHelp', () => {
     expect(explainPostgresFailure('psql:b.sql:20: ERROR:  relation "produto" already exists', restore)?.message).toContain('já existem');
   });
 
+  it('reconhece as mensagens do servidor e do libpq traduzidas para o português', () => {
+    expect(explainPostgresFailure('FATAL:  autenticação do tipo senha falhou para o usuário "teste"', ctx)?.message).toContain(
+      'Usuário ou senha incorretos'
+    );
+    expect(
+      explainPostgresFailure('pg_dump: erro: conexão com servidor em "127.0.0.1", porta 5432 falhou: Connection refused', ctx)
+    ).not.toBeNull();
+  });
+
   it('extrai as linhas de erro e devolve null para o que não conhece', () => {
     expect(extractPostgresErrorLines('ok\npg_dump: error: algo\npg_dump: error: algo')).toEqual(['pg_dump: error: algo']);
     expect(explainPostgresFailure('pg_dump: error: algo novo', ctx)).toBeNull();

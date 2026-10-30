@@ -30,6 +30,8 @@ import type { DelphiBuildService } from '../services/DelphiBuildService';
 import type { RemoteControlService } from '../services/RemoteControlService';
 import type { IntegrationTraceService } from '../services/IntegrationTraceService';
 import type { AuthLockoutTestService } from '../services/AuthLockoutTestService';
+import type { ApiScenarioService } from '../services/ApiScenarioService';
+import type { ScenarioHistoryService } from '../services/ScenarioHistoryService';
 
 /** Tudo que um grupo de handlers IPC pode precisar: a janela principal e os serviços do app. */
 export interface IpcContext {
@@ -65,4 +67,6 @@ export interface IpcContext {
   remoteControlService: RemoteControlService;
   integrationTraceService: IntegrationTraceService;
   authLockoutTestService: AuthLockoutTestService;
+  apiScenarioService: ApiScenarioService;
+  scenarioHistoryService: ScenarioHistoryService;
 }

@@ -31,16 +31,42 @@ export function getInfrVersionFaq(): FaqItem[] {
               (web 8038, SSH 8138, JMX 1038, Artemis 61638), para 38, 39 e 40 rodarem juntos. Nome e porta personalizados não são trocados.
             </li>
             <li>
-              <strong className="text-foreground">WSH da mesma versão:</strong> na aba WSH, a versão faz o script usar o <code className={C}>.env.&lt;versão&gt;</code>,
-              onde ficam o jar do WSH daquela versão (<code className={C}>WSH_JAR</code>), o container do WTA e a porta. O WSH confere as versões das{' '}
-              <em>features</em> do WTA ao subir e encerra se faltar alguma.
+              <strong className="text-foreground">WSH:</strong> na aba WSH, a versão faz o script usar o <code className={C}>.env.&lt;versão&gt;</code>,
+              onde ficam o jar do WSH (<code className={C}>WSH_JAR</code>), o container do WTA e a porta. Ao subir, o WSH confere as{' '}
+              <em>features</em> do WTA contra o <code className={C}>dependencies.json</code> dele como versão <strong className="text-foreground">mínima</strong>{' '}
+              (ex.: <code className={C}>winthor-integracao-config</code> 1.38.17.48 ou superior) e encerra se alguma estiver abaixo ou faltar. Por isso o
+              WSH publicado em produção serve também para uma versão mais nova do WinThor, como a 40.
             </li>
             <li>
               <strong className="text-foreground">Nova versão (aba Nova versão):</strong> escolha um ambiente que já funciona (ex.: master, no 39),
               a versão nova (40) e o nome do ambiente novo (develop). O Hub lê as features do <code className={C}>wta-master</code>, sobe cada uma
-              pelo catálogo de atualizações da rotina 801 até a linha 40 (sem passar dela) e, com o jar do WSH 40 escolhido, confere o que esse
-              WSH exige do WTA: é aí que um clone feito à mão costuma falhar com &quot;Versão exigida ... instalada&quot;. Na prévia você vê o que
+              pelo catálogo de atualizações da rotina 801 até a linha 40 (sem passar dela) e, com o jar do WSH escolhido (o de produção serve), confere o que
+              esse WSH exige do WTA: é aí que um clone feito à mão costuma falhar com &quot;Versão exigida ... instalada&quot;. Na prévia você vê o que
               sobe, o que ficou na versão anterior e o que o WSH cobraria.
+            </li>
+            <li>
+              <strong className="text-foreground">Guia completo:</strong> o que é cada projeto (oracle-winthor, linux-winthor, wsh-winthor e o Hub), por que
+              existe, como um ambiente sobe, o que o Hub faz por você e os problemas conhecidos estão em Central de Ajuda → <strong className="text-foreground">Guias</strong>,
+              e no botão <strong className="text-foreground">Como funciona</strong> do Assistente INFR.
+            </li>
+            <li>
+              <strong className="text-foreground">Como a tela guia:</strong> o assistente tem uma navegação lateral (Banco Oracle, WTA, WSH,
+              Nova versão, Scripts e pasta), cada item com o que faz, e o cabeçalho mostra a distro e a pasta do INFR-Docker em uso (vermelho
+              quando faltam scripts). A Nova versão vai em quatro passos (origem e versão, banco, WTA/WSH e portas, revisar e gerar), com o
+              resumo do que será criado ao lado; no último passo cada conferência fica verde, amarela ou vermelha, e o vermelho desliga o
+              Gerar. Um clone de banco que não vai funcionar (Oracle que não é o XE do INFR-Docker) oferece as saídas: usar aquele Oracle
+              direto ou subir um vazio.
+            </li>
+            <li>
+              <strong className="text-foreground">Manifesto que já existe:</strong> se o INFR-Docker já tem{' '}
+              <code className={C}>versions/40.features</code>, a prévia o compara com a lista nova (quantas features ficariam acima, abaixo
+              ou só num dos dois) e a geração usa o existente por padrão. Substituir pelo da prévia é uma escolha explícita, porque o
+              catálogo da 801 de um WTA mais antigo pode não ter a linha da versão e a lista sairia rebaixada.
+            </li>
+            <li>
+              <strong className="text-foreground">Login do catálogo:</strong> o catálogo da 801 exige login. O Hub entra no WTA de origem com
+              o usuário e a senha de Configurações → Rotinas WinThor e manda a senha em MD5 maiúsculo, como o WTA espera (pode digitar a
+              senha normal ou colar o hash). Se o WTA recusar, o erro traz a resposta dele.
             </li>
             <li>
               <strong className="text-foreground">Banco e portas da versão nova:</strong> clonar o banco de um Oracle escolhido (RMAN), usar um

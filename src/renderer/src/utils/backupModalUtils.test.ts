@@ -5,6 +5,7 @@ import {
   buildBackupHistoryCsvFilename,
   formatBytes,
   getBackupCommandPresets,
+  getCustomCommandProblem,
   getDefaultDbPort,
   hasBackupFileTag,
   normalizeWebhook,
@@ -91,9 +92,26 @@ describe('backupModalUtils', () => {
   });
 
   it('normaliza webhook com defaults', () => {
-    const w = normalizeWebhook({ name: ' A ', endpointUrl: ' https://x ', events: [] }, 123);
+    const w = normalizeWebhook({ name: ' A ', endpointUrl: ' https://x ' }, 123);
     expect(w).toMatchObject({ id: 'webhook_123', name: 'A', endpointUrl: 'https://x', method: 'POST', enabled: true, platform: 'generic' });
     expect(w.events).toBeUndefined();
+  });
+
+  it('webhook com os dois eventos desmarcados fica mudo, não passa a disparar em tudo', () => {
+    expect(normalizeWebhook({ name: 'A', endpointUrl: 'https://x', events: [] }, 1).events).toEqual([]);
+  });
+
+  it('aponta o que impede o comando personalizado de rodar, como o backend', () => {
+    expect(getCustomCommandProblem('pg_dump -f "{filePath}"')).toBeNull();
+    expect(getCustomCommandProblem('pg_dump > saida.sql')).toContain('{filePath}');
+    expect(getCustomCommandProblem('pg_dump -f "{filePath}" > log.txt')).toContain('sem shell');
+    expect(getCustomCommandProblem('   ')).toContain('em branco');
+  });
+
+  it('presets do expdp passam a senha (o comando personalizado não usa parfile)', () => {
+    for (const preset of getBackupCommandPresets('oracle').filter((p) => p.command.startsWith('expdp'))) {
+      expect(preset.command).toContain('{user}/{password}@');
+    }
   });
 
   it('upsert de webhook', () => {

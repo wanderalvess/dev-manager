@@ -32,11 +32,15 @@ const DESTRUCTIVE_TOOLS = new Set([
   'db_execute_query',
   'db_restore_backup',
   'db_run_backup',
+  // O drill é uma restauração completa no destino; salvar a config pode agendar um comando livre
+  'db_run_restore_drill',
+  'db_save_backup_config',
   'db_clear_oracle_capture',
   'logs_clear_file',
   'qa_delete_template',
   // Bloqueia contas de teste de propósito (e o nome termina em _test, que parece leitura)
   'qa_run_auth_lockout_test',
+  'qa_delete_api_scenario',
   'deploy_run_profile',
   'delphi_build',
   'delphi_run_pipeline'

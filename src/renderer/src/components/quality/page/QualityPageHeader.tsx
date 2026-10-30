@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, CheckCheck, Copy, Info, Plus } from 'lucide-react';
 import type { QualitySourceConfig } from '../../../../../shared/types';
+import { requestSettingsTab } from '../../../utils/settingsDeepLink';
 
 interface QualityPageHeaderProps {
   activeQualitySource?: QualitySourceConfig;
@@ -39,7 +40,10 @@ export const QualityPageHeader: React.FC<QualityPageHeaderProps> = ({
               // Sem alerta: cadastrar uma fonte ainda não sincroniza nada, então não há o que "resolver" aqui
               <button
                 type="button"
-                onClick={() => onNavigate?.('settings')}
+                onClick={() => {
+                  requestSettingsTab('quality');
+                  onNavigate?.('settings');
+                }}
                 className="px-2.5 py-0.5 rounded-full text-[13px] font-medium bg-muted hover:bg-muted/70 text-muted-foreground transition-colors cursor-pointer flex items-center gap-1"
                 title="Os cenários são cadastrados à mão. A integração com Zephyr Scale, Jira ou Azure DevOps ainda não sincroniza; dá para cadastrar a fonte nas Configurações."
               >

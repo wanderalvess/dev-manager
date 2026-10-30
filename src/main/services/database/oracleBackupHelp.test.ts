@@ -76,6 +76,16 @@ describe('oracleBackupHelp', () => {
     expect(res.message).toContain('Oracle_Local.dmp');
   });
 
+  it('ORA-39002/39001 sozinhos (só embrulham o erro real) não viram ajuda de DIRECTORY nem de dump ausente', () => {
+    expect(explainOracleFailure('ORA-39002: invalid operation\nORA-39142: incompatible version number 5.1 in dump file', ctx)).toBeNull();
+    expect(
+      explainOracleFailure('ORA-39001: invalid argument value\nORA-39143: dump file may be an original export dump file', {
+        ...ctx,
+        operation: 'restore'
+      })
+    ).toBeNull();
+  });
+
   it('ORACLE_HOME ausente e erro desconhecido', () => {
     expect(explainOracleFailure('UDE-00019: You may need to set ORACLE_HOME', ctx)?.message).toContain('ORACLE_HOME');
     expect(explainOracleFailure('ORA-99999: algo novo', ctx)).toBeNull();

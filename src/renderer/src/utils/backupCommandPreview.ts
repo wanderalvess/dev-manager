@@ -2,14 +2,17 @@ import type { DatabaseConnectionConfig, DatabaseType } from '../../../shared/typ
 import { buildOracleConnectDescriptor } from '../../../shared/oracleCliConnect';
 
 /** Template padrão de comando de backup por tipo de banco — sugestão inicial no editor de comando customizado. */
-export function getDefaultBackupCommandTemplate(type: DatabaseType): string {
+export function getDefaultBackupCommandTemplate(type: DatabaseType, compress = false): string {
   switch (type) {
     case 'oracle':
-      return 'expdp {user}/{password}@{connectString} directory={directory} dumpfile={fileName} logfile={logFileName} schemas={user}';
+      return `expdp {user}/{password}@{connectString} directory={directory} dumpfile={fileName} logfile={logFileName} schemas={user}${compress ? ' compression=ALL' : ''}`;
     case 'mysql':
+      // Sem shell não há "| gzip": o comando personalizado do MySQL grava o .sql sem compactar.
       return 'mysqldump -h {host} -P {port} -u {user} {database} --result-file="{filePath}"';
     default:
-      return 'pg_dump -h {host} -p {port} -U {user} -d {database} -f "{filePath}"';
+      return compress
+        ? 'pg_dump -h {host} -p {port} -U {user} -d {database} -F c --no-password -f "{filePath}"'
+        : 'pg_dump -h {host} -p {port} -U {user} -d {database} -F p --no-password --clean --if-exists -f "{filePath}"';
   }
 }
 
@@ -63,15 +66,22 @@ export function resolveBackupCommandPreview(
   const pwdDisplay = showPassword ? connection.password || '' : '****';
 
   if (!useCustomBackupCommand) {
+    // Mesmos nomes e argumentos que o BackupService usa no comando padrão de cada banco.
     if (connection.type === 'oracle') {
+      const base = `${(connection.name || connection.user).replace(/[^a-zA-Z0-9_-]/g, '_')}_${connection.user}_TIMESTAMP`;
       // A conexão vai na variável LOCAL (TWO_TASK fora do Windows) e os parâmetros, com a senha,
       // num parfile temporário: só o parfile vai na linha de comando.
-      return `LOCAL=${buildOracleConnectDescriptor({ ...connection, port })} expdp parfile=<temporário> → userid=${connection.user}/${pwdDisplay} directory=${directory} dumpfile=${sampleFileName} logfile=${sampleLogName} schemas=${connection.user}${backupCompress ? ' compression=ALL' : ''}`;
+      return `LOCAL=${buildOracleConnectDescriptor({ ...connection, port })} expdp parfile=<temporário> → userid=${connection.user}/${pwdDisplay} directory=${directory} dumpfile=${base}.dmp logfile=${base}.log schemas=${connection.user}${backupCompress ? ' compression=ALL' : ''}`;
     }
+    const base = `${(connection.name || connection.database).replace(/[^a-zA-Z0-9_-]/g, '_')}_${connection.database}_TIMESTAMP`;
     if (connection.type === 'mysql') {
-      return `mysqldump -h ${connection.host} -P ${port} -u ${connection.user} --result-file="${sampleFilePath}" ${connection.database}`;
+      if (backupCompress) {
+        return `mysqldump -h ${connection.host} -P ${port} -u ${connection.user} ${connection.database} | gzip > "${folder}\\${base}.sql.gz"`;
+      }
+      return `mysqldump -h ${connection.host} -P ${port} -u ${connection.user} --result-file="${folder}\\${base}.sql" ${connection.database}`;
     }
-    return `pg_dump -h ${connection.host} -p ${port} -U ${connection.user} -d ${connection.database} -f "${sampleFilePath}" -F ${backupCompress ? 'c' : 'p'}`;
+    const pgFile = `${folder}\\${base}.${backupCompress ? 'dump' : 'sql'}`;
+    return `pg_dump -h ${connection.host} -p ${port} -U ${connection.user} -d ${connection.database} -f "${pgFile}" -F ${backupCompress ? 'c' : 'p'} --no-password${backupCompress ? '' : ' --clean --if-exists'}`;
   }
 
   let cmd = customBackupCommand || '';

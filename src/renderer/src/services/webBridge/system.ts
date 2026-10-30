@@ -6,6 +6,8 @@ import type {
   NetworkIpInfo,
   SystemMetrics,
   HttpHealthResult,
+  HttpProbeRequest,
+  HttpProbeResult,
   UpdateStatus
 } from '../../../../shared/types';
 import type { ElectronAPI } from '../../../../preload/index';
@@ -88,6 +90,13 @@ export function createSystemApi({ apiFetch }: BridgeDeps) {
           error: 'Servidor Web/Docker offline'
         };
       }
+    },
+
+    probeHttpEndpoint: async (req: HttpProbeRequest): Promise<HttpProbeResult> => {
+      return apiFetch<HttpProbeResult>('/api/network/probe', {
+        method: 'POST',
+        body: JSON.stringify(req)
+      });
     },
 
     // Métricas do Sistema

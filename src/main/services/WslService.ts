@@ -1030,7 +1030,8 @@ export class WslService {
    */
   /** Pasta do INFR-Docker no Windows e o caminho /mnt/... dela no WSL; null se o caminho não for seguro. */
   public resolveInfrPaths(infrPath?: string): { windows: string; wsl: string } | null {
-    const infrCandidates = this.genericProjectRoots().map((root) => path.join(root, 'INFR-Docker'));
+    // C:\projetos é a pasta que o manual do INFR-Docker manda usar
+    const infrCandidates = [...this.genericProjectRoots(), 'C:\\projetos'].map((root) => path.join(root, 'INFR-Docker'));
     const basePath = infrPath || infrCandidates.find((c) => fs.existsSync(c)) || infrCandidates[0];
     if (!isSafeLocalPath(basePath) || !/^[a-zA-Z0-9_\-.:\\/ ]+$/.test(basePath)) return null;
     const wsl = basePath.replace(/^([A-Za-z]):/, (_, drive) => `/mnt/${drive.toLowerCase()}`).replace(/\\/g, '/');

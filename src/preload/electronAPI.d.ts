@@ -1,6 +1,7 @@
 import type {
   InfrEnvSaveRequest,
   InfrEnvTemplate,
+  InfrManifestSaveRequest,
   InfrManifestSaveResult,
   InfrVersionPreview,
   InfrVersionPreviewRequest
@@ -89,6 +90,8 @@ import type {
   GitCommandResult,
   SystemMetrics,
   HttpHealthResult,
+  HttpProbeRequest,
+  HttpProbeResult,
   DeployProfile,
   DeployStep,
   DeployProfileHistoryEntry,
@@ -361,7 +364,8 @@ export interface ElectronAPI {
   saveDbBackupConfig: (config: BackupConfig) => Promise<{ success: boolean; message: string }>;
   restoreDbBackup: (config: DatabaseConnectionConfig, filePath: string) => Promise<BackupResult>;
   listDbBackupHistory: (connectionId?: string) => Promise<BackupHistoryEntry[]>;
-  runDbRestoreDrill: (scratchConnection: DatabaseConnectionConfig, filePath: string) => Promise<BackupResult>;
+  /** `sourceConnectionId`: conexão que gerou o backup; o drill recusa rodar sobre ela. */
+  runDbRestoreDrill: (scratchConnection: DatabaseConnectionConfig, filePath: string, sourceConnectionId?: string) => Promise<BackupResult>;
   testBackupWebhook: (webhook: BackupWebhookConfig) => Promise<{ success: boolean; message: string }>;
   onBackupScheduleResult: (callback: (data: { connectionName: string; result: BackupResult }) => void) => () => void;
 
@@ -388,7 +392,7 @@ export interface ElectronAPI {
   getInfrEnvTemplate?: (params: { distro?: string; from: string }) => Promise<InfrEnvTemplate>;
   saveInfrEnvFiles?: (req: InfrEnvSaveRequest) => Promise<InfrManifestSaveResult>;
   previewInfrVersion?: (req: InfrVersionPreviewRequest) => Promise<InfrVersionPreview>;
-  saveInfrVersionManifest?: (req: { infrPath?: string; targetVersion: string; manifestText: string }) => Promise<InfrManifestSaveResult>;
+  saveInfrVersionManifest?: (req: InfrManifestSaveRequest) => Promise<InfrManifestSaveResult>;
   setDockerTargetWslDistro?: (distro: string | null) => Promise<DockerDaemonStatus>;
   getContainerEnvironments?: () => Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }>;
   saveContainerEnvironment?: (env: ContainerEnvironment) => Promise<boolean>;
@@ -447,6 +451,7 @@ export interface ElectronAPI {
   // Rede & Detecção de IPs (Local e WSL)
   getNetworkIps: () => Promise<NetworkIpInfo>;
   checkHttpHealth: (url: string, timeoutMs?: number) => Promise<HttpHealthResult>;
+  probeHttpEndpoint: (req: HttpProbeRequest) => Promise<HttpProbeResult>;
 
   // Métricas do Sistema
   getSystemMetrics: () => Promise<SystemMetrics>;

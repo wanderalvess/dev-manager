@@ -74,6 +74,31 @@ describe('resolveBackupCommandPreview', () => {
     expect(compressed).toContain('compression=ALL');
   });
 
+  it('prévia padrão usa os mesmos nomes e argumentos que o BackupService', () => {
+    const oracle = resolveBackupCommandPreview(makeConnection({ type: 'oracle', name: 'Oracle Local', user: 'local' }), baseOptions);
+    expect(oracle).toContain('dumpfile=Oracle_Local_local_TIMESTAMP.dmp logfile=Oracle_Local_local_TIMESTAMP.log');
+
+    const pgPlain = resolveBackupCommandPreview(makeConnection(), baseOptions);
+    expect(pgPlain).toContain('-F p --no-password --clean --if-exists');
+    expect(pgPlain).toContain('Meu_Banco_meudb_TIMESTAMP.sql');
+
+    const mysqlGz = resolveBackupCommandPreview(makeConnection({ type: 'mysql', port: 3306 }), { ...baseOptions, backupCompress: true });
+    expect(mysqlGz).toContain('| gzip >');
+    expect(mysqlGz).toContain('.sql.gz');
+  });
+
+  it('template do "Editar como personalizado" traz as tags, nunca a senha nem nome de exemplo', () => {
+    for (const type of ['oracle', 'postgres', 'mysql'] as const) {
+      const tpl = getDefaultBackupCommandTemplate(type, true);
+      expect(tpl).not.toContain('TIMESTAMP');
+      expect(tpl).not.toContain('****');
+      expect(tpl).toMatch(/\{filePath\}|\{fileName\}/);
+      expect(tpl).not.toMatch(/[;&|<>`]/);
+    }
+    expect(getDefaultBackupCommandTemplate('postgres', true)).toContain('-F c');
+    expect(getDefaultBackupCommandTemplate('oracle', true)).toContain('compression=ALL');
+  });
+
   it('modo SID do oracle usa SID no descritor da conexão', () => {
     const conn = makeConnection({ type: 'oracle', port: 1521, oracleMode: 'sid' });
     const cmd = resolveBackupCommandPreview(conn, baseOptions);

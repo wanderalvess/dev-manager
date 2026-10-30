@@ -1,4 +1,5 @@
 import type { AuthLockoutCheckStatus, ExposureFinding, LoginOutcome } from './authLockoutTypes';
+import { EXCEPTION_MESSAGE_PATTERNS, excerptAround, hasExceptionMessage } from './exceptionLeak';
 
 export type HeaderBag = Record<string, string | string[] | undefined>;
 
@@ -6,6 +7,8 @@ const JWT_PATTERN = /eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/
 const TOKEN_KEYS = /"(access_?token|accessToken|token|jwt|id_token|refresh_?token)"\s*:\s*"[^"]{8,}"/i;
 const SESSION_COOKIE = /^(suukie|jsessionid|session|sess|sid|token|auth)/i;
 const STACK_TRACE = /(\bat\s+[\w$.]+\([\w$]+\.(java|kt|groovy):\d+\)|\b[\w.]+(Exception|Error):\s|\bTraceback \(most recent call last\)|\bCaused by:\s)/;
+/** Nome completo de exceção Java (`java.lang.NullPointerException`): diz a classe interna mesmo sem o stack trace. */
+const JAVA_EXCEPTION_CLASS = /\b(?:java|javax|jakarta|org|com|br)\.[\w$]+(?:\.[\w$]+)*(?:Exception|Error)\b/;
 const CONNECTION_STRING = /(jdbc:[a-z]+:|Data Source\s*=|User Id\s*=|Initial Catalog\s*=|\bPassword\s*=|@\/\/[\w.-]+:\d+\/|mongodb(\+srv)?:\/\/|postgres(ql)?:\/\/[^\s"]*@)/i;
 const SQL_ERROR = /\b(ORA-\d{5}|PLS-\d{5}|SQLSTATE\[|SQL syntax)/;
 const SERVER_VERSION = /\/\d+(\.\d+)+/;
@@ -81,14 +84,23 @@ export interface ExposureInput {
   allowToken?: boolean;
 }
 
-export function detectExposure({ body, headers, secrets, allowToken }: ExposureInput): ExposureFinding[] {
-  const found = new Set<ExposureFinding>();
+/** Corpo, corpo sem escapes e cabeçalhos num texto só: o que as buscas de vazamento leem. `readable` deixa de fora o corpo cru. */
+function exposureText({ body, headers, allowToken }: ExposureInput, readable = false): string {
   const headerDump = Object.entries(headers ?? {})
     .filter(([name]) => name !== 'set-cookie' || !allowToken)
     .map(([name, value]) => `${name}: ${Array.isArray(value) ? value.join('; ') : value ?? ''}`)
     .join('\n');
-  const text = `${body}\n${headerDump}`;
-  if (STACK_TRACE.test(text)) found.add('stack-trace');
+  // Em resposta JSON o stack trace vem com as quebras escapadas ("\\n\\tat br.com..."): analisa também o texto sem os escapes
+  const unescaped = body.replace(/\\[nrt]/g, ' ').replace(/\\"/g, '"');
+  return readable ? `${unescaped}\n${headerDump}` : `${body}\n${unescaped}\n${headerDump}`;
+}
+
+export function detectExposure(input: ExposureInput): ExposureFinding[] {
+  const { body, headers, secrets, allowToken } = input;
+  const found = new Set<ExposureFinding>();
+  const text = exposureText(input);
+  if (STACK_TRACE.test(text) || JAVA_EXCEPTION_CLASS.test(text)) found.add('stack-trace');
+  if (hasExceptionMessage(text)) found.add('exception-message');
   if (secrets.some((secret) => secret.length >= 4 && text.includes(secret))) found.add('password');
   if (!allowToken && (JWT_PATTERN.test(text) || TOKEN_KEYS.test(body))) found.add('token');
   if (CONNECTION_STRING.test(text)) found.add('connection-string');
@@ -97,8 +109,27 @@ export function detectExposure({ body, headers, secrets, allowToken }: ExposureI
   return [...found];
 }
 
+/**
+ * O trecho da resposta que denunciou cada achado técnico (stack trace, mensagem da exceção, erro de SQL). Senha,
+ * token e string de conexão não ganham trecho: mostrar seria repetir o segredo.
+ */
+export function exposureExcerpts(input: ExposureInput): Partial<Record<ExposureFinding, string>> {
+  // Sem os escapes do JSON: o trecho sai como o QA leria (For input string: "NUMERO")
+  const text = exposureText(input, true);
+  const first = (patterns: readonly RegExp[]) => patterns.map((p) => excerptAround(text, p)).find(Boolean);
+  const excerpts: Partial<Record<ExposureFinding, string>> = {};
+  const stack = first([JAVA_EXCEPTION_CLASS, STACK_TRACE]);
+  const message = first(EXCEPTION_MESSAGE_PATTERNS);
+  const sql = first([SQL_ERROR]);
+  if (stack) excerpts['stack-trace'] = stack;
+  if (message) excerpts['exception-message'] = message;
+  if (sql) excerpts['sql-error'] = sql;
+  return excerpts;
+}
+
 export const EXPOSURE_LABELS: Record<ExposureFinding, string> = {
   'stack-trace': 'stack trace',
+  'exception-message': 'mensagem interna da exceção (Java/Spring)',
   password: 'senha usada no teste',
   token: 'token',
   'connection-string': 'string de conexão',
@@ -112,14 +143,15 @@ export function isBlockingExposure(finding: ExposureFinding): boolean {
 }
 
 /** Corta o corpo para o relatório, sem deixar passar senha nem token. */
-export function maskSecrets(text: string, secrets: readonly string[], max = 300): string {
+export function maskSecrets(text: string, secrets: readonly string[], max = 300, keepLayout = false): string {
   let masked = text;
   for (const secret of secrets) {
     if (secret.length >= 4) masked = masked.split(secret).join('***');
   }
   masked = masked.replace(new RegExp(JWT_PATTERN.source, 'g'), 'eyJ***');
   masked = masked.replace(/("(?:access_?token|accessToken|token|jwt|id_token|refresh_?token)"\s*:\s*")[^"]+"/gi, '$1***"');
-  const flat = masked.replace(/\s+/g, ' ').trim();
+  // `keepLayout` preserva as quebras de linha (corpo JSON formatado); o padrão achata para caber numa linha
+  const flat = keepLayout ? masked : masked.replace(/\s+/g, ' ').trim();
   return flat.length > max ? `${flat.slice(0, max)}…` : flat;
 }
 

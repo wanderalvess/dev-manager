@@ -555,8 +555,9 @@ export class ConfigService {
     if ('disabledModules' in candidate) updated.disabledModules = normalizeDisabledModules(candidate.disabledModules);
     try {
       const forDisk = this.encryptSecretsForDisk(updated);
-      // Grava num temporário e renomeia: uma queda no meio da escrita não deixa o config.json truncado
-      const tmpPath = `${this.configPath}.tmp`;
+      // Grava num temporário e renomeia: uma queda no meio da escrita não deixa o config.json truncado.
+      // O PID no nome evita que o app desktop e o servidor web gravem o mesmo temporário ao mesmo tempo.
+      const tmpPath = `${this.configPath}.${process.pid}.tmp`;
       fs.writeFileSync(tmpPath, JSON.stringify(forDisk, null, 2), 'utf-8');
       fs.renameSync(tmpPath, this.configPath);
       const stat = fs.statSync(this.configPath);
@@ -768,6 +769,7 @@ export class ConfigService {
         authValue: ''
       }));
     }
+    sanitized.hasCcwAuthCookie = Boolean(settings.ccwAuthCookie && settings.ccwAuthCookie.trim().length > 0);
     if (sanitized.ccwAuthCookie) {
       sanitized.ccwAuthCookie = '';
     }
@@ -775,6 +777,7 @@ export class ConfigService {
     sanitized.hasWtaAuthToken = Boolean(settings.wtaAuthToken && settings.wtaAuthToken.trim().length > 0);
     sanitized.wtaPassword = '';
     sanitized.wtaAuthToken = '';
+    sanitized.hasAzureDevOpsToken = Boolean(settings.azureDevOpsToken && settings.azureDevOpsToken.trim().length > 0);
     if (sanitized.azureDevOpsToken) {
       sanitized.azureDevOpsToken = '';
     }

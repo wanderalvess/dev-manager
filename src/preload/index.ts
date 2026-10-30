@@ -5,10 +5,13 @@ import { karafInstallApi } from './karafInstallApi';
 import { remoteControlApi } from './remoteControlApi';
 import { integrationApi } from './integrationApi';
 import { authLockoutApi } from './authLockoutApi';
+import { apiScenarioApi } from './apiScenarioApi';
+import { scenarioHistoryApi } from './scenarioHistoryApi';
 import type { DeployQueueProject } from '../shared/deployQueue';
 import type {
   InfrEnvSaveRequest,
   InfrEnvTemplate,
+  InfrManifestSaveRequest,
   InfrManifestSaveResult,
   InfrVersionPreview,
   InfrVersionPreviewRequest
@@ -94,6 +97,8 @@ import type {
   OracleCaptureState,
   SystemMetrics,
   HttpHealthResult,
+  HttpProbeRequest,
+  HttpProbeResult,
   DeployProfile,
   DeployStep,
   DeployProfileHistoryEntry,
@@ -366,6 +371,8 @@ const electronAPI = {
   ...remoteControlApi,
   ...integrationApi,
   ...authLockoutApi,
+  ...apiScenarioApi,
+  ...scenarioHistoryApi,
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
   runDeployProfile: (
@@ -605,8 +612,8 @@ const electronAPI = {
     ipcRenderer.invoke('db:restore-backup', config, filePath),
   listDbBackupHistory: (connectionId?: string): Promise<BackupHistoryEntry[]> =>
     ipcRenderer.invoke('db:list-backup-history', connectionId),
-  runDbRestoreDrill: (scratchConnection: DatabaseConnectionConfig, filePath: string): Promise<BackupResult> =>
-    ipcRenderer.invoke('db:run-restore-drill', scratchConnection, filePath),
+  runDbRestoreDrill: (scratchConnection: DatabaseConnectionConfig, filePath: string, sourceConnectionId?: string): Promise<BackupResult> =>
+    ipcRenderer.invoke('db:run-restore-drill', scratchConnection, filePath, sourceConnectionId),
   testBackupWebhook: (webhook: BackupWebhookConfig): Promise<{ success: boolean; message: string }> =>
     ipcRenderer.invoke('backup:test-webhook', webhook),
   onBackupScheduleResult: (callback: (data: { connectionName: string; result: BackupResult }) => void) => {
@@ -658,7 +665,7 @@ const electronAPI = {
     ipcRenderer.invoke('infr:version-env-template', params),
   saveInfrEnvFiles: (req: InfrEnvSaveRequest): Promise<InfrManifestSaveResult> => ipcRenderer.invoke('infr:version-env-save', req),
   previewInfrVersion: (req: InfrVersionPreviewRequest): Promise<InfrVersionPreview> => ipcRenderer.invoke('infr:version-preview', req),
-  saveInfrVersionManifest: (req: { infrPath?: string; targetVersion: string; manifestText: string }): Promise<InfrManifestSaveResult> =>
+  saveInfrVersionManifest: (req: InfrManifestSaveRequest): Promise<InfrManifestSaveResult> =>
     ipcRenderer.invoke('infr:version-save', req),
   setDockerTargetWslDistro: (distro: string | null): Promise<DockerDaemonStatus> =>
     ipcRenderer.invoke('docker:set-target-wsl-distro', distro),
@@ -763,6 +770,8 @@ const electronAPI = {
   getNetworkIps: (): Promise<NetworkIpInfo> => ipcRenderer.invoke('network:get-ips'),
   checkHttpHealth: (url: string, timeoutMs?: number): Promise<HttpHealthResult> =>
     ipcRenderer.invoke('network:check-http-health', url, timeoutMs),
+  probeHttpEndpoint: (req: HttpProbeRequest): Promise<HttpProbeResult> =>
+    ipcRenderer.invoke('network:probe-http', req),
 
   // Métricas do Sistema
   getSystemMetrics: (): Promise<SystemMetrics> => ipcRenderer.invoke('system:get-metrics'),

@@ -4,9 +4,9 @@ import {
   MAX_QUICK_COMMANDS,
   newQuickCommandId,
   type KarafQuickCommand
-} from '../../utils/karafQuickCommands';
+} from '../../../utils/karafQuickCommands';
 
-interface DeployQuickCommandsEditorProps {
+interface KarafQuickCommandsEditorProps {
   commands: KarafQuickCommand[];
   onSave: (list: KarafQuickCommand[]) => void;
   onRestoreDefaults: () => void;
@@ -19,7 +19,7 @@ const iconBtn =
   'p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 cursor-pointer transition';
 
 /** Edita a lista de comandos rápidos num rascunho; só grava ao salvar (itens sem comando são descartados). */
-export const DeployQuickCommandsEditor: React.FC<DeployQuickCommandsEditorProps> = ({
+export const KarafQuickCommandsEditor: React.FC<KarafQuickCommandsEditorProps> = ({
   commands,
   onSave,
   onRestoreDefaults,

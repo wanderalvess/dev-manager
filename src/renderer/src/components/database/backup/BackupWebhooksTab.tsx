@@ -63,6 +63,7 @@ export const BackupWebhooksTab: React.FC<BackupWebhooksTabProps> = ({
                     type="checkbox"
                     checked={w.enabled}
                     onChange={(e) => onToggleEnabled(w, e.target.checked)}
+                    aria-label={`Webhook ${w.name} ativo`}
                     className="text-primary focus:ring-0 rounded"
                   />
                 </label>

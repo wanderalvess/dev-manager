@@ -2,6 +2,7 @@ import React from 'react';
 import { Terminal, Copy, Check } from 'lucide-react';
 import type { DatabaseConnectionConfig } from '../../../../../shared/types';
 import type { BackupFormState } from '../../../hooks/database/useBackupForm';
+import { getDefaultBackupCommandTemplate } from '../../../utils/backupCommandPreview';
 
 interface BackupDefaultCommandPanelProps {
   activeConnection: DatabaseConnectionConfig;
@@ -66,7 +67,8 @@ export const BackupDefaultCommandPanel: React.FC<BackupDefaultCommandPanelProps>
               type="button"
               onClick={() => {
                 setUseCustomBackupCommand(true);
-                setCustomBackupCommand(previewBackupCommandResolved);
+                // O template com as tags, não a prévia resolvida: ela tem a senha (ou ****) e um nome de arquivo de exemplo.
+                setCustomBackupCommand(getDefaultBackupCommandTemplate(activeConnection.type, backupCompress));
               }}
               className="px-2 py-0.5 text-2xs text-primary hover:underline font-semibold cursor-pointer"
             >

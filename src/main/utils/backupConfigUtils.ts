@@ -18,6 +18,12 @@ export function validateBackupConfig(config: BackupConfig, options: ValidateOpti
   if (config.restoreDrillCronExpression && !cron.validate(config.restoreDrillCronExpression)) {
     return 'Expressão cron de restore drill inválida.';
   }
+  if (config.restoreDrillScratchConnectionId && config.restoreDrillScratchConnectionId === config.connectionId) {
+    return 'A conexão do teste de restauração não pode ser a própria conexão do backup: o teste sobrescreve o destino.';
+  }
+  if (config.restoreDrillCronExpression && config.restoreDrillEnabled !== false && !config.restoreDrillScratchConnectionId) {
+    return 'Escolha a conexão descartável do teste de restauração agendado, ou desative o agendamento do teste.';
+  }
   return null;
 }
 

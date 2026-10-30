@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { NAV_THEME_GROUPS } from './headerNavConfig';
 
 describe('headerNavConfig', () => {
-  it('contém exatamente os 4 grupos principais do cockpit', () => {
-    expect(NAV_THEME_GROUPS.map((g) => g.id)).toEqual(['infra', 'data', 'dev', 'qa']);
+  it('contém exatamente os 5 grupos principais do cockpit', () => {
+    expect(NAV_THEME_GROUPS.map((g) => g.id)).toEqual(['infra', 'obs', 'data', 'dev', 'qa']);
   });
 
   it('todos os grupos possuem títulos compactos menores ou iguais aos títulos curtos', () => {

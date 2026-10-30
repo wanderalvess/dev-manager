@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowDown, ArrowUp, ArrowUpDown, Download, Pencil, RefreshCw, Search, ShieldCheck, Trash2 } from 'lucide-react';
 import type { QualitySourceConfig } from '../../../../../shared/types';
 import type { QualityValidationItem, ValidationItemStatus } from '../../../utils/qualityPageUtils';
+import { requestSettingsTab } from '../../../utils/settingsDeepLink';
 import {
   getCategoryLabel,
   getStatusSelectClass,
@@ -95,7 +96,10 @@ export const QualityMatrixPanel: React.FC<QualityMatrixPanelProps> = ({
         {onNavigate && (
           <button
             type="button"
-            onClick={() => onNavigate('settings')}
+            onClick={() => {
+              requestSettingsTab('quality');
+              onNavigate('settings');
+            }}
             className="px-3 h-9 rounded-[10px] bg-card hover:bg-muted text-foreground border border-border text-[13px] font-medium shrink-0 transition-colors cursor-pointer self-start sm:self-auto flex items-center"
           >
             Ver Configurações

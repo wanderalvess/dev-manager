@@ -1,7 +1,8 @@
 import { MCP_TOOL_COUNT } from '../../../shared/mcpCatalog';
-import type { AppSettings, GitProjectInfo } from '../../../shared/types';
+import type { ApmReceiverStatus, AppSettings, GitProjectInfo } from '../../../shared/types';
 
-export type IntegrationStatus = 'active' | 'unconfigured' | 'detected' | 'none';
+/** `error`: configurada, mas a checagem ao vivo falhou (ex.: porta do OTLP ocupada). */
+export type IntegrationStatus = 'active' | 'unconfigured' | 'detected' | 'error' | 'none';
 
 export type IntegrationTarget =
   | { kind: 'page'; tab: string }
@@ -20,6 +21,8 @@ export interface IntegrationItem {
   statusLabel: string;
   actionLabel: string;
   target: IntegrationTarget;
+  /** Detalhe do problema quando `status` é `error`. */
+  detail?: string;
 }
 
 export const INTEGRATION_GROUP_TITLES: Record<IntegrationGroupId, { title: string; subtitle: string }> = {
@@ -28,20 +31,30 @@ export const INTEGRATION_GROUP_TITLES: Record<IntegrationGroupId, { title: strin
   quality: { title: 'Qualidade, observabilidade e avisos', subtitle: 'Testes, traces e notificações' }
 };
 
-export type IntegrationFilter = 'all' | 'active' | 'unconfigured';
+export type IntegrationFilter = 'all' | 'active' | 'attention' | 'unconfigured';
+
+/** Estado ao vivo que não vem das configurações salvas. `undefined` = ainda não consultado. */
+export interface IntegrationLiveState {
+  apmReceiver?: Pick<ApmReceiverStatus, 'listening' | 'port' | 'error'> | null;
+}
 
 const count = (list: readonly unknown[] | undefined): number => (Array.isArray(list) ? list.length : 0);
 
 /** Monta os cartões da tela Integrações a partir das configurações salvas e dos repositórios detectados. */
 export function buildIntegrations(
   settings: Partial<AppSettings> | null,
-  projects: readonly Pick<GitProjectInfo, 'provider'>[] = []
+  projects: readonly Pick<GitProjectInfo, 'provider'>[] = [],
+  live: IntegrationLiveState = {}
 ): IntegrationItem[] {
   const s = settings ?? {};
   const activeLlm = (s.llmProviders ?? []).find((p) => p.id === s.activeLlmProviderId) ?? null;
   const llmCount = count(s.llmProviders);
   const hostedRepos = projects.filter((p) => p.provider === 'github' || p.provider === 'gitlab').length;
-  const otlpPort = s.apmReceiverPort ?? 4318;
+  const apm = live.apmReceiver;
+  const otlpPort = apm?.port ?? s.apmReceiverPort ?? 4318;
+  // settings:get devolve os tokens vazios (sanitizados); o has* diz se existe um salvo.
+  const hasAzureToken = Boolean(s.azureDevOpsToken || s.hasAzureDevOpsToken);
+  const hasCcwCookie = Boolean(s.ccwAuthCookie || s.hasCcwAuthCookie);
   const webhooks = count(s.backupWebhooks);
   const qualitySources = count(s.qualitySources);
 
@@ -92,8 +105,8 @@ export function buildIntegrations(
       group: 'code',
       title: 'Azure DevOps',
       description: 'Repositórios, tarefas, pull requests e pipelines.',
-      status: s.azureDevOpsToken ? 'active' : 'unconfigured',
-      statusLabel: s.azureDevOpsToken ? 'Conectado' : 'Não configurado',
+      status: hasAzureToken ? 'active' : 'unconfigured',
+      statusLabel: hasAzureToken ? 'Token salvo' : 'Não configurado',
       actionLabel: 'Configurar',
       target: { kind: 'settings', tab: 'azure' }
     },
@@ -112,8 +125,8 @@ export function buildIntegrations(
       group: 'code',
       title: 'WinThor CCW',
       description: 'Baixa e atualiza rotinas pela Central de Controle WinThor, com backup .bak.',
-      status: s.ccwAuthCookie ? 'active' : 'unconfigured',
-      statusLabel: s.ccwAuthCookie ? 'Conectado' : 'Não configurado',
+      status: hasCcwCookie ? 'active' : 'unconfigured',
+      statusLabel: hasCcwCookie ? 'Cookie salvo' : 'Não configurado',
       actionLabel: 'Configurar',
       target: { kind: 'settings', tab: 'routines' }
     },
@@ -132,8 +145,7 @@ export function buildIntegrations(
       group: 'quality',
       title: 'OpenTelemetry',
       description: `Recebe traces OTLP na porta ${otlpPort} para o APM. Funciona ao lado de SigNoz ou Jaeger.`,
-      status: 'active',
-      statusLabel: `Porta ${otlpPort}`,
+      ...otlpStatus(apm, otlpPort),
       actionLabel: 'Trocar porta',
       target: { kind: 'settings', tab: 'ports' }
     },
@@ -150,8 +162,38 @@ export function buildIntegrations(
   ];
 }
 
+/** Receptor OTLP: só diz "recebendo" quando o app confirmou que a porta está escutando. */
+function otlpStatus(
+  apm: IntegrationLiveState['apmReceiver'],
+  port: number
+): Pick<IntegrationItem, 'status' | 'statusLabel' | 'detail'> {
+  if (apm === undefined) return { status: 'none', statusLabel: `Porta ${port}` };
+  if (apm === null) return { status: 'none', statusLabel: `Porta ${port} · estado desconhecido` };
+  if (apm.listening) return { status: 'active', statusLabel: `Recebendo na porta ${port}` };
+  return {
+    status: 'error',
+    statusLabel: `Parado na porta ${port}`,
+    detail: apm.error || 'O receptor não está escutando. A porta pode estar ocupada por outro programa.'
+  };
+}
+
+const FILTER_MATCH: Record<IntegrationFilter, (status: IntegrationStatus) => boolean> = {
+  all: () => true,
+  active: (status) => status === 'active' || status === 'detected',
+  attention: (status) => status === 'error',
+  unconfigured: (status) => status === 'unconfigured'
+};
+
 export function filterIntegrations(items: readonly IntegrationItem[], filter: IntegrationFilter): IntegrationItem[] {
-  if (filter === 'all') return [...items];
-  if (filter === 'active') return items.filter((i) => i.status === 'active' || i.status === 'detected');
-  return items.filter((i) => i.status === 'unconfigured');
+  return items.filter((i) => FILTER_MATCH[filter](i.status));
+}
+
+/** Quantos cartões cada filtro mostra, para o número ao lado do chip. */
+export function countIntegrationsByFilter(items: readonly IntegrationItem[]): Record<IntegrationFilter, number> {
+  return {
+    all: items.length,
+    active: filterIntegrations(items, 'active').length,
+    attention: filterIntegrations(items, 'attention').length,
+    unconfigured: filterIntegrations(items, 'unconfigured').length
+  };
 }

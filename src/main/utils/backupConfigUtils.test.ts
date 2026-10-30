@@ -14,6 +14,15 @@ describe('backupConfigUtils', () => {
     );
   });
 
+  it('recusa o drill sobre a própria conexão e o drill agendado sem conexão descartável', () => {
+    expect(validateBackupConfig(makeConfig({ restoreDrillScratchConnectionId: 'c1' }))).toContain('própria conexão');
+    expect(validateBackupConfig(makeConfig({ restoreDrillCronExpression: '0 4 * * *' }))).toContain('conexão descartável');
+    expect(validateBackupConfig(makeConfig({ restoreDrillCronExpression: '0 4 * * *', restoreDrillEnabled: false }))).toBeNull();
+    expect(
+      validateBackupConfig(makeConfig({ restoreDrillCronExpression: '0 4 * * *', restoreDrillScratchConnectionId: 'c2' }))
+    ).toBeNull();
+  });
+
   it('só recusa pasta remota quando pedido', () => {
     const remote = makeConfig({ destinationFolder: '\\\\servidor\\share' });
     expect(validateBackupConfig(remote)).toBeNull();

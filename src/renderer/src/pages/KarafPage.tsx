@@ -4,7 +4,7 @@ import { GitProjectInfo } from '../../../shared/types';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { KARAF_TOUR_STEPS, KARAF_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/karafTour';
-import { DeployDiagnosticsPanel } from '../components/deploy/DeployDiagnosticsPanel';
+import { KarafDiagnosticsPanel } from '../components/karaf/diagnostics/KarafDiagnosticsPanel';
 import { KarafToolCards, type KarafTool } from '../components/karaf/page/KarafToolCards';
 import { KarafBundleManagerModal } from '../components/KarafBundleManagerModal';
 import { KarafFeaturesModal } from '../components/karaf/modals/KarafFeaturesModal';
@@ -97,7 +97,7 @@ export const KarafPage: React.FC<KarafPageProps> = ({ projects }) => {
 
       <KarafToolCards onOpen={setOpenTool} />
 
-      <DeployDiagnosticsPanel
+      <KarafDiagnosticsPanel
         isDeploying={false}
         isDiagRunning={diagnostics.isDiagRunning}
         onRunDiagnostic={(cmd, label) => void diagnostics.runDiagnostic(cmd, label)}

@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthLockoutCheckId, AuthLockoutRunResult } from '../../shared/authLockoutTypes';
 import { AuthLockoutTestService } from './AuthLockoutTestService';
 import type { ConfigService } from './ConfigService';
+import { ScenarioHistoryService } from './ScenarioHistoryService';
 import { LockoutRun } from './authLockout/lockoutRun';
 import { startFakeWta, type FakeWtaOptions } from './authLockout/lockoutFakeWta';
 
@@ -23,6 +24,7 @@ const FAST_CHECKS: AuthLockoutCheckId[] = [
 ];
 
 let dir: string;
+const getConfigFilePath = () => path.join(dir, 'config.json');
 let server: http.Server | undefined;
 
 beforeEach(() => {
@@ -45,6 +47,7 @@ async function runAgainst(options: FakeWtaOptions, checks = FAST_CHECKS): Promis
   const fake = await startFakeWta(logFile, options);
   server = fake.server;
   const configService = {
+    getConfigFilePath,
     getSettings: () => ({ wtaUrl: fake.url, karafPath: dir, wtaLogin: 'ADMIN', wtaPassword: 'admin123' })
   } as unknown as ConfigService;
   const service = new AuthLockoutTestService(configService);
@@ -91,6 +94,11 @@ describe('AuthLockoutTestService contra um WTA falso', () => {
     expect(serialized).not.toContain('senhaA');
     expect(serialized).not.toContain('admin123');
     expect(serialized).not.toMatch(/assinatura\d+xyz/);
+    // A execução entra no histórico, também sem senha
+    const runs = await new ScenarioHistoryService({ getConfigFilePath }).list('auth-lockout');
+    expect(runs).toHaveLength(1);
+    expect(runs[0]).toMatchObject({ kind: 'auth-lockout', name: 'Bloqueio de Login (TESTE_A, TESTE_B)', verdict: 'warning' });
+    expect(fs.readFileSync(path.join(dir, 'scenario-runs', `${runs[0].id}.json`), 'utf-8')).not.toContain('senhaA');
   });
 
   it('bloqueio por origem reprova o bloqueio por usuário, mesmo com o logoff limpando o bloqueio', async () => {
@@ -119,7 +127,7 @@ describe('AuthLockoutTestService contra um WTA falso', () => {
     fs.writeFileSync(logFile, '');
     const fake = await startFakeWta(logFile);
     server = fake.server;
-    const service = new AuthLockoutTestService({ getSettings: () => ({ wtaUrl: fake.url }) } as unknown as ConfigService);
+    const service = new AuthLockoutTestService({ getConfigFilePath, getSettings: () => ({ wtaUrl: fake.url }) } as unknown as ConfigService);
     const result = await service.run({ userA: { login: 'TESTE_A', password: 'errada' }, checks: ['threshold'] });
     expect(result.success).toBe(false);
     expect(result.error).toContain('não entrou');
@@ -134,7 +142,7 @@ describe('AuthLockoutTestService contra um WTA falso', () => {
     fs.writeFileSync(logFile, '');
     const fake = await startFakeWta(logFile);
     server = fake.server;
-    const service = new AuthLockoutTestService({ getSettings: () => ({ wtaUrl: fake.url }) } as unknown as ConfigService);
+    const service = new AuthLockoutTestService({ getConfigFilePath, getSettings: () => ({ wtaUrl: fake.url }) } as unknown as ConfigService);
     const plain = await service.run({ userA: { login: 'TESTE_A', password: 'senhaA' }, passwordEncoding: 'plain', checks: ['threshold'] });
     expect(plain.error).toContain('HTTP 401');
   });
@@ -144,7 +152,7 @@ describe('AuthLockoutTestService contra um WTA falso', () => {
     fs.writeFileSync(logFile, '');
     const fake = await startFakeWta(logFile);
     server = fake.server;
-    const service = new AuthLockoutTestService({ getSettings: () => ({ wtaUrl: fake.url }) } as unknown as ConfigService);
+    const service = new AuthLockoutTestService({ getConfigFilePath, getSettings: () => ({ wtaUrl: fake.url }) } as unknown as ConfigService);
     const first = service.run({ userA: { login: 'TESTE_A', password: 'senhaA' }, checks: ['api-exceptions'] });
     const second = await service.run({ userA: { login: 'TESTE_A', password: 'senhaA' } });
     expect(second.error).toContain('em execução');

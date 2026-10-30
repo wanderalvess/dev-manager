@@ -4,6 +4,7 @@ import type { AuthLockoutCheckResult, AuthLockoutLogEntry, AuthLockoutRunResult 
 import { showToast } from '../../../components/ToastHost';
 import { requestConfirm } from '../../../components/ui/confirmService';
 import { copyText } from '../../useCopyToClipboard';
+import { notifyScenarioHistoryChanged } from '../../../utils/downloadText';
 import {
   AUTH_LOCKOUT_FORM_STORAGE_KEY,
   appendActivity,
@@ -106,6 +107,7 @@ export function useAuthLockoutRun() {
     } finally {
       runningRef.current = false;
       setRunning(false);
+      notifyScenarioHistoryChanged();
     }
   }, [form, blocker, estimatedMinutes]);
 

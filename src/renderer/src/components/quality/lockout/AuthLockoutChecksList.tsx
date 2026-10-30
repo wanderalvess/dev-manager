@@ -3,7 +3,9 @@ import { AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, Circle, Hand, I
 import { authLockoutCheckDefinition } from '../../../../../shared/authLockoutCatalog';
 import { AUTH_LOCKOUT_STATUS_LABELS } from '../../../../../shared/authLockoutReport';
 import type { AuthLockoutCheckResult, AuthLockoutCheckStatus } from '../../../../../shared/authLockoutTypes';
+import { evidenceToText } from '../../../../../shared/scenarioExports';
 import { STATUS_TONE } from '../../../utils/authLockoutView';
+import { CopyButton } from '../scenarios/CopyButton';
 import { TONE_BADGE, TONE_TEXT } from '../../integrationtrace/toneClasses';
 
 const STATUS_ICON: Record<AuthLockoutCheckStatus, React.ElementType> = {
@@ -80,7 +82,10 @@ export const AuthLockoutChecksList: React.FC<AuthLockoutChecksListProps> = ({ ch
                 )}
                 {check.evidence.length > 0 && (
                   <div>
-                    <div className="text-xs font-semibold text-foreground mb-1">Evidências</div>
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="text-xs font-semibold text-foreground">Evidências ({check.evidence.length})</span>
+                      <CopyButton label="Copiar evidências" done="Evidências copiadas." getText={() => evidenceToText(check)} />
+                    </div>
                     <ul className="space-y-1 text-2xs font-mono text-muted-foreground bg-muted/40 rounded-lg p-2 max-h-64 overflow-y-auto">
                       {check.evidence.map((line, i) => (
                         <li key={i} className="break-all">

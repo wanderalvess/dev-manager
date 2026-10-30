@@ -55,6 +55,14 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
     expect(exportCall?.[1].at(-1)).toContain('--container wta-master --out /tmp/hub-origem-master.features');
   });
 
+  it('catálogo da 801 recusado por falta de login diz onde configurar o usuário do WTA', async () => {
+    routine801.fetchUpdates.mockRejectedValueOnce(new Error('Falha ao obter lista de atualizações (HTTP 403): Forbidden'));
+    const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+    expect(res.success).toBe(false);
+    expect(res.error).toContain('Como resolver');
+    expect(res.error).toContain('Usuário WTA (Login Automático)');
+  });
+
   it('lista os ambientes da distro e os jars do WSH em /opt', async () => {
     execFileAsync.mockImplementation(async (_cmd: string, args: string[]) => {
       const script = args[args.length - 1];
@@ -119,5 +127,21 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
     expect(res.success).toBe(true);
     expect(fs.readFileSync(path.join(dir, 'linux-winthor', 'versions', '40.features'), 'utf-8')).toBe('feature a 1.40.0.1\n');
     expect(service().saveManifest({ targetVersion: '40', manifestText: '# vazio' }).success).toBe(false);
+
+    // Manifesto existente só é substituído quando o usuário escolhe
+    const again = service().saveManifest({ targetVersion: '40', manifestText: 'feature a 1.39.0.1\n' });
+    expect(again).toMatchObject({ success: false });
+    expect(again.error).toContain('já existe');
+    expect(fs.readFileSync(path.join(dir, 'linux-winthor', 'versions', '40.features'), 'utf-8')).toBe('feature a 1.40.0.1\n');
+    expect(service().saveManifest({ targetVersion: '40', manifestText: 'feature a 1.39.0.1\n', overwrite: true }).success).toBe(true);
+  });
+
+  it('prévia aponta o manifesto que já existe da versão, comparado e conferido contra o WSH', async () => {
+    const versions = path.join(dir, 'linux-winthor', 'versions');
+    fs.mkdirSync(versions, { recursive: true });
+    fs.writeFileSync(path.join(versions, '40.features'), 'feature winthor-core-data 1.40.1.0\nfeature winthor-integracao-config 1.40.2.5\n');
+    const res = await service().preview({ fromEnv: 'master', targetVersion: '40', wshJar: '/opt/wsh/winthor-integracao-core.jar' });
+    expect(res.existing).toMatchObject({ count: 2, comparison: { newer: 0, older: 2, onlyExisting: 0, onlyPreview: 0 } });
+    expect(res.existing?.wshCheck).toEqual([{ service: 'winthor-integracao-config', version: '1.40.2.1', found: '1.40.2.5', ok: true }]);
   });
 });

@@ -4,6 +4,8 @@ import { VALIDATION_SCENARIOS, type ValidationScenarioId } from '../../../utils/
 interface ValidationScenarioTabsProps {
   active: ValidationScenarioId;
   onChange: (id: ValidationScenarioId) => void;
+  /** Ações da página no fim da barra (o botão Histórico, que vale para todos os cenários). */
+  actions?: React.ReactNode;
 }
 
 const INACTIVE_CLASS = 'text-muted-foreground hover:text-foreground border-transparent';
@@ -11,9 +13,9 @@ const TAB_BASE =
   'py-3 text-sm whitespace-nowrap transition-colors flex items-center gap-2 cursor-pointer border-b-2 -mb-px';
 
 /** Uma aba por cenário de validação, no mesmo estilo das abas da Homologação. */
-export const ValidationScenarioTabs: React.FC<ValidationScenarioTabsProps> = ({ active, onChange }) => (
-  <div className="border-b border-border bg-card px-4 md:px-5 shrink-0">
-    <div role="tablist" aria-label="Cenários de validação" className="flex items-center gap-6 overflow-x-auto">
+export const ValidationScenarioTabs: React.FC<ValidationScenarioTabsProps> = ({ active, onChange, actions }) => (
+  <div className="border-b border-border bg-card px-4 md:px-5 shrink-0 flex items-center gap-4">
+    <div role="tablist" aria-label="Cenários de validação" className="flex-1 min-w-0 flex items-center gap-6 overflow-x-auto">
       {VALIDATION_SCENARIOS.map(({ id, label, icon: Icon, description }) => {
         const selected = id === active;
         return (
@@ -32,5 +34,6 @@ export const ValidationScenarioTabs: React.FC<ValidationScenarioTabsProps> = ({ 
         );
       })}
     </div>
+    {actions}
   </div>
 );

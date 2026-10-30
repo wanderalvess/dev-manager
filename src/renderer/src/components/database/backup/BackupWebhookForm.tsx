@@ -31,8 +31,9 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
 
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
       <div className="sm:col-span-2 space-y-1">
-        <label className="text-2xs font-bold text-foreground">Nome</label>
+        <label htmlFor="webhook-name" className="text-2xs font-bold text-foreground">Nome</label>
         <input
+          id="webhook-name"
           type="text"
           required
           placeholder="Ex: Slack #backups-winthor"
@@ -42,8 +43,9 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
         />
       </div>
       <div className="space-y-1">
-        <label className="text-2xs font-bold text-foreground">Método</label>
+        <label htmlFor="webhook-method" className="text-2xs font-bold text-foreground">Método</label>
         <select
+          id="webhook-method"
           value={editingWebhook.method || 'POST'}
           onChange={(e) => onChange({ ...editingWebhook, method: e.target.value as 'POST' | 'PUT' })}
           className="w-full bg-background border border-input rounded-[10px] px-3 py-2.5 text-sm text-foreground focus:outline-hidden"
@@ -55,8 +57,9 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
     </div>
 
     <div className="space-y-1">
-      <label className="text-2xs font-bold text-foreground">URL do Webhook</label>
+      <label htmlFor="webhook-url" className="text-2xs font-bold text-foreground">URL do Webhook</label>
       <input
+        id="webhook-url"
         type="url"
         required
         placeholder="https://hooks.slack.com/services/..."
@@ -67,8 +70,9 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
     </div>
 
     <div className="space-y-1">
-      <label className="text-2xs font-bold text-foreground">Plataforma</label>
+      <label htmlFor="webhook-platform" className="text-2xs font-bold text-foreground">Plataforma</label>
       <select
+        id="webhook-platform"
         value={editingWebhook.platform || 'generic'}
         onChange={(e) =>
           onChange({
@@ -87,8 +91,9 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
 
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
       <div className="space-y-1">
-        <label className="text-2xs font-bold text-foreground">Cabeçalho de Autenticação</label>
+        <label htmlFor="webhook-auth-header" className="text-2xs font-bold text-foreground">Cabeçalho de Autenticação</label>
         <input
+          id="webhook-auth-header"
           type="text"
           placeholder="Authorization (opcional)"
           value={editingWebhook.authHeader || ''}
@@ -97,8 +102,9 @@ export const BackupWebhookForm: React.FC<BackupWebhookFormProps> = ({
         />
       </div>
       <div className="space-y-1">
-        <label className="text-2xs font-bold text-foreground">Valor do Token / Chave</label>
+        <label htmlFor="webhook-auth-value" className="text-2xs font-bold text-foreground">Valor do Token / Chave</label>
         <input
+          id="webhook-auth-value"
           type="password"
           placeholder="Bearer ... (opcional)"
           value={editingWebhook.authValue || ''}

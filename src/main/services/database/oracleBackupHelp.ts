@@ -28,7 +28,11 @@ export interface OracleFailureExplanation {
   help?: BackupHelp;
 }
 
-const DIRECTORY_ERRORS = ['ORA-39087', 'ORA-39070', 'ORA-29283', 'ORA-39002'];
+// ORA-39002 ("operação inválida") e ORA-39001 só embrulham o erro de verdade (versão do dump,
+// formato exp...), então não indicam DIRECTORY sozinhos: vale o código específico que vem junto.
+const DIRECTORY_ERRORS = ['ORA-39087', 'ORA-39070', 'ORA-29283'];
+
+export const ORACLE_DETAIL_LABEL = 'Saída do Oracle';
 
 /** Linhas de erro do Oracle na saída do utilitário, sem repetição. */
 export function extractOracleErrorLines(output: string): string[] {
@@ -134,7 +138,7 @@ export function explainOracleFailure(output: string, ctx: OracleFailureContext):
 
   const result = (explanation: OracleFailureExplanation): OracleFailureExplanation => ({
     ...explanation,
-    help: explanation.help ? { ...explanation.help, detail } : undefined
+    help: explanation.help ? { ...explanation.help, detail, detailLabel: ORACLE_DETAIL_LABEL } : undefined
   });
 
   if (isMissingOracleHomeOutput(output)) {
@@ -222,7 +226,7 @@ export function explainOracleFailure(output: string, ctx: OracleFailureContext):
   }
 
   if (isOracleDirectoryError(output)) {
-    const code = DIRECTORY_ERRORS.find(has) ?? 'ORA-39002';
+    const code = DIRECTORY_ERRORS.find(has)!;
     return result(explainDirectory(ctx, code));
   }
 
@@ -256,12 +260,12 @@ export function explainOracleFailure(output: string, ctx: OracleFailureContext):
     });
   }
 
-  if (has('ORA-31640') || (ctx.operation === 'restore' && has('ORA-39001'))) {
+  if (has('ORA-31640')) {
     const dumpName = path.basename(ctx.localPath);
     return result({
       message: `O dump ${dumpName} não foi encontrado na pasta do DIRECTORY ${ctx.directory.toUpperCase()} no servidor.`,
       help: {
-        code: has('ORA-31640') ? 'ORA-31640' : 'ORA-39001',
+        code: 'ORA-31640',
         steps: [
           `O impdp lê o arquivo do servidor, pela pasta do DIRECTORY ${ctx.directory.toUpperCase()}, não da sua máquina.`,
           `Copie ${dumpName} para essa pasta no servidor e tente de novo.`

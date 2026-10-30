@@ -2,7 +2,7 @@ import { app, BrowserWindow, Tray, Menu, nativeImage, shell, session, Notificati
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { ConfigService } from './services/ConfigService';
+import { ConfigService, getAppDataDir } from './services/ConfigService';
 import { safeSend } from './utils/ipcSend';
 import { WindowsService } from './services/WindowsService';
 import { KarafService } from './services/KarafService';
@@ -32,6 +32,8 @@ import { TautAutomationService } from './services/TautAutomationService';
 import { HttpClientService } from './services/HttpClientService';
 import { IntegrationTraceService } from './services/IntegrationTraceService';
 import { AuthLockoutTestService } from './services/AuthLockoutTestService';
+import { ApiScenarioService } from './services/ApiScenarioService';
+import { ScenarioHistoryService } from './services/ScenarioHistoryService';
 import { HttpCollectionService } from './services/HttpCollectionService';
 import { RemoteControlService } from './services/RemoteControlService';
 import { createRemoteBackend } from './services/remoteControl/remoteBackend';
@@ -123,7 +125,11 @@ function createWindow() {
   });
   const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
   const backupService = new BackupService(configService, databaseService);
-  const backupSchedulerService = new BackupSchedulerService(configService, backupService);
+  const backupSchedulerService = new BackupSchedulerService(
+    configService,
+    backupService,
+    path.join(getAppDataDir(), 'backup-scheduler.lock')
+  );
   backupSchedulerService.onResult = (connectionName, result) => {
     safeSend(mainWindow, 'backup:schedule-result', { connectionName, result });
     // Notificação do sistema operacional: garante visibilidade mesmo com a janela
@@ -182,7 +188,9 @@ function createWindow() {
     httpClientService,
     { logWatcherService, apmTraces: apmService }
   );
-  const authLockoutTestService = new AuthLockoutTestService(configService);
+  const scenarioHistoryService = new ScenarioHistoryService(configService);
+  const authLockoutTestService = new AuthLockoutTestService(configService, scenarioHistoryService);
+  const apiScenarioService = new ApiScenarioService(configService, databaseService, scenarioHistoryService);
   const remoteControlService = new RemoteControlService(
     createRemoteBackend({
       configService,
@@ -234,7 +242,9 @@ function createWindow() {
     usageMetricsService,
     remoteControlService,
     integrationTraceService,
-    authLockoutTestService
+    authLockoutTestService,
+    apiScenarioService,
+    scenarioHistoryService
   });
 
   backupSchedulerService.rescheduleAll();

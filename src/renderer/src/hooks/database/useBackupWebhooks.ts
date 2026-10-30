@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import type { AppSettings, BackupWebhookConfig } from '../../../../shared/types';
 import { normalizeWebhook, upsertWebhook } from '../../utils/backupModalUtils';
+import { requestConfirm } from '../../components/ui/confirmService';
 
 interface UseBackupWebhooksParams {
   onSettingsUpdate?: (updater: (prev: AppSettings | null) => AppSettings | null) => void;
@@ -35,6 +36,15 @@ export function useBackupWebhooks({ onSettingsUpdate }: UseBackupWebhooksParams)
   };
 
   const handleDeleteWebhook = async (id: string) => {
+    const target = backupWebhooks.find((w) => w.id === id);
+    const confirmed = await requestConfirm({
+      title: 'Excluir webhook?',
+      message: `Excluir o webhook "${target?.name || id}"? Ele para de receber os avisos de backup.`,
+      confirmLabel: 'Excluir',
+      tone: 'danger'
+    });
+    if (!confirmed) return;
+
     const updated = backupWebhooks.filter((w) => w.id !== id);
     await persistWebhooks(updated);
     if (editingWebhook?.id === id) setEditingWebhook(null);
