@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.49.1] - 2026-10-30
 ### Adicionado
 - **Nova versão: registro da leitura**: o passo *Revisar e gerar* ganhou o painel *Registro da leitura*, com o horário de cada passo da prévia: distro e pasta usadas, scripts encontrados, cada comando no WSL (tempo, código de saída e as últimas linhas do que ele disse), a URL do WTA de origem, se há usuário do WTA configurado, cada requisição ao catálogo da 801 (status, content-type, tempo e começo do corpo), o login automático e as contagens. Abre sozinho quando a leitura falha e tem botão *Copiar* para mandar a quem está ajudando. Senha e token não aparecem.
 
