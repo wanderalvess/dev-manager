@@ -13,6 +13,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 ### Corrigido
 - **Integrações: Azure DevOps e WinThor CCW apareciam sempre como "Não configurado"**: o token vem vazio do `settings:get` (sanitizado). Agora o app envia `hasAzureDevOpsToken`/`hasCcwAuthCookie` e os cartões mostram *Token salvo* / *Cookie salvo*; o checklist do onboarding também reconhece o PAT do Azure.
 - **Integrações: OpenTelemetry mostra o estado real do receptor**: antes o cartão ficava sempre "ativo"; agora diz *Recebendo na porta N* ou, em vermelho, *Parado na porta N* com o motivo (ex.: porta ocupada).
+- **Assistente INFR, Nova versão: WSH de produção serve**: o WSH confere as features do WTA como versão mínima (cada parte com dois dígitos; só recusa o que estiver abaixo), então o jar publicado em produção serve para a versão nova. A aba, a prévia e o FAQ deixam de pedir um "WSH da versão".
+- **Assistente INFR, Nova versão: catálogo da 801 sem login**: quando o WTA de origem recusa o catálogo (HTTP 401/403), o erro diz como resolver: informar o usuário e a senha do WinThor em Configurações → Rotinas WinThor → Usuário WTA (Login Automático). A pasta do INFR-Docker também é procurada em `C:projetos`, a do manual.
 
 ## [1.48.0] - 2026-10-30
 ### Adicionado
