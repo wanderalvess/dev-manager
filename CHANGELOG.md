@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.50.0] - 2026-10-30
 ### Alterado
 - **Abertura do app**: o carregamento virou uma lista das áreas do cockpit e do servidor MCP, cada uma marcada como pronta, carregando ou na fila. Na primeira vez, a abertura já mostra as etapas da configuração (*Configurar meu cockpit* ou *Explorar sozinho*). Para quem volta, o *Entrar agora* conta 3 s antes de entrar sozinho, com os destaques da versão ao lado; *Ficar nesta tela* pausa a contagem.
 - **Onboarding em 6 etapas**: *Ambiente* e *Checklist* viraram uma etapa só, com os essenciais no topo, a contagem por seção, a marca *detectado agora* e o botão *Preencher* em cada item que falta. A detecção de caminhos roda sozinha ao chegar na etapa se algum caminho essencial estiver vazio. Também:
