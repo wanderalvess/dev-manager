@@ -45,7 +45,7 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
             COCKPIT INTEGRADO
           </span>
           <span className="text-xs text-muted-foreground font-mono">
-            Hub Manager • v{appInfo?.appVersion || '1.49.2'}
+            Hub Manager • v{appInfo?.appVersion || '1.49.3'}
           </span>
           {appInfo?.isAdmin ? (
             <span className="inline-flex items-center gap-1 text-[13px] font-medium px-2.5 py-0.5 rounded-full bg-success/10 text-success">
