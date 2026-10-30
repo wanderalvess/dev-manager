@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.49.2] - 2026-10-30
 ### Corrigido
 - **Nova versão: catálogo da 801 vazio no WTA 40**: o WTA mais novo só devolve o catálogo de atualizações quando a consulta traz a versão do WinThor (`versaoWinthor=40.00&versaoWinthorMinima=37.00`), como faz a tela da própria 801; sem isso, respondia vazio. A Nova versão agora manda a versão alvo. Quando o catálogo traz várias versões da mesma feature (ex.: 1.40.4.2 e 1.40.4.1), o Hub escolhe a mais nova que cabe na linha alvo; antes ficava com a última da lista, e uma 41 no catálogo fazia pular a 40 que também estava lá.
 
