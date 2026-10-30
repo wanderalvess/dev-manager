@@ -265,3 +265,27 @@ export function buildKarafInstallCommands(
     installCommand
   };
 }
+
+/**
+ * Explica uma resposta HTTP 200 do catálogo da 801 que não é JSON: corpo vazio (o WTA não alcançou o
+ * servidor de atualizações) ou uma página HTML (Configuração inicial, login ou o WTA ainda subindo).
+ * Mostra o começo do corpo para o erro não ficar só em "não é um JSON válido".
+ */
+export function describeNonJsonCatalog(body: string, baseUrl: string, contentType?: string): string {
+  const text = body.trim();
+  if (!text) {
+    return (
+      'O WTA respondeu sem conteúdo (corpo vazio). Como resolver: o catálogo vem do servidor de atualizações da TOTVS ' +
+      `pelo WTA; confira se o WTA de origem tem acesso à internet e se a rotina 801 lista as atualizações em ${baseUrl}.`
+    );
+  }
+  if (/^<(!doctype|html|head|body)/i.test(text) || /text\/html/i.test(contentType || '')) {
+    const title = /<title[^>]*>([^<]*)<\/title>/i.exec(text)?.[1]?.trim();
+    return (
+      `O WTA devolveu uma página HTML${title ? ` ("${title}")` : ''} em vez do catálogo. Como resolver: abra ${baseUrl} no ` +
+      'navegador. Se cair na Configuração inicial (/instalador), conclua-a; se o WTA ainda está subindo, espere e leia de novo.'
+    );
+  }
+  const start = text.replace(/\s+/g, ' ').slice(0, 160);
+  return `A resposta não é JSON${contentType ? ` (${contentType})` : ''}. Começo da resposta: ${start}${text.length > 160 ? '…' : ''}`;
+}

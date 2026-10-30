@@ -5,7 +5,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
 ## [Não lançado]
+### Adicionado
+- **Nova versão: registro da leitura**: o passo *Revisar e gerar* ganhou o painel *Registro da leitura*, com o horário de cada passo da prévia: distro e pasta usadas, scripts encontrados, cada comando no WSL (tempo, código de saída e as últimas linhas do que ele disse), a URL do WTA de origem, se há usuário do WTA configurado, cada requisição ao catálogo da 801 (status, content-type, tempo e começo do corpo), o login automático e as contagens. Abre sozinho quando a leitura falha e tem botão *Copiar* para mandar a quem está ajudando. Senha e token não aparecem.
+
 ### Corrigido
+- **Catálogo da 801 que "não é um JSON válido"**: quando o WTA responde com sucesso mas sem JSON, o erro agora diz o que veio e como resolver. Se o corpo veio vazio, o WTA não alcançou o servidor de atualizações. Se veio uma página HTML (com o título dela), o WTA está na Configuração inicial ou ainda subindo. Em qualquer outro caso, o erro mostra o começo da resposta. Vale para a Nova versão do Assistente INFR e para o Catálogo de Rotinas.
 - **Nova versão: "Não foi possível ler a origem" sem motivo**: o erro mostrava só o comando que falhou. Agora mostra o que o script disse (ex.: container que não existe, Karaf fora do ar). Antes de rodar qualquer coisa, o Hub confere se a pasta do INFR-Docker tem os scripts da Nova versão (`export_features.sh`, `build_version.sh` e `new_version_env.sh`); eles só existem no branch `feature/imagem-por-versao`, e uma pasta no `main` agora recebe o *Como resolver* com o `git checkout` desse branch.
 
 ## [1.49.0] - 2026-10-30

@@ -4,6 +4,7 @@ import type { InfrReviewFix, InfrReviewStatus } from '../../../../../shared/infr
 import type { InfrNewVersionState } from '../../../hooks/containers/useInfrNewVersion';
 import { InfrManifestChoice } from './InfrManifestChoice';
 import { InfrNewVersionPreview } from './InfrNewVersionPreview';
+import { InfrPreviewLog } from './InfrPreviewLog';
 
 const STATUS: Record<InfrReviewStatus, { icon: React.ReactNode; box: string; label: string }> = {
   ok: { icon: <CheckCircle2 className="w-5 h-5 text-success" />, box: 'border-border/80', label: 'Ok' },
@@ -74,6 +75,8 @@ export const InfrNewVersionReview: React.FC<{ s: InfrNewVersionState }> = ({ s }
           </div>
         </details>
       )}
+
+      {!!s.preview.log?.length && <InfrPreviewLog lines={s.preview.log} open={!s.preview.success} />}
 
       <details className="rounded-xl border border-border/80 px-4 py-3">
         <summary className="text-xs font-semibold text-foreground cursor-pointer">Comando que vai rodar no terminal</summary>

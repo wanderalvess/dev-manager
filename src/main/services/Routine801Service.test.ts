@@ -338,5 +338,26 @@ describe('Routine801Service', () => {
       expect(err.message).toContain('login de PCADMIN recusado pelo WTA (HTTP 401): Credenciais inválidas');
       expect(err.message).not.toContain('segredo');
     });
+
+    it('registro do catálogo mostra status, content-type e o começo do corpo, nunca senha ou token', async () => {
+      vi.mocked(configService.getSettings).mockReturnValue({ wtaLogin: 'PCADMIN', wtaPassword: 'segredo', wtaAuthToken: 'tok-secreto' } as any);
+      vi.mocked(httpRequest).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        headers: { 'content-type': 'text/html' },
+        text: async () => '<html><title>WinThor</title></html>',
+        buffer: async () => Buffer.from('')
+      } as any);
+      const log: string[] = [];
+      await routine801Service.fetchUpdates('http://localhost:8086', (l) => log.push(l)).catch(() => undefined);
+      const text = log.join('\n');
+      expect(text).toContain('Usuário WTA nas Configurações: configurado; token salvo: sim');
+      expect(text).toContain('GET http://localhost:8086/winthor/ferramenta/servidor/v1/atualizacao');
+      expect(text).toContain('HTTP 200 OK');
+      expect(text).toContain('content-type: text/html');
+      expect(text).toContain('<html><title>WinThor</title></html>');
+      expect(text).not.toMatch(/segredo|tok-secreto/);
+    });
   });
 });
