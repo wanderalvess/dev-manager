@@ -13,7 +13,8 @@ import {
 import {
   buildKarafInstallCommands,
   normalizeRoutine801Catalog,
-  findRepositoryForFeature
+  findRepositoryForFeature,
+  describeNonJsonCatalog
 } from '../utils/routine801Utils';
 
 export class Routine801Service {
@@ -207,11 +208,15 @@ export class Routine801Service {
       throw new Error(`Falha ao obter lista de ${label} (HTTP ${res.status}): ${res.statusText || 'Erro no servidor'}${auth}`);
     }
 
+    const body = await res.text();
+    let data: unknown;
     try {
-      return normalizeRoutine801Catalog(JSON.parse(await res.text()));
+      data = JSON.parse(body);
     } catch {
-      throw new Error(`A resposta do servidor de ${label} não é um JSON válido.`);
+      const contentType = String(res.headers?.['content-type'] || '');
+      throw new Error(`A resposta do servidor de ${label} não é um JSON válido. ${describeNonJsonCatalog(body, baseUrl, contentType)}`);
     }
+    return normalizeRoutine801Catalog(data);
   }
 
   /** Obtém a lista de instalações disponíveis consultando o endpoint da Rotina 801. */

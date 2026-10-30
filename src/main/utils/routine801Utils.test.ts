@@ -6,7 +6,8 @@ import {
   filterRoutine801Features,
   buildKarafInstallCommands,
   inferFeatureMavenUrl,
-  extractVersionFamilies
+  extractVersionFamilies,
+  describeNonJsonCatalog
 } from './routine801Utils';
 import { Routine801Feature, Routine801RepositoryUpdate } from '../../shared/types';
 
@@ -262,5 +263,23 @@ describe('routine801Utils', () => {
       );
       expect(cmds.installCommand).toBe('feature:install -r -u winthor-atualizacao-dados/1.39.1.6');
     });
+  });
+});
+
+describe('describeNonJsonCatalog', () => {
+  const url = 'http://localhost:8086';
+  it('corpo vazio aponta o acesso do WTA ao servidor de atualizações', () => {
+    expect(describeNonJsonCatalog('  \n', url)).toContain('corpo vazio');
+  });
+  it('página HTML traz o título e manda abrir o WTA no navegador', () => {
+    const msg = describeNonJsonCatalog('<!DOCTYPE html><html><head><title>WinThor Anywhere</title></head></html>', url);
+    expect(msg).toContain('("WinThor Anywhere")');
+    expect(msg).toContain(`abra ${url}`);
+    expect(describeNonJsonCatalog('oi', url, 'text/html; charset=utf-8')).toContain('página HTML');
+  });
+  it('outro conteúdo mostra o começo, cortado em 160 caracteres', () => {
+    const msg = describeNonJsonCatalog('x'.repeat(200), url, 'text/plain');
+    expect(msg).toContain('(text/plain)');
+    expect(msg).toContain(`${'x'.repeat(160)}…`);
   });
 });
