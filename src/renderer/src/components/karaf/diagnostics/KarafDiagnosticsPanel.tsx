@@ -1,10 +1,10 @@
 import React, { useCallback, useState } from 'react';
 import { ChevronDown, ChevronUp, ListTree, Package, Terminal, Zap } from 'lucide-react';
-import { DeployDiagQuickTab } from './DeployDiagQuickTab';
-import { DeployDiagFeatureTab } from './DeployDiagFeatureTab';
-import { DeployDiagBundleTab } from './DeployDiagBundleTab';
-import { useKarafConsole } from '../../hooks/karafConsole/KarafConsoleContext';
-import { confirmKarafCommand } from '../../hooks/karafConsole/useKarafQuickCommands';
+import { KarafDiagQuickTab } from './KarafDiagQuickTab';
+import { KarafDiagFeatureTab } from './KarafDiagFeatureTab';
+import { KarafDiagBundleTab } from './KarafDiagBundleTab';
+import { useKarafConsole } from '../../../hooks/karafConsole/KarafConsoleContext';
+import { confirmKarafCommand } from '../../../hooks/karafConsole/useKarafQuickCommands';
 
 type DiagTab = 'quick' | 'feature' | 'bundle';
 
@@ -18,7 +18,7 @@ function readCollapsed(): boolean {
   }
 }
 
-interface DeployDiagnosticsPanelProps {
+interface KarafDiagnosticsPanelProps {
   isDeploying: boolean;
   isDiagRunning: string | null;
   onRunDiagnostic: (cmd: string, label: string) => void;
@@ -32,7 +32,7 @@ const tabClass = (active: boolean) =>
   }`;
 
 /** Ferramentas de diagnóstico rápido do Karaf (abas + prompt de comando). */
-export const DeployDiagnosticsPanel: React.FC<DeployDiagnosticsPanelProps> = ({
+export const KarafDiagnosticsPanel: React.FC<KarafDiagnosticsPanelProps> = ({
   isDeploying,
   isDiagRunning,
   onRunDiagnostic
@@ -99,9 +99,9 @@ export const DeployDiagnosticsPanel: React.FC<DeployDiagnosticsPanelProps> = ({
             </button>
           </div>
 
-          {diagTab === 'quick' && <DeployDiagQuickTab disabled={disabled} onRun={guardedRun} />}
+          {diagTab === 'quick' && <KarafDiagQuickTab disabled={disabled} onRun={guardedRun} />}
           {diagTab === 'feature' && (
-            <DeployDiagFeatureTab
+            <KarafDiagFeatureTab
               disabled={disabled}
               onRun={guardedRun}
               featureName={diagFeatureName}
@@ -109,7 +109,7 @@ export const DeployDiagnosticsPanel: React.FC<DeployDiagnosticsPanelProps> = ({
             />
           )}
           {diagTab === 'bundle' && (
-            <DeployDiagBundleTab
+            <KarafDiagBundleTab
               disabled={disabled}
               onRun={guardedRun}
               bundleId={diagBundleId}

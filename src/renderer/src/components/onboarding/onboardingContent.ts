@@ -7,7 +7,8 @@ import type { ThemeVariant } from '../../context/ThemeContext';
 export const SPLASH_BOOT_LINES = [
   'iniciando o cockpit…',
   'carregando Infraestrutura & Ambiente',
-  'carregando Banco de Dados & Rotinas',
+  'carregando Observabilidade & Diagnóstico',
+  'carregando Banco de Dados & Backups',
   'carregando Desenvolvimento & DevOps',
   'carregando Qualidade & Homologação',
   'servidor MCP pronto'

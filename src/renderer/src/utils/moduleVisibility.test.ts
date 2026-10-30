@@ -19,8 +19,9 @@ describe('filterNavGroups', () => {
 
   it('remove as páginas desligadas e o grupo que fica vazio', () => {
     const groups = filterNavGroups(NAV_THEME_GROUPS, ['database', 'db-backups', 'routines', 'apm', 'integration-trace']);
-    expect(groups.map((g) => g.id)).toEqual(['infra', 'dev', 'qa']);
-    expect(groups[0].items.map((i) => i.id)).toEqual(['env', 'containers', 'winthor', 'deploy', 'karaf', 'logs']);
+    expect(groups.map((g) => g.id)).toEqual(['infra', 'obs', 'dev', 'qa']);
+    expect(groups[0].items.map((i) => i.id)).toEqual(['env', 'containers', 'winthor', 'deploy', 'karaf']);
+    expect(groups[1].items.map((i) => i.id)).toEqual(['logs']);
   });
 
   it('não altera os grupos originais', () => {
@@ -38,7 +39,7 @@ describe('resolveFallbackTab', () => {
 
   it('leva para a primeira página ligada quando a atual foi desligada', () => {
     expect(resolveFallbackTab('env', ['env'])).toBe('containers');
-    expect(resolveFallbackTab('apm', ['env', 'containers', 'winthor', 'deploy', 'karaf', 'logs', 'apm', 'integration-trace'])).toBe('database');
+    expect(resolveFallbackTab('apm', ['env', 'containers', 'winthor', 'routines', 'deploy', 'karaf', 'logs', 'apm', 'integration-trace'])).toBe('database');
     expect(resolveFallbackTab('env', allButOne('quality-taut'))).toBe('quality-taut');
   });
 });
