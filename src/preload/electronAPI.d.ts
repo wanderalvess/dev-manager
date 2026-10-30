@@ -1,6 +1,7 @@
 import type {
   InfrEnvSaveRequest,
   InfrEnvTemplate,
+  InfrManifestSaveRequest,
   InfrManifestSaveResult,
   InfrVersionPreview,
   InfrVersionPreviewRequest
@@ -389,7 +390,7 @@ export interface ElectronAPI {
   getInfrEnvTemplate?: (params: { distro?: string; from: string }) => Promise<InfrEnvTemplate>;
   saveInfrEnvFiles?: (req: InfrEnvSaveRequest) => Promise<InfrManifestSaveResult>;
   previewInfrVersion?: (req: InfrVersionPreviewRequest) => Promise<InfrVersionPreview>;
-  saveInfrVersionManifest?: (req: { infrPath?: string; targetVersion: string; manifestText: string }) => Promise<InfrManifestSaveResult>;
+  saveInfrVersionManifest?: (req: InfrManifestSaveRequest) => Promise<InfrManifestSaveResult>;
   setDockerTargetWslDistro?: (distro: string | null) => Promise<DockerDaemonStatus>;
   getContainerEnvironments?: () => Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }>;
   saveContainerEnvironment?: (env: ContainerEnvironment) => Promise<boolean>;

@@ -4,6 +4,7 @@ import type { InfrContainerInfo, InfrDbMode } from '../../../../../shared/infrWi
 import type { InfrNewVersionState } from '../../../hooks/containers/useInfrNewVersion';
 import { InfrNewVersionPreview } from './InfrNewVersionPreview';
 import { InfrEnvConfigSection } from './InfrEnvConfigSection';
+import { InfrManifestChoice } from './InfrManifestChoice';
 
 const INPUT =
   'w-full bg-background border border-input/80 rounded-[10px] px-2.5 py-2 text-sm text-foreground font-mono focus:outline-hidden focus:ring-1 focus:ring-warning';
@@ -158,6 +159,7 @@ export const InfrNewVersionTab: React.FC<{ s: InfrNewVersionState }> = ({ s }) =
       </button>
 
       {s.preview && <InfrNewVersionPreview preview={s.preview} version={form.version} />}
+      {s.preview?.success && <InfrManifestChoice s={s} />}
 
       {s.preview?.success && (
         <div className={BOX}>

@@ -11,6 +11,7 @@ import type { DeployQueueProject } from '../shared/deployQueue';
 import type {
   InfrEnvSaveRequest,
   InfrEnvTemplate,
+  InfrManifestSaveRequest,
   InfrManifestSaveResult,
   InfrVersionPreview,
   InfrVersionPreviewRequest
@@ -662,7 +663,7 @@ const electronAPI = {
     ipcRenderer.invoke('infr:version-env-template', params),
   saveInfrEnvFiles: (req: InfrEnvSaveRequest): Promise<InfrManifestSaveResult> => ipcRenderer.invoke('infr:version-env-save', req),
   previewInfrVersion: (req: InfrVersionPreviewRequest): Promise<InfrVersionPreview> => ipcRenderer.invoke('infr:version-preview', req),
-  saveInfrVersionManifest: (req: { infrPath?: string; targetVersion: string; manifestText: string }): Promise<InfrManifestSaveResult> =>
+  saveInfrVersionManifest: (req: InfrManifestSaveRequest): Promise<InfrManifestSaveResult> =>
     ipcRenderer.invoke('infr:version-save', req),
   setDockerTargetWslDistro: (distro: string | null): Promise<DockerDaemonStatus> =>
     ipcRenderer.invoke('docker:set-target-wsl-distro', distro),

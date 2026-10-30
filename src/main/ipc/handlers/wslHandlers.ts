@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron';
 import { wslService } from '../../services/WslService';
 import { InfrVersionService } from '../../services/infr/InfrVersionService';
-import type { InfrEnvSaveRequest, InfrVersionPreviewRequest } from '../../../shared/infrVersionManifest';
+import type { InfrEnvSaveRequest, InfrManifestSaveRequest, InfrVersionPreviewRequest } from '../../../shared/infrVersionManifest';
 import type { IpcContext } from '../ipcContext';
 
 /** WSL, snapshots e INFR-Docker. Canais: infr:*, wsl:* */
@@ -25,7 +25,7 @@ export function registerWslHandlers(ctx: IpcContext): void {
     return await infrVersionService.preview(req);
   });
 
-  ipcMain.handle('infr:version-save', async (_, req: { infrPath?: string; targetVersion: string; manifestText: string }) => {
+  ipcMain.handle('infr:version-save', async (_, req: InfrManifestSaveRequest) => {
     return infrVersionService.saveManifest(req);
   });
 
