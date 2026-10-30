@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.49.4] - 2026-10-30
 ### Adicionado
 - **Assistente INFR: Verificar ambiente**: aba nova, aberta sozinha depois do Gerar, que mostra se o ambiente subiu. Para `oracle-`, `wta-` e `wsh-<nome>` mostra:
   - o estado (no ar, iniciando, reiniciando, parado ou não existe), o health, os reinícios, a imagem e as portas;
