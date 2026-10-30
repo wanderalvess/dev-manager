@@ -31,15 +31,17 @@ export function getInfrVersionFaq(): FaqItem[] {
               (web 8038, SSH 8138, JMX 1038, Artemis 61638), para 38, 39 e 40 rodarem juntos. Nome e porta personalizados não são trocados.
             </li>
             <li>
-              <strong className="text-foreground">WSH da mesma versão:</strong> na aba WSH, a versão faz o script usar o <code className={C}>.env.&lt;versão&gt;</code>,
-              onde ficam o jar do WSH daquela versão (<code className={C}>WSH_JAR</code>), o container do WTA e a porta. O WSH confere as versões das{' '}
-              <em>features</em> do WTA ao subir e encerra se faltar alguma.
+              <strong className="text-foreground">WSH:</strong> na aba WSH, a versão faz o script usar o <code className={C}>.env.&lt;versão&gt;</code>,
+              onde ficam o jar do WSH (<code className={C}>WSH_JAR</code>), o container do WTA e a porta. Ao subir, o WSH confere as{' '}
+              <em>features</em> do WTA contra o <code className={C}>dependencies.json</code> dele como versão <strong className="text-foreground">mínima</strong>{' '}
+              (ex.: <code className={C}>winthor-integracao-config</code> 1.38.17.48 ou superior) e encerra se alguma estiver abaixo ou faltar. Por isso o
+              WSH publicado em produção serve também para uma versão mais nova do WinThor, como a 40.
             </li>
             <li>
               <strong className="text-foreground">Nova versão (aba Nova versão):</strong> escolha um ambiente que já funciona (ex.: master, no 39),
               a versão nova (40) e o nome do ambiente novo (develop). O Hub lê as features do <code className={C}>wta-master</code>, sobe cada uma
-              pelo catálogo de atualizações da rotina 801 até a linha 40 (sem passar dela) e, com o jar do WSH 40 escolhido, confere o que esse
-              WSH exige do WTA: é aí que um clone feito à mão costuma falhar com &quot;Versão exigida ... instalada&quot;. Na prévia você vê o que
+              pelo catálogo de atualizações da rotina 801 até a linha 40 (sem passar dela) e, com o jar do WSH escolhido (o de produção serve), confere o que
+              esse WSH exige do WTA: é aí que um clone feito à mão costuma falhar com &quot;Versão exigida ... instalada&quot;. Na prévia você vê o que
               sobe, o que ficou na versão anterior e o que o WSH cobraria.
             </li>
             <li>

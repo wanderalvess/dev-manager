@@ -39,7 +39,7 @@ export const InfrNewVersionTab: React.FC<{ s: InfrNewVersionState }> = ({ s }) =
         <div>
           <strong className="text-foreground font-semibold block mb-0.5">Nova versão a partir de um ambiente</strong>
           Lê as features do WTA de origem, sobe cada uma pelo catálogo de atualizações da rotina 801 até a versão nova (sem passar dela) e confere
-          com o que o WSH da versão exige. Ao gerar, grava <code className="font-mono text-foreground">versions/&lt;versão&gt;.features</code> e abre o
+          com o que o WSH escolhido exige (versão mínima: o WSH de produção serve para a versão nova). Ao gerar, grava <code className="font-mono text-foreground">versions/&lt;versão&gt;.features</code> e abre o
           terminal com o <code className="font-mono text-foreground">new_version_env.sh</code>: imagem, banco, WTA e WSH.
         </div>
       </div>
@@ -129,7 +129,7 @@ export const InfrNewVersionTab: React.FC<{ s: InfrNewVersionState }> = ({ s }) =
             <input value={form.wtaPort} onChange={(e) => update('wtaPort', e.target.value)} className={INPUT} />
           </div>
           <div>
-            <label className={LABEL}>Jar do WSH da versão</label>
+            <label className={LABEL}>Jar do WSH (o de produção serve)</label>
             <select value={form.wshJar} onChange={(e) => update('wshJar', e.target.value)} className={INPUT}>
               <option value="">Sem WSH (criar depois)</option>
               {envs?.wshJars.map((j) => <option key={j} value={j}>{j}</option>)}

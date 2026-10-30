@@ -77,7 +77,7 @@ export const InfrEnvConfigSection: React.FC<{ s: InfrNewVersionState }> = ({ s }
               <p className="text-2xs text-warning">O ambiente {s.form.from} não tem wsh-{s.form.from}: o .env do WSH sai só com o que for preenchido aqui.</p>
             )
           ) : (
-            <p className="text-2xs text-muted-foreground">Escolha o jar do WSH da versão para configurar o WSH.</p>
+            <p className="text-2xs text-muted-foreground">Escolha o jar do WSH para configurar o WSH.</p>
           )}
         </>
       )}
