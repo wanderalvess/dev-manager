@@ -26,7 +26,14 @@ export type LoginOutcome = 'authenticated' | 'locked' | 'rejected' | 'error';
 export type AuthLockoutAttemptKind = 'login-wrong' | 'login-correct' | 'logoff' | 'logs' | 'probe';
 
 /** O que apareceu numa resposta e não deveria (status, corpo ou cabeçalhos). */
-export type ExposureFinding = 'stack-trace' | 'password' | 'token' | 'connection-string' | 'sql-error' | 'server-version';
+export type ExposureFinding =
+  | 'stack-trace'
+  | 'exception-message'
+  | 'password'
+  | 'token'
+  | 'connection-string'
+  | 'sql-error'
+  | 'server-version';
 
 /** `md5` = MD5 em hexadecimal maiúsculo, como o login do WTA espera; `plain` = a senha como foi digitada. */
 export type AuthLockoutPasswordEncoding = 'md5' | 'plain';

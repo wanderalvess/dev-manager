@@ -33,11 +33,12 @@ describe('apiScenarioView', () => {
     expect(isSameScenario(a, { ...a, name: 'Outro' })).toBe(false);
   });
 
-  it('modelo de exceção não mapeada: 4xx, JSON, formato de erro, sem vazamento e registro no log; falta só a rota', () => {
+  it('modelo de exceção não mapeada: 4xx, sem UNK-ERR, JSON, formato de erro, sem vazamento e registro no log; falta só a rota', () => {
     const scenario = newExceptionScenario();
-    expect(scenario.rules.map((r) => r.kind)).toEqual(['status', 'header', 'body', 'leak', 'log']);
+    expect(scenario.rules.map((r) => r.kind)).toEqual(['status', 'json', 'header', 'body', 'leak', 'log']);
     expect(scenario.rules[0]).toMatchObject({ operator: 'in', expected: '4xx' });
-    expect(scenario.rules[4]).toMatchObject({ expected: '{{requestId}}', logSource: 'any' });
+    expect(scenario.rules[1]).toMatchObject({ path: '$.code', operator: 'not-equals', expected: 'UNK-ERR' });
+    expect(scenario.rules[5]).toMatchObject({ expected: '{{requestId}}', logSource: 'any' });
     expect(scenarioProblem(scenario)).toContain('rota');
     expect(scenarioProblem({ ...scenario, url: '{{wtaUrl}}/winthor/pedidos' })).toBeNull();
   });

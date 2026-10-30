@@ -13,7 +13,7 @@ const ruleSchema = z.object({
   kind: z
     .enum(['status', 'duration', 'header', 'body', 'json', 'db', 'leak', 'log'])
     .describe(
-      'status HTTP; duration = tempo de resposta em ms; header = cabeçalho; body = texto do corpo; json = campo do JSON; db = campo do JSON comparado com o valor de uma consulta no banco; leak = a resposta não pode expor stack trace, erro ORA-/SQL, string de conexão, senha ou token (operator not-contains); log = o erro precisa aparecer no winthor.log e/ou na API de logs (operator contains, expected = texto procurado, padrão {{requestId}})'
+      'status HTTP; duration = tempo de resposta em ms; header = cabeçalho; body = texto do corpo; json = campo do JSON; db = campo do JSON comparado com o valor de uma consulta no banco; leak = a resposta não pode expor stack trace, mensagem interna da exceção (For input string, Failed to convert, nested exception is, tipos java.lang...), erro ORA-/SQL, string de conexão, senha ou token (operator not-contains); log = o erro precisa aparecer no winthor.log e/ou na API de logs (operator contains, expected = texto procurado, padrão {{requestId}})'
     ),
   path: z.string().optional().describe('json/db: caminho do campo (ex.: "$.itens[0].codigo"); header: nome do cabeçalho (ex.: "content-type")'),
   operator: z

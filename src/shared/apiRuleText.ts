@@ -27,7 +27,7 @@ export const API_RULE_KIND_LABELS: Record<ApiRuleKind, string> = {
 export const API_LOG_SOURCE_LABELS = { file: 'winthor.log', api: 'API de logs', any: 'winthor.log ou API de logs' } as const;
 
 /** O que a regra "Sem vazamento de erro" procura na resposta (corpo e cabeçalhos). */
-export const LEAK_RULE_SCOPE = 'stack trace, erro ORA-/SQL, string de conexão, senha ou token';
+export const LEAK_RULE_SCOPE = 'stack trace, mensagem interna da exceção, erro ORA-/SQL, string de conexão, senha ou token';
 
 export const API_RULE_OPERATOR_LABELS: Record<ApiRuleOperator, string> = {
   equals: 'igual a',
