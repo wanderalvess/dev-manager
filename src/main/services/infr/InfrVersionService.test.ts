@@ -55,6 +55,14 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
     expect(exportCall?.[1].at(-1)).toContain('--container wta-master --out /tmp/hub-origem-master.features');
   });
 
+  it('catálogo da 801 recusado por falta de login diz onde configurar o usuário do WTA', async () => {
+    routine801.fetchUpdates.mockRejectedValueOnce(new Error('Falha ao obter lista de atualizações (HTTP 403): Forbidden'));
+    const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+    expect(res.success).toBe(false);
+    expect(res.error).toContain('Como resolver');
+    expect(res.error).toContain('Usuário WTA (Login Automático)');
+  });
+
   it('lista os ambientes da distro e os jars do WSH em /opt', async () => {
     execFileAsync.mockImplementation(async (_cmd: string, args: string[]) => {
       const script = args[args.length - 1];
