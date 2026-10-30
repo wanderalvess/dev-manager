@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Adicionado
+- **Central de Ajuda → Guias: manual da Validação de Cenários**: a aba Guias ganhou a escolha entre os guias, e o novo *Validação de Cenários: manual de uso* explica o que preencher em Configurações antes do primeiro teste, como rodar o Bloqueio de Login (campos, as regras com o que cada uma faz e o que precisa acontecer, e o que cada status quer dizer) e a Validação de API (requisição, autenticação, tipos de regra com operadores e exemplos), como forçar uma exceção não mapeada (o formato `UNK-ERR` do WTA, o que o modelo *Exceção* confere e receitas como número inválido, data inválida, campo inexistente, tipo errado e JSON quebrado), o que cada botão de copiar e baixar leva, o Histórico, os problemas comuns e onde fica cada coisa. As tabelas de regras saem dos mesmos catálogos que a tela usa. O mesmo manual abre pelo novo botão **Como usar**, ao lado do *Histórico* na página Validação de Cenários.
+
 ## [1.49.0] - 2026-10-30
 ### Adicionado
 - **Central de Ajuda: aba Guias, com Ambientes WinThor no Docker**: um guia para quem nunca mexeu no INFR-Docker, com o diagrama de como Hub, WSL e os containers se encaixam, o que é cada projeto (oracle-winthor, linux-winthor, wsh-winthor e o Hub) e por que existe, a ordem em que um ambiente sobe, as portas por versão (da mesma regra que o Hub usa para sugerir), cada tarefa na mão comparada com onde fazer no Hub, o passo a passo das tarefas comuns, os problemas conhecidos com como resolver e onde está cada coisa. Também abre pelo botão *Como funciona* no cabeçalho do Assistente INFR.
