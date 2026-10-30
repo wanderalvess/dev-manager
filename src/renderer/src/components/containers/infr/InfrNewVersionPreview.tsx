@@ -58,7 +58,7 @@ export const InfrNewVersionPreview: React.FC<{ preview: InfrVersionPreview; vers
 
       {(preview.wshCheck || preview.wshError) && (
         <div className={`${BOX} ${wshFails.length ? 'border-danger/40' : ''}`}>
-          <p className="text-xs font-semibold text-foreground">O que o WSH da versão exige do WTA</p>
+          <p className="text-xs font-semibold text-foreground">O que o WSH escolhido exige do WTA (versão mínima)</p>
           {preview.wshError && <p className="text-2xs text-danger">{preview.wshError}</p>}
           {preview.wshCheck?.map((c) => (
             <p key={c.service} className="text-2xs font-mono flex items-center gap-1.5">
