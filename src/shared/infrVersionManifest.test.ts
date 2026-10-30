@@ -4,6 +4,7 @@ import {
   checkManifestAgainstWsh,
   compareManifests,
   compareVersions,
+  manifestLineOf,
   parseVersionManifest,
   parseWshDependencies,
   serializeVersionManifest,
@@ -121,5 +122,19 @@ describe('upgradeManifestFromCatalog com várias versões da mesma feature', () 
     const up = upgradeManifestFromCatalog(origin, { repositorios: [], funcionalidades: [item('1.41.0.1'), item('1.40.4.1'), item('1.40.5.0', 'BLOQUEADO')] }, 40);
     expect(up.changes).toEqual([{ name: 'winthor-core-servico', from: '1.40.3.1', to: '1.40.4.1' }]);
     expect(up.skipped).toEqual([]);
+  });
+});
+
+describe('manifestLineOf', () => {
+  it('usa o núcleo (winthor-core-*) mesmo com a maioria das features em linha antiga', () => {
+    const m38 = parseVersionManifest('feature winthor-core-data 1.38.5.10\nfeature winthor-a 1.36.0.1\nfeature winthor-b 1.36.2.0\nfeature winthor-c 1.36.1.0\n');
+    expect(manifestLineOf(m38)).toBe(38);
+  });
+
+  it('sem núcleo, pega a linha mais comum; no empate, a maior', () => {
+    const m = parseVersionManifest('feature winthor-a 1.39.0.1\nfeature winthor-b 0.39.2.0\nfeature winthor-c 1.40.1.0\nfeature acesso 1.9.15\n');
+    expect(manifestLineOf(m)).toBe(39);
+    expect(manifestLineOf(parseVersionManifest('feature a 1.38.0.1\nfeature b 1.39.0.1\n'))).toBe(39);
+    expect(manifestLineOf(parseVersionManifest('feature a 1.9.15\n'))).toBeUndefined();
   });
 });

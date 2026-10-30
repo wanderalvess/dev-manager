@@ -64,6 +64,12 @@ export function getInfrVersionFaq(): FaqItem[] {
               &quot;Não foi possível ler a origem&quot; e pede para rodar <code className={C}>git checkout feature/imagem-por-versao</code> na pasta.
             </li>
             <li>
+              <strong className="text-foreground">Downgrade (ex.: um 38 a partir de um 39):</strong> a Nova versão só sobe features, e o banco da 39 tem
+              tabelas que um WTA 38 não conhece. A revisão mostra a linha da origem (pelo núcleo <code className={C}>winthor-core-*</code>) e, quando a
+              versão nova é menor, bloqueia o clone do banco e as features sem <code className={C}>versions/38.features</code>. Com a lista pronta e um
+              Oracle vazio (botão na revisão), passa com aviso: importe o dump da 38 antes de usar o WTA. Sem a lista, use Montar do zero.
+            </li>
+            <li>
               <strong className="text-foreground">Manifesto que já existe:</strong> se o INFR-Docker já tem{' '}
               <code className={C}>versions/40.features</code>, a prévia o compara com a lista nova (quantas features ficariam acima, abaixo
               ou só num dos dois) e a geração usa o existente por padrão. Substituir pelo da prévia é uma escolha explícita, porque o

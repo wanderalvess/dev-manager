@@ -89,6 +89,8 @@ export interface InfrVersionPreview {
   error?: string;
   originWtaUrl?: string;
   originCount?: number;
+  /** Linha do WinThor em que a origem está (a mais comum entre as features); maior que a alvo é downgrade */
+  originLine?: number;
   upgrade?: Omit<ManifestUpgrade, 'manifest'>;
   wshCheck?: WshDependencyCheck[];
   /** Erro ao ler o jar do WSH (não impede a prévia) */
@@ -186,6 +188,26 @@ export function winthorLineOf(version: string): number | undefined {
   if (!m) return undefined;
   const line = parseInt(m[1], 10);
   return line >= 30 ? line : undefined;
+}
+
+/**
+ * Linha do WinThor de um ambiente pelo núcleo (winthor-core-*), que acompanha a versão: muitas
+ * features ficam anos na mesma linha (um 38 tem dezenas na 36). Sem núcleo, a linha mais comum;
+ * no empate, a maior.
+ */
+export function manifestLineOf(manifest: VersionManifest): number | undefined {
+  const core = manifest.features.map((f) => (/^winthor-core-/.test(f.name) ? winthorLineOf(f.version) : undefined)).filter((l): l is number => l !== undefined);
+  if (core.length) return Math.max(...core);
+  const count = new Map<number, number>();
+  for (const f of manifest.features) {
+    const line = winthorLineOf(f.version);
+    if (line !== undefined) count.set(line, (count.get(line) || 0) + 1);
+  }
+  let best: number | undefined;
+  for (const [line, n] of count) {
+    if (best === undefined || n > count.get(best)! || (n === count.get(best) && line > best)) best = line;
+  }
+  return best;
 }
 
 /**

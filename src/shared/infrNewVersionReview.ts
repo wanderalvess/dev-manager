@@ -11,7 +11,7 @@ export type InfrReviewStatus = 'ok' | 'warn' | 'block';
 export type InfrReviewFix = 'useSourceOracle' | 'emptyOracle';
 
 export interface InfrReviewItem {
-  id: 'origem' | 'features' | 'wsh' | 'banco';
+  id: 'origem' | 'versao' | 'features' | 'wsh' | 'banco';
   status: InfrReviewStatus;
   title: string;
   detail: string;
@@ -49,7 +49,25 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
 
   const existing = p.existing;
   const useExisting = !!existing && i.manifestSource === 'existing';
-  if (useExisting) {
+  const from = downgradeFrom(i);
+  if (from !== undefined) {
+    items.push({
+      id: 'versao',
+      status: 'warn',
+      title: `Downgrade: a origem está na ${from}`,
+      detail: `O ${i.from} está na linha ${from} e a versão nova é a ${i.version}. A Nova versão só sobe features; para descer, o ambiente precisa da lista e do banco da ${i.version}. Se não tiver os dois, use Montar do zero com um dump da ${i.version}.`
+    });
+  }
+  if (from !== undefined && !useExisting) {
+    items.push({
+      id: 'features',
+      status: 'block',
+      title: `Features da ${i.version}`,
+      detail: existing
+        ? `Use a lista que já existe (versions/${i.version}.features): a lista nova manteria as features da ${from} num ambiente ${i.version}.`
+        : `Não há versions/${i.version}.features no INFR-Docker, e a lista nova manteria as features da ${from} num ambiente ${i.version}. Gere a lista de um WTA ${i.version} (export_features.sh) ou use Montar do zero.`
+    });
+  } else if (useExisting) {
     items.push({ id: 'features', status: 'ok', title: `Features da ${i.version}`, detail: `Usa a lista que já existe (${existing.count} features); nada é regravado.` });
   } else if (existing && existing.comparison.older > 0) {
     items.push({
@@ -95,8 +113,29 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
   return items;
 }
 
+/** Linha da origem quando ela é maior que a versão nova (downgrade); senão, undefined. */
+function downgradeFrom(i: InfrReviewInput): number | undefined {
+  const line = i.preview.originLine;
+  const target = parseInt(i.version, 10);
+  return line !== undefined && Number.isFinite(target) && target < line ? line : undefined;
+}
+
 function reviewDatabase(i: InfrReviewInput): InfrReviewItem {
   const title = 'Banco do ambiente novo';
+  const from = downgradeFrom(i);
+  // Banco de uma versão mais nova tem colunas e tabelas que o WTA mais antigo não conhece
+  if (from !== undefined && (i.dbMode === 'clone' || i.dbContainer === `oracle-${i.from}`)) {
+    return {
+      id: 'banco',
+      status: 'block',
+      title: `O banco da ${from} não serve para a ${i.version}`,
+      detail: `${i.dbMode === 'clone' ? `O clone do ${i.dbSource}` : `O ${i.dbContainer}`} traz as tabelas da ${from}, e um WTA ${i.version} não roda em cima delas. Suba um Oracle vazio e importe um dump da ${i.version}.`,
+      fixes: ['emptyOracle']
+    };
+  }
+  if (from !== undefined && i.dbMode === 'existing') {
+    return { id: 'banco', status: 'warn', title, detail: `Usa o ${i.dbContainer}: confira que ele tem um banco da ${i.version}, não da ${from}.` };
+  }
   if (i.dbMode === 'clone') {
     if (i.dbSourceImage && !isInfrXeImage(i.dbSourceImage)) {
       return {

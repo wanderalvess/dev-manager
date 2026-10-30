@@ -10,6 +10,7 @@ import {
 import {
   checkManifestAgainstWsh,
   compareManifests,
+  manifestLineOf,
   parseVersionManifest,
   parseWshDependencies,
   serializeVersionManifest,
@@ -139,7 +140,7 @@ export class InfrVersionService {
       return { success: false, error: `Não foi possível ler as features do ${container}: ${commandFailureDetail(err)}` };
     }
     const origin = parseVersionManifest(originText);
-    trace(`Origem: ${origin.features.length} features, ${origin.repos.length} repositórios`);
+    trace(`Origem: ${origin.features.length} features, ${origin.repos.length} repositórios, linha ${manifestLineOf(origin) ?? '?'}`);
     if (origin.features.length === 0) {
       return { success: false, error: `O ${container} não devolveu features. Ele está rodando e com o Karaf de pé?` };
     }
@@ -171,6 +172,7 @@ export class InfrVersionService {
       success: true,
       originWtaUrl: url,
       originCount: origin.features.length,
+      originLine: manifestLineOf(origin),
       upgrade: { changes: upgrade.changes, behind: upgrade.behind, skipped: upgrade.skipped },
       manifestText: serializeVersionManifest(upgrade.manifest, header)
     };
