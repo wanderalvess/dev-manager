@@ -209,19 +209,32 @@ export class Routine801Service {
       return r;
     };
 
-    let res = await request();
-    if (res.status === 401 || res.status === 403) {
-      trace?.('Sessão recusada; tentando login automático no WTA');
+    let renewTried = false;
+    const login = async (why: string) => {
+      renewTried = true;
+      trace?.(`${why}; tentando login automático no WTA`);
       const renewed = await this.renewWtaAuth(baseUrl);
       trace?.(renewed ? 'Login automático: token novo recebido' : `Login automático falhou: ${this.lastAuthError || 'sem motivo'}`);
-      if (renewed) res = await request();
+      return !!renewed;
+    };
+
+    // Sem token, o WTA 40 responde 200 com corpo vazio em vez de 401: entra antes de pedir
+    if (!settings.wtaAuthToken && settings.wtaLogin?.trim()) await login('Sem token salvo');
+    let res = await request();
+    if ((res.status === 401 || res.status === 403) && !renewTried && (await login('Sessão recusada'))) {
+      res = await request();
     }
     if (!res.ok) {
       const auth = (res.status === 401 || res.status === 403) && this.lastAuthError ? `; ${this.lastAuthError}` : '';
       throw new Error(`Falha ao obter lista de ${label} (HTTP ${res.status}): ${res.statusText || 'Erro no servidor'}${auth}`);
     }
 
-    const body = await res.text();
+    let body = await res.text();
+    // Token vencido também pode vir como 200 vazio: renova uma vez e pede de novo
+    if (!body.trim() && !renewTried && settings.wtaLogin?.trim() && (await login('Resposta vazia'))) {
+      res = await request();
+      body = res.ok ? await res.text() : '';
+    }
     trace?.(`Corpo: ${body.length} caracteres; começo: ${body.trim().replace(/\s+/g, ' ').slice(0, 200) || '(vazio)'}`);
     let data: unknown;
     try {

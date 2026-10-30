@@ -5,6 +5,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
 ## [Não lançado]
+### Corrigido
+- **Catálogo da 801 vazio sem login**: o WTA 40 responde *200 com corpo vazio* (não 401) quando a consulta vem sem login, e o Hub só entrava no WTA depois de um 401. Agora, sem token salvo e com usuário configurado, o Hub entra antes de pedir o catálogo. Se um token vencido também voltar vazio, renova uma vez e pede de novo. O Registro da leitura mostra cada tentativa.
+
 ### Adicionado
 - **Nova versão: proteção contra downgrade**: a prévia passa a mostrar a linha do WinThor em que a origem está, pelo núcleo (`winthor-core-*`), já que muitas features ficam anos numa linha antiga. Quando a versão nova é menor (ex.: um 38 a partir de um 39), a revisão avisa o downgrade e bloqueia o que não funcionaria:
   - o clone do banco ou o uso do banco da própria origem, porque eles têm as tabelas da versão mais nova; o botão *Criar um Oracle vazio* troca por um banco vazio, para importar o dump da versão;

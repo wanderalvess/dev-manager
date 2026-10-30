@@ -326,8 +326,29 @@ describe('Routine801Service', () => {
       expect(body).toEqual({ login: 'PCADMIN', senha: 'C4CA4238A0B923820DCC509A6F75849B' });
     });
 
+    const ok = (body: string) => ({ ok: true, status: 200, statusText: 'OK', headers: {}, text: async () => body, buffer: async () => Buffer.from('') }) as any;
+    const catalogo = JSON.stringify({ repositorios: [], funcionalidades: [{ nome: 'winthor-core-servico', versao: '1.40.4.2' }] });
+
+    it('sem token salvo entra no WTA antes de pedir o catálogo (o WTA 40 responde 200 vazio sem login)', async () => {
+      vi.mocked(configService.getSettings).mockReturnValue({ wtaLogin: 'PCADMIN', wtaPassword: '1' } as any);
+      vi.mocked(httpRequest).mockResolvedValueOnce(ok(JSON.stringify({ accessToken: 'novo' }))).mockResolvedValueOnce(ok(catalogo));
+      const log: string[] = [];
+      const cat = await routine801Service.fetchUpdates('http://localhost:8087', (l) => log.push(l), 40);
+      expect(cat.funcionalidades).toHaveLength(1);
+      const urls = vi.mocked(httpRequest).mock.calls.slice(-2).map((c) => c[0]);
+      expect(urls).toEqual(['http://localhost:8087/winthor/autenticacao/v1/login', 'http://localhost:8087/winthor/ferramenta/servidor/v1/atualizacao?versaoWinthor=40.00&versaoWinthorMinima=37.00']);
+      expect(log.join('\n')).toContain('Sem token salvo; tentando login automático no WTA');
+    });
+
+    it('com token vencido que volta 200 vazio, renova uma vez e pede de novo', async () => {
+      vi.mocked(configService.getSettings).mockReturnValue({ wtaLogin: 'PCADMIN', wtaPassword: '1', wtaAuthToken: 'velho' } as any);
+      vi.mocked(httpRequest).mockResolvedValueOnce(ok('')).mockResolvedValueOnce(ok(JSON.stringify({ accessToken: 'novo' }))).mockResolvedValueOnce(ok(catalogo));
+      const cat = await routine801Service.fetchUpdates('http://localhost:8087', undefined, 40);
+      expect(cat.funcionalidades[0].versao).toBe('1.40.4.2');
+    });
+
     it('catálogo recusado traz o motivo do login que falhou, sem a senha', async () => {
-      vi.mocked(configService.getSettings).mockReturnValue({ wtaLogin: 'PCADMIN', wtaPassword: 'segredo' } as any);
+      vi.mocked(configService.getSettings).mockReturnValue({ wtaLogin: 'PCADMIN', wtaPassword: 'segredo', wtaAuthToken: 'velho' } as any);
       const resp = (status: number, body: string) => ({ ok: false, status, statusText: 'Forbidden', text: async () => body, buffer: async () => Buffer.from('') });
       vi.mocked(httpRequest)
         .mockResolvedValueOnce(resp(403, ''))
