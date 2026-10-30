@@ -14,6 +14,7 @@ import {
   Box,
   ScrollText,
   Database,
+  GitCompareArrows,
   FileSearch,
   Activity,
   CheckCheck,
@@ -172,7 +173,7 @@ const NAVIGATION_ACTIONS: NavigationActionSpec[] = [
     tab: 'quality-regression',
     title: 'Validador Regressivo',
     subtitle: 'Validação de dados Oracle com templates, asserções e payloads de API',
-    icon: Database
+    icon: GitCompareArrows
   },
   {
     id: 'act-quality-runners',

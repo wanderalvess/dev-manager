@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Database } from 'lucide-react';
+import { GitCompareArrows } from 'lucide-react';
 import { QaRegressionRunner } from '../components/quality/QaRegressionRunner';
 import { QaRegressionTemplatesManager } from '../components/quality/QaRegressionTemplatesManager';
 import { QualityPageShell } from '../components/quality/page/QualityPageShell';
@@ -16,7 +16,7 @@ export const QualityRegressionPage: React.FC<QualityRegressionPageProps> = ({ on
   const [isTemplatesManagerOpen, setIsTemplatesManagerOpen] = useState(false);
   return (
     <QualityPageShell
-      icon={Database}
+      icon={GitCompareArrows}
       title="Validador Regressivo"
       description="Valide dados no Oracle com templates de asserções, variáveis e payloads de API."
     >

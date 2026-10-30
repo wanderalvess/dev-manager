@@ -8,6 +8,7 @@ import {
   ScrollText,
   Activity,
   Database,
+  GitCompareArrows,
   Grid,
   GitPullRequest,
   FileSearch,
@@ -194,7 +195,7 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
         id: 'quality-regression',
         label: 'Validador Regressivo',
         shortLabel: 'Regressivo',
-        icon: Database,
+        icon: GitCompareArrows,
         description: 'Validação de dados Oracle com templates, asserções e payloads de API',
       },
       {
