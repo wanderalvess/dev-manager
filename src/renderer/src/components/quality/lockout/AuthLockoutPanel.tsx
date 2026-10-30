@@ -5,6 +5,9 @@ import type { AuthLockoutCheckStatus } from '../../../../../shared/authLockoutTy
 import { useAuthLockoutRun } from '../../../hooks/quality/lockout/useAuthLockoutRun';
 import { STATUS_TONE, summarizeChecks } from '../../../utils/authLockoutView';
 import { TONE_BADGE } from '../../integrationtrace/toneClasses';
+import { reportFileName } from '../../../../../shared/scenarioExports';
+import { lockoutRunName } from '../../../../../shared/scenarioHistoryTypes';
+import { DownloadMdButton } from '../scenarios/CopyButton';
 import { AuthLockoutActivityLog } from './AuthLockoutActivityLog';
 import { AuthLockoutChecksList } from './AuthLockoutChecksList';
 import { AuthLockoutConfigForm } from './AuthLockoutConfigForm';
@@ -49,15 +52,22 @@ export const AuthLockoutPanel: React.FC = () => {
               </span>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={lockout.copyReport}
-            disabled={!lockout.result?.markdown || lockout.running}
-            className="h-8 px-3 bg-muted hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed text-foreground border border-border text-xs font-medium rounded-[10px] flex items-center gap-1.5"
-          >
-            <ClipboardCopy className="w-3.5 h-3.5" />
-            Copiar relatório (Jira)
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <DownloadMdButton
+              disabled={!lockout.result?.markdown || lockout.running}
+              fileName={lockout.result ? reportFileName(lockoutRunName(lockout.result), lockout.result.startedAt) : 'bloqueio-de-login.md'}
+              getText={() => lockout.result?.markdown ?? ''}
+            />
+            <button
+              type="button"
+              onClick={lockout.copyReport}
+              disabled={!lockout.result?.markdown || lockout.running}
+              className="h-8 px-3 bg-muted hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed text-foreground border border-border text-xs font-medium rounded-[10px] flex items-center gap-1.5"
+            >
+              <ClipboardCopy className="w-3.5 h-3.5" />
+              Copiar relatório (Jira)
+            </button>
+          </div>
         </div>
 
         {lockout.error && (

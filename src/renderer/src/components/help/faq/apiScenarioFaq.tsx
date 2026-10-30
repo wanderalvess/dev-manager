@@ -88,6 +88,35 @@ export function getApiScenarioFaq(): FaqItem[] {
           </ul>
         </div>
       )
+    },
+    {
+      id: 'scenario-copy-history',
+      question: 'Como copio o passo a passo, a requisição como cURL ou reabro uma execução antiga da Validação de Cenários?',
+      category: 'Qualidade & Homologação',
+      tags: ['copiar', 'curl', 'postman', 'histórico', 'baixar', 'markdown', '.md', 'evidências', 'requestId', 'jira'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <ul className="list-disc pl-4 space-y-1.5">
+            <li>
+              {strong('Copiar:')} o passo a passo tem {strong('Copiar passo a passo')} (com {strong('Mostrar cada requisição')} desligado, copia só
+              os passos); cada regra do Bloqueio de Login, {strong('Copiar evidências')}; na Validação de API, o identificador da execução, o
+              corpo e os cabeçalhos da resposta têm o seu botão.
+            </li>
+            <li>
+              {strong('Requisição enviada:')} mostra o que o Hub mandou como cURL. {strong('Copiar como cURL')} leva URL, cabeçalhos e corpo, mas
+              nunca o token: {code('Authorization')} e {code('Cookie')} saem como {code('<TOKEN_DO_WTA>')}. Troque pelo seu antes de rodar
+              (ou importe no Postman).
+            </li>
+            <li>{strong('Baixar .md:')} salva o relatório do Jira num arquivo com o nome do cenário e a data.</li>
+            <li>
+              {strong('Histórico:')} o botão no alto da página lista as últimas 50 execuções dos dois cenários, com filtro por tipo.{' '}
+              {strong('Abrir')} mostra a execução como ficou, com os mesmos botões de copiar; dá para baixar o .md, apagar uma ou limpar tudo. O
+              histórico fica em {code('scenario-runs/')}, ao lado do {code('config.json')}, com senhas e tokens mascarados, e é o mesmo no app,
+              no modo Web e no MCP ({code('qa_list_scenario_runs')} e {code('qa_get_scenario_run')}).
+            </li>
+          </ul>
+        </div>
+      )
     }
   ];
 }

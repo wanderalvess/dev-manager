@@ -1,15 +1,46 @@
-import React from 'react';
-import { CheckCircle2, ClipboardCopy, XCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle2, ChevronDown, ChevronRight, XCircle } from 'lucide-react';
 import type { ApiScenarioRunResult } from '../../../../../shared/apiScenarioTypes';
 import { EXPOSURE_LABELS } from '../../../../../shared/authLockoutAnalysis';
+import { headersToText, reportFileName } from '../../../../../shared/scenarioExports';
+import { CopyButton, DownloadMdButton } from '../scenarios/CopyButton';
+import { ApiRequestBlock } from './ApiRequestBlock';
 
 interface ApiScenarioResultViewProps {
   result: ApiScenarioRunResult;
-  onCopyReport: () => void;
 }
 
-/** O confronto regra a regra (esperado x obtido) e a resposta que a API devolveu. */
-export const ApiScenarioResultView: React.FC<ApiScenarioResultViewProps> = ({ result, onCopyReport }) => {
+interface SectionProps {
+  title: string;
+  action: React.ReactNode;
+  children: React.ReactNode;
+}
+
+/** Bloco recolhível com o botão de copiar ao lado do título (dentro de um <summary> o clique abriria o bloco). */
+function Section({ title, action, children }: SectionProps) {
+  const [open, setOpen] = useState(false);
+  const Icon = open ? ChevronDown : ChevronRight;
+  return (
+    <div className="border-t border-border">
+      <div className="flex items-center gap-2 pr-3">
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          aria-expanded={open}
+          className="flex-1 px-3 py-2 text-xs font-medium text-foreground flex items-center gap-1.5 text-left"
+        >
+          <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+          {title}
+        </button>
+        {action}
+      </div>
+      {open && children}
+    </div>
+  );
+}
+
+/** O confronto regra a regra (esperado x obtido), a requisição enviada e a resposta que a API devolveu. */
+export const ApiScenarioResultView: React.FC<ApiScenarioResultViewProps> = ({ result }) => {
   const passed = result.rules.filter((r) => r.passed).length;
   const leaks = (result.exposure ?? []).filter((f) => f !== 'server-version');
   const r = result.response;
@@ -27,15 +58,15 @@ export const ApiScenarioResultView: React.FC<ApiScenarioResultViewProps> = ({ re
               {r.status ? `HTTP ${r.status}` : 'sem resposta'} · {r.durationMs} ms{r.isJson ? ' · JSON' : ''} · {result.requestId}
             </span>
           )}
+          {/* O identificador é o que o QA procura no winthor.log e cita no Jira */}
+          {result.requestId && (
+            <CopyButton iconOnly label="Copiar identificador da execução" done="Identificador copiado." getText={() => result.requestId} />
+          )}
         </div>
-        <button
-          type="button"
-          onClick={onCopyReport}
-          className="h-8 px-3 bg-muted hover:bg-muted/80 text-foreground border border-border text-xs font-medium rounded-[10px] flex items-center gap-1.5"
-        >
-          <ClipboardCopy className="w-3.5 h-3.5" />
-          Copiar relatório (Jira)
-        </button>
+        <div className="flex items-center gap-2">
+          <DownloadMdButton fileName={reportFileName(result.scenarioName, result.startedAt)} getText={() => result.markdown} disabled={!result.markdown} />
+          <CopyButton label="Copiar relatório (Jira)" done="Relatório copiado (Markdown para o Jira)." getText={() => result.markdown} />
+        </div>
       </div>
       {result.error && <p className="p-3 text-xs text-danger">{result.error}</p>}
       {leaks.length > 0 && (
@@ -67,9 +98,12 @@ export const ApiScenarioResultView: React.FC<ApiScenarioResultViewProps> = ({ re
           </tbody>
         </table>
       )}
+      {result.request && <ApiRequestBlock request={result.request} />}
       {r && Object.keys(r.headers ?? {}).length > 0 && (
-        <details className="border-t border-border">
-          <summary className="px-3 py-2 text-xs font-medium text-foreground cursor-pointer">Cabeçalhos da resposta ({Object.keys(r.headers).length})</summary>
+        <Section
+          title={`Cabeçalhos da resposta (${Object.keys(r.headers).length})`}
+          action={<CopyButton label="Copiar cabeçalhos" done="Cabeçalhos copiados." getText={() => headersToText(r.headers)} />}
+        >
           <dl className="px-3 pb-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-2xs font-mono">
             {Object.entries(r.headers).map(([name, value]) => (
               <React.Fragment key={name}>
@@ -78,13 +112,15 @@ export const ApiScenarioResultView: React.FC<ApiScenarioResultViewProps> = ({ re
               </React.Fragment>
             ))}
           </dl>
-        </details>
+        </Section>
       )}
       {r?.body && (
-        <details className="border-t border-border">
-          <summary className="px-3 py-2 text-xs font-medium text-foreground cursor-pointer">Corpo da resposta (tokens mascarados)</summary>
+        <Section
+          title="Corpo da resposta (tokens mascarados)"
+          action={<CopyButton label="Copiar corpo" done="Corpo da resposta copiado." getText={() => r.body ?? ''} />}
+        >
           <pre className="px-3 pb-3 text-2xs font-mono text-muted-foreground whitespace-pre-wrap break-all max-h-80 overflow-y-auto">{r.body}</pre>
-        </details>
+        </Section>
       )}
     </div>
   );

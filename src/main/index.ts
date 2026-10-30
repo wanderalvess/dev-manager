@@ -33,6 +33,7 @@ import { HttpClientService } from './services/HttpClientService';
 import { IntegrationTraceService } from './services/IntegrationTraceService';
 import { AuthLockoutTestService } from './services/AuthLockoutTestService';
 import { ApiScenarioService } from './services/ApiScenarioService';
+import { ScenarioHistoryService } from './services/ScenarioHistoryService';
 import { HttpCollectionService } from './services/HttpCollectionService';
 import { RemoteControlService } from './services/RemoteControlService';
 import { createRemoteBackend } from './services/remoteControl/remoteBackend';
@@ -183,8 +184,9 @@ function createWindow() {
     httpClientService,
     { logWatcherService, apmTraces: apmService }
   );
-  const authLockoutTestService = new AuthLockoutTestService(configService);
-  const apiScenarioService = new ApiScenarioService(configService, databaseService);
+  const scenarioHistoryService = new ScenarioHistoryService(configService);
+  const authLockoutTestService = new AuthLockoutTestService(configService, scenarioHistoryService);
+  const apiScenarioService = new ApiScenarioService(configService, databaseService, scenarioHistoryService);
   const remoteControlService = new RemoteControlService(
     createRemoteBackend({
       configService,
@@ -237,7 +239,8 @@ function createWindow() {
     remoteControlService,
     integrationTraceService,
     authLockoutTestService,
-    apiScenarioService
+    apiScenarioService,
+    scenarioHistoryService
   });
 
   backupSchedulerService.rescheduleAll();

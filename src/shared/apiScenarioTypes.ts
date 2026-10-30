@@ -98,7 +98,8 @@ export interface ApiScenarioRunResult {
   success: boolean;
   /** Erro antes de chamar a API (URL inválida, login do WTA recusado...). */
   error?: string;
-  request: { method: ApiHttpMethod; url: string };
+  /** O que foi enviado, para o "Copiar como cURL": credenciais mascaradas (Authorization/Cookie viram ***). */
+  request: { method: ApiHttpMethod; url: string; headers?: Record<string, string>; body?: string };
   /** Identificador único desta execução: vai em X-Request-Id/X-Correlation-Id e substitui `{{requestId}}`. */
   requestId: string;
   response?: ApiResponseSnapshot;

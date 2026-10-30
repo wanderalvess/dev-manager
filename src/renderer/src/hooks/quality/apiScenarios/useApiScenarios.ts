@@ -6,7 +6,7 @@ import { showToast } from '../../../components/ToastHost';
 import { requestConfirm } from '../../../components/ui/confirmService';
 import { appendActivity, progressToEntry } from '../../../utils/authLockoutView';
 import { isSameScenario, isUntouchedDraft, newExceptionScenario, newScenario, scenarioProblem } from '../../../utils/apiScenarioView';
-import { copyText } from '../../useCopyToClipboard';
+import { notifyScenarioHistoryChanged } from '../../../utils/downloadText';
 
 /** Validação de API: cenários salvos, rascunho em edição, execução com passo a passo e último resultado de cada um. */
 export function useApiScenarios() {
@@ -97,6 +97,7 @@ export function useApiScenarios() {
     } finally {
       runningRef.current = false;
       setRunning(false);
+      notifyScenarioHistoryChanged();
     }
   };
 
@@ -124,13 +125,7 @@ export function useApiScenarios() {
     if (mine) setCurrent(mine);
   }, [draft.id]);
 
-  const copyReport = useCallback(async () => {
-    if (!current) return;
-    if (await copyText(current.markdown)) showToast('Relatório copiado (Markdown para o Jira).');
-    else showToast('Não foi possível copiar o relatório.', 'error');
-  }, [current]);
-
   const newException = useCallback(() => select(null, newExceptionScenario), [select]);
 
-  return { connections, newException, scenarios, draft, setDraft, saved, dirty, problem, results, current, activity, running, error, select, save, remove, run, runAll, copyReport };
+  return { connections, newException, scenarios, draft, setDraft, saved, dirty, problem, results, current, activity, running, error, select, save, remove, run, runAll };
 }

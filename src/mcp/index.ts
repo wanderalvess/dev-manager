@@ -51,6 +51,8 @@ import { IntegrationTraceService } from '../main/services/IntegrationTraceServic
 import { registerIntegrationTools } from './tools/integrationTools';
 import { registerAuthLockoutTools } from './tools/authLockoutTools';
 import { registerApiScenarioTools } from './tools/apiScenarioTools';
+import { registerScenarioHistoryTools } from './tools/scenarioHistoryTools';
+import { ScenarioHistoryService } from '../main/services/ScenarioHistoryService';
 import { ApiScenarioService } from '../main/services/ApiScenarioService';
 import { AuthLockoutTestService } from '../main/services/AuthLockoutTestService';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
@@ -2485,6 +2487,7 @@ registerAuthLockoutTools(server, { authLockoutTestService: new AuthLockoutTestSe
 
 // --- Validação de API: status e campos do JSON confrontados com o esperado ---
 registerApiScenarioTools(server, { apiScenarioService: new ApiScenarioService(configService, databaseService), ok, fail });
+registerScenarioHistoryTools(server, { scenarioHistoryService: new ScenarioHistoryService(configService), ok, fail });
 
 // --- Rotina 801: Catálogo Oficial e Instalação de Serviços Web ---
 server.registerTool(

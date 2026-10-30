@@ -46,13 +46,14 @@ export async function runApiScenario(
   const secrets: string[] = [];
   const requestId = newRequestId();
   const url = resolveScenarioUrl(scenario.url, settings, requestId);
+  const request: ApiScenarioRunResult['request'] = { method: scenario.method, url };
   const finish = (partial: Pick<ApiScenarioRunResult, 'success' | 'rules'> & Partial<ApiScenarioRunResult>): ApiScenarioRunResult => {
     const base = {
       scenarioId: scenario.id,
       scenarioName: scenario.name,
       startedAt,
       finishedAt: new Date().toISOString(),
-      request: { method: scenario.method, url },
+      request,
       requestId,
       exposure: [],
       log,
@@ -90,6 +91,11 @@ export async function runApiScenario(
     headers.Cookie = `suukie=${token}`;
   }
 
+  // Guardado depois do login: o token entra em `secrets` e sai mascarado; Authorization/Cookie viram *** de qualquer forma
+  request.headers = Object.fromEntries(
+    Object.entries(headers).map(([name, value]) => [name, maskCredentialHeader(name, value, secrets)])
+  );
+  if (body) request.body = maskSecrets(body, secrets, 64 * 1024, true);
   note(`Chamando ${scenario.method} ${url}${scenario.auth === 'settings-wta' ? ' com o token do WTA' : ' sem autenticação'}.`);
   const hasLogRule = scenario.rules.some((r) => r.kind === 'log');
   const probe = hasLogRule ? startLogProbe(settings) : {};
@@ -138,6 +144,13 @@ export async function runApiScenario(
     ...(response.error ? { error: response.error } : {})
   };
   return finish({ success, rules, response: snapshot, exposure });
+}
+
+/** Authorization guarda o esquema ("Bearer ***") e Cookie os nomes ("suukie=***"): dá para saber o que foi enviado sem o valor. */
+function maskCredentialHeader(name: string, value: string, secrets: string[]): string {
+  if (/^(authorization|proxy-authorization)$/i.test(name)) return /\s/.test(value) ? `${value.split(/\s+/)[0]} ***` : '***';
+  if (/^cookie$/i.test(name)) return value.replace(/=([^;]*)/g, '=***');
+  return maskSecrets(value, secrets, 500);
 }
 
 type CalledResponse = ApiResponseSnapshot & { rawBody: string; rawHeaders: Record<string, string> };

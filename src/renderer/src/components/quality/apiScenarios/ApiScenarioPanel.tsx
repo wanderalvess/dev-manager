@@ -35,7 +35,7 @@ export const ApiScenarioPanel: React.FC = () => {
           onRun={api.run}
           onDelete={api.remove}
         />
-        {api.current && <ApiScenarioResultView result={api.current} onCopyReport={api.copyReport} />}
+        {api.current && <ApiScenarioResultView result={api.current} />}
         <AuthLockoutActivityLog lines={api.activity} />
       </div>
     </div>

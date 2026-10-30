@@ -6,6 +6,7 @@ import type {
   ApiScenarioSaveResponse
 } from '../../shared/apiScenarioTypes';
 import type { ConfigService } from './ConfigService';
+import { ScenarioHistoryService } from './ScenarioHistoryService';
 import type { DatabaseService } from './DatabaseService';
 import type { RunDbQuery } from './apiScenarios/apiDbLookup';
 import { ApiScenarioStore, isSafeScenarioId, normalizeScenario } from './apiScenarios/apiScenarioStore';
@@ -22,7 +23,8 @@ export interface ApiScenarioRunInput {
 export class ApiScenarioService {
   constructor(
     private readonly configService: ConfigService,
-    private readonly databaseService?: DatabaseService
+    private readonly databaseService?: DatabaseService,
+    private readonly history: ScenarioHistoryService = new ScenarioHistoryService(configService)
   ) {}
 
   /** Campo × banco: consulta pela conexão do DB Studio, com no máximo uma linha (só a primeira coluna importa). */
@@ -72,7 +74,9 @@ export class ApiScenarioService {
       scenario = normalized.scenario;
     }
     const target = scenario;
-    return runApiScenario(target, this.configService.getSettings(), (entry) => onProgress({ ...entry, scenarioId: target.id }), this.runQuery());
+    const result = await runApiScenario(target, this.configService.getSettings(), (entry) => onProgress({ ...entry, scenarioId: target.id }), this.runQuery());
+    await this.history.saveApi(result);
+    return result;
   }
 
   /** Roda os cenários salvos um depois do outro, na ordem da lista. */
@@ -80,7 +84,9 @@ export class ApiScenarioService {
     const settings = this.configService.getSettings();
     const results: ApiScenarioRunResult[] = [];
     for (const scenario of await this.list()) {
-      results.push(await runApiScenario(scenario, settings, (entry) => onProgress({ ...entry, scenarioId: scenario.id }), this.runQuery()));
+      const result = await runApiScenario(scenario, settings, (entry) => onProgress({ ...entry, scenarioId: scenario.id }), this.runQuery());
+      await this.history.saveApi(result);
+      results.push(result);
     }
     return results;
   }

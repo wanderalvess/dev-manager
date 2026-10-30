@@ -6,6 +6,7 @@ import { remoteControlApi } from './remoteControlApi';
 import { integrationApi } from './integrationApi';
 import { authLockoutApi } from './authLockoutApi';
 import { apiScenarioApi } from './apiScenarioApi';
+import { scenarioHistoryApi } from './scenarioHistoryApi';
 import type { DeployQueueProject } from '../shared/deployQueue';
 import type {
   InfrEnvSaveRequest,
@@ -368,6 +369,7 @@ const electronAPI = {
   ...integrationApi,
   ...authLockoutApi,
   ...apiScenarioApi,
+  ...scenarioHistoryApi,
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
   runDeployProfile: (

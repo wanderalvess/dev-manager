@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { AuthLockoutLogEntry } from '../../../../../shared/authLockoutTypes';
+import { activityToText } from '../../../../../shared/scenarioExports';
 import { STATUS_TONE } from '../../../utils/authLockoutView';
+import { CopyButton } from '../scenarios/CopyButton';
 import { TONE_TEXT } from '../../integrationtrace/toneClasses';
 
 interface AuthLockoutActivityLogProps {
@@ -85,10 +87,14 @@ export const AuthLockoutActivityLog: React.FC<AuthLockoutActivityLogProps> = ({ 
         <span className="text-xs font-semibold text-foreground">
           Passo a passo {requestsCount !== undefined ? `(${requestsCount} requisições)` : ''}
         </span>
-        <label className="flex items-center gap-1.5 text-2xs text-muted-foreground cursor-pointer">
-          <input type="checkbox" checked={showRequests} onChange={(e) => setShowRequests(e.target.checked)} />
-          Mostrar cada requisição
-        </label>
+        <div className="flex items-center gap-3 flex-wrap">
+          <label className="flex items-center gap-1.5 text-2xs text-muted-foreground cursor-pointer">
+            <input type="checkbox" checked={showRequests} onChange={(e) => setShowRequests(e.target.checked)} />
+            Mostrar cada requisição
+          </label>
+          {/* Copia o que está na tela: com o filtro desligado, só passos e resultados */}
+          <CopyButton label="Copiar passo a passo" done="Passo a passo copiado." getText={() => activityToText(lines, showRequests)} />
+        </div>
       </div>
       <div ref={ref} className="max-h-[28rem] overflow-y-auto p-3 space-y-1">
         {visible.map((entry, i) => (

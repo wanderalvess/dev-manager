@@ -6,9 +6,11 @@ import path from 'path';
 import type { AddressInfo } from 'net';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { ApiScenario, ApiScenarioRunResult } from '../../shared/apiScenarioTypes';
+import { buildCurl, TOKEN_PLACEHOLDER } from '../../shared/scenarioExports';
 import { ApiScenarioService } from './ApiScenarioService';
 import type { ConfigService } from './ConfigService';
 import type { DatabaseService } from './DatabaseService';
+import { ScenarioHistoryService } from './ScenarioHistoryService';
 
 const TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiQURNSU4ifQ.assinaturaFalsa123';
 const md5 = (text: string) => createHash('md5').update(text, 'utf8').digest('hex').toUpperCase();
@@ -120,6 +122,21 @@ describe('ApiScenarioService', () => {
     expect(JSON.stringify(result)).not.toContain(TOKEN);
     expect(result.log.some((l) => l.message.startsWith('✔ Campo $.filiais[1].nome igual a Loja'))).toBe(true);
     expect(result.markdown).toContain('| Status igual a 200 | 200 | 200 | ✅ |');
+  });
+
+  it('cada execução entra no histórico, com a requisição mascarada e um cURL sem o token', async () => {
+    const result = asResult(await service.run({ scenario: filiais() }));
+    expect(result.request.headers).toMatchObject({ Authorization: 'Bearer ***' });
+    expect(buildCurl(result.request)).toContain(`Authorization: Bearer ${TOKEN_PLACEHOLDER}`);
+    expect(buildCurl(result.request)).not.toContain(TOKEN);
+    const history = new ScenarioHistoryService({ getConfigFilePath: () => path.join(dir, 'config.json') });
+    const runs = await history.list('api');
+    expect(runs).toHaveLength(1);
+    expect(runs[0]).toMatchObject({ kind: 'api', name: 'Filiais do WTA', verdict: 'passed', summary: 'OK · 3 de 3' });
+    const record = await history.get(runs[0].id);
+    expect(record?.api?.requestId).toBe(result.requestId);
+    expect(fs.readdirSync(path.join(dir, 'scenario-runs')).join('\n')).not.toContain('.tmp');
+    expect(JSON.stringify(record)).not.toContain(TOKEN);
   });
 
   it('valor obtido que é token sai mascarado na regra, no passo a passo e no relatório', async () => {
