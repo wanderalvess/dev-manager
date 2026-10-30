@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.49.5] - 2026-10-30
 ### Alterado
 - **Nova versão confere a origem logo no passo 1**: antes, pasta, WTA e login só eram testados no passo 4, depois de a pessoa preencher tudo. Agora, ao escolher a origem, o Hub confere três coisas e só libera o *Próximo* quando as três passam:
   - a pasta do INFR-Docker, que precisa ter os scripts da Nova versão;
