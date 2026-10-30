@@ -23,11 +23,46 @@ export function infrBootstrapModalPreviewCommand(
   return `./${script} --container ${container || defaultContainer} --port ${port || defaultPort}`;
 }
 
-/** Classes do botão de aba; a cor ativa é fixa (laranja) neste modal. */
-export function infrBootstrapModalTabClass(active: boolean): string {
-  const base =
-    'px-3.5 py-2.5 text-xs font-bold rounded-t-lg border-b-2 flex items-center gap-2 transition cursor-pointer';
-  return active
-    ? `${base} border-warning text-warning bg-card shadow-2xs`
-    : `${base} border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40`;
+export interface InfrNavItem {
+  tab: InfrBootstrapTab;
+  label: string;
+  /** O que a etapa faz, numa linha (aparece embaixo do nome na navegação lateral) */
+  hint: string;
+  /** Número da etapa no "montar do zero"; sem número é uma ação à parte */
+  step?: number;
+}
+
+/** Navegação do assistente, em grupos: montar do zero, a partir de um ambiente e diagnóstico. */
+export const INFR_ASSISTANT_NAV: { group: string; items: InfrNavItem[] }[] = [
+  {
+    group: 'Montar do zero',
+    items: [
+      { tab: 'oracle', step: 1, label: 'Banco Oracle', hint: 'Sobe o Oracle e importa o dump' },
+      { tab: 'wta', step: 2, label: 'WTA', hint: 'Sobe o WinThor Anywhere ligado ao banco' },
+      { tab: 'wsh', step: 3, label: 'WSH', hint: 'Sobe o Smart Hub apontando para o WTA' }
+    ]
+  },
+  {
+    group: 'A partir de um ambiente',
+    items: [{ tab: 'newVersion', label: 'Nova versão', hint: 'Copia um ambiente que funciona para outra versão' }]
+  },
+  {
+    group: 'Diagnóstico',
+    items: [{ tab: 'scripts', label: 'Scripts e pasta', hint: 'Confere se o INFR-Docker está completo' }]
+  }
+];
+
+export interface InfrFolderStatus {
+  /** Pasta do INFR-Docker em uso (a digitada ou a detectada pelos scripts) */
+  folder: string;
+  /** Todos os scripts foram achados nela */
+  ok: boolean;
+  missing: number;
+}
+
+/** Pasta do INFR-Docker e se os scripts estão nela, para o cabeçalho do assistente. */
+export function infrFolderStatus(customPath: string, scripts: { path: string; exists: boolean }[]): InfrFolderStatus {
+  const detected = scripts.map((s) => /^(.*?INFR-Docker)(?=[\\/]|$)/i.exec(s.path)?.[1]).find(Boolean) ?? '';
+  const missing = scripts.filter((s) => !s.exists).length;
+  return { folder: customPath.trim() || detected, ok: scripts.length > 0 && missing === 0, missing };
 }

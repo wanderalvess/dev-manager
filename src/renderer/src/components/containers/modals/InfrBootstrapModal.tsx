@@ -2,8 +2,8 @@ import React from 'react';
 import type { InfrDockerScriptStatus } from '../../../../../shared/types';
 import { useInfrBootstrapModalState } from '../../../hooks/containers/useInfrBootstrapModalState';
 import { InfrBootstrapHeader } from '../infr/InfrBootstrapHeader';
-import { InfrBootstrapTabs } from '../infr/InfrBootstrapTabs';
-import { InfrBootstrapFooter } from '../infr/InfrBootstrapFooter';
+import { InfrAssistantNav } from '../infr/InfrAssistantNav';
+import { infrFolderStatus, type InfrBootstrapTab } from '../../../utils/infrBootstrapModalUtils';
 import { InfrOracleTab } from '../infr/InfrOracleTab';
 import { InfrWtaTab } from '../infr/InfrWtaTab';
 import { InfrWshTab } from '../infr/InfrWshTab';
@@ -52,79 +52,81 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
 
   if (!isOpen) return null;
 
+  const selectTab = (tab: InfrBootstrapTab) => (tab === 'scripts' ? state.openScriptsTab() : state.setActiveTab(tab));
+
   return (
     <Modal
       open
       onClose={onClose}
       bare
-      panelClassName="bg-card border border-border/80 rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in"
+      panelClassName="bg-card border border-border/80 rounded-xl shadow-lg w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden animate-fade-in"
       closeOnBackdrop={false}
       closeOnEscape={false}
     >
-      <InfrBootstrapHeader onClose={onClose} />
-
-      <InfrBootstrapTabs
-        activeTab={state.activeTab}
-        onSelect={state.setActiveTab}
+      <InfrBootstrapHeader
+        onClose={onClose}
+        distro={distro}
+        detectedDistro={newVersion.envs?.distro}
+        folder={infrFolderStatus(state.customPath, infrScripts)}
         onOpenScripts={state.openScriptsTab}
       />
 
-      <div className="flex-1 overflow-auto p-5 space-y-4 scrollbar-thin">
-        {state.activeTab !== 'scripts' && state.activeTab !== 'newVersion' && (
-          <InfrVersionField version={state.winthorVersion} onChange={state.setWinthorVersion} />
-        )}
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row">
+        <InfrAssistantNav activeTab={state.activeTab} onSelect={selectTab} />
 
-        {state.activeTab === 'newVersion' && <InfrNewVersionTab s={newVersion} />}
+        {state.activeTab === 'newVersion' ? (
+          <InfrNewVersionTab s={newVersion} onClose={onClose} />
+        ) : (
+          <div className="flex-1 min-w-0 overflow-auto p-5 space-y-4 scrollbar-thin">
+            {state.activeTab !== 'scripts' && (
+              <InfrVersionField version={state.winthorVersion} onChange={state.setWinthorVersion} />
+            )}
 
-        {state.activeTab === 'oracle' && (
-          <InfrOracleTab
-            container={state.oracleContainer}
-            port={state.oraclePort}
-            isExecuting={isExecutingInfr}
-            onContainerChange={state.setOracleContainer}
-            onPortChange={state.setOraclePort}
-            onRun={() => state.handleRun('oracle')}
-          />
-        )}
+            {state.activeTab === 'oracle' && (
+              <InfrOracleTab
+                container={state.oracleContainer}
+                port={state.oraclePort}
+                isExecuting={isExecutingInfr}
+                onContainerChange={state.setOracleContainer}
+                onPortChange={state.setOraclePort}
+                onRun={() => state.handleRun('oracle')}
+              />
+            )}
 
-        {state.activeTab === 'wta' && (
-          <InfrWtaTab
-            container={state.wtaContainer}
-            port={state.wtaPort}
-            version={state.winthorVersion}
-            isExecuting={isExecutingInfr}
-            onContainerChange={state.setWtaContainer}
-            onPortChange={state.setWtaPort}
-            onRun={() => state.handleRun('wta')}
-          />
-        )}
+            {state.activeTab === 'wta' && (
+              <InfrWtaTab
+                container={state.wtaContainer}
+                port={state.wtaPort}
+                version={state.winthorVersion}
+                isExecuting={isExecutingInfr}
+                onContainerChange={state.setWtaContainer}
+                onPortChange={state.setWtaPort}
+                onRun={() => state.handleRun('wta')}
+              />
+            )}
 
-        {state.activeTab === 'wsh' && (
-          <InfrWshTab
-            version={state.winthorVersion}
-            isExecuting={isExecutingInfr}
-            onRun={() => state.handleRun('wsh')}
-          />
-        )}
+            {state.activeTab === 'wsh' && (
+              <InfrWshTab version={state.winthorVersion} isExecuting={isExecutingInfr} onRun={() => state.handleRun('wsh')} />
+            )}
 
-        {state.activeTab === 'scripts' && (
-          <InfrScriptsTab
-            customPath={state.customPath}
-            scripts={infrScripts}
-            isLoading={isLoadingInfrScripts}
-            onCustomPathChange={state.setCustomPath}
-            onVerify={() => onLoadInfrScripts(state.customPath)}
-          />
-        )}
+            {state.activeTab === 'scripts' && (
+              <InfrScriptsTab
+                customPath={state.customPath}
+                scripts={infrScripts}
+                isLoading={isLoadingInfrScripts}
+                onCustomPathChange={state.setCustomPath}
+                onVerify={() => onLoadInfrScripts(state.customPath)}
+              />
+            )}
 
-        {infrOutput && (
-          <div className="p-3 bg-[#090D14] rounded-xl border border-border/60 text-xs font-mono text-emerald-400 select-text whitespace-pre-wrap">
-            {infrOutput}
+            {infrOutput && (
+              <div className="p-3 bg-[#090D14] rounded-xl border border-border/60 text-xs font-mono text-emerald-400 select-text whitespace-pre-wrap">
+                {infrOutput}
+              </div>
+            )}
           </div>
         )}
       </div>
-
-      <InfrBootstrapFooter onClose={onClose} />
     </Modal>
   );
 };

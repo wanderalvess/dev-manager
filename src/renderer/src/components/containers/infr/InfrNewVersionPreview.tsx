@@ -1,16 +1,15 @@
 import React from 'react';
-import { AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import type { InfrVersionPreview } from '../../../../../shared/infrVersionManifest';
 
 const BOX = 'p-4 bg-card border border-border/80 rounded-xl space-y-2';
 
-/** Prévia da versão nova: o que o catálogo da 801 sobe, o que ficou para trás e o que o WSH cobraria. */
+/** Detalhe da prévia: o que o catálogo da 801 sobe e o que ficou para trás (o WSH vai na revisão). */
 export const InfrNewVersionPreview: React.FC<{ preview: InfrVersionPreview; version: string }> = ({ preview, version }) => {
   if (!preview.success) {
     return <div className="p-3 rounded-xl border border-danger/30 bg-danger/5 text-xs text-danger">{preview.error}</div>;
   }
   const up = preview.upgrade!;
-  const wshFails = preview.wshCheck?.filter((c) => !c.ok) ?? [];
 
   return (
     <div className="space-y-3">
@@ -56,23 +55,6 @@ export const InfrNewVersionPreview: React.FC<{ preview: InfrVersionPreview; vers
         </div>
       )}
 
-      {(preview.wshCheck || preview.wshError) && (
-        <div className={`${BOX} ${wshFails.length ? 'border-danger/40' : ''}`}>
-          <p className="text-xs font-semibold text-foreground">O que o WSH escolhido exige do WTA (versão mínima)</p>
-          {preview.wshError && <p className="text-2xs text-danger">{preview.wshError}</p>}
-          {preview.wshCheck?.map((c) => (
-            <p key={c.service} className="text-2xs font-mono flex items-center gap-1.5">
-              {c.ok ? <CheckCircle2 className="w-3.5 h-3.5 text-success" /> : <XCircle className="w-3.5 h-3.5 text-danger" />}
-              {c.service}: exige {c.version}, a versão nova terá {c.found ?? 'nenhuma'}
-            </p>
-          ))}
-          {wshFails.length > 0 && (
-            <p className="text-2xs text-danger">
-              Com esta lista, o WSH encerra ao subir ("Versão exigida ... instalada"). Confira o catálogo da 801 ou escolha o jar do WSH certo.
-            </p>
-          )}
-        </div>
-      )}
     </div>
   );
 };
