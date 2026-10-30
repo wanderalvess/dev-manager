@@ -63,6 +63,27 @@ export interface InfrVersionPreviewRequest {
   wshJar?: string;
 }
 
+/** Como a lista da prévia se compara ao manifesto que já existe da versão. */
+export interface ManifestComparison {
+  /** Na prévia numa versão acima da do manifesto existente */
+  newer: number;
+  /** Na prévia numa versão abaixo: gravar a prévia rebaixaria essas features */
+  older: number;
+  onlyExisting: number;
+  onlyPreview: number;
+}
+
+/** `versions/<versão>.features` que já existe no INFR-Docker. */
+export interface ExistingVersionManifest {
+  path: string;
+  count: number;
+  comparison: ManifestComparison;
+  wshCheck?: WshDependencyCheck[];
+}
+
+/** Qual manifesto a geração usa: o que já existe da versão ou o montado pela prévia. */
+export type InfrManifestSource = 'existing' | 'preview';
+
 export interface InfrVersionPreview {
   success: boolean;
   error?: string;
@@ -73,6 +94,16 @@ export interface InfrVersionPreview {
   /** Erro ao ler o jar do WSH (não impede a prévia) */
   wshError?: string;
   manifestText?: string;
+  /** Manifesto da versão que já existe: a geração só o substitui se o usuário escolher */
+  existing?: ExistingVersionManifest;
+}
+
+/** Gravação de `versions/<versão>.features`; sem `overwrite`, não substitui um manifesto existente. */
+export interface InfrManifestSaveRequest {
+  infrPath?: string;
+  targetVersion: string;
+  manifestText: string;
+  overwrite?: boolean;
 }
 
 /** Configuração da origem para a tela da Nova versão. */
@@ -205,6 +236,21 @@ export function parseWshDependencies(json: string): WshDependency[] {
   return data
     .filter((d) => d && typeof d.service === 'string' && typeof d.version === 'string')
     .map((d) => ({ service: d.service, version: d.version, description: d.description }));
+}
+
+/** Compara a lista da prévia com o manifesto existente, feature a feature, pela versão. */
+export function compareManifests(existing: VersionManifest, preview: VersionManifest): ManifestComparison {
+  const byName = new Map(existing.features.map((f) => [f.name, f.version]));
+  const result: ManifestComparison = { newer: 0, older: 0, onlyExisting: 0, onlyPreview: 0 };
+  for (const f of preview.features) {
+    const current = byName.get(f.name);
+    if (current === undefined) result.onlyPreview++;
+    else if (compareVersions(f.version, current) > 0) result.newer++;
+    else if (compareVersions(f.version, current) < 0) result.older++;
+    byName.delete(f.name);
+  }
+  result.onlyExisting = byName.size;
+  return result;
 }
 
 /** O WSH encerra ao subir se o WTA não tiver cada serviço na versão exigida ou acima. */

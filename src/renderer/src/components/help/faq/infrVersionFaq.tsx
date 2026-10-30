@@ -45,6 +45,17 @@ export function getInfrVersionFaq(): FaqItem[] {
               sobe, o que ficou na versão anterior e o que o WSH cobraria.
             </li>
             <li>
+              <strong className="text-foreground">Manifesto que já existe:</strong> se o INFR-Docker já tem{' '}
+              <code className={C}>versions/40.features</code>, a prévia o compara com a lista nova (quantas features ficariam acima, abaixo
+              ou só num dos dois) e a geração usa o existente por padrão. Substituir pelo da prévia é uma escolha explícita, porque o
+              catálogo da 801 de um WTA mais antigo pode não ter a linha da versão e a lista sairia rebaixada.
+            </li>
+            <li>
+              <strong className="text-foreground">Login do catálogo:</strong> o catálogo da 801 exige login. O Hub entra no WTA de origem com
+              o usuário e a senha de Configurações → Rotinas WinThor e manda a senha em MD5 maiúsculo, como o WTA espera (pode digitar a
+              senha normal ou colar o hash). Se o WTA recusar, o erro traz a resposta dele.
+            </li>
+            <li>
               <strong className="text-foreground">Banco e portas da versão nova:</strong> clonar o banco de um Oracle escolhido (RMAN), usar um
               Oracle que já existe ou criar um vazio para importar o dump depois; container e portas vêm sugeridos pela versão e podem ser
               mudados. Ao gerar, o Hub grava <code className={C}>versions/40.features</code> e abre o terminal com o{' '}

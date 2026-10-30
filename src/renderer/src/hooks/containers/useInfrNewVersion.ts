@@ -7,7 +7,7 @@ import {
   type InfrDbMode,
   type InfrEnvironmentsResult
 } from '../../../../shared/infrWinthorVersion';
-import type { InfrEnvTemplate, InfrVersionPreview } from '../../../../shared/infrVersionManifest';
+import type { InfrEnvTemplate, InfrManifestSource, InfrVersionPreview } from '../../../../shared/infrVersionManifest';
 
 export interface InfrNewVersionForm {
   from: string;
@@ -54,6 +54,8 @@ export function useInfrNewVersion(distro?: string, infrPath?: string) {
   const [envs, setEnvs] = useState<InfrEnvironmentsResult | null>(null);
   const [loadingEnvs, setLoadingEnvs] = useState(false);
   const [preview, setPreview] = useState<InfrVersionPreview | null>(null);
+  // Com versions/<v>.features já existente, a geração usa ele, a menos que o usuário escolha substituir
+  const [manifestSource, setManifestSource] = useState<InfrManifestSource>('preview');
   const [envTemplate, setEnvTemplate] = useState<InfrEnvTemplate | null>(null);
   const [edits, setEdits] = useState<{ wta: Record<string, string>; wsh: Record<string, string> }>({ wta: {}, wsh: {} });
 
@@ -117,16 +119,16 @@ export function useInfrNewVersion(distro?: string, infrPath?: string) {
     setBusy('preview');
     setMessage('');
     try {
-      setPreview(
-        await window.electronAPI.previewInfrVersion({
-          distro,
-          infrPath,
-          fromEnv: form.from,
-          targetVersion: form.version,
-          wshJar: form.wshJar || undefined,
-          originWtaUrl: form.originWtaUrl || undefined
-        })
-      );
+      const res = await window.electronAPI.previewInfrVersion({
+        distro,
+        infrPath,
+        fromEnv: form.from,
+        targetVersion: form.version,
+        wshJar: form.wshJar || undefined,
+        originWtaUrl: form.originWtaUrl || undefined
+      });
+      setPreview(res);
+      setManifestSource(res.existing ? 'existing' : 'preview');
     } finally {
       setBusy(null);
     }
@@ -137,7 +139,10 @@ export function useInfrNewVersion(distro?: string, infrPath?: string) {
     if (!api?.saveInfrVersionManifest || !api.runInfrSetupScript || !preview?.manifestText || !command) return;
     setBusy('generate');
     try {
-      const saved = await api.saveInfrVersionManifest({ infrPath, targetVersion: form.version, manifestText: preview.manifestText });
+      const keepExisting = !!preview.existing && manifestSource === 'existing';
+      const saved = keepExisting
+        ? { success: true, path: `${preview.existing!.path} (mantido)` }
+        : await api.saveInfrVersionManifest({ infrPath, targetVersion: form.version, manifestText: preview.manifestText, overwrite: !!preview.existing });
       if (!saved.success) {
         setMessage(saved.error || 'Não foi possível gravar o manifesto.');
         return;
@@ -167,7 +172,7 @@ export function useInfrNewVersion(distro?: string, infrPath?: string) {
 
   return {
     form, update, envs, loadingEnvs, loadEnvironments, preview, busy, message, command, canPreview, runPreview, generate,
-    envTemplate, edits, editEnv
+    envTemplate, edits, editEnv, manifestSource, setManifestSource
   };
 }
 

@@ -9,6 +9,7 @@ import {
 } from '../../../shared/infrWinthorVersion';
 import {
   checkManifestAgainstWsh,
+  compareManifests,
   parseVersionManifest,
   parseWshDependencies,
   serializeVersionManifest,
@@ -17,7 +18,7 @@ import {
   type InfrVersionPreviewRequest
 } from '../../../shared/infrVersionManifest';
 import { buildEnvFile, envFieldsFor, parseEnvLines, pickEnv, type InfrEnvTarget } from '../../../shared/infrEnvConfig';
-import type { InfrEnvSaveRequest, InfrEnvTemplate, InfrManifestSaveResult } from '../../../shared/infrVersionManifest';
+import type { InfrEnvSaveRequest, InfrEnvTemplate, InfrManifestSaveRequest, InfrManifestSaveResult } from '../../../shared/infrVersionManifest';
 import type { Routine801Service } from '../Routine801Service';
 import type { WslService } from '../WslService';
 
@@ -114,9 +115,11 @@ export class InfrVersionService {
       catalog = await this.routine801.fetchUpdates(url);
     } catch (err: any) {
       const msg = String(err?.message || err);
-      const howTo = /HTTP 40[13]/.test(msg)
-        ? ' Como resolver: o WTA pede login para o catálogo. Informe o usuário e a senha do WinThor em Configurações → Rotinas WinThor → Usuário WTA (Login Automático); o Hub entra no WTA de origem com eles.'
-        : '';
+      const howTo = /recusado pelo WTA/.test(msg)
+        ? ' Como resolver: confira o usuário e a senha em Configurações → Rotinas WinThor → Usuário WTA (Login Automático). O usuário precisa existir no banco do ambiente de origem, com a senha que entra no WinThor.'
+        : /HTTP 40[13]/.test(msg)
+          ? ' Como resolver: o WTA pede login para o catálogo. Informe o usuário e a senha do WinThor em Configurações → Rotinas WinThor → Usuário WTA (Login Automático); o Hub entra no WTA de origem com eles.'
+          : '';
       return { success: false, error: `Catálogo da rotina 801 em ${url}: ${msg}.${howTo}`, originWtaUrl: url };
     }
 
@@ -133,15 +136,25 @@ export class InfrVersionService {
       upgrade: { changes: upgrade.changes, behind: upgrade.behind, skipped: upgrade.skipped },
       manifestText: serializeVersionManifest(upgrade.manifest, header)
     };
+    const existingFile = this.manifestPath(infr.windows, target);
+    const existing = fs.existsSync(existingFile) ? parseVersionManifest(fs.readFileSync(existingFile, 'utf-8')) : null;
+    if (existing?.features.length) {
+      result.existing = { path: existingFile, count: existing.features.length, comparison: compareManifests(existing, upgrade.manifest) };
+    }
     if (req.wshJar) {
       try {
         const deps = parseWshDependencies(await this.readWshDependencies(distro, req.wshJar.trim()));
         result.wshCheck = checkManifestAgainstWsh(upgrade.manifest, deps);
+        if (result.existing && existing) result.existing.wshCheck = checkManifestAgainstWsh(existing, deps);
       } catch (err: any) {
         result.wshError = `Não foi possível ler o dependencies.json de ${req.wshJar}: ${err?.message || err}`;
       }
     }
     return result;
+  }
+
+  private manifestPath(infrWindows: string, version: string): string {
+    return path.join(infrWindows, 'linux-winthor', 'versions', `${version}.features`);
   }
 
   /** Ambiente do container (KEY=valor por linha) e, no WSH, o Winthor.ini montado. */
@@ -213,8 +226,8 @@ export class InfrVersionService {
     }
   }
 
-  /** Grava `linux-winthor/versions/<versão>.features` (LF, lido no Linux pelo build). */
-  public saveManifest(req: { infrPath?: string; targetVersion: string; manifestText: string }): { success: boolean; path?: string; error?: string } {
+  /** Grava `linux-winthor/versions/<versão>.features` (LF, lido no Linux pelo build); só substitui com `overwrite`. */
+  public saveManifest(req: InfrManifestSaveRequest): InfrManifestSaveResult {
     const target = req.targetVersion?.trim();
     if (!isValidWinthorVersion(target)) return { success: false, error: 'Versão alvo inválida.' };
     if (!parseVersionManifest(req.manifestText || '').features.length) return { success: false, error: 'Manifesto vazio.' };
@@ -222,7 +235,10 @@ export class InfrVersionService {
     if (!infr) return { success: false, error: 'Pasta do INFR-Docker inválida.' };
     const dir = path.join(infr.windows, 'linux-winthor', 'versions');
     if (!fs.existsSync(dir)) return { success: false, error: `Pasta não encontrada: ${dir}. A branch do INFR-Docker tem a imagem por versão?` };
-    const file = path.join(dir, `${target}.features`);
+    const file = this.manifestPath(infr.windows, target);
+    if (fs.existsSync(file) && !req.overwrite) {
+      return { success: false, error: `${file} já existe. Escolha usar o manifesto existente ou substituí-lo pelo da prévia.` };
+    }
     fs.writeFileSync(file, req.manifestText.replace(/\r\n/g, '\n'), 'utf-8');
     return { success: true, path: file };
   }

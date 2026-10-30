@@ -321,6 +321,22 @@ describe('Routine801Service', () => {
       const token = await routine801Service.renewWtaAuth('http://localhost:8889');
       expect(token).toBe('newToken999');
       expect(configService.saveSettings).toHaveBeenCalledWith({ wtaAuthToken: 'newToken999' });
+      // O WTA só aceita o MD5 maiúsculo da senha
+      const body = JSON.parse(String(vi.mocked(httpRequest).mock.calls.at(-1)?.[1]?.body));
+      expect(body).toEqual({ login: 'PCADMIN', senha: 'C4CA4238A0B923820DCC509A6F75849B' });
+    });
+
+    it('catálogo recusado traz o motivo do login que falhou, sem a senha', async () => {
+      vi.mocked(configService.getSettings).mockReturnValue({ wtaLogin: 'PCADMIN', wtaPassword: 'segredo' } as any);
+      const resp = (status: number, body: string) => ({ ok: false, status, statusText: 'Forbidden', text: async () => body, buffer: async () => Buffer.from('') });
+      vi.mocked(httpRequest)
+        .mockResolvedValueOnce(resp(403, ''))
+        .mockResolvedValueOnce(resp(401, JSON.stringify({ mensagem: 'Credenciais inválidas para o Usuário informado' })));
+
+      const err = (await routine801Service.fetchUpdates('http://localhost:8038').catch((e) => e)) as Error;
+      expect(err.message).toContain('HTTP 403');
+      expect(err.message).toContain('login de PCADMIN recusado pelo WTA (HTTP 401): Credenciais inválidas');
+      expect(err.message).not.toContain('segredo');
     });
   });
 });

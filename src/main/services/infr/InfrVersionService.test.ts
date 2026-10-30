@@ -127,5 +127,21 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
     expect(res.success).toBe(true);
     expect(fs.readFileSync(path.join(dir, 'linux-winthor', 'versions', '40.features'), 'utf-8')).toBe('feature a 1.40.0.1\n');
     expect(service().saveManifest({ targetVersion: '40', manifestText: '# vazio' }).success).toBe(false);
+
+    // Manifesto existente só é substituído quando o usuário escolhe
+    const again = service().saveManifest({ targetVersion: '40', manifestText: 'feature a 1.39.0.1\n' });
+    expect(again).toMatchObject({ success: false });
+    expect(again.error).toContain('já existe');
+    expect(fs.readFileSync(path.join(dir, 'linux-winthor', 'versions', '40.features'), 'utf-8')).toBe('feature a 1.40.0.1\n');
+    expect(service().saveManifest({ targetVersion: '40', manifestText: 'feature a 1.39.0.1\n', overwrite: true }).success).toBe(true);
+  });
+
+  it('prévia aponta o manifesto que já existe da versão, comparado e conferido contra o WSH', async () => {
+    const versions = path.join(dir, 'linux-winthor', 'versions');
+    fs.mkdirSync(versions, { recursive: true });
+    fs.writeFileSync(path.join(versions, '40.features'), 'feature winthor-core-data 1.40.1.0\nfeature winthor-integracao-config 1.40.2.5\n');
+    const res = await service().preview({ fromEnv: 'master', targetVersion: '40', wshJar: '/opt/wsh/winthor-integracao-core.jar' });
+    expect(res.existing).toMatchObject({ count: 2, comparison: { newer: 0, older: 2, onlyExisting: 0, onlyPreview: 0 } });
+    expect(res.existing?.wshCheck).toEqual([{ service: 'winthor-integracao-config', version: '1.40.2.1', found: '1.40.2.5', ok: true }]);
   });
 });

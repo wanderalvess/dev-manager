@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Routine801CatalogResponse } from './types';
 import {
   checkManifestAgainstWsh,
+  compareManifests,
   compareVersions,
   parseVersionManifest,
   parseWshDependencies,
@@ -95,5 +96,11 @@ describe('manifesto de versão do INFR-Docker', () => {
       ['winthor-core-data', '1.40.0.3', true],
       ['winthor-nao-instalado', undefined, false]
     ]);
+  });
+
+  it('compara a prévia com o manifesto existente: acima, abaixo e o que só um dos dois tem', () => {
+    const existing = parseVersionManifest('feature a 1.39.0.5\nfeature b 1.39.2.0\nfeature c 1.39.0.1\nfeature so-existente 1.39.0.1\n');
+    const preview = parseVersionManifest('feature a 1.39.1.0\nfeature b 1.38.9.9\nfeature c 1.39.0.1\nfeature so-previa 1.38.0.1\n');
+    expect(compareManifests(existing, preview)).toEqual({ newer: 1, older: 1, onlyExisting: 1, onlyPreview: 1 });
   });
 });
