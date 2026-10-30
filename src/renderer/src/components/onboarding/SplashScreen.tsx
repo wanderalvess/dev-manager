@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { AppLogo } from '../AppLogo';
 import { Modal } from '../ui/Modal';
-import { SPLASH_BOOT_LINES } from './onboardingContent';
-import { getSplashTiming, RETURNING_AUTO_CLOSE_MS } from './splashTiming';
+import { SPLASH_BOOT_ITEMS } from './onboardingContent';
+import { countdownSeconds, getSplashTiming, RETURNING_AUTO_CLOSE_MS } from './splashTiming';
+import { SplashBootPanel, SplashNewsPanel, SplashStepsPanel } from './splash/SplashPanels';
+import { extractVersionHighlights } from '../../utils/changelogUtils';
+import changelogRaw from '../../../../../CHANGELOG.md?raw';
 
 interface SplashScreenProps {
   isOpen: boolean;
@@ -15,7 +18,6 @@ interface SplashScreenProps {
   onEnter: () => void;
   onWhatsNew: () => void;
 }
-
 
 const prefersReducedMotion = (): boolean => {
   try {
@@ -30,6 +32,14 @@ const TITLE_WORDS = [
   { word: 'Manager', accent: true }
 ];
 
+const COUNTDOWN_TICK_MS = 100;
+const RING_LENGTH = 2 * Math.PI * 15;
+
+const PRIMARY_BUTTON =
+  'h-14 rounded-2xl bg-primary text-primary-foreground text-base font-extrabold flex items-center gap-3 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg';
+const SECONDARY_BUTTON =
+  'h-14 px-6 rounded-2xl border border-border text-muted-foreground hover:text-foreground font-semibold cursor-pointer transition-colors';
+
 export const SplashScreen: React.FC<SplashScreenProps> = ({
   isOpen,
   isNewUser,
@@ -39,39 +49,53 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
   onEnter,
   onWhatsNew
 }) => {
-  const [tick, setTick] = useState(0);
+  const [completed, setCompleted] = useState(0);
   const [done, setDone] = useState(false);
+  const [remainingMs, setRemainingMs] = useState(RETURNING_AUTO_CLOSE_MS);
+  const [paused, setPaused] = useState(false);
+  const enterRef = useRef<HTMLButtonElement>(null);
+  const news = useMemo(() => extractVersionHighlights(changelogRaw, appVersion), [appVersion]);
 
   useEffect(() => {
     if (!isOpen) return;
-    setTick(0);
+    setCompleted(0);
     setDone(false);
+    setRemainingMs(RETURNING_AUTO_CLOSE_MS);
+    setPaused(false);
     if (prefersReducedMotion()) {
-      setTick(SPLASH_BOOT_LINES.length - 1);
+      setCompleted(SPLASH_BOOT_ITEMS.length);
       setDone(true);
       return;
     }
     const { bootStartMs, lineMs } = getSplashTiming(isNewUser);
-    const timers = SPLASH_BOOT_LINES.map((_, i) => setTimeout(() => setTick(i), bootStartMs + i * lineMs));
-    timers.push(setTimeout(() => setDone(true), bootStartMs + SPLASH_BOOT_LINES.length * lineMs));
+    const timers = SPLASH_BOOT_ITEMS.map((_, i) => setTimeout(() => setCompleted(i + 1), bootStartMs + (i + 1) * lineMs));
+    timers.push(setTimeout(() => setDone(true), bootStartMs + SPLASH_BOOT_ITEMS.length * lineMs));
     return () => timers.forEach(clearTimeout);
     // isNewUser só muda quando a abertura já fechou; reiniciar o boot no meio dela seria pior que ignorar.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
+  // Quem já usa o app entra sozinho ao fim da contagem, a menos que tenha pedido para ficar.
   useEffect(() => {
-    if (!isOpen || !done || isNewUser) return;
-    const t = setTimeout(onEnter, RETURNING_AUTO_CLOSE_MS);
-    return () => clearTimeout(t);
-  }, [isOpen, done, isNewUser, onEnter]);
+    if (!isOpen || !done || isNewUser || paused) return;
+    const t = setInterval(() => setRemainingMs((ms) => ms - COUNTDOWN_TICK_MS), COUNTDOWN_TICK_MS);
+    return () => clearInterval(t);
+  }, [isOpen, done, isNewUser, paused]);
+
+  useEffect(() => {
+    if (isOpen && done && !isNewUser && !paused && remainingMs <= 0) onEnter();
+  }, [isOpen, done, isNewUser, paused, remainingMs, onEnter]);
 
   const skip = () => {
-    setTick(SPLASH_BOOT_LINES.length - 1);
+    setCompleted(SPLASH_BOOT_ITEMS.length);
     setDone(true);
   };
 
-  const progress = Math.round(((tick + 1) / SPLASH_BOOT_LINES.length) * 100);
+  const showNews = done && !isNewUser && news !== null && news.items.length > 0;
   let letterIndex = 0;
+
+  let hint = 'Esc para pular a abertura';
+  if (done) hint = isNewUser ? 'Enter para começar · Esc para explorar sozinho' : 'Enter para entrar';
 
   return (
     <Modal
@@ -81,125 +105,134 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       closeOnBackdrop={false}
       zIndexClass="z-10003"
       ariaLabel="Abertura do Hub Manager"
-      panelClassName="fixed inset-0 bg-background text-foreground overflow-hidden select-none flex flex-col items-center justify-center"
+      panelClassName="fixed inset-0 bg-background text-foreground overflow-hidden select-none flex flex-col"
     >
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 w-[900px] h-[900px] -ml-[450px] -mt-[450px] rounded-full animate-splash-glow"
-        style={{ background: 'radial-gradient(circle, hsl(var(--primary) / 0.16) 0%, transparent 60%)' }}
-      />
+      <svg aria-hidden="true" className="pointer-events-none absolute inset-0 w-full h-full" fill="none">
+        <line x1="0" y1="20%" x2="100%" y2="20%" className="stroke-border" />
+        <line x1="0" y1="80%" x2="100%" y2="80%" className="stroke-border" />
+        <line x1="6.5%" y1="0" x2="6.5%" y2="100%" className="stroke-border" />
+        <line x1="93.5%" y1="0" x2="93.5%" y2="100%" className="stroke-border" />
+      </svg>
       <svg
         aria-hidden="true"
-        viewBox="0 0 1100 1100"
+        viewBox="0 0 660 660"
         fill="none"
-        className="pointer-events-none absolute left-1/2 top-1/2 w-[1100px] h-[1100px] -ml-[550px] -mt-[550px] animate-splash-orbit"
+        className="pointer-events-none absolute left-[30%] top-1/2 w-[660px] h-[660px] -ml-[330px] -mt-[330px] animate-splash-orbit"
       >
-        <circle cx="550" cy="550" r="540" className="stroke-border" strokeOpacity="0.5" />
-        <circle cx="550" cy="550" r="420" className="stroke-border" strokeOpacity="0.5" strokeDasharray="2 12" />
-        <circle cx="1090" cy="550" r="5" className="fill-primary" />
-        <circle cx="550" cy="130" r="3" className="fill-foreground" />
+        <circle cx="330" cy="330" r="328" className="stroke-border" strokeDasharray="2 10" />
+        <circle cx="658" cy="330" r="4" className="fill-primary" />
       </svg>
 
-      <div className="relative flex flex-col items-center gap-7 px-6">
-        <div className="relative w-28 h-28 flex items-center justify-center">
-          <span aria-hidden="true" className="absolute inset-0 rounded-full border-2 border-primary animate-splash-ring" />
-          <span aria-hidden="true" className="absolute inset-0 rounded-full border border-primary animate-splash-ring [animation-delay:0.3s]" />
+      <header className="relative h-16 shrink-0 px-6 sm:px-16 lg:px-24 flex items-center justify-between font-mono text-xs text-muted-foreground">
+        <span>HUB MANAGER{appVersion ? ` · v${appVersion}` : ''}</span>
+        <span>ecossistema WinThor</span>
+      </header>
+
+      <main className="relative flex-1 min-h-0 overflow-y-auto px-6 sm:px-16 lg:px-24 py-6 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-24 items-center">
+        <section className="flex flex-col items-start gap-7">
           <div className="animate-splash-logo">
-            <AppLogo size="lg" />
+            <AppLogo size="xl" />
           </div>
-        </div>
 
-        <h1 aria-label="Hub Manager" className="m-0 flex gap-6 text-6xl sm:text-8xl font-extrabold tracking-tighter leading-none">
-          {TITLE_WORDS.map(({ word, accent }) => (
-            <span key={word} aria-hidden="true" className={accent ? 'text-primary' : undefined}>
-              {word.split('').map((ch, i) => {
-                const delay = 0.6 + letterIndex++ * 0.06;
-                return (
-                  <span key={i} className="inline-block animate-splash-letter" style={{ animationDelay: `${delay}s` }}>
-                    {ch}
-                  </span>
-                );
-              })}
-            </span>
-          ))}
-        </h1>
+          {!done && (
+            <h1 aria-label="Hub Manager" className="m-0 flex flex-col text-6xl sm:text-8xl font-extrabold tracking-tighter leading-[0.95]">
+              {TITLE_WORDS.map(({ word, accent }) => (
+                <span key={word} aria-hidden="true" className={accent ? 'text-primary' : undefined}>
+                  {word.split('').map((ch, i) => {
+                    const delay = 0.3 + letterIndex++ * 0.05;
+                    return (
+                      <span key={i} className="inline-block animate-splash-letter" style={{ animationDelay: `${delay}s` }}>
+                        {ch}
+                      </span>
+                    );
+                  })}
+                </span>
+              ))}
+            </h1>
+          )}
+          {done && (
+            <h1 className="m-0 text-5xl sm:text-7xl font-extrabold tracking-tighter leading-none animate-splash-rise">
+              {isNewUser ? 'Primeira vez por aqui?' : 'Bem-vindo de volta.'}
+            </h1>
+          )}
 
-        <p className="m-0 font-mono text-xs sm:text-sm tracking-[0.32em] text-muted-foreground animate-splash-rise [animation-delay:1.3s]">
-          OPERAÇÃO · DESENVOLVIMENTO · QUALIDADE
-        </p>
+          <p className="m-0 max-w-lg text-lg sm:text-xl leading-relaxed text-muted-foreground">
+            {!done && 'O cockpit do seu dia: ambiente, Karaf, banco, deploy e qualidade num lugar só.'}
+            {done &&
+              isNewUser &&
+              'A gente detecta seus caminhos, liga só os módulos que você usa e deixa o cockpit pronto. Dá para mudar tudo depois em Configurações.'}
+            {done && !isNewUser && (paused ? 'Tudo carregado. Entre quando quiser.' : 'Tudo carregado. Entrando no cockpit em instantes.')}
+          </p>
 
-        {!done && (
-          <div className="mt-4 w-[min(420px,80vw)] flex flex-col items-center gap-3 animate-splash-rise [animation-delay:1.5s]">
-            <div className="relative w-full h-[3px] rounded-full bg-border overflow-hidden">
-              <div className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width] duration-300" style={{ width: `${progress}%` }} />
-            </div>
-            <span className="font-mono text-xs text-muted-foreground" aria-live="polite">
-              {SPLASH_BOOT_LINES[tick]}
-            </span>
-          </div>
-        )}
-
-        {done && isNewUser && (
-          <div className="mt-4 flex flex-col items-center gap-5">
-            <p className="m-0 text-lg sm:text-xl text-muted-foreground text-center max-w-xl leading-relaxed animate-splash-rise">
-              Primeira vez por aqui? Vamos deixar o seu cockpit pronto em poucos passos.
-            </p>
-            <div className="flex flex-wrap justify-center gap-3 animate-splash-rise [animation-delay:0.1s]">
-              <button
-                type="button"
-                autoFocus
-                onClick={onStartOnboarding}
-                className="h-12 px-7 rounded-xl bg-primary text-primary-foreground font-extrabold flex items-center gap-2 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg"
-              >
-                Começar onboarding <ArrowRight className="w-4 h-4" />
+          {done && isNewUser && (
+            <div className="flex flex-wrap gap-3 animate-splash-rise">
+              <button type="button" autoFocus onClick={onStartOnboarding} className={`${PRIMARY_BUTTON} px-7`}>
+                Configurar meu cockpit <ArrowRight className="w-4 h-4" />
               </button>
-              <button
-                type="button"
-                onClick={onExplore}
-                className="h-12 px-5 rounded-xl border border-border text-muted-foreground hover:text-foreground font-semibold cursor-pointer transition-colors"
-              >
+              <button type="button" onClick={onExplore} className={SECONDARY_BUTTON}>
                 Explorar sozinho
               </button>
             </div>
-          </div>
-        )}
+          )}
 
-        {done && !isNewUser && (
-          <div className="mt-4 flex flex-col items-center gap-5">
-            <p className="m-0 text-xl font-bold animate-splash-rise">Bem-vindo de volta.</p>
-            <div className="flex flex-wrap justify-center gap-3 animate-splash-rise [animation-delay:0.1s]">
-              <button
-                type="button"
-                autoFocus
-                onClick={onEnter}
-                className="h-12 px-8 rounded-xl bg-primary text-primary-foreground font-extrabold flex items-center gap-2 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg"
-              >
-                Entrar <ArrowRight className="w-4 h-4" />
+          {done && !isNewUser && (
+            <div className="flex flex-wrap gap-3 animate-splash-rise">
+              <button ref={enterRef} type="button" autoFocus onClick={onEnter} className={`${PRIMARY_BUTTON} ${paused ? 'px-8' : 'pl-7 pr-3'}`}>
+                {paused ? 'Entrar' : 'Entrar agora'}
+                {paused ? (
+                  <ArrowRight className="w-4 h-4" />
+                ) : (
+                  <span className="relative w-9 h-9 flex items-center justify-center font-mono text-sm" aria-hidden="true">
+                    <svg viewBox="0 0 36 36" fill="none" className="absolute inset-0 -rotate-90">
+                      <circle cx="18" cy="18" r="15" stroke="currentColor" strokeOpacity="0.25" strokeWidth="3" />
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="15"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeDasharray={RING_LENGTH}
+                        strokeDashoffset={RING_LENGTH * (1 - Math.max(0, remainingMs) / RETURNING_AUTO_CLOSE_MS)}
+                      />
+                    </svg>
+                    {countdownSeconds(remainingMs)}
+                  </span>
+                )}
               </button>
-              <button
-                type="button"
-                onClick={onWhatsNew}
-                className="h-12 px-5 rounded-xl border border-border text-muted-foreground hover:text-foreground font-semibold cursor-pointer transition-colors"
-              >
-                Ver novidades
-              </button>
+              {!paused && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaused(true);
+                    enterRef.current?.focus();
+                  }}
+                  className={SECONDARY_BUTTON}
+                >
+                  Ficar nesta tela
+                </button>
+              )}
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </section>
 
-      <div className="absolute inset-x-6 sm:inset-x-10 bottom-6 flex items-center justify-between font-mono text-xs text-muted-foreground">
-        <span>{appVersion ? `v${appVersion} · ` : ''}ecossistema WinThor</span>
+        {done && isNewUser && <SplashStepsPanel />}
+        {showNews && news && <SplashNewsPanel version={news.version} items={news.items} onWhatsNew={onWhatsNew} />}
+        {(!done || (!isNewUser && !showNews)) && <SplashBootPanel completed={completed} />}
+      </main>
+
+      <footer className="relative h-20 shrink-0 px-6 sm:px-16 lg:px-24 flex items-center justify-between gap-4 font-mono text-xs text-muted-foreground">
+        <span>{hint}</span>
         {!done && (
           <button
             type="button"
             onClick={skip}
-            className="min-h-[36px] px-4 rounded-lg border border-border/70 hover:text-foreground cursor-pointer transition-colors"
+            className="min-h-11 px-5 rounded-xl border border-border hover:text-foreground cursor-pointer transition-colors"
           >
             Pular abertura
           </button>
         )}
-      </div>
+      </footer>
     </Modal>
   );
 };

@@ -93,3 +93,63 @@ export function extractChangelogByVersion(
   return found ? found.content : null;
 }
 
+
+export interface ChangelogHighlight {
+  /** Seção do Keep a Changelog em que o item está (ex.: "Adicionado", "Corrigido"). */
+  section: string;
+  title: string;
+  summary: string;
+}
+
+/** Tira ênfase, código e links do Markdown; o conteúdo de `código` fica intacto (ex.: `winthor-core-*`). */
+const stripMarkdown = (text: string): string =>
+  text
+    .split(/(`[^`]*`)/)
+    .map((part) =>
+      part.startsWith('`') && part.endsWith('`')
+        ? part.slice(1, -1)
+        : part
+            .replace(/\*\*(.+?)\*\*/g, '$1')
+            .replace(/\*(.+?)\*/g, '$1')
+            .replace(/__(.+?)__/g, '$1')
+            .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    )
+    .join('')
+    .trim();
+
+const capitalize = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
+
+/** Primeira frase de um texto, cortada em `max` caracteres. */
+function firstSentence(text: string, max: number): string {
+  const sentence = text.split(/(?<=[.!?])\s/)[0] ?? text;
+  return sentence.length > max ? `${sentence.slice(0, max - 1).trimEnd()}…` : sentence;
+}
+
+/**
+ * Destaques de uma versão para a abertura: os primeiros itens de nível 1 no formato `- **Título**: texto`,
+ * com a seção de cada um e só a primeira frase do texto. Sem `version` (ou se ela não existir), usa a mais recente.
+ */
+export function extractVersionHighlights(
+  content: string | null | undefined,
+  version?: string,
+  max = 2
+): { version: string; items: ChangelogHighlight[] } | null {
+  const versions = parseChangelogVersions(content);
+  if (versions.length === 0) return null;
+  const wanted = version?.replace(/^v/, '').toLowerCase();
+  const entry = versions.find((v) => v.version.toLowerCase() === wanted) ?? versions[0];
+  const items: ChangelogHighlight[] = [];
+  let section = '';
+  for (const line of entry.content.split('\n')) {
+    const heading = line.match(/^###\s+(.+)/);
+    if (heading) {
+      section = heading[1].trim();
+      continue;
+    }
+    const bullet = line.match(/^-\s+\*\*(.+?)\*\*:?\s*(.*)$/);
+    if (!bullet) continue;
+    items.push({ section, title: stripMarkdown(bullet[1]).replace(/:$/, ''), summary: capitalize(firstSentence(stripMarkdown(bullet[2]), 160)) });
+    if (items.length >= max) break;
+  }
+  return { version: entry.version, items };
+}

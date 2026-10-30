@@ -4,6 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Alterado
+- **Abertura do app**: o carregamento virou uma lista das áreas do cockpit e do servidor MCP, cada uma marcada como pronta, carregando ou na fila. Na primeira vez, a abertura já mostra as etapas da configuração (*Configurar meu cockpit* ou *Explorar sozinho*). Para quem volta, o *Entrar agora* conta 3 s antes de entrar sozinho, com os destaques da versão ao lado; *Ficar nesta tela* pausa a contagem.
+- **Onboarding em 6 etapas**: *Ambiente* e *Checklist* viraram uma etapa só, com os essenciais no topo, a contagem por seção, a marca *detectado agora* e o botão *Preencher* em cada item que falta. A detecção de caminhos roda sozinha ao chegar na etapa se algum caminho essencial estiver vazio. Também:
+  - *Módulos*: contagem de ligados por área e *Ligar todos*/*Desligar todos* por área;
+  - *Tema*: prévia grande do cockpit no tema escolhido;
+  - *IA & MCP*: o exemplo virou uma conversa (pedido, tools chamadas e resultado);
+  - *Pronto*: resumo do que ficou configurado (módulos, tema e o que falta no ambiente) e o tour guiado em destaque;
+  - *Terminar depois* na barra lateral fecha o onboarding; antes o *Pular* do rodapé fazia isso e parecia pular só a etapa.
+- **Instalador do Windows**: nova tela de boas-vindas, conclusão com texto próprio (*Abrir o Hub Manager agora*) e imagens laterais e de cabeçalho no visual escuro da abertura.
+
 ## [1.49.5] - 2026-10-30
 ### Alterado
 - **Nova versão confere a origem logo no passo 1**: antes, pasta, WTA e login só eram testados no passo 4, depois de a pessoa preencher tudo. Agora, ao escolher a origem, o Hub confere três coisas e só libera o *Próximo* quando as três passam:
