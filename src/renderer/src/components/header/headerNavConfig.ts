@@ -16,6 +16,7 @@ import {
   PlayCircle,
   Zap,
   ListChecks,
+  FlaskConical,
   Globe,
   Route,
   LucideIcon
@@ -71,6 +72,14 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
         description: 'Stack WinThor (Oracle XE, WTA, WSH), distros WSL2, snapshots e bootstrap INFR'
       },
       {
+        id: 'routines',
+        label: 'Catálogo de Rotinas',
+        shortLabel: 'Rotinas',
+        icon: Grid,
+        description: 'Catálogo de executáveis, rotinas e atalhos',
+        shortcut: 'Alt+6'
+      },
+      {
         id: 'deploy',
         label: 'Deploy & Esteiras',
         shortLabel: 'Deploy',
@@ -84,7 +93,16 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
         shortLabel: 'Karaf',
         icon: Cpu,
         description: 'Bundles, features, catálogo 801, memória da JVM & diagnósticos do servidor OSGi'
-      },
+      }
+    ]
+  },
+  {
+    id: 'obs',
+    title: 'Observabilidade & Diagnóstico',
+    shortTitle: 'Observabilidade',
+    compactTitle: 'Obs',
+    icon: Activity,
+    items: [
       {
         id: 'logs',
         label: 'Logs em Tempo Real',
@@ -112,8 +130,8 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
   },
   {
     id: 'data',
-    title: 'Banco de Dados & Rotinas',
-    shortTitle: 'Dados & Rotinas',
+    title: 'Banco de Dados & Backups',
+    shortTitle: 'Banco de Dados',
     compactTitle: 'Dados',
     icon: Database,
     items: [
@@ -131,14 +149,6 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
         shortLabel: 'Backups',
         icon: HardDriveDownload,
         description: 'Backup, restauração, agendamento, arquivos, histórico e webhooks dos bancos'
-      },
-      {
-        id: 'routines',
-        label: 'Catálogo de Rotinas',
-        shortLabel: 'Rotinas',
-        icon: Grid,
-        description: 'Catálogo de executáveis, rotinas e atalhos',
-        shortcut: 'Alt+6'
       }
     ]
   },
@@ -194,7 +204,7 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
         id: 'quality-regression',
         label: 'Validador Regressivo',
         shortLabel: 'Regressivo',
-        icon: Database,
+        icon: FlaskConical,
         description: 'Validação de dados Oracle com templates, asserções e payloads de API',
       },
       {

@@ -1,6 +1,6 @@
 import React from 'react';
 
-interface DeployDiagCommandButtonProps {
+interface KarafDiagCommandButtonProps {
   icon: React.ReactNode;
   label: string;
   command: string;
@@ -10,7 +10,7 @@ interface DeployDiagCommandButtonProps {
 }
 
 /** Botão grande de comando Karaf com rótulo e comando em fonte mono. */
-export const DeployDiagCommandButton: React.FC<DeployDiagCommandButtonProps> = ({
+export const KarafDiagCommandButton: React.FC<KarafDiagCommandButtonProps> = ({
   icon,
   label,
   command,
@@ -33,7 +33,7 @@ export const DeployDiagCommandButton: React.FC<DeployDiagCommandButtonProps> = (
   </button>
 );
 
-interface DeployDiagActionButtonProps {
+interface KarafDiagActionButtonProps {
   icon: React.ReactNode;
   label: string;
   title: string;
@@ -43,7 +43,7 @@ interface DeployDiagActionButtonProps {
 }
 
 /** Botão compacto de ação pontual (por feature ou bundle). */
-export const DeployDiagActionButton: React.FC<DeployDiagActionButtonProps> = ({
+export const KarafDiagActionButton: React.FC<KarafDiagActionButtonProps> = ({
   icon,
   label,
   title,

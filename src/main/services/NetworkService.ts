@@ -1,5 +1,13 @@
 import os from 'os';
-import { NetworkIpInfo, NetworkInterfaceItem, SystemMetrics, HttpHealthResult } from '../../shared/types';
+import {
+  NetworkIpInfo,
+  NetworkInterfaceItem,
+  SystemMetrics,
+  HttpHealthResult,
+  HttpProbeMethod,
+  HttpProbeRequest,
+  HttpProbeResult
+} from '../../shared/types';
 import { execFileAsync, isSafeUrl } from '../utils/security';
 
 export class NetworkService {
@@ -257,4 +265,144 @@ export class NetworkService {
       };
     }
   }
+
+  /**
+   * Checagem de uma API específica para o monitor da tela Integrações: status, latência, cabeçalhos
+   * e o início do corpo. Só GET/HEAD e sem seguir redirect — `isSafeUrl` valida apenas a URL
+   * informada, e um 3xx poderia levar a um host bloqueado (ex.: metadados de nuvem).
+   */
+  public async probeHttpEndpoint(req: HttpProbeRequest): Promise<HttpProbeResult> {
+    const url = typeof req?.url === 'string' ? req.url.trim() : '';
+    const method: HttpProbeMethod = req?.method === 'HEAD' ? 'HEAD' : 'GET';
+    const timeoutMs = clampProbeTimeout(req?.timeoutMs);
+    const startTime = Date.now();
+    const base: HttpProbeResult = {
+      url,
+      method,
+      ok: false,
+      status: 0,
+      statusText: '',
+      durationMs: 0,
+      sizeBytes: 0,
+      contentType: '',
+      headers: {},
+      bodyPreview: '',
+      truncated: false,
+      checkedAt: startTime
+    };
+
+    if (!isSafeUrl(url)) return { ...base, error: 'URL inválida ou não permitida (use http:// ou https://).' };
+    const headers = sanitizeProbeHeaders(req?.headers);
+    if (typeof headers === 'string') return { ...base, error: headers };
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, {
+        method,
+        redirect: 'manual',
+        signal: controller.signal,
+        headers: { 'User-Agent': 'DevManager-ApiMonitor/1.0', Accept: 'application/json, text/plain, */*', ...headers }
+      });
+
+      const responseHeaders: Record<string, string> = {};
+      response.headers.forEach((value, key) => {
+        responseHeaders[key] = value;
+      });
+      const { text, sizeBytes, truncated } = method === 'HEAD' ? { text: '', sizeBytes: 0, truncated: false } : await readBodyPreview(response);
+      const isRedirect = response.status >= 300 && response.status < 400;
+
+      return {
+        ...base,
+        ok: response.ok,
+        status: response.status,
+        statusText: response.statusText,
+        durationMs: Date.now() - startTime,
+        sizeBytes,
+        contentType: responseHeaders['content-type'] || '',
+        headers: responseHeaders,
+        bodyPreview: text,
+        truncated,
+        redirectLocation: isRedirect ? responseHeaders.location : undefined
+      };
+    } catch (err: any) {
+      const aborted = err?.name === 'AbortError';
+      return {
+        ...base,
+        durationMs: Date.now() - startTime,
+        error: aborted ? `Sem resposta em ${Math.round(timeoutMs / 1000)} s.` : describeFetchError(err)
+      };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+}
+
+/** Limite do corpo guardado no resultado: o suficiente para ver o formato do retorno. */
+export const PROBE_BODY_PREVIEW_BYTES = 64 * 1024;
+const PROBE_DEFAULT_TIMEOUT_MS = 10_000;
+const PROBE_MAX_TIMEOUT_MS = 60_000;
+const HEADER_NAME = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
+
+function clampProbeTimeout(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return PROBE_DEFAULT_TIMEOUT_MS;
+  return Math.min(Math.max(Math.round(value), 500), PROBE_MAX_TIMEOUT_MS);
+}
+
+/** Devolve os cabeçalhos válidos ou a mensagem de erro do primeiro inválido. */
+function sanitizeProbeHeaders(input: unknown): Record<string, string> | string {
+  if (!input || typeof input !== 'object') return {};
+  const result: Record<string, string> = {};
+  for (const [rawName, rawValue] of Object.entries(input as Record<string, unknown>)) {
+    const name = rawName.trim();
+    if (!name) continue;
+    if (!HEADER_NAME.test(name)) return `Nome de cabeçalho inválido: "${name}".`;
+    const value = String(rawValue ?? '');
+    if (/[\r\n]/.test(value)) return `O valor do cabeçalho "${name}" não pode ter quebra de linha.`;
+    result[name] = value;
+  }
+  return result;
+}
+
+async function readBodyPreview(response: Response): Promise<{ text: string; sizeBytes: number; truncated: boolean }> {
+  if (!response.body) {
+    const text = await response.text();
+    const buffer = Buffer.from(text, 'utf-8');
+    const truncated = buffer.length > PROBE_BODY_PREVIEW_BYTES;
+    const slice = truncated ? buffer.subarray(0, PROBE_BODY_PREVIEW_BYTES) : buffer;
+    return { text: slice.toString('utf-8'), sizeBytes: slice.length, truncated };
+  }
+  const reader = response.body.getReader();
+  const chunks: Buffer[] = [];
+  let received = 0;
+  let truncated = false;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const piece = Buffer.from(value);
+    const room = PROBE_BODY_PREVIEW_BYTES - received;
+    if (piece.length > room) {
+      chunks.push(piece.subarray(0, room));
+      received += room;
+      truncated = true;
+      await reader.cancel().catch(() => undefined);
+      break;
+    }
+    chunks.push(piece);
+    received += piece.length;
+  }
+  return { text: Buffer.concat(chunks).toString('utf-8'), sizeBytes: received, truncated };
+}
+
+/** O `fetch` do Node esconde o motivo real em `cause` (ECONNREFUSED, ENOTFOUND, certificado...). */
+function describeFetchError(err: any): string {
+  if (err?.cause?.message === 'bad port' || err?.message === 'bad port') {
+    return 'O Node bloqueia a porta desta URL por segurança (lista de portas proibidas do fetch, ex.: 6000).';
+  }
+  const code = err?.cause?.code || err?.code;
+  if (code === 'ECONNREFUSED') return 'Conexão recusada: nada escutando nesse endereço/porta.';
+  if (code === 'ENOTFOUND' || code === 'EAI_AGAIN') return 'Host não encontrado (DNS).';
+  if (code === 'ECONNRESET') return 'A conexão foi encerrada pelo servidor.';
+  if (typeof code === 'string' && /CERT|SSL|TLS/i.test(code)) return `Falha no certificado TLS (${code}).`;
+  return err?.cause?.message || err?.message || 'Falha na conexão HTTP';
 }

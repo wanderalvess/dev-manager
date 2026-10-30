@@ -90,6 +90,8 @@ import type {
   GitCommandResult,
   SystemMetrics,
   HttpHealthResult,
+  HttpProbeRequest,
+  HttpProbeResult,
   DeployProfile,
   DeployStep,
   DeployProfileHistoryEntry,
@@ -449,6 +451,7 @@ export interface ElectronAPI {
   // Rede & Detecção de IPs (Local e WSL)
   getNetworkIps: () => Promise<NetworkIpInfo>;
   checkHttpHealth: (url: string, timeoutMs?: number) => Promise<HttpHealthResult>;
+  probeHttpEndpoint: (req: HttpProbeRequest) => Promise<HttpProbeResult>;
 
   // Métricas do Sistema
   getSystemMetrics: () => Promise<SystemMetrics>;

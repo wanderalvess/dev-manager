@@ -97,6 +97,8 @@ import type {
   OracleCaptureState,
   SystemMetrics,
   HttpHealthResult,
+  HttpProbeRequest,
+  HttpProbeResult,
   DeployProfile,
   DeployStep,
   DeployProfileHistoryEntry,
@@ -768,6 +770,8 @@ const electronAPI = {
   getNetworkIps: (): Promise<NetworkIpInfo> => ipcRenderer.invoke('network:get-ips'),
   checkHttpHealth: (url: string, timeoutMs?: number): Promise<HttpHealthResult> =>
     ipcRenderer.invoke('network:check-http-health', url, timeoutMs),
+  probeHttpEndpoint: (req: HttpProbeRequest): Promise<HttpProbeResult> =>
+    ipcRenderer.invoke('network:probe-http', req),
 
   // Métricas do Sistema
   getSystemMetrics: (): Promise<SystemMetrics> => ipcRenderer.invoke('system:get-metrics'),

@@ -566,6 +566,8 @@ export interface AppSettings {
   ccwWinthorVersion?: string;
   /** Cookie de sessão / autenticação da Central de Controle para consulta de catálogo (opcional, criptografado em repouso) */
   ccwAuthCookie?: string;
+  /** Indicador de que o cookie da CCW já está salvo (ccwAuthCookie trafega vazio quando sanitizado). */
+  hasCcwAuthCookie?: boolean;
   /** Mapa de extensão -> caminho de executável launcher, para formatos de rotina que não rodam sozinhos (ex: ".PC" -> caminho de um launcher configurado pelo usuário) */
   routineLauncherMap?: Record<string, string>;
   /** Caminho do arquivo tnsnames.ora de configuração de rede do Oracle (ex: C:\oracle\product\11.2.0\dbhome_1\network\admin\tnsnames.ora) */
@@ -631,6 +633,8 @@ export interface AppSettings {
   usageBaselines?: UsageBaselineOverrides;
   /** Personal Access Token (PAT) do Azure DevOps para consulta de Work Items e automação de branches (criptografado em repouso) */
   azureDevOpsToken?: string;
+  /** Indicador de que o PAT do Azure DevOps já está salvo (azureDevOpsToken trafega vazio quando sanitizado). */
+  hasAzureDevOpsToken?: boolean;
   /** Pasta onde os artefatos de build do Azure Pipelines são baixados (padrão: Downloads\HubManager-Azure) */
   azureArtifactsDir?: string;
   /** Fontes externas de qualidade e testes (Zephyr Scale, Zephyr Squad, Jira, Azure Test Plans) */
@@ -2016,6 +2020,40 @@ export interface HttpHealthResult {
   statusText?: string;
   timeMs: number;
   responseTimeMs?: number;
+  error?: string;
+}
+
+/** Métodos aceitos pelo monitor de API: só leitura, para checar repetidamente sem efeito colateral. */
+export type HttpProbeMethod = 'GET' | 'HEAD';
+
+export interface HttpProbeRequest {
+  url: string;
+  method?: HttpProbeMethod;
+  /** Cabeçalhos extras (ex.: Authorization). Não são guardados em lugar nenhum. */
+  headers?: Record<string, string>;
+  timeoutMs?: number;
+}
+
+/** Resultado de uma checagem do monitor de API (tela Integrações). */
+export interface HttpProbeResult {
+  url: string;
+  method: HttpProbeMethod;
+  /** true para 2xx; 3xx não é seguido (o destino pode ser um host que a URL original não autorizou). */
+  ok: boolean;
+  status: number;
+  statusText: string;
+  durationMs: number;
+  /** Bytes lidos do corpo (no máximo o limite do preview). */
+  sizeBytes: number;
+  contentType: string;
+  headers: Record<string, string>;
+  /** Início do corpo da resposta, para ver o formato do retorno. */
+  bodyPreview: string;
+  /** O corpo era maior que o preview e foi cortado. */
+  truncated: boolean;
+  /** Destino do redirect (cabeçalho Location) quando a resposta é 3xx. */
+  redirectLocation?: string;
+  checkedAt: number;
   error?: string;
 }
 
