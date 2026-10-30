@@ -26,7 +26,7 @@ export function useAppShellOnboarding(setActiveTab: (tab: string) => void) {
       return false;
     }
   });
-  // O onboarding em etapas só abre quando a pessoa escolhe "Começar onboarding" na abertura.
+  // O onboarding em etapas só abre quando a pessoa escolhe "Configurar meu cockpit" na abertura.
   const [isWelcomeOpen, setIsWelcomeOpen] = useState<boolean>(false);
   // Havia marcadores de onboarding já na abertura? Lido uma vez, antes de o usuário interagir.
   const hadMarkersAtMount = useRef<boolean>(false);

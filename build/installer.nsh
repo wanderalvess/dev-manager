@@ -1,6 +1,7 @@
-﻿; Telas opcionais do instalador (pt-BR). Nada aqui é obrigatório: "Avançar" pula a tela.
-; Ligado pelo electron-builder (nsis.include). As telas entram depois da escolha da pasta e são
-; ignoradas em atualizações automáticas.
+﻿; Telas do instalador (pt-BR), ligadas pelo electron-builder (nsis.include):
+; - boas-vindas e conclusão com texto próprio (as imagens laterais vêm de scripts/generate-icons.cjs);
+; - telas opcionais depois da escolha da pasta. Nada nelas é obrigatório: "Avançar" pula a tela.
+; Boas-vindas e telas opcionais são ignoradas em atualizações.
 
 !include "nsDialogs.nsh"
 !include "LogicLib.nsh"
@@ -99,4 +100,36 @@ FunctionEnd
 
   Page custom OraclePageCreate OraclePageLeave
   Page custom LlmPageCreate
+!macroend
+
+; ---------------------------------------------------------------- Boas-vindas
+; O instalador assistido do electron-builder não tem boas-vindas própria: só aparece a que for definida aqui.
+!macro customWelcomePage
+  !insertmacro skipPageIfUpdated
+  !define MUI_WELCOMEPAGE_TITLE "Bem-vindo à instalação do Hub Manager"
+  !define MUI_WELCOMEPAGE_TEXT "O cockpit para o dia a dia com WinThor: ambiente, Karaf, banco de dados, deploy OSGi e qualidade num lugar só.$\r$\n$\r$\n•  Atalhos na Área de Trabalho e no Menu Iniciar$\r$\n•  Atualizações automáticas pelo próprio app$\r$\n•  Suas conexões, perfis e configurações são mantidos ao atualizar$\r$\n$\r$\nSe o Hub Manager estiver aberto, feche-o antes de continuar."
+  !insertmacro MUI_PAGE_WELCOME
+!macroend
+
+; ---------------------------------------------------------------- Conclusão
+; Mesmo comportamento da conclusão padrão do electron-builder (assistedInstaller.nsh: StartApp com
+; --updated em atualizações), só com título e textos próprios.
+!macro customFinishPage
+  !ifndef HIDE_RUN_AFTER_FINISH
+    Function StartApp
+      ${if} ${isUpdated}
+        StrCpy $1 "--updated"
+      ${else}
+        StrCpy $1 ""
+      ${endif}
+      ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "$1"
+    FunctionEnd
+
+    !define MUI_FINISHPAGE_RUN
+    !define MUI_FINISHPAGE_RUN_FUNCTION "StartApp"
+    !define MUI_FINISHPAGE_RUN_TEXT "Abrir o Hub Manager agora"
+  !endif
+  !define MUI_FINISHPAGE_TITLE "Hub Manager instalado"
+  !define MUI_FINISHPAGE_TEXT "Na primeira abertura, uma configuração rápida detecta seus caminhos (projetos, Karaf, IDE) e liga só os módulos que você usa.$\r$\n$\r$\nAtalhos criados na Área de Trabalho e no Menu Iniciar."
+  !insertmacro MUI_PAGE_FINISH
 !macroend
