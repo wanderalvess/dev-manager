@@ -64,6 +64,14 @@ export function getInfrVersionFaq(): FaqItem[] {
               &quot;Não foi possível ler a origem&quot; e pede para rodar <code className={C}>git checkout feature/imagem-por-versao</code> na pasta.
             </li>
             <li>
+              <strong className="text-foreground">O ambiente subiu?</strong> Depois do Gerar, o assistente abre <strong className="text-foreground">Verificar ambiente</strong>{' '}
+              (também no menu do assistente). Ele mostra o estado de <code className={C}>oracle-</code>, <code className={C}>wta-</code> e{' '}
+              <code className={C}>wsh-&lt;nome&gt;</code>, o fim do log de cada um e se o WTA responde, e repete a leitura a cada 15 s enquanto o
+              ambiente sobe. Um WSH reiniciando com &quot;Versão exigida&quot; no log aparece como falha, com a linha do log. Cada teste também vem
+              como comando (<code className={C}>docker ps</code>, <code className={C}>docker logs</code>, <code className={C}>curl</code>), com
+              Copiar e Executar.
+            </li>
+            <li>
               <strong className="text-foreground">Downgrade (ex.: um 38 a partir de um 39):</strong> a Nova versão só sobe features, e o banco da 39 tem
               tabelas que um WTA 38 não conhece. A revisão mostra a linha da origem (pelo núcleo <code className={C}>winthor-core-*</code>) e, quando a
               versão nova é menor, bloqueia o clone do banco e as features sem <code className={C}>versions/38.features</code>. Com a lista pronta e um

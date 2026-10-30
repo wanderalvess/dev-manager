@@ -21,6 +21,7 @@ import { mergeBackupConfig, validateBackupConfig } from '../main/utils/backupCon
 import { DockerService } from '../main/services/DockerService';
 import { wslService } from '../main/services/WslService';
 import { InfrVersionService } from '../main/services/infr/InfrVersionService';
+import { InfrEnvCheckService } from '../main/services/infr/InfrEnvCheckService';
 import { NetworkService } from '../main/services/NetworkService';
 import { DeployService } from '../main/services/DeployService';
 import { LogWatcherService } from '../main/services/LogWatcherService';
@@ -1393,6 +1394,25 @@ app.post('/api/infr/run-script', async (req, res) => {
 
 // Nova versão do WinThor a partir de outro ambiente (Assistente INFR → Nova versão)
 const infrVersionService = new InfrVersionService(wslService, routine801Service);
+const infrEnvCheckService = new InfrEnvCheckService(wslService);
+
+app.post('/api/infr/env-check', async (req, res) => {
+  try {
+    const { distro, name } = req.body || {};
+    res.json(await infrEnvCheckService.check(distro, String(name || '')));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message, containers: [] });
+  }
+});
+
+app.post('/api/infr/env-check/terminal', async (req, res) => {
+  try {
+    const { distro, name, id, wtaPort } = req.body || {};
+    res.json(await infrEnvCheckService.openCheckTerminal(distro, String(name || ''), id, typeof wtaPort === 'number' ? wtaPort : undefined));
+  } catch (err: any) {
+    res.status(500).json({ success: false, output: err.message });
+  }
+});
 
 app.get('/api/infr/version/environments', async (req, res) => {
   try {

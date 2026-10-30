@@ -18,6 +18,7 @@ import type {
   InfrVersionPreview,
   InfrVersionPreviewRequest
 } from '../../../../shared/infrVersionManifest';
+import type { InfrCheckCommandId, InfrEnvCheck } from '../../../../shared/infrEnvCheck';
 import type { InfrEnvironmentsResult } from '../../../../shared/infrWinthorVersion';
 import type { BridgeDeps } from './core';
 
@@ -222,6 +223,20 @@ export function createWslApi({ apiFetch, wsManager }: BridgeDeps) {
         return await apiFetch<InfrManifestSaveResult>('/api/infr/version/save', { method: 'POST', body: JSON.stringify(req) });
       } catch (err: any) {
         return { success: false, error: err.message };
+      }
+    },
+    checkInfrEnvironment: async (params: { distro?: string; name: string }): Promise<InfrEnvCheck> => {
+      try {
+        return await apiFetch<InfrEnvCheck>('/api/infr/env-check', { method: 'POST', body: JSON.stringify(params) });
+      } catch (err: any) {
+        return { success: false, error: err.message, containers: [] };
+      }
+    },
+    openInfrCheckTerminal: async (req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }) => {
+      try {
+        return await apiFetch<{ success: boolean; output: string }>('/api/infr/env-check/terminal', { method: 'POST', body: JSON.stringify(req) });
+      } catch (err: any) {
+        return { success: false, output: err.message };
       }
     },
     setDockerTargetWslDistro: async (distro: string | null): Promise<DockerDaemonStatus> => {

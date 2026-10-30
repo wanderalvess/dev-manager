@@ -5,6 +5,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
 ## [Não lançado]
+### Adicionado
+- **Assistente INFR: Verificar ambiente**: aba nova, aberta sozinha depois do Gerar, que mostra se o ambiente subiu. Para `oracle-`, `wta-` e `wsh-<nome>` mostra:
+  - o estado (no ar, iniciando, reiniciando, parado ou não existe), o health, os reinícios, a imagem e as portas;
+  - as últimas 30 linhas do log;
+  - se o WTA responde pela porta publicada.
+
+  Um resumo diz *Ambiente no ar*, *Subindo: 2 de 3*, *Falhou* (com o motivo tirado do log, como o WSH recusando a versão do WTA ou um `ORA-`) ou *Nenhum container*. Enquanto o ambiente sobe, a leitura se repete a cada 15 s. Os mesmos testes aparecem como comandos (`docker ps`, `docker logs` de cada container, `curl` no WTA), cada um com **Copiar** e **Executar**; o Executar abre o Windows Terminal na distro. O Hub monta o comando pelo tipo, a tela nunca manda texto livre para rodar.
+
+### Alterado
+- **Assistente INFR mais largo**: o modal ocupa até 1680 px (96% da tela) e 92% da altura. O painel *O que será criado* ficou mais largo e não quebra mais nome de arquivo no meio da palavra. Em tela grande, a revisão do passo 4 mostra as conferências em duas colunas. O comando do Gerar aparece com uma opção por linha e o botão **Copiar**.
+
 ### Corrigido
 - **Gerar (e os scripts do Assistente INFR) abriam várias janelas no Windows Terminal**: o `wt.exe` usa `;` para separar os próprios comandos, mesmo dentro do comando passado ao bash. O `...; echo ''; echo 'Pressione Enter...'; read -r` do fim virava uma janela por pedaço, e a janela do script fechava sem esperar o Enter. Agora o `;` vai escapado (`\;`) e o comando chega inteiro ao bash. A mesma correção vale para o Karaf em modo debug no WSL, o Karaf Client do WTA e as etapas em abas do Windows Terminal.
 

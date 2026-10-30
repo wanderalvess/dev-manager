@@ -127,7 +127,7 @@ export const InfrNewVersionTab: React.FC<{ s: InfrNewVersionState; onClose: () =
         </footer>
       </div>
 
-      <aside aria-label="O que será criado" className="hidden xl:block w-72 shrink-0 border-l border-border/70 bg-muted/15 p-5 overflow-y-auto scrollbar-thin">
+      <aside aria-label="O que será criado" className="hidden xl:block w-80 shrink-0 border-l border-border/70 bg-muted/15 p-5 overflow-y-auto scrollbar-thin">
         <h4 className="text-2xs font-bold uppercase tracking-wider text-foreground/80 mb-3">O que será criado</h4>
         <InfrNewVersionSummary s={s} />
       </aside>
