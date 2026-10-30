@@ -19,6 +19,7 @@ import {
 } from '../../../shared/infrVersionManifest';
 import { buildEnvFile, envFieldsFor, parseEnvLines, pickEnv, type InfrEnvTarget } from '../../../shared/infrEnvConfig';
 import type { InfrEnvSaveRequest, InfrEnvTemplate, InfrManifestSaveRequest, InfrManifestSaveResult } from '../../../shared/infrVersionManifest';
+import { INFR_NEW_VERSION_SCRIPTS, commandFailureDetail, missingNewVersionScriptsMessage } from '../../../shared/infrNewVersionScripts';
 import type { Routine801Service } from '../Routine801Service';
 import type { WslService } from '../WslService';
 
@@ -74,7 +75,7 @@ export class InfrVersionService {
         wshJars: jars.split(/\r?\n/).map((j) => j.trim()).filter((j) => WSL_FILE.test(j))
       };
     } catch (err: any) {
-      return { success: false, error: `Não foi possível listar os containers da distro ${distro}: ${err?.message || err}`, distro, ...empty };
+      return { success: false, error: `Não foi possível listar os containers da distro ${distro}: ${commandFailureDetail(err)}`, distro, ...empty };
     }
   }
 
@@ -89,6 +90,9 @@ export class InfrVersionService {
     const infr = this.wsl.resolveInfrPaths(req.infrPath);
     if (!infr) return { success: false, error: 'Pasta do INFR-Docker inválida.' };
 
+    const missing = INFR_NEW_VERSION_SCRIPTS.filter((s) => !fs.existsSync(path.join(infr.windows, s)));
+    if (missing.length > 0) return { success: false, error: missingNewVersionScriptsMessage(infr.windows, missing) };
+
     const from = req.fromEnv.trim();
     const container = `wta-${from}`;
     const tmp = `/tmp/hub-origem-${from}.features`;
@@ -101,7 +105,7 @@ export class InfrVersionService {
       );
       originText = await this.run(distro, `cat ${tmp}`, 20000);
     } catch (err: any) {
-      return { success: false, error: `Não foi possível ler as features do ${container}: ${err?.message || err}` };
+      return { success: false, error: `Não foi possível ler as features do ${container}: ${commandFailureDetail(err)}` };
     }
     const origin = parseVersionManifest(originText);
     if (origin.features.length === 0) {
@@ -147,7 +151,7 @@ export class InfrVersionService {
         result.wshCheck = checkManifestAgainstWsh(upgrade.manifest, deps);
         if (result.existing && existing) result.existing.wshCheck = checkManifestAgainstWsh(existing, deps);
       } catch (err: any) {
-        result.wshError = `Não foi possível ler o dependencies.json de ${req.wshJar}: ${err?.message || err}`;
+        result.wshError = `Não foi possível ler o dependencies.json de ${req.wshJar}: ${commandFailureDetail(err)}`;
       }
     }
     return result;
