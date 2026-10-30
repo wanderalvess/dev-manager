@@ -8,4 +8,4 @@ export const MCP_TOOL_COUNT = 172;
 export const MCP_READ_TOOL_COUNT = 92;
 
 /** Tools marcadas como destrutivas (`destructiveHint`): o cliente MCP pede aprovação antes de chamar. */
-export const MCP_DESTRUCTIVE_TOOL_COUNT = 26;
+export const MCP_DESTRUCTIVE_TOOL_COUNT = 28;

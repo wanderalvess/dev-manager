@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type {
   AppSettings,
   BackupConfig,
@@ -28,7 +28,13 @@ export function useBackupActions({
   refreshBackupHistory,
   onSettingsUpdate
 }: UseBackupActionsParams) {
-  const [isRunningBackup, setIsRunningBackup] = useState<boolean>(false);
+  // Backup em andamento é da conexão que o iniciou: trocar de conexão no meio não trava nem
+  // mistura a outra (o resultado de A não aparece em B, nem os arquivos e o histórico de A).
+  const [runningBackupConnectionId, setRunningBackupConnectionId] = useState<string | null>(null);
+  const isRunningBackup = runningBackupConnectionId !== null && runningBackupConnectionId === activeConnection?.id;
+  const activeConnectionIdRef = useRef(activeConnection?.id);
+  activeConnectionIdRef.current = activeConnection?.id;
+  const isStillActive = (connectionId: string) => activeConnectionIdRef.current === connectionId;
   const [backupResult, setBackupResult] = useState<BackupResult | null>(null);
   const [isSavingSchedule, setIsSavingSchedule] = useState<boolean>(false);
   const [scheduleSaveResult, setScheduleSaveResult] = useState<{ success: boolean; message: string } | null>(null);
@@ -72,7 +78,8 @@ export function useBackupActions({
 
   const handleRunBackup = async () => {
     if (!activeConnection || !backupFolder.trim() || !window.electronAPI?.runDbBackup) return;
-    setIsRunningBackup(true);
+    const connectionId = activeConnection.id;
+    setRunningBackupConnectionId(connectionId);
     setBackupResult(null);
     try {
       const res = await window.electronAPI.runDbBackup(
@@ -83,7 +90,7 @@ export function useBackupActions({
         useCustomBackupCommand,
         useCustomBackupCommand ? customBackupCommand.trim() : undefined
       );
-      setBackupResult(res);
+      if (isStillActive(connectionId)) setBackupResult(res);
       onSettingsUpdate?.((prev) => {
         if (!prev) return prev;
         const existing = prev.backupConfigs || [];
@@ -102,12 +109,16 @@ export function useBackupActions({
         };
         return { ...prev, backupConfigs: upsertBackupConfig(existing, entry) };
       });
-      if (res.success) refreshBackupFiles(backupFolder.trim());
-      refreshBackupHistory(activeConnection.id);
+      if (isStillActive(connectionId)) {
+        if (res.success) refreshBackupFiles(backupFolder.trim());
+        refreshBackupHistory(connectionId);
+      }
     } catch (err: any) {
-      setBackupResult({ success: false, message: err?.message || 'Erro inesperado ao executar backup.' });
+      if (isStillActive(connectionId)) {
+        setBackupResult({ success: false, message: err?.message || 'Erro inesperado ao executar backup.' });
+      }
     } finally {
-      setIsRunningBackup(false);
+      setRunningBackupConnectionId((current) => (current === connectionId ? null : current));
     }
   };
 
@@ -162,23 +173,29 @@ export function useBackupActions({
     });
     if (!confirmed) return;
 
+    const connectionId = activeConnection.id;
     setRestoringFilePath(file.filePath);
     setRestoreResult(null);
     try {
       const res = await window.electronAPI.restoreDbBackup(activeConnection, file.filePath);
-      setRestoreResult(res);
-      refreshBackupHistory(activeConnection.id);
+      if (isStillActive(connectionId)) {
+        setRestoreResult(res);
+        refreshBackupHistory(connectionId);
+      }
     } catch (err: any) {
-      setRestoreResult({ success: false, message: err?.message || 'Erro inesperado ao restaurar backup.' });
+      if (isStillActive(connectionId)) {
+        setRestoreResult({ success: false, message: err?.message || 'Erro inesperado ao restaurar backup.' });
+      }
     } finally {
       setRestoringFilePath(null);
     }
   };
 
   const handleRunRestoreDrill = async (file: BackupFileInfo) => {
-    if (!scratchConnectionId || !window.electronAPI?.runDbRestoreDrill) return;
+    if (!activeConnection || !scratchConnectionId || !window.electronAPI?.runDbRestoreDrill) return;
     const scratchConnection = connections.find((c) => c.id === scratchConnectionId);
-    if (!scratchConnection) return;
+    if (!scratchConnection || scratchConnection.id === activeConnection.id) return;
+    const connectionId = activeConnection.id;
 
     const confirmed = await requestConfirm({
       title: 'Testar restauração?',
@@ -193,11 +210,16 @@ export function useBackupActions({
     setDrillingFilePath(file.filePath);
     setDrillResult(null);
     try {
-      const res = await window.electronAPI.runDbRestoreDrill(scratchConnection, file.filePath);
-      setDrillResult(res);
-      if (activeConnection) refreshBackupHistory(activeConnection.id);
+      // A conexão ativa é a origem do backup: o main recusa o drill sobre ela e grava o resultado no histórico dela.
+      const res = await window.electronAPI.runDbRestoreDrill(scratchConnection, file.filePath, connectionId);
+      if (isStillActive(connectionId)) {
+        setDrillResult(res);
+        refreshBackupHistory(connectionId);
+      }
     } catch (err: any) {
-      setDrillResult({ success: false, message: err?.message || 'Erro inesperado ao testar restauração.' });
+      if (isStillActive(connectionId)) {
+        setDrillResult({ success: false, message: err?.message || 'Erro inesperado ao testar restauração.' });
+      }
     } finally {
       setDrillingFilePath(null);
     }

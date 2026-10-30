@@ -31,6 +31,10 @@ export const BackupPanel: React.FC<BackupPanelProps> = ({
   if (!activeConnection) return null;
 
   const { backupActiveTab } = form;
+  // O teste de restauração sobrescreve o destino: só bancos do mesmo tipo, fora de produção e nunca a própria conexão.
+  const scratchCandidates = connections.filter(
+    (c) => c.id !== activeConnection.id && c.type === activeConnection.type && !c.isProduction
+  );
 
   return (
     <div className="bg-card border border-border rounded-[14px] shadow-xs w-full overflow-hidden flex flex-col">
@@ -62,7 +66,7 @@ export const BackupPanel: React.FC<BackupPanelProps> = ({
 
         {backupActiveTab === 'schedule' && (
           <BackupScheduleTab
-            connections={connections}
+            connections={scratchCandidates}
             form={form}
             isSavingSchedule={actions.isSavingSchedule}
             scheduleSaveResult={actions.scheduleSaveResult}
@@ -72,7 +76,7 @@ export const BackupPanel: React.FC<BackupPanelProps> = ({
 
         {backupActiveTab === 'files' && (
           <BackupFilesTab
-            connections={connections}
+            connections={scratchCandidates}
             backupFolder={form.backupFolder}
             backupFiles={data.backupFiles}
             isLoadingBackupFiles={data.isLoadingBackupFiles}

@@ -3,6 +3,8 @@ import type { BackupHelp } from '../../../shared/types';
 /** Utilitários do cliente PostgreSQL usados no backup e na restauração. */
 const POSTGRES_TOOLS = new Set(['pg_dump', 'pg_dumpall', 'pg_restore', 'psql']);
 
+export const POSTGRES_DETAIL_LABEL = 'Saída do PostgreSQL';
+
 export function isPostgresTool(binary: string): boolean {
   const name = (binary.split(/[\\/]/).pop() || '').toLowerCase().replace(/\.exe$/, '');
   return POSTGRES_TOOLS.has(name);
@@ -58,7 +60,7 @@ export function explainPostgresFailure(output: string, ctx: PostgresFailureConte
   const target = `${ctx.host}:${ctx.port}`;
   const result = (e: PostgresFailureExplanation): PostgresFailureExplanation => ({
     ...e,
-    help: e.help ? { ...e.help, detail } : undefined
+    help: e.help ? { ...e.help, detail, detailLabel: POSTGRES_DETAIL_LABEL } : undefined
   });
 
   const versionMismatch = output.match(/server version: ([\d.]+)[^\n]*?(?:pg_dump|pg_restore) version: ([\d.]+)/i);

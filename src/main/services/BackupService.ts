@@ -14,6 +14,7 @@ import {
   explainOracleFailure,
   extractOracleErrorLines,
   isOracleDirectoryError,
+  ORACLE_DETAIL_LABEL,
   type OracleDirectoryInfo,
   type OracleFailureContext
 } from './database/oracleBackupHelp';
@@ -22,6 +23,7 @@ import {
   extractPostgresErrorLines,
   isPostgresMissingDatabase,
   isPostgresTool,
+  POSTGRES_DETAIL_LABEL,
   type PostgresFailureContext
 } from './database/postgresBackupHelp';
 import { buildOracleParfileContent, writeTempOracleParfile } from './database/oracleParfile';
@@ -1402,7 +1404,9 @@ export class BackupService {
     });
     if (explained) return explained;
     const lines = extractOracleErrorLines(output);
-    return lines.length > 0 ? { message: lines[0], help: { steps: [], detail: lines.join('\n') } } : null;
+    return lines.length > 0
+      ? { message: lines[0], help: { steps: [], detail: lines.join('\n'), detailLabel: ORACLE_DETAIL_LABEL } }
+      : null;
   }
 
   /** DIRECTORY que o usuário da conexão enxerga; undefined se não deu para consultar (sem driver, sem acesso, lento). */
@@ -1462,7 +1466,9 @@ export class BackupService {
     });
     if (explained) return explained;
     const lines = extractPostgresErrorLines(output);
-    return lines.length > 0 ? { message: lines[0], help: { steps: [], detail: lines.join('\n') } } : null;
+    return lines.length > 0
+      ? { message: lines[0], help: { steps: [], detail: lines.join('\n'), detailLabel: POSTGRES_DETAIL_LABEL } }
+      : null;
   }
 
   /** Bancos do servidor, consultados pelo banco de manutenção "postgres"; undefined se não deu para consultar. */

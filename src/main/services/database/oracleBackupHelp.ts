@@ -32,6 +32,8 @@ export interface OracleFailureExplanation {
 // formato exp...), então não indicam DIRECTORY sozinhos: vale o código específico que vem junto.
 const DIRECTORY_ERRORS = ['ORA-39087', 'ORA-39070', 'ORA-29283'];
 
+export const ORACLE_DETAIL_LABEL = 'Saída do Oracle';
+
 /** Linhas de erro do Oracle na saída do utilitário, sem repetição. */
 export function extractOracleErrorLines(output: string): string[] {
   const lines = output
@@ -136,7 +138,7 @@ export function explainOracleFailure(output: string, ctx: OracleFailureContext):
 
   const result = (explanation: OracleFailureExplanation): OracleFailureExplanation => ({
     ...explanation,
-    help: explanation.help ? { ...explanation.help, detail } : undefined
+    help: explanation.help ? { ...explanation.help, detail, detailLabel: ORACLE_DETAIL_LABEL } : undefined
   });
 
   if (isMissingOracleHomeOutput(output)) {
