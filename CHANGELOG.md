@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.49.0] - 2026-10-30
 ### Adicionado
 - **Central de Ajuda: aba Guias, com Ambientes WinThor no Docker**: um guia para quem nunca mexeu no INFR-Docker, com o diagrama de como Hub, WSL e os containers se encaixam, o que é cada projeto (oracle-winthor, linux-winthor, wsh-winthor e o Hub) e por que existe, a ordem em que um ambiente sobe, as portas por versão (da mesma regra que o Hub usa para sugerir), cada tarefa na mão comparada com onde fazer no Hub, o passo a passo das tarefas comuns, os problemas conhecidos com como resolver e onde está cada coisa. Também abre pelo botão *Como funciona* no cabeçalho do Assistente INFR.
 - **Assistente INFR redesenhado**: as abas de cima, que cortavam o nome em janela menor, viram uma navegação lateral com o que cada etapa faz (em janela estreita, uma faixa de botões que quebra linha). O cabeçalho mostra a distro e a pasta do INFR-Docker em uso, em vermelho quando faltam scripts. A Nova versão vai em quatro passos (origem e versão, banco, WTA/WSH e portas, revisar e gerar), cada um só libera o próximo quando está completo, e o painel *O que será criado* lista containers, portas e arquivos. O último passo confere a origem, as features, o WSH e o banco em verde, amarelo ou vermelho; o vermelho desliga o Gerar, e um clone de banco que não vai funcionar (Oracle que não é o XE do INFR-Docker) oferece usar aquele Oracle direto ou subir um vazio.
