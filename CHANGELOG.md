@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Corrigido
+- **Nova versão: "Não foi possível ler a origem" sem motivo**: o erro mostrava só o comando que falhou. Agora mostra o que o script disse (ex.: container que não existe, Karaf fora do ar). Antes de rodar qualquer coisa, o Hub confere se a pasta do INFR-Docker tem os scripts da Nova versão (`export_features.sh`, `build_version.sh` e `new_version_env.sh`); eles só existem no branch `feature/imagem-por-versao`, e uma pasta no `main` agora recebe o *Como resolver* com o `git checkout` desse branch.
+
 ## [1.49.0] - 2026-10-30
 ### Adicionado
 - **Central de Ajuda: aba Guias, com Ambientes WinThor no Docker**: um guia para quem nunca mexeu no INFR-Docker, com o diagrama de como Hub, WSL e os containers se encaixam, o que é cada projeto (oracle-winthor, linux-winthor, wsh-winthor e o Hub) e por que existe, a ordem em que um ambiente sobe, as portas por versão (da mesma regra que o Hub usa para sugerir), cada tarefa na mão comparada com onde fazer no Hub, o passo a passo das tarefas comuns, os problemas conhecidos com como resolver e onde está cada coisa. Também abre pelo botão *Como funciona* no cabeçalho do Assistente INFR.

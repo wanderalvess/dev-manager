@@ -58,6 +58,12 @@ export function getInfrVersionFaq(): FaqItem[] {
               direto ou subir um vazio.
             </li>
             <li>
+              <strong className="text-foreground">Branch do INFR-Docker:</strong> os scripts da Nova versão (<code className={C}>export_features.sh</code>,{' '}
+              <code className={C}>build_version.sh</code> e <code className={C}>new_version_env.sh</code>) ficam no branch{' '}
+              <code className={C}>feature/imagem-por-versao</code>. Com a pasta no <code className={C}>main</code>, a revisão para em
+              &quot;Não foi possível ler a origem&quot; e pede para rodar <code className={C}>git checkout feature/imagem-por-versao</code> na pasta.
+            </li>
+            <li>
               <strong className="text-foreground">Manifesto que já existe:</strong> se o INFR-Docker já tem{' '}
               <code className={C}>versions/40.features</code>, a prévia o compara com a lista nova (quantas features ficariam acima, abaixo
               ou só num dos dois) e a geração usa o existente por padrão. Substituir pelo da prévia é uma escolha explícita, porque o

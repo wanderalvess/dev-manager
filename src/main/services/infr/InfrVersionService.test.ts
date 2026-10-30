@@ -7,6 +7,7 @@ const execFileAsync = vi.fn();
 vi.mock('../../utils/security', async (orig) => ({ ...(await orig<object>()), execFileAsync }));
 
 const { InfrVersionService } = await import('./InfrVersionService');
+const { INFR_NEW_VERSION_SCRIPTS } = await import('../../../shared/infrNewVersionScripts');
 
 const ORIGIN = `repo mvn:g/winthor-core-features/1.39.0.1/xml/features
 feature winthor-core-data 1.39.0.1
@@ -32,6 +33,8 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
 
   beforeEach(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'infr-'));
+    fs.mkdirSync(path.join(dir, 'linux-winthor', 'scripts'), { recursive: true });
+    for (const s of INFR_NEW_VERSION_SCRIPTS) fs.writeFileSync(path.join(dir, s), '#!/bin/bash\n');
     execFileAsync.mockImplementation(async (_cmd: string, args: string[]) => {
       const script = args[args.length - 1];
       if (script.startsWith('cat ')) return { stdout: ORIGIN };
@@ -53,6 +56,31 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
     expect(res.manifestText).toContain('feature winthor-core-data 1.40.0.3');
     const exportCall = execFileAsync.mock.calls.find((c) => String(c[1].at(-1)).includes('export_features.sh'));
     expect(exportCall?.[1].at(-1)).toContain('--container wta-master --out /tmp/hub-origem-master.features');
+  });
+
+  it('pasta do INFR-Docker sem os scripts da Nova versão diz qual branch usar, sem rodar nada', async () => {
+    fs.rmSync(path.join(dir, 'linux-winthor', 'scripts', 'export_features.sh'));
+    execFileAsync.mockClear();
+    const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+    expect(res.success).toBe(false);
+    expect(res.error).toContain('export_features.sh');
+    expect(res.error).toContain('git checkout feature/imagem-por-versao');
+    expect(execFileAsync).not.toHaveBeenCalled();
+  });
+
+  it('leitura da origem que falha mostra o que o script disse, não só o comando', async () => {
+    execFileAsync.mockImplementation(async (_cmd: string, args: string[]) => {
+      if (String(args.at(-1)).includes('export_features.sh')) {
+        throw Object.assign(new Error('Command failed: wsl.exe -d x -- bash -c ...'), {
+          stdout: '',
+          stderr: 'Error response from daemon: No such container: wta-master\n'
+        });
+      }
+      return { stdout: '' };
+    });
+    const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+    expect(res.error).toContain('No such container: wta-master');
+    expect(res.error).not.toContain('Command failed');
   });
 
   it('catálogo da 801 recusado por falta de login diz onde configurar o usuário do WTA', async () => {
