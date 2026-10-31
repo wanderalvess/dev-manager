@@ -97,6 +97,7 @@ export const App: React.FC = () => {
         onSplashWhatsNew={onboarding.handleSplashWhatsNew}
         onSettingsSaved={data.handleSettingsSaved}
         onOpenSettings={onboarding.handleWelcomeOpenSettings}
+        onOpenInfrFirstSteps={onboarding.handleWelcomeOpenInfrFirstSteps}
         isWelcomeOpen={onboarding.isWelcomeOpen}
         isTourOpen={onboarding.isTourOpen}
         tourSteps={modules.tourSteps}

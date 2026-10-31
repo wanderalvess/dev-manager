@@ -29,6 +29,8 @@ export interface AppGlobalModalsProps {
   onFinishWelcome: (wantsTour: boolean) => void;
   onSettingsSaved: () => void;
   onOpenSettings: () => void;
+  /** Etapa Ambiente → Começar do zero: Assistente INFR em Primeiros passos */
+  onOpenInfrFirstSteps: () => void;
   onCloseTour: () => void;
   onClosePageToursPrompt: () => void;
   onCloseWhatsNew: () => void;
@@ -51,6 +53,7 @@ export const AppGlobalModals: React.FC<AppGlobalModalsProps> = ({
   onFinishWelcome,
   onSettingsSaved,
   onOpenSettings,
+  onOpenInfrFirstSteps,
   onCloseTour,
   onClosePageToursPrompt,
   onCloseWhatsNew
@@ -70,7 +73,7 @@ export const AppGlobalModals: React.FC<AppGlobalModalsProps> = ({
       onWhatsNew={onSplashWhatsNew}
     />
 
-    <OnboardingWizard isOpen={isWelcomeOpen} onFinish={onFinishWelcome} onSettingsSaved={onSettingsSaved} onOpenSettings={onOpenSettings} />
+    <OnboardingWizard isOpen={isWelcomeOpen} onFinish={onFinishWelcome} onSettingsSaved={onSettingsSaved} onOpenSettings={onOpenSettings} onOpenInfrFirstSteps={onOpenInfrFirstSteps} />
 
     <OnboardingTour
       steps={tourSteps}
