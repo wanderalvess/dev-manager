@@ -6,7 +6,9 @@ import {
   filterRoutine801Features,
   buildKarafInstallCommands,
   inferFeatureMavenUrl,
-  extractVersionFamilies
+  extractVersionFamilies,
+  describeNonJsonCatalog,
+  routine801VersionQuery
 } from './routine801Utils';
 import { Routine801Feature, Routine801RepositoryUpdate } from '../../shared/types';
 
@@ -262,5 +264,64 @@ describe('routine801Utils', () => {
       );
       expect(cmds.installCommand).toBe('feature:install -r -u winthor-atualizacao-dados/1.39.1.6');
     });
+  });
+});
+
+describe('describeNonJsonCatalog', () => {
+  const url = 'http://localhost:8086';
+  it('corpo vazio aponta o acesso do WTA ao servidor de atualizações', () => {
+    expect(describeNonJsonCatalog('  \n', url)).toContain('corpo vazio');
+  });
+  it('página HTML traz o título e manda abrir o WTA no navegador', () => {
+    const msg = describeNonJsonCatalog('<!DOCTYPE html><html><head><title>WinThor Anywhere</title></head></html>', url);
+    expect(msg).toContain('("WinThor Anywhere")');
+    expect(msg).toContain(`abra ${url}`);
+    expect(describeNonJsonCatalog('oi', url, 'text/html; charset=utf-8')).toContain('página HTML');
+  });
+  it('outro conteúdo mostra o começo, cortado em 160 caracteres', () => {
+    const msg = describeNonJsonCatalog('x'.repeat(200), url, 'text/plain');
+    expect(msg).toContain('(text/plain)');
+    expect(msg).toContain(`${'x'.repeat(160)}…`);
+  });
+});
+
+describe('routine801VersionQuery e o formato do catálogo do WTA 40', () => {
+  it('manda a versão como a tela da 801 (40.00, mínima 37.00); sem versão, nada', () => {
+    expect(routine801VersionQuery(40)).toBe('?versaoWinthor=40.00&versaoWinthorMinima=37.00');
+    expect(routine801VersionQuery(36)).toBe('?versaoWinthor=36.00&versaoWinthorMinima=36.00');
+    expect(routine801VersionQuery(undefined)).toBe('');
+    expect(routine801VersionQuery(NaN)).toBe('');
+  });
+
+  it('lê as funcionalidades aninhadas em "funcionalidade" e os repositórios em "repositorio"', () => {
+    const cat = normalizeRoutine801Catalog({
+      repositorios: [
+        {
+          comando: 'INSTALL',
+          repositorio: {
+            groupId: 'br.com.totvs.integracao',
+            artifactId: 'winthor-integracao-config-service',
+            version: '1.40.0.1',
+            featureMavenUrl: 'mvn:br.com.totvs.integracao/winthor-integracao-config-service/1.40.0.1/xml/features'
+          }
+        }
+      ],
+      funcionalidades: [
+        {
+          funcionalidade: { nome: 'winthor-core-servico', versao: '1.40.4.2', dependencias: [], id: 'winthor-core-servico/1.40.4.2' },
+          versao: '1.40.4.2',
+          comando: 'UPDATE',
+          codigoRotina: 0,
+          codigoModulo: 0,
+          tipoProjeto: 'SERVICO',
+          descricao: 'Núcleo de integridade do WTA',
+          status: 'HOMOLOGACAO',
+          funcionalidadeAnterior: { nome: 'winthor-core-servico', versao: '1.40.3.1' },
+          nome: 'winthor-core-servico'
+        }
+      ]
+    });
+    expect(cat.repositorios[0].repositorio.version).toBe('1.40.0.1');
+    expect(cat.funcionalidades[0]).toMatchObject({ nome: 'winthor-core-servico', versao: '1.40.4.2', versaoAnterior: '1.40.3.1', status: 'HOMOLOGACAO' });
   });
 });

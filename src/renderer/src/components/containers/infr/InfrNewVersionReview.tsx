@@ -4,6 +4,9 @@ import type { InfrReviewFix, InfrReviewStatus } from '../../../../../shared/infr
 import type { InfrNewVersionState } from '../../../hooks/containers/useInfrNewVersion';
 import { InfrManifestChoice } from './InfrManifestChoice';
 import { InfrNewVersionPreview } from './InfrNewVersionPreview';
+import { InfrPreviewLog } from './InfrPreviewLog';
+import { InfrCommandLine } from './InfrCommandLine';
+import { multilineCommand } from '../../../../../shared/infrEnvCheck';
 
 const STATUS: Record<InfrReviewStatus, { icon: React.ReactNode; box: string; label: string }> = {
   ok: { icon: <CheckCircle2 className="w-5 h-5 text-success" />, box: 'border-border/80', label: 'Ok' },
@@ -36,7 +39,7 @@ export const InfrNewVersionReview: React.FC<{ s: InfrNewVersionState }> = ({ s }
 
   return (
     <div className="space-y-4">
-      <ul className="space-y-2">
+      <ul className="grid grid-cols-1 2xl:grid-cols-2 gap-2">
         {s.review.map((item) => (
           <li key={item.id} className={`flex gap-3 p-3.5 rounded-xl border ${STATUS[item.status].box}`}>
             <span className="shrink-0" role="img" aria-label={STATUS[item.status].label}>
@@ -75,18 +78,25 @@ export const InfrNewVersionReview: React.FC<{ s: InfrNewVersionState }> = ({ s }
         </details>
       )}
 
-      <details className="rounded-xl border border-border/80 px-4 py-3">
-        <summary className="text-xs font-semibold text-foreground cursor-pointer">Comando que vai rodar no terminal</summary>
-        <pre className="mt-3 p-3 bg-[#090D14] rounded-lg text-xs font-mono text-emerald-400 whitespace-pre-wrap break-all">
-          {s.command || 'Faltam dados nos passos anteriores.'}
-        </pre>
-      </details>
+      {!!s.preview.log?.length && <InfrPreviewLog lines={s.preview.log} open={!s.preview.success} />}
+
+      <section className="rounded-xl border border-border/80 px-4 py-3 space-y-2">
+        {s.command ? (
+          <InfrCommandLine block label="Comando que o Gerar vai rodar" command={`cd linux-winthor/scripts\n${multilineCommand(s.command)}`} />
+        ) : (
+          <p className="text-xs text-muted-foreground">Faltam dados nos passos anteriores para montar o comando.</p>
+        )}
+        <p className="text-2xs text-muted-foreground">
+          Rode a partir da pasta do INFR-Docker no WSL. Depois do Gerar, o assistente abre <strong>Verificar ambiente</strong>, que mostra se banco, WTA e
+          WSH subiram.
+        </p>
+      </section>
 
       <button type="button" onClick={s.runPreview} disabled={!s.canPreview} className="text-2xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 cursor-pointer disabled:opacity-50">
         <RotateCw className="w-3 h-3" /> Ler a origem de novo
       </button>
 
-      {s.message && <p className="text-xs text-foreground/80 p-3 rounded-xl bg-muted/40 break-all">{s.message}</p>}
+      {s.message && <p className="text-xs text-foreground/80 p-3 rounded-xl bg-muted/40 break-words">{s.message}</p>}
     </div>
   );
 };

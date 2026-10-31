@@ -58,6 +58,32 @@ export function getInfrVersionFaq(): FaqItem[] {
               direto ou subir um vazio.
             </li>
             <li>
+              <strong className="text-foreground">Branch do INFR-Docker:</strong> os scripts da Nova versão (<code className={C}>export_features.sh</code>,{' '}
+              <code className={C}>build_version.sh</code> e <code className={C}>new_version_env.sh</code>) ficam no branch{' '}
+              <code className={C}>feature/imagem-por-versao</code>. Com a pasta no <code className={C}>main</code>, a revisão para em
+              &quot;Não foi possível ler a origem&quot; e pede para rodar <code className={C}>git checkout feature/imagem-por-versao</code> na pasta.
+            </li>
+            <li>
+              <strong className="text-foreground">Conferência no passo 1:</strong> ao escolher a origem, o assistente confere três coisas: se a pasta do
+              INFR-Docker tem os scripts, se o <code className={C}>wta-&lt;origem&gt;</code> está rodando e responde, e se o login do WTA entra. O Próximo só
+              libera com as três em verde. Sem usuário, ou com a senha recusada, o próprio passo 1 pede usuário e senha. Salvar e testar grava em
+              Configurações → Rotinas WinThor e confere de novo.
+            </li>
+            <li>
+              <strong className="text-foreground">O ambiente subiu?</strong> Depois do Gerar, o assistente abre <strong className="text-foreground">Verificar ambiente</strong>{' '}
+              (também no menu do assistente). Ele mostra o estado de <code className={C}>oracle-</code>, <code className={C}>wta-</code> e{' '}
+              <code className={C}>wsh-&lt;nome&gt;</code>, o fim do log de cada um e se o WTA responde, e repete a leitura a cada 15 s enquanto o
+              ambiente sobe. Um WSH reiniciando com &quot;Versão exigida&quot; no log aparece como falha, com a linha do log. Cada teste também vem
+              como comando (<code className={C}>docker ps</code>, <code className={C}>docker logs</code>, <code className={C}>curl</code>), com
+              Copiar e Executar.
+            </li>
+            <li>
+              <strong className="text-foreground">Downgrade (ex.: um 38 a partir de um 39):</strong> a Nova versão só sobe features, e o banco da 39 tem
+              tabelas que um WTA 38 não conhece. A revisão mostra a linha da origem (pelo núcleo <code className={C}>winthor-core-*</code>) e, quando a
+              versão nova é menor, bloqueia o clone do banco e as features sem <code className={C}>versions/38.features</code>. Com a lista pronta e um
+              Oracle vazio (botão na revisão), passa com aviso: importe o dump da 38 antes de usar o WTA. Sem a lista, use Montar do zero.
+            </li>
+            <li>
               <strong className="text-foreground">Manifesto que já existe:</strong> se o INFR-Docker já tem{' '}
               <code className={C}>versions/40.features</code>, a prévia o compara com a lista nova (quantas features ficariam acima, abaixo
               ou só num dos dois) e a geração usa o existente por padrão. Substituir pelo da prévia é uma escolha explícita, porque o

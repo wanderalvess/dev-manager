@@ -89,6 +89,8 @@ export interface InfrVersionPreview {
   error?: string;
   originWtaUrl?: string;
   originCount?: number;
+  /** Linha do WinThor em que a origem está (a mais comum entre as features); maior que a alvo é downgrade */
+  originLine?: number;
   upgrade?: Omit<ManifestUpgrade, 'manifest'>;
   wshCheck?: WshDependencyCheck[];
   /** Erro ao ler o jar do WSH (não impede a prévia) */
@@ -96,6 +98,8 @@ export interface InfrVersionPreview {
   manifestText?: string;
   /** Manifesto da versão que já existe: a geração só o substitui se o usuário escolher */
   existing?: ExistingVersionManifest;
+  /** Registro de cada passo (comandos, respostas HTTP, login sem senha), para mostrar e copiar */
+  log?: string[];
 }
 
 /** Gravação de `versions/<versão>.features`; sem `overwrite`, não substitui um manifesto existente. */
@@ -187,6 +191,26 @@ export function winthorLineOf(version: string): number | undefined {
 }
 
 /**
+ * Linha do WinThor de um ambiente pelo núcleo (winthor-core-*), que acompanha a versão: muitas
+ * features ficam anos na mesma linha (um 38 tem dezenas na 36). Sem núcleo, a linha mais comum;
+ * no empate, a maior.
+ */
+export function manifestLineOf(manifest: VersionManifest): number | undefined {
+  const core = manifest.features.map((f) => (/^winthor-core-/.test(f.name) ? winthorLineOf(f.version) : undefined)).filter((l): l is number => l !== undefined);
+  if (core.length) return Math.max(...core);
+  const count = new Map<number, number>();
+  for (const f of manifest.features) {
+    const line = winthorLineOf(f.version);
+    if (line !== undefined) count.set(line, (count.get(line) || 0) + 1);
+  }
+  let best: number | undefined;
+  for (const [line, n] of count) {
+    if (best === undefined || n > count.get(best)! || (n === count.get(best) && line > best)) best = line;
+  }
+  return best;
+}
+
+/**
  * Sobe a lista de origem para a versão alvo pelo catálogo `/atualizacao` da rotina 801: cada
  * feature recebe a versão do catálogo quando ela é mais nova e não passa da linha alvo
  * (a 41 não entra numa 40). O repositório Maven da versão nova entra no manifesto.
@@ -199,18 +223,25 @@ export function upgradeManifestFromCatalog(
   const repos = [...origin.repos];
   const changes: ManifestChange[] = [];
   const skipped: ManifestSkip[] = [];
-  const byName = new Map(catalog.funcionalidades.map((f) => [f.nome, f]));
+  // O catálogo pode trazer várias versões da mesma feature (ex.: 1.40.4.2 e 1.40.4.1), em qualquer ordem
+  const byName = new Map<string, Routine801CatalogResponse['funcionalidades']>();
+  for (const f of catalog.funcionalidades) {
+    if (f.nome && f.versao) byName.set(f.nome, [...(byName.get(f.nome) || []), f]);
+  }
+  const whyNot = (f: Routine801CatalogResponse['funcionalidades'][number]): string | null => {
+    if (BLOCKED_STATUS.has(String(f.status).toUpperCase())) return `status ${f.status} na rotina 801`;
+    const line = winthorLineOf(f.versao);
+    return line !== undefined && line > target ? `linha ${line}, acima da ${target}` : null;
+  };
 
   const features = origin.features.map((feature) => {
-    const update = byName.get(feature.name);
-    if (!update || !update.versao || compareVersions(update.versao, feature.version) <= 0) return feature;
-    const line = winthorLineOf(update.versao);
-    if (BLOCKED_STATUS.has(String(update.status).toUpperCase())) {
-      skipped.push({ name: feature.name, version: update.versao, reason: `status ${update.status} na rotina 801` });
-      return feature;
-    }
-    if (line !== undefined && line > target) {
-      skipped.push({ name: feature.name, version: update.versao, reason: `linha ${line}, acima da ${target}` });
+    const newer = (byName.get(feature.name) || [])
+      .filter((f) => compareVersions(f.versao, feature.version) > 0)
+      .sort((a, b) => compareVersions(b.versao, a.versao));
+    if (newer.length === 0) return feature;
+    const update = newer.find((f) => !whyNot(f));
+    if (!update) {
+      skipped.push({ name: feature.name, version: newer[0].versao, reason: whyNot(newer[0]) as string });
       return feature;
     }
     const repo =

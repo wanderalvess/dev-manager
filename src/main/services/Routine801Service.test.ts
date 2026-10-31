@@ -326,8 +326,47 @@ describe('Routine801Service', () => {
       expect(body).toEqual({ login: 'PCADMIN', senha: 'C4CA4238A0B923820DCC509A6F75849B' });
     });
 
-    it('catálogo recusado traz o motivo do login que falhou, sem a senha', async () => {
+    it('testWtaLogin: sem usuário pede credenciais; recusado traz o motivo, nunca a senha', async () => {
+      vi.mocked(configService.getSettings).mockReturnValue({} as any);
+      expect(await routine801Service.testWtaLogin('http://localhost:8087')).toMatchObject({ ok: false, needsCredentials: true });
+
       vi.mocked(configService.getSettings).mockReturnValue({ wtaLogin: 'PCADMIN', wtaPassword: 'segredo' } as any);
+      vi.mocked(httpRequest).mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+        text: async () => JSON.stringify({ mensagem: 'Credenciais inválidas' }),
+        buffer: async () => Buffer.from('')
+      });
+      const res = await routine801Service.testWtaLogin('http://localhost:8087');
+      expect(res).toMatchObject({ ok: false, user: 'PCADMIN' });
+      expect(res.error).toContain('Credenciais inválidas');
+      expect(JSON.stringify(res)).not.toContain('segredo');
+    });
+
+    const ok = (body: string) => ({ ok: true, status: 200, statusText: 'OK', headers: {}, text: async () => body, buffer: async () => Buffer.from('') }) as any;
+    const catalogo = JSON.stringify({ repositorios: [], funcionalidades: [{ nome: 'winthor-core-servico', versao: '1.40.4.2' }] });
+
+    it('sem token salvo entra no WTA antes de pedir o catálogo (o WTA 40 responde 200 vazio sem login)', async () => {
+      vi.mocked(configService.getSettings).mockReturnValue({ wtaLogin: 'PCADMIN', wtaPassword: '1' } as any);
+      vi.mocked(httpRequest).mockResolvedValueOnce(ok(JSON.stringify({ accessToken: 'novo' }))).mockResolvedValueOnce(ok(catalogo));
+      const log: string[] = [];
+      const cat = await routine801Service.fetchUpdates('http://localhost:8087', (l) => log.push(l), 40);
+      expect(cat.funcionalidades).toHaveLength(1);
+      const urls = vi.mocked(httpRequest).mock.calls.slice(-2).map((c) => c[0]);
+      expect(urls).toEqual(['http://localhost:8087/winthor/autenticacao/v1/login', 'http://localhost:8087/winthor/ferramenta/servidor/v1/atualizacao?versaoWinthor=40.00&versaoWinthorMinima=37.00']);
+      expect(log.join('\n')).toContain('Sem token salvo; tentando login automático no WTA');
+    });
+
+    it('com token vencido que volta 200 vazio, renova uma vez e pede de novo', async () => {
+      vi.mocked(configService.getSettings).mockReturnValue({ wtaLogin: 'PCADMIN', wtaPassword: '1', wtaAuthToken: 'velho' } as any);
+      vi.mocked(httpRequest).mockResolvedValueOnce(ok('')).mockResolvedValueOnce(ok(JSON.stringify({ accessToken: 'novo' }))).mockResolvedValueOnce(ok(catalogo));
+      const cat = await routine801Service.fetchUpdates('http://localhost:8087', undefined, 40);
+      expect(cat.funcionalidades[0].versao).toBe('1.40.4.2');
+    });
+
+    it('catálogo recusado traz o motivo do login que falhou, sem a senha', async () => {
+      vi.mocked(configService.getSettings).mockReturnValue({ wtaLogin: 'PCADMIN', wtaPassword: 'segredo', wtaAuthToken: 'velho' } as any);
       const resp = (status: number, body: string) => ({ ok: false, status, statusText: 'Forbidden', text: async () => body, buffer: async () => Buffer.from('') });
       vi.mocked(httpRequest)
         .mockResolvedValueOnce(resp(403, ''))
@@ -337,6 +376,27 @@ describe('Routine801Service', () => {
       expect(err.message).toContain('HTTP 403');
       expect(err.message).toContain('login de PCADMIN recusado pelo WTA (HTTP 401): Credenciais inválidas');
       expect(err.message).not.toContain('segredo');
+    });
+
+    it('registro do catálogo mostra status, content-type e o começo do corpo, nunca senha ou token', async () => {
+      vi.mocked(configService.getSettings).mockReturnValue({ wtaLogin: 'PCADMIN', wtaPassword: 'segredo', wtaAuthToken: 'tok-secreto' } as any);
+      vi.mocked(httpRequest).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        headers: { 'content-type': 'text/html' },
+        text: async () => '<html><title>WinThor</title></html>',
+        buffer: async () => Buffer.from('')
+      } as any);
+      const log: string[] = [];
+      await routine801Service.fetchUpdates('http://localhost:8086', (l) => log.push(l), 40).catch(() => undefined);
+      const text = log.join('\n');
+      expect(text).toContain('Usuário WTA nas Configurações: configurado; token salvo: sim');
+      expect(text).toContain('GET http://localhost:8086/winthor/ferramenta/servidor/v1/atualizacao?versaoWinthor=40.00&versaoWinthorMinima=37.00');
+      expect(text).toContain('HTTP 200 OK');
+      expect(text).toContain('content-type: text/html');
+      expect(text).toContain('<html><title>WinThor</title></html>');
+      expect(text).not.toMatch(/segredo|tok-secreto/);
     });
   });
 });

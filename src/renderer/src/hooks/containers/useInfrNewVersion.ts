@@ -9,6 +9,7 @@ import {
 } from '../../../../shared/infrWinthorVersion';
 import type { InfrEnvTemplate, InfrManifestSource, InfrVersionPreview } from '../../../../shared/infrVersionManifest';
 import { reviewBlocks, reviewNewVersion, type InfrReviewFix } from '../../../../shared/infrNewVersionReview';
+import { useInfrOriginCheck } from './useInfrOriginCheck';
 
 /** Passos da Nova versão: 1 origem e versão, 2 banco, 3 WTA/WSH e portas, 4 revisar e gerar. */
 export type InfrNewVersionStep = 1 | 2 | 3 | 4;
@@ -52,7 +53,7 @@ function derive(form: InfrNewVersionForm, edited: Set<Derived>): InfrNewVersionF
 const toPort = (v: string) => (v.trim() ? parseInt(v, 10) : undefined);
 
 /** Aba Nova versão do Assistente INFR: escolhas do usuário, prévia pelo catálogo da 801 e geração. */
-export function useInfrNewVersion(distro?: string, infrPath?: string) {
+export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerated?: (name: string) => void) {
   const [form, setForm] = useState<InfrNewVersionForm>(EMPTY);
   const [edited, setEdited] = useState<Set<Derived>>(new Set());
   const [envs, setEnvs] = useState<InfrEnvironmentsResult | null>(null);
@@ -118,6 +119,7 @@ export function useInfrNewVersion(distro?: string, infrPath?: string) {
   const command = buildNewVersionEnvCommand({ ...newEnv, version: form.version });
   const canPreview = isValidWinthorVersion(form.version) && isValidEnvName(form.from) && !busy;
 
+  const origin = useInfrOriginCheck(distro, infrPath, form.from);
   const [step, setStep] = useState<InfrNewVersionStep>(1);
   const isPort = (v: string) => /^\d{2,5}$/.test(v.trim());
   // O que falta em cada passo para seguir (vazio = pode seguir)
@@ -128,7 +130,11 @@ export function useInfrNewVersion(distro?: string, infrPath?: string) {
         ? 'Informe a versão nova (ex.: 40).'
         : !isValidEnvName(form.name) || form.name === form.from
           ? 'Dê um nome ao ambiente novo, diferente da origem.'
-          : '',
+          : origin.loading && !origin.result
+            ? 'Conferindo a origem (pasta, WTA e login)...'
+            : origin.blocked
+              ? 'Resolva o que está em vermelho na conferência da origem.'
+              : '',
     2: !isValidEnvName(form.dbContainer)
       ? 'Escolha o Oracle do ambiente novo.'
       : form.dbMode === 'clone' && !isValidEnvName(form.dbSource)
@@ -219,6 +225,7 @@ export function useInfrNewVersion(distro?: string, infrPath?: string) {
       }
       const res = await api.runInfrSetupScript('version', { distro, infrPath, winthorVersion: form.version, newEnv });
       setMessage(`Manifesto: ${saved.path}. Configuração: ${env?.path ?? '—'}. ${res.output}`);
+      if (res.success) onGenerated?.(form.name.trim());
     } finally {
       setBusy(null);
     }
@@ -235,7 +242,7 @@ export function useInfrNewVersion(distro?: string, infrPath?: string) {
     goTo,
     form, update, envs, loadingEnvs, loadEnvironments, preview, busy, message, command, canPreview, runPreview, generate,
     envTemplate, edits, editEnv, manifestSource, setManifestSource,
-    step, setStep, stepIssue, canReach, review, blocked, applyFix
+    step, setStep, stepIssue, canReach, review, blocked, applyFix, origin
   };
 }
 

@@ -60,3 +60,47 @@ describe('conferência da versão nova', () => {
     expect(falha).toEqual([{ id: 'origem', status: 'block', title: 'Não foi possível ler a origem', detail: 'HTTP 403' }]);
   });
 });
+
+describe('downgrade (versão nova menor que a da origem)', () => {
+  const down: InfrReviewInput = {
+    ...base,
+    preview: { ...base.preview, originLine: 39 },
+    version: '38',
+    from: 'master',
+    dbSource: 'oracle-master',
+    dbSourceImage: 'oracle-winthor:11.2.0.2-xe',
+    dbContainer: 'oracle-suport_38'
+  };
+
+  it('avisa o downgrade e bloqueia o clone do banco, oferecendo um Oracle vazio', () => {
+    const items = reviewNewVersion(down);
+    expect(byId(items, 'versao')).toMatchObject({ status: 'warn', title: 'Downgrade: a origem está na 39' });
+    expect(byId(items, 'banco')).toMatchObject({ status: 'block', title: 'O banco da 39 não serve para a 38', fixes: ['emptyOracle'] });
+    expect(reviewBlocks(items)).toBe(true);
+    expect(new Set(items.map((i) => i.id)).size).toBe(items.length);
+  });
+
+  it('com a lista pronta da 38 e um Oracle vazio, só avisa', () => {
+    const items = reviewNewVersion({ ...down, dbMode: 'empty' });
+    expect(byId(items, 'features').status).toBe('ok');
+    expect(reviewBlocks(items)).toBe(false);
+  });
+
+  it('sem a lista pronta (ou escolhendo a nova), as features bloqueiam', () => {
+    const semLista = reviewNewVersion({ ...down, dbMode: 'empty', preview: { ...down.preview, existing: undefined } });
+    expect(byId(semLista, 'features')).toMatchObject({ status: 'block' });
+    expect(byId(semLista, 'features').detail).toContain('Não há versions/38.features');
+    const listaNova = reviewNewVersion({ ...down, dbMode: 'empty', manifestSource: 'preview' });
+    expect(byId(listaNova, 'features').status).toBe('block');
+  });
+
+  it('usar o banco da própria origem também bloqueia; outro Oracle só pede para conferir', () => {
+    expect(byId(reviewNewVersion({ ...down, dbMode: 'existing', dbContainer: 'oracle-master' }), 'banco').status).toBe('block');
+    expect(byId(reviewNewVersion({ ...down, dbMode: 'existing', dbContainer: 'oracle-38' }), 'banco')).toMatchObject({ status: 'warn' });
+  });
+
+  it('mesma linha ou subida não é downgrade', () => {
+    expect(reviewNewVersion({ ...down, version: '39' }).some((i) => i.id === 'versao')).toBe(false);
+    expect(reviewNewVersion({ ...down, version: '40' }).some((i) => i.id === 'versao')).toBe(false);
+  });
+});

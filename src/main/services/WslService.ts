@@ -3,6 +3,7 @@ import path from 'path';
 import os from 'os';
 import crypto from 'crypto';
 import { exec, spawn } from 'child_process';
+import { wtArg } from '../utils/windowsTerminal';
 import {
   WslDistroInfo,
   ContainerEnvironment,
@@ -1093,7 +1094,7 @@ export class WslService {
         '-w', '0', 'nt',
         '--title', title,
         'wsl.exe', '-d', targetDistro, '--',
-        'bash', '-c', `${cmdToRun}; echo ''; echo 'Pressione Enter para fechar...'; read -r`
+        'bash', '-c', wtArg(`${cmdToRun}; echo ''; echo 'Pressione Enter para fechar...'; read -r`)
       ];
 
       const wtChild = spawn('wt.exe', wtArgs, { detached: true, stdio: 'ignore' });

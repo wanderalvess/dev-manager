@@ -13,7 +13,9 @@ import {
 import {
   buildKarafInstallCommands,
   normalizeRoutine801Catalog,
-  findRepositoryForFeature
+  findRepositoryForFeature,
+  describeNonJsonCatalog,
+  routine801VersionQuery
 } from '../utils/routine801Utils';
 
 export class Routine801Service {
@@ -117,6 +119,16 @@ export class Routine801Service {
   /** Por que o último login automático no WTA não deu token (nunca traz a senha). */
   private lastAuthError: string | null = null;
 
+  /** Testa o login do WTA com o usuário das Configurações (sempre um login novo); nunca devolve a senha. */
+  public async testWtaLogin(baseUrl: string): Promise<{ ok: boolean; user?: string; error?: string; needsCredentials?: boolean }> {
+    const settings = this.configService.getSettings();
+    const user = settings.wtaLogin?.trim();
+    if (!user || !settings.wtaPassword?.trim()) return { ok: false, needsCredentials: true, error: 'sem usuário e senha do WTA nas Configurações' };
+    if (!isSafeUrl(baseUrl)) return { ok: false, user, error: `URL do WTA inválida: ${baseUrl}` };
+    const token = await this.renewWtaAuth(baseUrl);
+    return token ? { ok: true, user } : { ok: false, user, error: this.lastAuthError ?? 'login recusado' };
+  }
+
   /**
    * Checa se o serviço HTTP da ferramenta servidor está acessível na porta configurada.
    */
@@ -189,17 +201,37 @@ export class Routine801Service {
   }
 
   /** Consulta um catálogo do servidor da Rotina 801, renovando o login do WTA se a sessão expirou. */
-  private async fetchCatalog(path: string, label: string, customUrl?: string): Promise<Routine801CatalogResponse> {
+  private async fetchCatalog(path: string, label: string, customUrl?: string, trace?: (line: string) => void): Promise<Routine801CatalogResponse> {
     const baseUrl = this.getServerUrl(customUrl);
     if (!isSafeUrl(baseUrl)) {
       throw new Error(`URL de servidor inválida: ${baseUrl}`);
     }
 
     const targetUrl = `${baseUrl}/winthor/ferramenta/servidor/v1/${path}`;
-    const request = () => httpRequest(targetUrl, { method: 'GET', headers: this.getAuthHeaders(), timeout: 15000 });
+    const settings = this.configService.getSettings();
+    // Só diz se há token e login; token e senha nunca vão para o registro
+    trace?.(`Usuário WTA nas Configurações: ${settings.wtaLogin?.trim() ? 'configurado' : 'não configurado'}; token salvo: ${settings.wtaAuthToken ? 'sim' : 'não'}`);
+    const request = async () => {
+      trace?.(`GET ${targetUrl}`);
+      const started = Date.now();
+      const r = await httpRequest(targetUrl, { method: 'GET', headers: this.getAuthHeaders(), timeout: 15000 });
+      trace?.(`HTTP ${r.status} ${r.statusText || ''} em ${Date.now() - started} ms; content-type: ${r.headers?.['content-type'] || '(nenhum)'}`);
+      return r;
+    };
 
+    let renewTried = false;
+    const login = async (why: string) => {
+      renewTried = true;
+      trace?.(`${why}; tentando login automático no WTA`);
+      const renewed = await this.renewWtaAuth(baseUrl);
+      trace?.(renewed ? 'Login automático: token novo recebido' : `Login automático falhou: ${this.lastAuthError || 'sem motivo'}`);
+      return !!renewed;
+    };
+
+    // Sem token, o WTA 40 responde 200 com corpo vazio em vez de 401: entra antes de pedir
+    if (!settings.wtaAuthToken && settings.wtaLogin?.trim()) await login('Sem token salvo');
     let res = await request();
-    if ((res.status === 401 || res.status === 403) && (await this.renewWtaAuth(baseUrl))) {
+    if ((res.status === 401 || res.status === 403) && !renewTried && (await login('Sessão recusada'))) {
       res = await request();
     }
     if (!res.ok) {
@@ -207,11 +239,21 @@ export class Routine801Service {
       throw new Error(`Falha ao obter lista de ${label} (HTTP ${res.status}): ${res.statusText || 'Erro no servidor'}${auth}`);
     }
 
-    try {
-      return normalizeRoutine801Catalog(JSON.parse(await res.text()));
-    } catch {
-      throw new Error(`A resposta do servidor de ${label} não é um JSON válido.`);
+    let body = await res.text();
+    // Token vencido também pode vir como 200 vazio: renova uma vez e pede de novo
+    if (!body.trim() && !renewTried && settings.wtaLogin?.trim() && (await login('Resposta vazia'))) {
+      res = await request();
+      body = res.ok ? await res.text() : '';
     }
+    trace?.(`Corpo: ${body.length} caracteres; começo: ${body.trim().replace(/\s+/g, ' ').slice(0, 200) || '(vazio)'}`);
+    let data: unknown;
+    try {
+      data = JSON.parse(body);
+    } catch {
+      const contentType = String(res.headers?.['content-type'] || '');
+      throw new Error(`A resposta do servidor de ${label} não é um JSON válido. ${describeNonJsonCatalog(body, baseUrl, contentType)}`);
+    }
+    return normalizeRoutine801Catalog(data);
   }
 
   /** Obtém a lista de instalações disponíveis consultando o endpoint da Rotina 801. */
@@ -220,8 +262,8 @@ export class Routine801Service {
   }
 
   /** Obtém a lista de atualizações disponíveis para os pacotes instalados. */
-  public fetchUpdates(customUrl?: string): Promise<Routine801CatalogResponse> {
-    return this.fetchCatalog('atualizacao', 'atualizações', customUrl);
+  public fetchUpdates(customUrl?: string, trace?: (line: string) => void, winthorVersion?: number): Promise<Routine801CatalogResponse> {
+    return this.fetchCatalog(`atualizacao${routine801VersionQuery(winthorVersion)}`, 'atualizações', customUrl, trace);
   }
 
   /**

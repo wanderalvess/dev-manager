@@ -8,6 +8,64 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 ### Adicionado
 - **Central de Ajuda → Guias: manual da Validação de Cenários**: a aba Guias ganhou a escolha entre os guias, e o novo *Validação de Cenários: manual de uso* explica o que preencher em Configurações antes do primeiro teste, como rodar o Bloqueio de Login (campos, as regras com o que cada uma faz e o que precisa acontecer, e o que cada status quer dizer) e a Validação de API (requisição, autenticação, tipos de regra com operadores e exemplos), como forçar uma exceção não mapeada (o formato `UNK-ERR` do WTA, o que o modelo *Exceção* confere e receitas como número inválido, data inválida, campo inexistente, tipo errado e JSON quebrado), o que cada botão de copiar e baixar leva, o Histórico, os problemas comuns e onde fica cada coisa. As tabelas de regras saem dos mesmos catálogos que a tela usa. O mesmo manual abre pelo novo botão **Como usar**, ao lado do *Histórico* na página Validação de Cenários.
 
+## [1.50.0] - 2026-10-30
+### Alterado
+- **Abertura do app**: o carregamento virou uma lista das áreas do cockpit e do servidor MCP, cada uma marcada como pronta, carregando ou na fila. Na primeira vez, a abertura já mostra as etapas da configuração (*Configurar meu cockpit* ou *Explorar sozinho*). Para quem volta, o *Entrar agora* conta 3 s antes de entrar sozinho, com os destaques da versão ao lado; *Ficar nesta tela* pausa a contagem.
+- **Onboarding em 6 etapas**: *Ambiente* e *Checklist* viraram uma etapa só, com os essenciais no topo, a contagem por seção, a marca *detectado agora* e o botão *Preencher* em cada item que falta. A detecção de caminhos roda sozinha ao chegar na etapa se algum caminho essencial estiver vazio. Também:
+  - *Módulos*: contagem de ligados por área e *Ligar todos*/*Desligar todos* por área;
+  - *Tema*: prévia grande do cockpit no tema escolhido;
+  - *IA & MCP*: o exemplo virou uma conversa (pedido, tools chamadas e resultado);
+  - *Pronto*: resumo do que ficou configurado (módulos, tema e o que falta no ambiente) e o tour guiado em destaque;
+  - *Terminar depois* na barra lateral fecha o onboarding; antes o *Pular* do rodapé fazia isso e parecia pular só a etapa.
+- **Instalador do Windows**: nova tela de boas-vindas, conclusão com texto próprio (*Abrir o Hub Manager agora*) e imagens laterais e de cabeçalho no visual escuro da abertura.
+
+## [1.49.5] - 2026-10-30
+### Alterado
+- **Nova versão confere a origem logo no passo 1**: antes, pasta, WTA e login só eram testados no passo 4, depois de a pessoa preencher tudo. Agora, ao escolher a origem, o Hub confere três coisas e só libera o *Próximo* quando as três passam:
+  - a pasta do INFR-Docker, que precisa ter os scripts da Nova versão;
+  - o `wta-<origem>`, que precisa estar rodando e respondendo;
+  - o login no WTA com o usuário das Configurações, num login de verdade.
+
+  Sem usuário, ou com o login recusado (a resposta do WTA aparece), o próprio passo 1 pede usuário e senha. *Salvar e testar* grava em Configurações → Rotinas WinThor, criptografado, e confere de novo. A senha não volta para a tela. Um WTA parado ou ainda subindo aparece em vermelho, com o que fazer, e há o botão *Conferir de novo*.
+
+## [1.49.4] - 2026-10-30
+### Adicionado
+- **Assistente INFR: Verificar ambiente**: aba nova, aberta sozinha depois do Gerar, que mostra se o ambiente subiu. Para `oracle-`, `wta-` e `wsh-<nome>` mostra:
+  - o estado (no ar, iniciando, reiniciando, parado ou não existe), o health, os reinícios, a imagem e as portas;
+  - as últimas 30 linhas do log;
+  - se o WTA responde pela porta publicada.
+
+  Um resumo diz *Ambiente no ar*, *Subindo: 2 de 3*, *Falhou* (com o motivo tirado do log, como o WSH recusando a versão do WTA ou um `ORA-`) ou *Nenhum container*. Enquanto o ambiente sobe, a leitura se repete a cada 15 s. Os mesmos testes aparecem como comandos (`docker ps`, `docker logs` de cada container, `curl` no WTA), cada um com **Copiar** e **Executar**; o Executar abre o Windows Terminal na distro. O Hub monta o comando pelo tipo, a tela nunca manda texto livre para rodar.
+
+### Alterado
+- **Assistente INFR mais largo**: o modal ocupa até 1680 px (96% da tela) e 92% da altura. O painel *O que será criado* ficou mais largo e não quebra mais nome de arquivo no meio da palavra. Em tela grande, a revisão do passo 4 mostra as conferências em duas colunas. O comando do Gerar aparece com uma opção por linha e o botão **Copiar**.
+
+### Corrigido
+- **Gerar (e os scripts do Assistente INFR) abriam várias janelas no Windows Terminal**: o `wt.exe` usa `;` para separar os próprios comandos, mesmo dentro do comando passado ao bash. O `...; echo ''; echo 'Pressione Enter...'; read -r` do fim virava uma janela por pedaço, e a janela do script fechava sem esperar o Enter. Agora o `;` vai escapado (`\;`) e o comando chega inteiro ao bash. A mesma correção vale para o Karaf em modo debug no WSL, o Karaf Client do WTA e as etapas em abas do Windows Terminal.
+
+## [1.49.3] - 2026-10-30
+### Corrigido
+- **Catálogo da 801 vazio sem login**: o WTA 40 responde *200 com corpo vazio* (não 401) quando a consulta vem sem login, e o Hub só entrava no WTA depois de um 401. Agora, sem token salvo e com usuário configurado, o Hub entra antes de pedir o catálogo. Se um token vencido também voltar vazio, renova uma vez e pede de novo. O Registro da leitura mostra cada tentativa.
+
+### Adicionado
+- **Nova versão: proteção contra downgrade**: a prévia passa a mostrar a linha do WinThor em que a origem está, pelo núcleo (`winthor-core-*`), já que muitas features ficam anos numa linha antiga. Quando a versão nova é menor (ex.: um 38 a partir de um 39), a revisão avisa o downgrade e bloqueia o que não funcionaria:
+  - o clone do banco ou o uso do banco da própria origem, porque eles têm as tabelas da versão mais nova; o botão *Criar um Oracle vazio* troca por um banco vazio, para importar o dump da versão;
+  - as features sem a lista `versions/<versão>.features` pronta, porque a Nova versão só sobe features.
+
+  Com a lista pronta e um Oracle vazio, o downgrade passa com aviso. O outro caminho é o *Montar do zero* com um dump da versão.
+
+## [1.49.2] - 2026-10-30
+### Corrigido
+- **Nova versão: catálogo da 801 vazio no WTA 40**: o WTA mais novo só devolve o catálogo de atualizações quando a consulta traz a versão do WinThor (`versaoWinthor=40.00&versaoWinthorMinima=37.00`), como faz a tela da própria 801; sem isso, respondia vazio. A Nova versão agora manda a versão alvo. Quando o catálogo traz várias versões da mesma feature (ex.: 1.40.4.2 e 1.40.4.1), o Hub escolhe a mais nova que cabe na linha alvo; antes ficava com a última da lista, e uma 41 no catálogo fazia pular a 40 que também estava lá.
+
+## [1.49.1] - 2026-10-30
+### Adicionado
+- **Nova versão: registro da leitura**: o passo *Revisar e gerar* ganhou o painel *Registro da leitura*, com o horário de cada passo da prévia: distro e pasta usadas, scripts encontrados, cada comando no WSL (tempo, código de saída e as últimas linhas do que ele disse), a URL do WTA de origem, se há usuário do WTA configurado, cada requisição ao catálogo da 801 (status, content-type, tempo e começo do corpo), o login automático e as contagens. Abre sozinho quando a leitura falha e tem botão *Copiar* para mandar a quem está ajudando. Senha e token não aparecem.
+
+### Corrigido
+- **Catálogo da 801 que "não é um JSON válido"**: quando o WTA responde com sucesso mas sem JSON, o erro agora diz o que veio e como resolver. Se o corpo veio vazio, o WTA não alcançou o servidor de atualizações. Se veio uma página HTML (com o título dela), o WTA está na Configuração inicial ou ainda subindo. Em qualquer outro caso, o erro mostra o começo da resposta. Vale para a Nova versão do Assistente INFR e para o Catálogo de Rotinas.
+- **Nova versão: "Não foi possível ler a origem" sem motivo**: o erro mostrava só o comando que falhou. Agora mostra o que o script disse (ex.: container que não existe, Karaf fora do ar). Antes de rodar qualquer coisa, o Hub confere se a pasta do INFR-Docker tem os scripts da Nova versão (`export_features.sh`, `build_version.sh` e `new_version_env.sh`); eles só existem no branch `feature/imagem-por-versao`, e uma pasta no `main` agora recebe o *Como resolver* com o `git checkout` desse branch.
+
 ## [1.49.0] - 2026-10-30
 ### Adicionado
 - **Central de Ajuda: aba Guias, com Ambientes WinThor no Docker**: um guia para quem nunca mexeu no INFR-Docker, com o diagrama de como Hub, WSL e os containers se encaixam, o que é cada projeto (oracle-winthor, linux-winthor, wsh-winthor e o Hub) e por que existe, a ordem em que um ambiente sobe, as portas por versão (da mesma regra que o Hub usa para sugerir), cada tarefa na mão comparada com onde fazer no Hub, o passo a passo das tarefas comuns, os problemas conhecidos com como resolver e onde está cada coisa. Também abre pelo botão *Como funciona* no cabeçalho do Assistente INFR.

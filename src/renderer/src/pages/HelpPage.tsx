@@ -111,7 +111,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({
   }, [debugPort]);
 
   const categories = useMemo(() => {
-    return getHelpCategories(faqList.length, appInfo?.appVersion || '1.49.0');
+    return getHelpCategories(faqList.length, appInfo?.appVersion || '1.50.0');
   }, [faqList.length, appInfo?.appVersion]);
 
   return (

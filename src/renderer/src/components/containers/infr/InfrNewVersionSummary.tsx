@@ -7,7 +7,7 @@ const Item: React.FC<{ title: string; port?: string; name?: string; detail: stri
       <span>{title}</span>
       {port && <span className="font-mono font-medium text-muted-foreground">:{port}</span>}
     </div>
-    {name && <div className="font-mono text-2xs text-foreground mt-1 break-all">{name}</div>}
+    {name && <div className="font-mono text-2xs text-foreground mt-1 break-words">{name}</div>}
     <div className={`text-2xs mt-0.5 ${tone === 'danger' ? 'text-danger' : 'text-muted-foreground'}`}>{detail}</div>
   </div>
 );
@@ -38,9 +38,9 @@ export const InfrNewVersionSummary: React.FC<{ s: InfrNewVersionState }> = ({ s 
       )}
       <div className="pt-3 border-t border-border/70 space-y-1">
         <p className="text-2xs font-semibold text-foreground/80">Arquivos no INFR-Docker</p>
-        <p className="font-mono text-2xs text-foreground break-all">linux-winthor/wta.env.{v}</p>
-        {form.wshJar && <p className="font-mono text-2xs text-foreground break-all">wsh-winthor/.env.{v}</p>}
-        <p className="font-mono text-2xs text-muted-foreground break-all">
+        <p className="font-mono text-2xs text-foreground break-words">linux-winthor/wta.env.{v}</p>
+        {form.wshJar && <p className="font-mono text-2xs text-foreground break-words">wsh-winthor/.env.{v}</p>}
+        <p className="font-mono text-2xs text-muted-foreground break-words">
           versions/{v}.features ({manifest})
         </p>
       </div>

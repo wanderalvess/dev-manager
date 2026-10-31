@@ -10,6 +10,7 @@ import {
 import {
   checkManifestAgainstWsh,
   compareManifests,
+  manifestLineOf,
   parseVersionManifest,
   parseWshDependencies,
   serializeVersionManifest,
@@ -19,10 +20,13 @@ import {
 } from '../../../shared/infrVersionManifest';
 import { buildEnvFile, envFieldsFor, parseEnvLines, pickEnv, type InfrEnvTarget } from '../../../shared/infrEnvConfig';
 import type { InfrEnvSaveRequest, InfrEnvTemplate, InfrManifestSaveRequest, InfrManifestSaveResult } from '../../../shared/infrVersionManifest';
+import { INFR_NEW_VERSION_SCRIPTS, commandFailureDetail, missingNewVersionScriptsMessage } from '../../../shared/infrNewVersionScripts';
 import type { Routine801Service } from '../Routine801Service';
 import type { WslService } from '../WslService';
 
-const WSL_FILE = /^\/[a-zA-Z0-9_./-]+$/;
+type Trace = (line: string) => void;
+
+const WSL_FILE =/^\/[a-zA-Z0-9_./-]+$/;
 const SAFE_URL = /^https?:\/\/[a-zA-Z0-9.-]+(:\d{2,5})?$/;
 
 /**
@@ -38,25 +42,33 @@ export class InfrVersionService {
     private readonly routine801: Pick<Routine801Service, 'fetchUpdates'>
   ) {}
 
-  private async run(distro: string, script: string, timeout = 120000): Promise<string> {
-    const { stdout } = await execFileAsync('wsl.exe', ['-d', distro, '--', 'bash', '-c', script], {
-      timeout,
-      windowsHide: true,
-      maxBuffer: 16 * 1024 * 1024
-    });
-    return String(stdout);
+  private async run(distro: string, script: string, timeout = 120000, trace?: Trace): Promise<string> {
+    trace?.(`wsl -d ${distro}: ${script}`);
+    const started = Date.now();
+    try {
+      const { stdout, stderr } = await execFileAsync('wsl.exe', ['-d', distro, '--', 'bash', '-c', script], {
+        timeout,
+        windowsHide: true,
+        maxBuffer: 16 * 1024 * 1024
+      });
+      trace?.(`ok em ${Date.now() - started} ms${String(stderr || '').trim() ? `; stderr: ${commandFailureDetail({ stderr })}` : ''}`);
+      return String(stdout);
+    } catch (err: any) {
+      trace?.(`falhou em ${Date.now() - started} ms (código ${err?.code ?? '?'}${err?.killed ? ', tempo esgotado' : ''}): ${commandFailureDetail(err, 15)}`);
+      throw err;
+    }
   }
 
   /** URL do WTA de origem pela porta publicada da 8080 do container (o WSL2 encaminha o localhost). */
-  private async originUrl(distro: string, container: string): Promise<string | null> {
-    const out = await this.run(distro, `docker port ${container} 8080 2>/dev/null | head -1`, 20000);
+  private async originUrl(distro: string, container: string, trace?: Trace): Promise<string | null> {
+    const out = await this.run(distro, `docker port ${container} 8080 2>/dev/null | head -1`, 20000, trace);
     const port = /:(\d{2,5})\s*$/.exec(out.trim())?.[1];
     return port ? `http://localhost:${port}` : null;
   }
 
-  private async readWshDependencies(distro: string, jar: string): Promise<string> {
+  private async readWshDependencies(distro: string, jar: string, trace?: Trace): Promise<string> {
     const py = "import zipfile,sys;print(zipfile.ZipFile(sys.argv[1]).read('BOOT-INF/classes/dependencies.json').decode())";
-    return this.run(distro, `python3 -I -c "${py}" '${jar}'`, 30000);
+    return this.run(distro, `python3 -I -c "${py}" '${jar}'`, 30000, trace);
   }
 
   /** Ambientes (oracle/wta/wsh-<nome>), todos os Oracles e os jars do WSH em /opt da distro. */
@@ -74,11 +86,29 @@ export class InfrVersionService {
         wshJars: jars.split(/\r?\n/).map((j) => j.trim()).filter((j) => WSL_FILE.test(j))
       };
     } catch (err: any) {
-      return { success: false, error: `Não foi possível listar os containers da distro ${distro}: ${err?.message || err}`, distro, ...empty };
+      return { success: false, error: `Não foi possível listar os containers da distro ${distro}: ${commandFailureDetail(err)}`, distro, ...empty };
     }
   }
 
+  /** Prévia com o registro de cada passo (comandos, HTTP, login), para a tela mostrar e copiar. */
   public async preview(req: InfrVersionPreviewRequest): Promise<InfrVersionPreview> {
+    const log: string[] = [];
+    const trace: Trace = (line) => {
+      log.push(`${new Date().toTimeString().slice(0, 8)} ${line}`);
+      console.log('[InfrVersion]', line);
+    };
+    trace(`Prévia: origem ${req.fromEnv}, versão ${req.targetVersion}, distro ${req.distro || '(detectar)'}, pasta ${req.infrPath || '(detectar)'}`);
+    let result: InfrVersionPreview;
+    try {
+      result = await this.previewSteps(req, trace);
+    } catch (err: any) {
+      result = { success: false, error: `Erro inesperado na prévia: ${err?.message || err}` };
+    }
+    trace(result.success ? 'Prévia concluída' : `Prévia parou: ${result.error}`);
+    return { ...result, log };
+  }
+
+  private async previewSteps(req: InfrVersionPreviewRequest, trace: Trace): Promise<InfrVersionPreview> {
     const target = req.targetVersion?.trim();
     if (!isValidWinthorVersion(target)) return { success: false, error: 'Versão alvo inválida (ex.: 40).' };
     if (!isValidEnvName(req.fromEnv)) return { success: false, error: 'Ambiente de origem inválido (ex.: master).' };
@@ -89,6 +119,11 @@ export class InfrVersionService {
     const infr = this.wsl.resolveInfrPaths(req.infrPath);
     if (!infr) return { success: false, error: 'Pasta do INFR-Docker inválida.' };
 
+    trace(`Distro ${distro}; pasta do INFR-Docker ${infr.windows} (${infr.wsl})`);
+    const missing = INFR_NEW_VERSION_SCRIPTS.filter((s) => !fs.existsSync(path.join(infr.windows, s)));
+    trace(missing.length ? `Scripts que faltam: ${missing.join(', ')}` : 'Scripts da Nova versão encontrados');
+    if (missing.length > 0) return { success: false, error: missingNewVersionScriptsMessage(infr.windows, missing) };
+
     const from = req.fromEnv.trim();
     const container = `wta-${from}`;
     const tmp = `/tmp/hub-origem-${from}.features`;
@@ -97,22 +132,26 @@ export class InfrVersionService {
       await this.run(
         distro,
         `cd "${infr.wsl}/linux-winthor" && bash scripts/export_features.sh --version ${target} --container ${container} --out ${tmp}`,
-        180000
+        180000,
+        trace
       );
       originText = await this.run(distro, `cat ${tmp}`, 20000);
     } catch (err: any) {
-      return { success: false, error: `Não foi possível ler as features do ${container}: ${err?.message || err}` };
+      return { success: false, error: `Não foi possível ler as features do ${container}: ${commandFailureDetail(err)}` };
     }
     const origin = parseVersionManifest(originText);
+    trace(`Origem: ${origin.features.length} features, ${origin.repos.length} repositórios, linha ${manifestLineOf(origin) ?? '?'}`);
     if (origin.features.length === 0) {
       return { success: false, error: `O ${container} não devolveu features. Ele está rodando e com o Karaf de pé?` };
     }
 
-    const url = req.originWtaUrl?.trim() || (await this.originUrl(distro, container));
+    const url = req.originWtaUrl?.trim() || (await this.originUrl(distro, container, trace));
+    trace(`URL do WTA de origem: ${url || '(porta 8080 não publicada)'}${req.originWtaUrl ? ' (informada na tela)' : ''}`);
     if (!url) return { success: false, error: `Porta 8080 do ${container} não publicada; informe a URL do WTA de origem.` };
     let catalog;
     try {
-      catalog = await this.routine801.fetchUpdates(url);
+      catalog = await this.routine801.fetchUpdates(url, trace, parseInt(target, 10));
+      trace(`Catálogo da 801: ${catalog.funcionalidades.length} features, ${catalog.repositorios.length} repositórios`);
     } catch (err: any) {
       const msg = String(err?.message || err);
       const howTo = /recusado pelo WTA/.test(msg)
@@ -133,21 +172,24 @@ export class InfrVersionService {
       success: true,
       originWtaUrl: url,
       originCount: origin.features.length,
+      originLine: manifestLineOf(origin),
       upgrade: { changes: upgrade.changes, behind: upgrade.behind, skipped: upgrade.skipped },
       manifestText: serializeVersionManifest(upgrade.manifest, header)
     };
     const existingFile = this.manifestPath(infr.windows, target);
     const existing = fs.existsSync(existingFile) ? parseVersionManifest(fs.readFileSync(existingFile, 'utf-8')) : null;
+    trace(`Manifesto: ${upgrade.changes.length} sobem, ${upgrade.behind.length} sem versão da linha ${target}; ${existingFile} ${existing ? `já existe (${existing.features.length} features)` : 'não existe'}`);
     if (existing?.features.length) {
       result.existing = { path: existingFile, count: existing.features.length, comparison: compareManifests(existing, upgrade.manifest) };
     }
     if (req.wshJar) {
       try {
-        const deps = parseWshDependencies(await this.readWshDependencies(distro, req.wshJar.trim()));
+        const deps = parseWshDependencies(await this.readWshDependencies(distro, req.wshJar.trim(), trace));
+        trace(`WSH exige ${deps.length} serviços`);
         result.wshCheck = checkManifestAgainstWsh(upgrade.manifest, deps);
         if (result.existing && existing) result.existing.wshCheck = checkManifestAgainstWsh(existing, deps);
       } catch (err: any) {
-        result.wshError = `Não foi possível ler o dependencies.json de ${req.wshJar}: ${err?.message || err}`;
+        result.wshError = `Não foi possível ler o dependencies.json de ${req.wshJar}: ${commandFailureDetail(err)}`;
       }
     }
     return result;
