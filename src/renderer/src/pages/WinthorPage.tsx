@@ -5,6 +5,7 @@ import { WINTHOR_TOUR_STEPS, WINTHOR_TOUR_STORAGE_KEY } from '../components/onbo
 import { computeStackTopology } from '../utils/dockerContainerUtils';
 import { WinthorHeader } from '../components/winthor/WinthorHeader';
 import { WinthorModals } from '../components/winthor/WinthorModals';
+import { WinthorEmptyState } from '../components/winthor/WinthorEmptyState';
 import { ContainerTopologyBus } from '../components/containers/topology/ContainerTopologyBus';
 import { useDockerData } from '../hooks/containers/useDockerData';
 import { useContainerErrors } from '../hooks/containers/useContainerErrors';
@@ -35,6 +36,9 @@ export const WinthorPage: React.FC<WinthorPageProps> = ({ isActive }) => {
   const infr = useInfrBootstrap(data);
 
   const stackTopology = useMemo(() => computeStackTopology(data.containers), [data.containers]);
+  // Sem distro do WinThor e sem containers: a tela vira o ponto de partida do zero
+  const noWinthorDistro =
+    !data.isLoading && data.containers.length === 0 && !data.availableDistros.some((d) => d.name.toLowerCase().includes('winthor'));
 
   return (
     <div className="flex flex-col h-full w-full bg-background overflow-hidden select-none">
@@ -54,7 +58,7 @@ export const WinthorPage: React.FC<WinthorPageProps> = ({ isActive }) => {
         containersCount={data.containers.length}
         onStartWinThorSequence={envs.handleStartWinThorSequence}
         onOpenSnapshotsModal={snapshots.openSnapshotsModal}
-        onOpenInfrModal={infr.openInfrModal}
+        onOpenInfrModal={() => infr.openInfrModal()}
         isLoading={data.isLoading}
         onRefreshData={data.loadDockerData}
         onOpenTour={tour.open}
@@ -63,18 +67,26 @@ export const WinthorPage: React.FC<WinthorPageProps> = ({ isActive }) => {
       />
 
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-8">
-        <ContainerTopologyBus
-          stackTopology={stackTopology}
-          selectedDistro={data.selectedDistro}
-          daemonStatus={data.daemonStatus}
-          onOpenWslTerminal={() => wsl.handleOpenWslTerminal()}
-          onOpenOracleTools={tools.openOracleTools}
-          onOpenWtaTools={tools.openWtaTools}
-          onOpenWshTools={(c) => tools.openWshTools(c)}
-          copyFeedback={logs.copyFeedback}
-          onCopyText={(text, key) => logs.copyToClipboard(text, key)}
-          containers={data.containers}
-        />
+        {noWinthorDistro ? (
+          <WinthorEmptyState
+            hasWsl={data.availableDistros.length > 0}
+            onStart={() => infr.openInfrModal('firstSteps')}
+            onOpenSnapshots={snapshots.openSnapshotsModal}
+          />
+        ) : (
+          <ContainerTopologyBus
+            stackTopology={stackTopology}
+            selectedDistro={data.selectedDistro}
+            daemonStatus={data.daemonStatus}
+            onOpenWslTerminal={() => wsl.handleOpenWslTerminal()}
+            onOpenOracleTools={tools.openOracleTools}
+            onOpenWtaTools={tools.openWtaTools}
+            onOpenWshTools={(c) => tools.openWshTools(c)}
+            copyFeedback={logs.copyFeedback}
+            onCopyText={(text, key) => logs.copyToClipboard(text, key)}
+            containers={data.containers}
+          />
+        )}
       </div>
 
       <WinthorModals data={data} errors={errors} wsl={wsl} tools={tools} snapshots={snapshots} infr={infr} />

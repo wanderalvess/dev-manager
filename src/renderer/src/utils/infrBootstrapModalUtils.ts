@@ -1,4 +1,4 @@
-export type InfrBootstrapTab = 'oracle' | 'wta' | 'wsh' | 'newVersion' | 'verify' | 'scripts';
+export type InfrBootstrapTab = 'firstSteps' | 'oracle' | 'wta' | 'wsh' | 'newVersion' | 'verify' | 'scripts';
 
 // Vazio = o backend detecta a pasta INFR-Docker a partir do diretório de projetos configurado
 export const INFR_DEFAULT_CUSTOM_PATH = '';
@@ -37,7 +37,8 @@ export const INFR_ASSISTANT_NAV: { group: string; items: InfrNavItem[] }[] = [
   {
     group: 'Montar do zero',
     items: [
-      { tab: 'oracle', step: 1, label: 'Banco Oracle', hint: 'Sobe o Oracle e importa o dump' },
+      { tab: 'firstSteps', label: 'Primeiros passos', hint: 'WSL, distro, projeto, arquivos e o primeiro ambiente' },
+      { tab: 'oracle', step: 1, label: 'Banco Oracle', hint: 'Sobe o Oracle (o dump entra em Primeiros passos)' },
       { tab: 'wta', step: 2, label: 'WTA', hint: 'Sobe o WinThor Anywhere ligado ao banco' },
       { tab: 'wsh', step: 3, label: 'WSH', hint: 'Sobe o Smart Hub apontando para o WTA' }
     ]

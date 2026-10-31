@@ -1,12 +1,15 @@
 import { useState, useCallback } from 'react';
 import type { InfrDockerScriptStatus } from '../../../../shared/types';
 import type { DockerDataState } from './useDockerData';
+import type { InfrBootstrapTab } from '../../utils/infrBootstrapModalUtils';
 
 /** Assistente de bootstrap INFR-Docker (verificação e execução dos scripts oracle/wta/wsh). */
 export function useInfrBootstrap(data: DockerDataState) {
   const { selectedDistro, daemonStatus, loadDockerData } = data;
 
   const [isInfrModalOpen, setIsInfrModalOpen] = useState<boolean>(false);
+  // Aba em que o assistente abre (o estado vazio da tela abre direto em Primeiros passos)
+  const [initialTab, setInitialTab] = useState<InfrBootstrapTab | undefined>(undefined);
   const [infrScripts, setInfrScripts] = useState<InfrDockerScriptStatus[]>([]);
   const [isLoadingInfrScripts, setIsLoadingInfrScripts] = useState<boolean>(false);
   const [isExecutingInfr, setIsExecutingInfr] = useState<boolean>(false);
@@ -25,7 +28,8 @@ export function useInfrBootstrap(data: DockerDataState) {
     }
   }, []);
 
-  const openInfrModal = () => {
+  const openInfrModal = (tab?: InfrBootstrapTab) => {
+    setInitialTab(tab);
     setIsInfrModalOpen(true);
     loadInfrScripts();
   };
@@ -73,6 +77,7 @@ export function useInfrBootstrap(data: DockerDataState) {
     isInfrModalOpen,
     closeInfrModal: () => setIsInfrModalOpen(false),
     openInfrModal,
+    initialTab,
     infrScripts,
     isLoadingInfrScripts,
     isExecutingInfr,

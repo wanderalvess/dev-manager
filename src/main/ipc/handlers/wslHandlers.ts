@@ -4,15 +4,30 @@ import { InfrVersionService } from '../../services/infr/InfrVersionService';
 import type { InfrEnvSaveRequest, InfrManifestSaveRequest, InfrVersionPreviewRequest } from '../../../shared/infrVersionManifest';
 import { InfrEnvCheckService } from '../../services/infr/InfrEnvCheckService';
 import { InfrOriginCheckService } from '../../services/infr/InfrOriginCheckService';
+import { InfrFirstStepsService } from '../../services/infr/InfrFirstStepsService';
+import { InfrFirstStepsActions } from '../../services/infr/InfrFirstStepsActions';
+import type { InfrFirstStepsActionRequest } from '../../../shared/infrFirstSteps';
 import type { InfrCheckCommandId } from '../../../shared/infrEnvCheck';
 import type { IpcContext } from '../ipcContext';
 
 /** WSL, snapshots e INFR-Docker. Canais: infr:*, wsl:* */
 export function registerWslHandlers(ctx: IpcContext): void {
   const { dockerService } = ctx;
+  // O INFR-Docker é procurado primeiro no Diretório de Repositórios Git das Configurações
+  wslService.setProjectsRootProvider(() => ctx.configService.getSettings().projectsPath);
   const infrVersionService = new InfrVersionService(wslService, ctx.routine801Service);
   const infrEnvCheckService = new InfrEnvCheckService(wslService);
   const infrOriginCheckService = new InfrOriginCheckService(wslService, ctx.routine801Service);
+  const infrFirstStepsService = new InfrFirstStepsService(wslService, ctx.routine801Service);
+  const infrFirstStepsActions = new InfrFirstStepsActions(wslService);
+
+  ipcMain.handle('infr:first-steps', async (_, req: { distro?: string; infrPath?: string; version?: string }) => {
+    return await infrFirstStepsService.check(req);
+  });
+
+  ipcMain.handle('infr:first-steps-action', async (_, req: InfrFirstStepsActionRequest) => {
+    return await infrFirstStepsActions.run(req);
+  });
 
   ipcMain.handle('infr:origin-check', async (_, req: { distro?: string; infrPath?: string; fromEnv: string }) => {
     return await infrOriginCheckService.check(req);

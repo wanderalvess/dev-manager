@@ -21,6 +21,14 @@ export function getInfrVersionFaq(): FaqItem[] {
           </p>
           <ul className="list-disc pl-4 space-y-1.5">
             <li>
+              <strong className="text-foreground">Nunca instalou nada?</strong> Use <strong className="text-foreground">Primeiros passos</strong>, no topo do
+              assistente (ou <em>Começar do zero</em> na tela WinThor &amp; WSL sem distro). O Hub confere WSL, distro, Docker, o clone do INFR-Docker no
+              branch <code className={C}>feature/imagem-por-versao</code>, os arquivos fora do git (<code className={C}>pcsist.tar.gz</code>, dump,{' '}
+              <code className={C}>Winthor.ini</code>, jar do WSH), sobe banco, WTA e WSH da versão e espera a configuração inicial do WTA. Cada etapa
+              traz o comando com Copiar e a ação. Ficam com você: o administrador para instalar o WSL, o login no Drive e no Azure DevOps, o acesso ao
+              Nexus e a senha do <em>system</em>, que o import do dump pede no terminal.
+            </li>
+            <li>
               <strong className="text-foreground">Um banco por versão:</strong> o WTA de uma versão espera as colunas dela, então cada versão
               roda com o seu Oracle: a aba Oracle sugere <code className={C}>oracle-38</code> na porta 1538, restaurado de um dump daquela versão.
               O WTA lê o <code className={C}>wta.env.38</code> (com <code className={C}>DB_HOST=oracle-38</code>) e o WSH, o{' '}

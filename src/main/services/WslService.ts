@@ -28,6 +28,12 @@ export class WslService {
   private cachedDistros: WslDistroInfo[] = [];
   private lastFetchTime = 0;
   private readonly CACHE_TTL_MS = 4000;
+  /** Diretório de Repositórios Git das Configurações: o INFR-Docker costuma estar clonado ali */
+  private projectsRoot: () => string | undefined = () => undefined;
+
+  public setProjectsRootProvider(provider: () => string | undefined): void {
+    this.projectsRoot = provider;
+  }
 
   /**
    * Executa comando retornando Buffer bruto para tratamento correto de UTF-16LE emitido pelo WSL no Windows.
@@ -734,6 +740,12 @@ export class WslService {
     return [path.join(home, 'Projetos'), path.join(home, 'projetos'), path.join(home, 'projects')];
   }
 
+  /** Onde procurar o INFR-Docker: o Diretório de Repositórios Git configurado primeiro, depois as pastas comuns. */
+  private infrProjectRoots(): string[] {
+    const configured = this.projectsRoot()?.trim();
+    return [...(configured ? [configured] : []), ...this.genericProjectRoots()];
+  }
+
   /**
    * Salva o diretório de snapshots preferencial.
    */
@@ -954,7 +966,7 @@ export class WslService {
   public async checkInfrDockerScripts(customBasePath?: string): Promise<InfrDockerScriptStatus[]> {
     const candidates = [
       customBasePath,
-      ...this.genericProjectRoots().map((root) => path.join(root, 'INFR-Docker')),
+      ...this.infrProjectRoots().map((root) => path.join(root, 'INFR-Docker')),
       'C:\\projetos\\INFR-Docker',
       'D:\\projetos\\INFR-Docker'
     ].filter(Boolean) as string[];
@@ -1032,7 +1044,7 @@ export class WslService {
   /** Pasta do INFR-Docker no Windows e o caminho /mnt/... dela no WSL; null se o caminho não for seguro. */
   public resolveInfrPaths(infrPath?: string): { windows: string; wsl: string } | null {
     // C:\projetos é a pasta que o manual do INFR-Docker manda usar
-    const infrCandidates = [...this.genericProjectRoots(), 'C:\\projetos'].map((root) => path.join(root, 'INFR-Docker'));
+    const infrCandidates = [...this.infrProjectRoots(), 'C:\\projetos'].map((root) => path.join(root, 'INFR-Docker'));
     const basePath = infrPath || infrCandidates.find((c) => fs.existsSync(c)) || infrCandidates[0];
     if (!isSafeLocalPath(basePath) || !/^[a-zA-Z0-9_\-.:\\/ ]+$/.test(basePath)) return null;
     const wsl = basePath.replace(/^([A-Za-z]):/, (_, drive) => `/mnt/${drive.toLowerCase()}`).replace(/\\/g, '/');
