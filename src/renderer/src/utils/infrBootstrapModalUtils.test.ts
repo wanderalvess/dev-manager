@@ -25,7 +25,7 @@ describe('infrBootstrapModalUtils', () => {
 
   it('navegação cobre cada aba uma vez, com o que ela faz', () => {
     const items = INFR_ASSISTANT_NAV.flatMap((g) => g.items);
-    expect(items.map((i) => i.tab).sort()).toEqual(['newVersion', 'oracle', 'scripts', 'verify', 'wsh', 'wta']);
+    expect(items.map((i) => i.tab).sort()).toEqual(['firstSteps', 'newVersion', 'oracle', 'scripts', 'verify', 'wsh', 'wta']);
     expect(items.every((i) => i.hint.length > 10)).toBe(true);
   });
 

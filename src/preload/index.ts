@@ -18,6 +18,7 @@ import type {
 } from '../shared/infrVersionManifest';
 import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
 import type { InfrOriginCheck } from '../shared/infrOriginCheck';
+import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../shared/infrFirstSteps';
 import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
 import type {
   AppSettings,
@@ -671,6 +672,10 @@ const electronAPI = {
     ipcRenderer.invoke('infr:version-save', req),
   checkInfrEnvironment: (params: { distro?: string; name: string }): Promise<InfrEnvCheck> => ipcRenderer.invoke('infr:env-check', params),
   checkInfrOrigin: (req: { distro?: string; infrPath?: string; fromEnv: string }): Promise<InfrOriginCheck> => ipcRenderer.invoke('infr:origin-check', req),
+  checkInfrFirstSteps: (req: { distro?: string; infrPath?: string; version?: string }): Promise<InfrFirstStepsResult> =>
+    ipcRenderer.invoke('infr:first-steps', req),
+  runInfrFirstStepsAction: (req: InfrFirstStepsActionRequest): Promise<{ success: boolean; output: string }> =>
+    ipcRenderer.invoke('infr:first-steps-action', req),
   openInfrCheckTerminal: (req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }): Promise<{ success: boolean; output: string }> =>
     ipcRenderer.invoke('infr:env-check-terminal', req),
   setDockerTargetWslDistro: (distro: string | null): Promise<DockerDaemonStatus> =>

@@ -1,8 +1,9 @@
 import React from 'react';
-import { Activity, Database, GitBranchPlus, Globe, Key, Wrench, type LucideIcon } from 'lucide-react';
+import { Activity, Database, GitBranchPlus, Globe, Key, ListChecks, Wrench, type LucideIcon } from 'lucide-react';
 import { INFR_ASSISTANT_NAV, type InfrBootstrapTab } from '../../../utils/infrBootstrapModalUtils';
 
 const ICONS: Record<InfrBootstrapTab, LucideIcon> = {
+  firstSteps: ListChecks,
   oracle: Database,
   wta: Globe,
   wsh: Key,

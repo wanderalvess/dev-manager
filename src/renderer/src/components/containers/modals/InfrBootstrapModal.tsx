@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { InfrDockerGuide } from '../../help/guides/InfrDockerGuide';
 import type { InfrDockerScriptStatus } from '../../../../../shared/types';
 import { useInfrBootstrapModalState } from '../../../hooks/containers/useInfrBootstrapModalState';
@@ -14,6 +14,8 @@ import { InfrNewVersionTab } from '../infr/InfrNewVersionTab';
 import { useInfrNewVersion } from '../../../hooks/containers/useInfrNewVersion';
 import { useInfrEnvCheck } from '../../../hooks/containers/useInfrEnvCheck';
 import { InfrVerifyTab } from '../infr/InfrVerifyTab';
+import { InfrFirstStepsTab } from '../infr/firststeps/InfrFirstStepsTab';
+import { useInfrFirstSteps } from '../../../hooks/containers/useInfrFirstSteps';
 import { Modal } from '../../ui/Modal';
 
 export interface InfrBootstrapModalProps {
@@ -37,6 +39,8 @@ export interface InfrBootstrapModalProps {
   infrOutput: string;
   /** Distro WSL selecionada na tela (a aba Nova versão lista os ambientes dela) */
   distro?: string;
+  /** Aba em que o assistente abre (ex.: Primeiros passos, pelo estado vazio da tela) */
+  initialTab?: InfrBootstrapTab;
 }
 
 export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
@@ -48,7 +52,8 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
   onRunInfrScript,
   isExecutingInfr,
   infrOutput,
-  distro
+  distro,
+  initialTab
 }) => {
   const state = useInfrBootstrapModalState({ onLoadInfrScripts, onRunInfrScript });
   const [verifyName, setVerifyName] = useState('');
@@ -59,6 +64,14 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
   });
   const verify = useInfrEnvCheck(distro || newVersion.envs?.distro, verifyName);
   const [guideOpen, setGuideOpen] = useState(false);
+  const firstSteps = useInfrFirstSteps(distro, state.customPath || undefined, isOpen && state.activeTab === 'firstSteps', (name) => {
+    setVerifyName(name);
+    state.setActiveTab('verify');
+  });
+
+  useEffect(() => {
+    if (isOpen && initialTab) state.setActiveTab(initialTab);
+  }, [isOpen, initialTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isOpen) return null;
 
@@ -98,7 +111,9 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
       <div className="flex-1 min-h-0 flex flex-col md:flex-row">
         <InfrAssistantNav activeTab={state.activeTab} onSelect={selectTab} />
 
-        {state.activeTab === 'newVersion' ? (
+        {state.activeTab === 'firstSteps' ? (
+          <InfrFirstStepsTab f={firstSteps} onGoTo={selectTab} />
+        ) : state.activeTab === 'newVersion' ? (
           <InfrNewVersionTab s={newVersion} onClose={onClose} />
         ) : state.activeTab === 'verify' ? (
           <InfrVerifyTab v={verify} envNames={newVersion.envs?.environments.map((e) => e.name) ?? []} />

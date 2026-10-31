@@ -20,6 +20,7 @@ import type {
 } from '../../../../shared/infrVersionManifest';
 import type { InfrCheckCommandId, InfrEnvCheck } from '../../../../shared/infrEnvCheck';
 import type { InfrOriginCheck } from '../../../../shared/infrOriginCheck';
+import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../../../../shared/infrFirstSteps';
 import type { InfrEnvironmentsResult } from '../../../../shared/infrWinthorVersion';
 import type { BridgeDeps } from './core';
 
@@ -231,6 +232,20 @@ export function createWslApi({ apiFetch, wsManager }: BridgeDeps) {
         return await apiFetch<InfrOriginCheck>('/api/infr/origin-check', { method: 'POST', body: JSON.stringify(req) });
       } catch (err: any) {
         return { success: false, error: err.message, items: [] };
+      }
+    },
+    checkInfrFirstSteps: async (req: { distro?: string; infrPath?: string; version?: string }): Promise<InfrFirstStepsResult> => {
+      try {
+        return await apiFetch<InfrFirstStepsResult>('/api/infr/first-steps', { method: 'POST', body: JSON.stringify(req) });
+      } catch (err: any) {
+        return { success: false, error: err.message, steps: [] };
+      }
+    },
+    runInfrFirstStepsAction: async (req: InfrFirstStepsActionRequest) => {
+      try {
+        return await apiFetch<{ success: boolean; output: string }>('/api/infr/first-steps/action', { method: 'POST', body: JSON.stringify(req) });
+      } catch (err: any) {
+        return { success: false, output: err.message };
       }
     },
     checkInfrEnvironment: async (params: { distro?: string; name: string }): Promise<InfrEnvCheck> => {

@@ -1,8 +1,25 @@
 import { describe, expect, it } from 'vitest';
+import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { WslService } from './WslService';
 
 describe('WslService', () => {
+  it('procura o INFR-Docker primeiro no Diretório de Repositórios Git configurado', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'projetos-'));
+    try {
+      fs.mkdirSync(path.join(root, 'INFR-Docker'));
+      const service = new WslService();
+      service.setProjectsRootProvider(() => root);
+      expect(service.resolveInfrPaths()?.windows).toBe(path.join(root, 'INFR-Docker'));
+      // Sem a pasta configurada, cai nas pastas comuns (nunca a de outro usuário)
+      service.setProjectsRootProvider(() => undefined);
+      expect(service.resolveInfrPaths()?.windows).not.toBe(path.join(root, 'INFR-Docker'));
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it('rejeita nomes de distribuição maliciosos ou inválidos', async () => {
     const service = new WslService();
 

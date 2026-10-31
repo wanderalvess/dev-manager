@@ -6,9 +6,31 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 
 ## [Não lançado]
 ### Adicionado
+- **Assistente INFR → Primeiros passos: do computador sem nada ao ambiente WinThor no Docker**: uma aba nova, no topo de *Montar do zero*, confere o computador sozinha e mostra o que falta em 8 etapas:
+  1. WSL;
+  2. a distro do WinThor;
+  3. o Docker na distro;
+  4. o clone do INFR-Docker no branch dos scripts por versão;
+  5. os arquivos fora do git (pcsist.tar.gz, dump, Winthor.ini e jar do WSH);
+  6. banco, dump, configuração, WTA e WSH da versão;
+  7. a configuração inicial do WTA;
+  8. os endereços do ambiente pronto.
+
+  Cada etapa traz o comando com *Copiar* e uma ação:
+  - instalar o WSL como administrador;
+  - importar o `.tar` da distro pelo próprio Hub;
+  - clonar ou trocar de branch num terminal;
+  - abrir as pastas onde soltar os arquivos;
+  - criar o `wta.env.<versão>` e o `.env.<versão>` a partir dos modelos, com os nomes e portas da versão (usuário, senha, loja e empresa ficam para a pessoa);
+  - subir banco, WTA e WSH;
+  - importar o dump: a senha do *system* é pedida no terminal e não passa pelo Hub.
+
+  A tela confere de novo a cada 20 s enquanto falta algo.
+- **Tela WinThor & WSL sem distro do WinThor**: no lugar da topologia vazia, o caminho do zero, com *Começar do zero* (abre o assistente em Primeiros passos) e *Snapshots WSL* para quem já tem o `.tar`.
 - **Central de Ajuda → Guias: manual da Validação de Cenários**: a aba Guias ganhou a escolha entre os guias, e o novo *Validação de Cenários: manual de uso* explica o que preencher em Configurações antes do primeiro teste, como rodar o Bloqueio de Login (campos, as regras com o que cada uma faz e o que precisa acontecer, e o que cada status quer dizer) e a Validação de API (requisição, autenticação, tipos de regra com operadores e exemplos), como forçar uma exceção não mapeada (o formato `UNK-ERR` do WTA, o que o modelo *Exceção* confere e receitas como número inválido, data inválida, campo inexistente, tipo errado e JSON quebrado), o que cada botão de copiar e baixar leva, o Histórico, os problemas comuns e onde fica cada coisa. As tabelas de regras saem dos mesmos catálogos que a tela usa. O mesmo manual abre pelo novo botão **Como usar**, ao lado do *Histórico* na página Validação de Cenários.
 
 ### Alterado
+- **INFR-Docker no Diretório de Repositórios Git**: o assistente (cabeçalho, Nova versão e Primeiros passos) passa a procurar o INFR-Docker primeiro na pasta de projetos das Configurações. Antes, só procurava em `%USERPROFILE%\Projetos` e em `C:\projetos`.
 - **Configurações reorganizadas**: as 14 abas viraram um menu lateral com 14 seções em quatro grupos (*Essencial*, *Conexões*, *Operação*, *Preferências*), cada uma marcada como pronta, com pendência (*falta 1*) ou opcional. Também:
   - *Visão geral* é a primeira seção: os 5 essenciais com o atalho para resolver cada um, a situação de cada área e o exportar/importar em três cartões (*Para o time*, *Backup deste PC*, *Trazer de um arquivo*);
   - uma barra única no rodapé (*N alterações não salvas · Descartar · Salvar alterações*) substitui o botão do topo; o que grava direto leva a etiqueta *aplica na hora*;
