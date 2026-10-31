@@ -587,7 +587,7 @@ export class WslService {
 
   /**
    * Gera hash MD5 para senhas do WinThor/WSH (em formatos minúsculo e maiúsculo).
-   * O WSH exige DB_PASSWORD em formato MD5 maiúsculo no .env.
+   * O login do WTA exige a senha em MD5 maiúsculo.
    */
   public generateMd5(text: string): { lower: string; upper: string } {
     const hash = crypto.createHash('md5').update(text || '', 'utf8').digest('hex');
@@ -1013,14 +1013,14 @@ export class WslService {
         name: 'Setup Winthor Smart Hub',
         relPath: 'wsh-winthor/wsh_setup.sh',
         type: 'wsh',
-        description: 'Configura o container WSH apontando para o Winthor.ini e porta 8080'
+        description: 'Configura o container WSH apontando para o Winthor.ini, o banco e o WTA'
       },
       {
         script: '.env.example',
         name: 'Modelo .env WSH',
         relPath: 'wsh-winthor/.env.example',
         type: 'wsh',
-        description: 'Modelo de credenciais do banco com senha em hash MD5 maiúsculo'
+        description: 'Modelo de credenciais do banco (host do Oracle, usuário e senha do schema)'
       }
     ];
 

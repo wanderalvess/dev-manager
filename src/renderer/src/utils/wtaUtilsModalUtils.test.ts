@@ -22,7 +22,7 @@ describe('wtaUtilsModalUtils', () => {
 
   it('mantém credenciais separadas por TAB e modelo wta.env terminado em quebra de linha', () => {
     expect(WTA_DEFAULT_CREDENTIALS_CLIPBOARD).toBe('PCADMIN\t1');
-    expect(WTA_ENV_SAMPLE.startsWith('DB_HOST=172.17.0.1\n')).toBe(true);
+    expect(WTA_ENV_SAMPLE.startsWith('DB_HOST=oracle-39\n')).toBe(true);
     expect(WTA_ENV_SAMPLE.endsWith('DB_PASSWORD=pcinfo\n')).toBe(true);
   });
 

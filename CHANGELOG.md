@@ -4,6 +4,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Corrigido
+- **Login do WTA com a senha em MD5 maiúsculo** em mais dois lugares: *Executar rotina* pelo WinThor Start e o *Login WinThor* do pré-voo da Integração (e a ferramenta MCP `http_login_winthor`). Antes iam com a senha como digitada e o WTA recusava, com a mensagem de "conferir usuário e senha". Um hash colado de 32 caracteres vai como está.
+- **Rotina 801**:
+  - o catálogo de atualizações usa a versão do WinThor das Configurações (a página e o MCP pediam sem `versaoWinthor` e recebiam o catálogo vazio ou incompleto);
+  - a checagem do servidor e a instalação pela API entram no WTA antes de pedir. Um 200 sem corpo, que o WTA devolve sem sessão, não conta mais como "online" nem como "instalado": a instalação diz que nada foi instalado e o que configurar;
+  - com o token vencido (401, ou 200 sem corpo), a checagem e a instalação pela API renovam o login e repetem uma vez. Se o login é recusado, a mensagem traz o motivo que o WTA deu;
+  - a mensagem do modo Karaf CLI passa a apontar a execução pela API para quem usa o WTA em container.
+- **Status do WTA nas rotinas**: 404 (a API do WinThor ainda não subiu) e 5xx (iniciando) deixam de aparecer como "online"; a mensagem cita o `/instalador`.
+- **Encerrar o Karaf da distro WSL** não derruba mais o WTA dos containers: o `pkill -f karaf` casava com o JVM de todos os `wta-<nome>` da distro. Agora só encerra o que não está num cgroup de docker/containerd.
+- **Textos e modelos antigos**:
+  - o texto do MD5 no WSH confundia o login do WTA com a conexão do WSH ao banco (a falha real é a senha em maiúsculas no `Winthor.ini`, ORA-01017);
+  - o modelo do `wta.env` usava `DB_HOST=172.17.0.1`, e agora mostra o nome do container do banco (`oracle-<ambiente>`);
+  - a aba *Modo Desenvolvedor* dizia que o container monta o `~/.m2` do host, o que o `wta_setup.sh` não faz;
+  - a porta do Oracle para o TNS com o container parado vem do nome (`oracle-39` → 1539), ou 1521, e não mais da inexistente 1522.
+
 ## [1.51.1] - 2026-10-31
 ### Adicionado
 - **Onboarding → Ambiente: Começar do zero**: a etapa Ambiente ganhou o cartão *Ambiente WinThor no Docker*. O botão *Começar do zero* fecha o onboarding, vai para a tela WinThor & WSL e abre o Assistente INFR em *Primeiros passos*.

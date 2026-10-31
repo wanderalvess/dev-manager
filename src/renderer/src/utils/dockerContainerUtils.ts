@@ -9,6 +9,7 @@ import type {
   DockerContainerInfo,
   DockerContainerPortBinding
 } from '../../../shared/types';
+import { winthorVersionPorts } from '../../../shared/infrWinthorVersion';
 
 export interface PortLink {
   hostPort: number;
@@ -35,14 +36,21 @@ export function parsePortLinks(portsStr: string): PortLink[] {
   return matches;
 }
 
-/** Extrai a porta do host mapeada para o listener Oracle (padrão XE: 1522 ou 1521). */
-export function extractOraclePort(portsStr?: string): string {
-  if (!portsStr) return '1522';
+/**
+ * Extrai a porta do host mapeada para o listener Oracle. Com o container parado não há mapeamento:
+ * o nome por versão (oracle-39) dá a porta da versão (1539); sem isso fica 1521, a do Oracle.
+ */
+export function extractOraclePort(portsStr?: string, containerName?: string): string {
+  const fallback = () => {
+    const version = /^\/?oracle-(\d{2,3})$/.exec(containerName?.trim() ?? '')?.[1];
+    return version ? String(winthorVersionPorts(version).oracle) : '1521';
+  };
+  if (!portsStr) return fallback();
   const match = portsStr.match(/(?:[\d.]+::?|\[::\]:)?(\d+)->1521/);
   if (match && match[1]) return match[1];
   const directMatch = portsStr.match(/(\d+):1521/);
   if (directMatch && directMatch[1]) return directMatch[1];
-  return '1522';
+  return fallback();
 }
 
 /** Extrai a porta do host mapeada para o WTA (padrão: 8080). */
@@ -56,7 +64,7 @@ export function extractWtaPort(ports?: string): number {
 }
 
 /** Bloco oficial tnsnames.ora para conexão local ao Oracle. */
-export function getOracleTnsConfig(port = '1522', alias = 'LOCAL_DOCKER', sid = 'XE'): string {
+export function getOracleTnsConfig(port = '1521', alias = 'LOCAL_DOCKER', sid = 'XE'): string {
   return `${alias} =
   (DESCRIPTION =
     (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = ${port}))

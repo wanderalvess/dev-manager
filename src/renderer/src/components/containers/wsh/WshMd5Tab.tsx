@@ -24,8 +24,8 @@ export const WshMd5Tab: React.FC<WshMd5TabProps> = ({
         <Key className="w-4 h-4" />
       </div>
       <div className="text-xs leading-relaxed text-muted-foreground">
-        <strong className="text-foreground font-semibold block mb-0.5">Por que o MD5 é obrigatório no WSH?</strong>
-        O WSH valida a conexão com o banco comparando o hash MD5 da senha com o configurado no <code className="text-foreground font-mono">Winthor.ini</code>. No arquivo <code className="text-foreground font-mono">.env</code>, o parâmetro <code className="text-foreground font-mono">DB_PASSWORD</code> deve ser <strong>obrigatoriamente o hash MD5 em letras maiúsculas</strong>.
+        <strong className="text-foreground font-semibold block mb-0.5">Onde o MD5 maiúsculo é usado</strong>
+        O login do WTA (e das rotinas e APIs do WinThor) recebe o MD5 da senha em hexadecimal maiúsculo; o Hub faz essa conversão sozinho. Já a conexão do WSH com o banco usa a senha do <code className="text-foreground font-mono">Winthor.ini</code>, que o WSH grava em <strong>maiúsculas</strong>: em Oracle 12 ou mais novo, use a senha do usuário do banco em maiúsculas (senão o erro é ORA-01017).
       </div>
     </div>
 
