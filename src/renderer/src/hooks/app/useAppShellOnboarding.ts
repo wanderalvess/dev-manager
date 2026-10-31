@@ -5,6 +5,7 @@ import { TOUR_STORAGE_KEY } from '../../components/onboarding/tourSteps';
 import { WELCOME_STORAGE_KEY } from '../../components/onboarding/welcomeSteps';
 import { getMissingRequiredPaths, pickDetectedPaths, shouldClearStaleOnboarding } from '../../utils/environmentPageUtils';
 import { collectPageTourKeys } from '../../utils/appShellNavigation';
+import { requestInfrFirstSteps } from '../../utils/infrDeepLink';
 import changelogRaw from '../../../../../CHANGELOG.md?raw';
 
 // Welcome, tour guiado, prompt de tours por página, novidades (changelog) e versão do app.
@@ -173,6 +174,15 @@ export function useAppShellOnboarding(setActiveTab: (tab: string) => void) {
     setActiveTab('settings');
   }, [handleCloseTour, setActiveTab]);
 
+  // Etapa Ambiente → Começar do zero: a tela WinThor & WSL abre o Assistente INFR em Primeiros passos
+  const handleWelcomeOpenInfrFirstSteps = useCallback(() => {
+    markWelcomeDone();
+    setIsWelcomeOpen(false);
+    handleCloseTour();
+    requestInfrFirstSteps();
+    setActiveTab('winthor');
+  }, [handleCloseTour, setActiveTab]);
+
   // O botão só promete o tour de spotlight — reabrir também a introdução (tema,
   // slides de boas-vindas) surpreendia quem só queria rever onde ficam os recursos.
   const handleRestartTour = useCallback(() => {
@@ -262,6 +272,7 @@ export function useAppShellOnboarding(setActiveTab: (tab: string) => void) {
     handleSplashEnter,
     handleSplashWhatsNew,
     handleWelcomeOpenSettings,
+    handleWelcomeOpenInfrFirstSteps,
     isTourOpen,
     isWelcomeOpen,
     isPageToursPromptOpen,

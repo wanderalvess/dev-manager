@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Adicionado
+- **Onboarding → Ambiente: Começar do zero**: a etapa Ambiente ganhou o cartão *Ambiente WinThor no Docker*. O botão *Começar do zero* fecha o onboarding, vai para a tela WinThor & WSL e abre o Assistente INFR em *Primeiros passos*.
+
 ## [1.51.0] - 2026-10-30
 ### Adicionado
 - **Assistente INFR → Primeiros passos: do computador sem nada ao ambiente WinThor no Docker**: uma aba nova, no topo de *Montar do zero*, confere o computador sozinha e mostra o que falta em 8 etapas:

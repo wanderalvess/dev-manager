@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Search } from 'lucide-react';
+import { Check, ListChecks, Search } from 'lucide-react';
 import type { SetupChecklistItemStatus } from '../../../utils/settingsListEditors';
 import { sectionProgress, summarizeChecklist, type EnvSection } from '../onboardingContent';
 import { Eyebrow, StepLead, StepTitle } from './stepUi';
@@ -17,6 +17,8 @@ interface EnvStepProps {
   onDetect: () => void;
   /** Abre Configurações já na seção desta parte do ambiente. */
   onOpenSettings: (section?: string) => void;
+  /** Ambiente WinThor no Docker do zero: abre o Assistente INFR em Primeiros passos */
+  onOpenInfrFirstSteps: () => void;
 }
 
 /** Etapa 4: os essenciais do checklist no topo e, embaixo, cada seção de Configurações com o que já está preenchido. */
@@ -29,7 +31,8 @@ export const EnvStep: React.FC<EnvStepProps> = ({
   hasDetected,
   isDetecting,
   onDetect,
-  onOpenSettings
+  onOpenSettings,
+  onOpenInfrFirstSteps
 }) => {
   const section = sections[sectionIndex];
   const summary = summarizeChecklist(checklist);
@@ -118,6 +121,22 @@ export const EnvStep: React.FC<EnvStepProps> = ({
           ))}
         </section>
       </div>
+
+      <section aria-label="Ambiente WinThor no Docker" className="rounded-2xl border border-dashed border-border bg-card p-5 flex flex-wrap items-center gap-4">
+        <span className="flex-1 min-w-[16rem] flex flex-col gap-1">
+          <span className="font-bold">Ambiente WinThor no Docker</span>
+          <span className="text-sm text-muted-foreground">
+            Nunca subiu banco, WTA e WSH no WSL? O Assistente INFR confere WSL, distro, INFR-Docker e arquivos e guia até o ambiente pronto.
+          </span>
+        </span>
+        <button
+          type="button"
+          onClick={onOpenInfrFirstSteps}
+          className="min-h-10 px-4 rounded-lg border border-border text-sm font-semibold text-foreground hover:bg-muted flex items-center gap-2 cursor-pointer"
+        >
+          <ListChecks className="w-4 h-4" /> Começar do zero
+        </button>
+      </section>
     </>
   );
 };

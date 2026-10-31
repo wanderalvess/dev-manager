@@ -24,6 +24,8 @@ interface OnboardingWizardProps {
   /** Chamado depois de salvar configurações (módulos, caminhos detectados) para o app reler. */
   onSettingsSaved: () => void;
   onOpenSettings: () => void;
+  /** Abre o Assistente INFR em Primeiros passos (WSL, distro e INFR-Docker do zero) */
+  onOpenInfrFirstSteps: () => void;
 }
 
 // Caminhos essenciais: se algum estiver vazio ao chegar na etapa Ambiente, a detecção roda sozinha uma vez.
@@ -37,7 +39,7 @@ function markWelcomeDone(): void {
   }
 }
 
-export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onFinish, onSettingsSaved, onOpenSettings }) => {
+export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onFinish, onSettingsSaved, onOpenSettings, onOpenInfrFirstSteps }) => {
   const [stepIndex, setStepIndex] = useState(0);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [disabledModules, setDisabledModules] = useState<string[]>([]);
@@ -107,6 +109,11 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onFi
     await persistModules();
     requestSettingsTab(section ?? 'overview');
     onOpenSettings();
+  };
+
+  const openInfrFirstSteps = async () => {
+    await persistModules();
+    onOpenInfrFirstSteps();
   };
 
   const goTo = (i: number) => {
@@ -195,6 +202,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onFi
               isDetecting={isDetecting}
               onDetect={() => void detect(false)}
               onOpenSettings={(section) => void openSettings(section)}
+              onOpenInfrFirstSteps={() => void openInfrFirstSteps()}
             />
           )}
           {step.id === 'mcp' && <McpStep exampleIndex={mcpIndex} onExampleChange={setMcpIndex} />}

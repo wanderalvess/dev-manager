@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { WINTHOR_TOUR_STEPS, WINTHOR_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/winthorTour';
@@ -6,6 +6,7 @@ import { computeStackTopology } from '../utils/dockerContainerUtils';
 import { WinthorHeader } from '../components/winthor/WinthorHeader';
 import { WinthorModals } from '../components/winthor/WinthorModals';
 import { WinthorEmptyState } from '../components/winthor/WinthorEmptyState';
+import { onInfrFirstStepsRequested, takePendingInfrFirstSteps } from '../utils/infrDeepLink';
 import { ContainerTopologyBus } from '../components/containers/topology/ContainerTopologyBus';
 import { useDockerData } from '../hooks/containers/useDockerData';
 import { useContainerErrors } from '../hooks/containers/useContainerErrors';
@@ -34,6 +35,12 @@ export const WinthorPage: React.FC<WinthorPageProps> = ({ isActive }) => {
   const tools = useContainerToolModals(data, errors);
   const snapshots = useWslSnapshots(data);
   const infr = useInfrBootstrap(data);
+
+  // Pedido do onboarding (etapa Ambiente → Começar do zero): abre o assistente em Primeiros passos
+  useEffect(() => {
+    if (isActive && takePendingInfrFirstSteps()) infr.openInfrModal('firstSteps');
+    return onInfrFirstStepsRequested(() => infr.openInfrModal('firstSteps'));
+  }, [isActive]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stackTopology = useMemo(() => computeStackTopology(data.containers), [data.containers]);
   // Sem distro do WinThor e sem containers: a tela vira o ponto de partida do zero
