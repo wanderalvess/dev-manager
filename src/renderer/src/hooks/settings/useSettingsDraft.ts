@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AppSettings } from '../../../../shared/types';
 import { createInitialSettings, normalizeLoadedSettings } from '../../utils/settingsDefaults';
+import { countChangedSettingsKeys } from '../../utils/settingsDiff';
 
 /**
  * Rascunho editável das configurações: carrega do disco, sabe se há alterações não salvas (comparando com o
@@ -20,6 +21,16 @@ export function useSettingsDraft(onSettingsSaved?: () => void) {
     () => savedSnapshot !== null && JSON.stringify(settings) !== savedSnapshot,
     [settings, savedSnapshot]
   );
+  const savedSettings = useMemo(() => (savedSnapshot ? (JSON.parse(savedSnapshot) as AppSettings) : null), [savedSnapshot]);
+  const changedCount = useMemo(
+    () => (hasUnsavedChanges && savedSettings ? countChangedSettingsKeys({ ...savedSettings }, { ...settings }) : 0),
+    [hasUnsavedChanges, savedSettings, settings]
+  );
+
+  /** Volta o rascunho ao último estado salvo, sem ir ao disco. */
+  const discard = useCallback(() => {
+    if (savedSettings) setSettings(savedSettings);
+  }, [savedSettings]);
 
   /** Relê do disco (já sanitizado pelo main) e descarta o rascunho. */
   const reload = useCallback(async (): Promise<AppSettings | null> => {
@@ -69,5 +80,17 @@ export function useSettingsDraft(onSettingsSaved?: () => void) {
     }
   }, [settings, onSettingsSaved]);
 
-  return { settings, setSettings, loadedSettings, hasUnsavedChanges, isSaving, savedSuccess, saveError, handleSave, reload };
+  return {
+    settings,
+    setSettings,
+    loadedSettings,
+    hasUnsavedChanges,
+    changedCount,
+    discard,
+    isSaving,
+    savedSuccess,
+    saveError,
+    handleSave,
+    reload
+  };
 }

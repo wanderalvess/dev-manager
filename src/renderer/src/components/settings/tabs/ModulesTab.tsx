@@ -19,14 +19,14 @@ export const ModulesTab: React.FC<ModulesTabProps> = ({ settings, setSettings })
     setSettings((prev) => ({ ...prev, disabledModules: toggleModule(prev.disabledModules ?? [], id, enabled) }));
 
   return (
-    <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border flex-1" id="field-modules">
+    <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border flex-1" id="field-modules">
       <div className="flex items-center justify-between gap-3 pb-1 border-b border-border/60">
         <div>
-          <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
-            <LayoutGrid className="w-4 h-4 text-primary" /> Módulos da Navegação
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <LayoutGrid className="w-4 h-4 text-primary" /> Módulos na barra lateral
           </h3>
           <p className="text-2xs text-muted-foreground mt-0.5">
-            Escolha quais páginas aparecem no cabeçalho, na busca rápida (Ctrl+K) e nos atalhos Alt+N. Módulo desligado
+            Escolha quais páginas aparecem na barra lateral, na busca rápida (Ctrl+K) e nos atalhos Alt+N. Módulo desligado
             não perde configurações nem dados — só sai da navegação. Ajuda e Configurações ficam sempre disponíveis.
           </p>
         </div>
@@ -56,7 +56,7 @@ export const ModulesTab: React.FC<ModulesTabProps> = ({ settings, setSettings })
                   <GroupIcon className="w-3.5 h-3.5 text-primary" /> {group.title}
                 </h4>
                 <span className="text-2xs font-mono text-muted-foreground">
-                  {groupEnabled === 0 ? 'oculto no cabeçalho' : `${groupEnabled}/${group.items.length}`}
+                  {groupEnabled === 0 ? 'fora da barra lateral' : `${groupEnabled}/${group.items.length}`}
                 </span>
               </div>
               {group.items.map((item) => {

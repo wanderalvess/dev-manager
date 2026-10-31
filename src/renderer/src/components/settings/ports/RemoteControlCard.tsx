@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Smartphone, Power, RefreshCw, Copy } from 'lucide-react';
 import { EMPTY_REMOTE_STATUS, type RemoteControlStatus } from '../../../../../shared/remoteControl';
 import { showToast } from '../../ToastHost';
+import { AppliesNowTag } from '../AppliesNowTag';
 
 /** Liga o servidor da rede local e mostra o QR para o celular controlar o app (só no app desktop). */
 export const RemoteControlCard: React.FC = () => {
@@ -30,16 +31,18 @@ export const RemoteControlCard: React.FC = () => {
   };
 
   return (
-    <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
+    <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border">
       <div className="flex items-center justify-between pb-1 border-b border-border/60">
         <div>
-          <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <Smartphone className="w-4 h-4 text-primary" /> Controle Remoto pelo Celular
           </h3>
           <p className="text-2xs text-muted-foreground mt-0.5">
             O celular, no mesmo Wi-Fi, abre uma página leve para ver o ambiente e acionar o Hub Manager.
           </p>
         </div>
+        <div className="flex items-center gap-2 shrink-0">
+        <AppliesNowTag />
         <button
           type="button"
           disabled={busy}
@@ -50,6 +53,7 @@ export const RemoteControlCard: React.FC = () => {
         >
           <Power className="w-3.5 h-3.5" /> {status.running ? 'Desligar' : 'Ligar'}
         </button>
+        </div>
       </div>
 
       {status.running && status.qrDataUrl ? (

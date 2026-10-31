@@ -15,7 +15,8 @@ interface EnvStepProps {
   hasDetected: boolean;
   isDetecting: boolean;
   onDetect: () => void;
-  onOpenSettings: () => void;
+  /** Abre Configurações já na seção desta parte do ambiente. */
+  onOpenSettings: (section?: string) => void;
 }
 
 /** Etapa 4: os essenciais do checklist no topo e, embaixo, cada seção de Configurações com o que já está preenchido. */
@@ -107,7 +108,7 @@ export const EnvStep: React.FC<EnvStepProps> = ({
               {!r.done && (
                 <button
                   type="button"
-                  onClick={onOpenSettings}
+                  onClick={() => onOpenSettings(section.id)}
                   className="shrink-0 min-h-9 px-3.5 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
                 >
                   Preencher

@@ -14,10 +14,10 @@ export const AutomationTab: React.FC<AutomationTabProps> = ({
   defaultAutomation
 }) => {
   return (
-    <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border flex-1" id="field-automation">
+    <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border flex-1" id="field-automation">
       <div className="flex items-center justify-between pb-1 border-b border-border/60">
         <div>
-          <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <Zap className="w-4 h-4 text-primary" /> Preferências Padrão de Automação
           </h3>
           <p className="text-2xs text-muted-foreground mt-0.5">

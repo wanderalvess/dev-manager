@@ -1,112 +1,94 @@
 import React from 'react';
-import { Globe, Terminal, Code2 } from 'lucide-react';
 import { AppSettings } from '../../../../../shared/types';
+import { SECTION_TITLE_CLASS } from '../../ui/PageHeader';
 import { normalizeWebPath, parsePortInput, webPathToInput } from '../../../utils/portsTabUtils';
 
 interface PortsMainCardProps {
   settings: AppSettings;
   setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
+  onGoToKaraf: () => void;
+  onOpenApm: () => void;
 }
 
-export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSettings }) => (
-  <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
-    <div className="flex items-center justify-between pb-1 border-b border-border/60">
-      <div>
-        <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
-          <Globe className="w-4 h-4 text-primary" /> Portas Principais de Integração
-        </h3>
-        <p className="text-2xs text-muted-foreground mt-0.5">
-          Portas-chave utilizadas pelo Portal Web, Karaf client.bat e JVM Debug.
-        </p>
-      </div>
+const INPUT = 'w-full h-9 rounded-lg border border-input bg-background px-3 text-sm font-mono text-foreground focus:outline-hidden focus:ring-2 focus:ring-ring';
+
+/** Porta que é editada em outra tela: aparece aqui só para consulta, com o atalho para quem é dono dela. */
+const ReadOnlyPort: React.FC<{ label: string; value: number; hint: string; actionLabel: string; onAction: () => void }> = ({
+  label,
+  value,
+  hint,
+  actionLabel,
+  onAction
+}) => (
+  <div className="space-y-1.5 min-w-0">
+    <span className="text-[13px] font-semibold text-foreground">{label}</span>
+    <div className="h-9 rounded-lg border border-dashed border-border px-3 flex items-center justify-between gap-2">
+      <span className="text-sm font-mono text-foreground">{value}</span>
+      <button type="button" onClick={onAction} className="text-xs font-semibold text-primary hover:underline cursor-pointer">
+        {actionLabel}
+      </button>
     </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-      {/* Porta Web Local */}
-      <div className="bg-card border border-border hover:border-primary/40 rounded-xl p-3 space-y-2 transition-all">
-        <div className="flex items-center justify-between">
-          <label htmlFor="ports-main-card-1" className="font-bold text-foreground flex items-center gap-1.5">
-            <Globe className="w-3.5 h-3.5 text-primary" /> Porta do Portal Web Local:
-          </label>
-          <span className="text-2xs bg-primary/10 text-primary px-2 py-0.5 rounded font-mono font-bold">
-            HTTP
-          </span>
-        </div>
-        <div className="flex items-center bg-muted/30 border border-border rounded-lg px-2.5 py-1.5 shadow-inner">
-          <span className="text-primary font-mono text-xs select-none mr-1 font-bold">:</span>
-          <input id="ports-main-card-1"
-            type="number"
-            value={settings.webPort ?? 8889}
-            onChange={(e) => setSettings({ ...settings, webPort: parsePortInput(e.target.value) })}
-            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-hidden"
-            placeholder="8889"
-          />
-        </div>
-        <div className="flex items-center bg-muted/30 border border-border rounded-lg px-2.5 py-1.5 shadow-inner mt-2">
-          <span className="text-primary font-mono text-xs select-none mr-1 font-bold">/</span>
-          <input
-            aria-label="Caminho do Portal Web (path)"
-            type="text"
-            value={webPathToInput(settings.webPath)}
-            onChange={(e) => setSettings({ ...settings, webPath: normalizeWebPath(e.target.value) })}
-            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-hidden"
-            placeholder="web"
-          />
-        </div>
-        <p className="text-2xs text-muted-foreground leading-relaxed">
-          Usada para abrir o Portal Web no navegador (<code>http://localhost:{settings.webPort || 8889}{settings.webPath || ''}</code>) e verificar o status ativo.
-        </p>
-      </div>
-
-      {/* Porta SSH do Apache Karaf */}
-      <div className="bg-card border border-border hover:border-warning/40 rounded-xl p-3 space-y-2 transition-all">
-        <div className="flex items-center justify-between">
-          <label htmlFor="ports-main-card-2" className="font-bold text-foreground flex items-center gap-1.5">
-            <Terminal className="w-3.5 h-3.5 text-warning" /> Porta SSH Karaf (client.bat):
-          </label>
-          <span className="text-2xs bg-warning/10 text-warning px-2 py-0.5 rounded font-mono font-bold">
-            SSH
-          </span>
-        </div>
-        <div className="flex items-center bg-muted/30 border border-border rounded-lg px-2.5 py-1.5 shadow-inner">
-          <span className="text-warning font-mono text-xs select-none mr-1 font-bold">:</span>
-          <input id="ports-main-card-2"
-            type="number"
-            value={settings.karafSshPort ?? 8101}
-            onChange={(e) => setSettings({ ...settings, karafSshPort: parsePortInput(e.target.value) })}
-            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-hidden"
-            placeholder="8101"
-          />
-        </div>
-        <p className="text-2xs text-muted-foreground leading-relaxed">
-          Usada pelo <code>client.bat -a {settings.karafSshPort || 8101}</code> para envio de comandos OSGi e deploy de bundles.
-        </p>
-      </div>
-
-      {/* Porta Remote Debug Java */}
-      <div className="bg-card border border-border hover:border-success/40 rounded-xl p-3 space-y-2 transition-all">
-        <div className="flex items-center justify-between">
-          <label htmlFor="ports-main-card-3" className="font-bold text-foreground flex items-center gap-1.5">
-            <Code2 className="w-3.5 h-3.5 text-success" /> Porta Debug JVM (Java):
-          </label>
-          <span className="text-2xs bg-success/10 text-success px-2 py-0.5 rounded font-mono font-bold">
-            JDWP
-          </span>
-        </div>
-        <div className="flex items-center bg-muted/30 border border-border rounded-lg px-2.5 py-1.5 shadow-inner">
-          <span className="text-success font-mono text-xs select-none mr-1 font-bold">:</span>
-          <input id="ports-main-card-3"
-            type="number"
-            value={settings.karafDebugPort ?? 5005}
-            onChange={(e) => setSettings({ ...settings, karafDebugPort: parsePortInput(e.target.value) })}
-            className="w-full bg-transparent text-xs font-mono font-bold text-foreground focus:outline-hidden"
-            placeholder="5005"
-          />
-        </div>
-        <p className="text-2xs text-muted-foreground leading-relaxed">
-          Porta TCP onde a JVM do Karaf aguarda conexão de Remote Debug da IDE (IntelliJ, VS Code, etc.).
-        </p>
-      </div>
-    </div>
+    <p className="text-xs text-muted-foreground">{hint}</p>
   </div>
+);
+
+/** Portas que o próprio Hub usa. Cada uma tem um dono: SSH e debug são do Karaf, o receptor OTLP é do APM. */
+export const PortsMainCard: React.FC<PortsMainCardProps> = ({ settings, setSettings, onGoToKaraf, onOpenApm }) => (
+  <section aria-labelledby="ports-main" className="rounded-xl border border-border bg-card p-5 space-y-4">
+    <div>
+      <h3 id="ports-main" className={SECTION_TITLE_CLASS}>
+        Portas do Hub
+      </h3>
+      <p className="text-xs text-muted-foreground">Cada porta é editada num lugar só. As do Karaf e do APM aparecem aqui para consulta.</p>
+    </div>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="space-y-1.5 min-w-0">
+        <label htmlFor="ports-web-port" className="text-[13px] font-semibold text-foreground">
+          Portal web local
+        </label>
+        <input
+          id="ports-web-port"
+          type="number"
+          value={settings.webPort ?? 8889}
+          onChange={(e) => setSettings({ ...settings, webPort: parsePortInput(e.target.value) })}
+          className={INPUT}
+          placeholder="8889"
+        />
+        <input
+          aria-label="Caminho do Portal Web (path)"
+          type="text"
+          value={webPathToInput(settings.webPath)}
+          onChange={(e) => setSettings({ ...settings, webPath: normalizeWebPath(e.target.value) })}
+          className={INPUT}
+          placeholder="web"
+        />
+        <p className="text-xs text-muted-foreground font-mono break-all">
+          localhost:{settings.webPort || 8889}
+          {settings.webPath || ''}
+        </p>
+      </div>
+      <ReadOnlyPort
+        label="Receptor APM (OTLP)"
+        value={settings.apmReceiverPort ?? 4318}
+        hint="Recebe a telemetria do Karaf. Trocar reinicia o receptor."
+        actionLabel="Alterar no APM"
+        onAction={onOpenApm}
+      />
+      <ReadOnlyPort
+        label="Karaf SSH"
+        value={settings.karafSshPort ?? 8101}
+        hint="Usada pelo client.bat e pelo deploy de bundles."
+        actionLabel="Alterar em Karaf"
+        onAction={onGoToKaraf}
+      />
+      <ReadOnlyPort
+        label="Debug da JVM"
+        value={settings.karafDebugPort ?? 5005}
+        hint="Onde a IDE conecta o debug remoto."
+        actionLabel="Alterar em Karaf"
+        onAction={onGoToKaraf}
+      />
+    </div>
+  </section>
 );
