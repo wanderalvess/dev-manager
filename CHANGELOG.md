@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.51.2] - 2026-10-31
 ### Corrigido
 - **Login do WTA com a senha em MD5 maiúsculo** em mais dois lugares: *Executar rotina* pelo WinThor Start e o *Login WinThor* do pré-voo da Integração (e a ferramenta MCP `http_login_winthor`). Antes iam com a senha como digitada e o WTA recusava, com a mensagem de "conferir usuário e senha". Um hash colado de 32 caracteres vai como está.
 - **Rotina 801**:
