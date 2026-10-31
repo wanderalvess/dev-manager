@@ -1,28 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { AlertTriangle, CheckCircle2 } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { AlertTriangle, CheckCircle2, Sparkles } from 'lucide-react';
 import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { SETTINGS_TOUR_STEPS, SETTINGS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/settingsTour';
-import { SettingsTab } from '../components/settings/settingsSearchData';
-import { SettingsHeader } from '../components/settings/SettingsHeader';
-import { PathStatusBadge } from '../components/settings/PathStatusBadge';
-import { SettingsTabsNav } from '../components/settings/SettingsTabsNav';
+import type { SettingsTab } from '../components/settings/settingsSections';
+import { SettingsSectionNav } from '../components/settings/SettingsSectionNav';
+import { SettingsSectionHeader } from '../components/settings/SettingsSectionHeader';
+import { SettingsSectionContent } from '../components/settings/SettingsSectionContent';
+import { SettingsSaveBar } from '../components/settings/SettingsSaveBar';
 import { SettingsSearchBar } from '../components/settings/SettingsSearchBar';
-import { SetupChecklistCard } from '../components/settings/SetupChecklistCard';
-import { DirsTab } from '../components/settings/tabs/DirsTab';
-import { KarafTab } from '../components/settings/tabs/KarafTab';
-import { RoutinesTab } from '../components/settings/tabs/RoutinesTab';
-import { AzureTab } from '../components/settings/tabs/AzureTab';
-import { ServicesTab } from '../components/settings/tabs/ServicesTab';
-import { PortsTab } from '../components/settings/tabs/PortsTab';
-import { AutomationTab } from '../components/settings/tabs/AutomationTab';
-import { LogsTab } from '../components/settings/tabs/LogsTab';
-import { BackupTab } from '../components/settings/tabs/BackupTab';
-import { AiTab } from '../components/settings/tabs/AiTab';
-import { QualityTab } from '../components/settings/tabs/QualityTab';
-import { IntegrationTab } from '../components/settings/tabs/IntegrationTab';
-import { UsageTab } from '../components/settings/tabs/UsageTab';
-import { ModulesTab } from '../components/settings/tabs/ModulesTab';
 import { useSettingsDraft } from '../hooks/settings/useSettingsDraft';
 import { usePathValidation } from '../hooks/settings/usePathValidation';
 import { useLauncherRows } from '../hooks/settings/useLauncherRows';
@@ -33,29 +19,28 @@ import { useEnvironmentProfiles } from '../hooks/settings/useEnvironmentProfiles
 import { useSettingsImportExport } from '../hooks/settings/useSettingsImportExport';
 import { useSettingsSearch } from '../hooks/settings/useSettingsSearch';
 import { useSetupChecklist } from '../hooks/settings/useSetupChecklist';
+import { computeSectionStatuses } from '../utils/settingsSectionStatus';
 import { clearPendingSettingsTab, onSettingsTabRequested, peekPendingSettingsTab } from '../utils/settingsDeepLink';
-import { DEFAULT_AUTOMATION, DEFAULT_LOG_SOURCES, DEFAULT_PORTS, DEFAULT_PROCESSES, DEFAULT_SERVICES } from '../utils/settingsDefaults';
 
 interface SettingsPageProps {
   onSettingsSaved?: () => void;
   onNavigate?: (tab: string) => void;
 }
 
-const BANNER_BASE = 'px-4 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 shadow-xs shrink-0';
+const BANNER_BASE = 'px-4 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 shrink-0';
 
 /**
- * Orquestra a tela de Configurações: o estado e as regras vivem nos hooks de `hooks/settings`, cada aba fica em
- * `components/settings/tabs`, e aqui só se liga um ao outro.
+ * Orquestra a tela de Configurações: menu lateral de seções à esquerda, a seção ativa à direita e uma barra de salvar
+ * única no rodapé. O estado e as regras vivem nos hooks de `hooks/settings`; cada seção monta as abas de
+ * `components/settings/tabs` em `SettingsSectionContent`.
  */
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onNavigate }) => {
   const tour = usePageTour(SETTINGS_TOUR_STORAGE_KEY);
-  const [activeTab, setActiveTab] = useState<SettingsTab>(() => peekPendingSettingsTab() ?? 'dirs');
+  const [activeTab, setActiveTab] = useState<SettingsTab>(() => peekPendingSettingsTab() ?? 'overview');
   useEffect(() => {
     clearPendingSettingsTab();
     return onSettingsTabRequested(setActiveTab);
   }, []);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showWtaPassword, setShowWtaPassword] = useState(false);
 
   const draft = useSettingsDraft(onSettingsSaved);
   const { settings, setSettings, loadedSettings } = draft;
@@ -68,6 +53,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
   const importExport = useSettingsImportExport(draft.reload, onSettingsSaved);
   const search = useSettingsSearch(activeTab, setActiveTab);
   const setup = useSetupChecklist(settings, paths.pathStatuses, setActiveTab, onNavigate);
+  const statuses = useMemo(() => computeSectionStatuses(setup.checklist, settings), [setup.checklist, settings]);
 
   // A cada (re)carga do disco: valida os caminhos e remonta o editor de launchers a partir do que foi salvo
   const { validateAllPaths } = paths;
@@ -78,19 +64,25 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
     void validateAllPaths(loadedSettings);
   }, [loadedSettings, resetRows, validateAllPaths]);
 
-  const renderPathStatusBadge = (fieldKey: string) => <PathStatusBadge status={paths.pathStatuses[fieldKey]} />;
+  // Trocar de seção volta o conteúdo ao topo (a busca rola até o campo depois disso)
+  const contentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 });
+  }, [activeTab]);
+
+  const handleAutoDetect = async () => {
+    await paths.handleAutoDetect();
+    setActiveTab('dirs');
+  };
+  const showDetect = activeTab === 'overview' || activeTab === 'dirs';
 
   return (
-    <div className="h-full w-full flex flex-col px-4 py-3 md:px-5 md:py-4 space-y-3 overflow-hidden">
-      <SettingsHeader
+    <div className="h-full w-full flex flex-col md:flex-row gap-4 md:gap-6 px-4 py-3 md:px-5 md:py-4 overflow-hidden">
+      <SettingsSectionNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        statuses={statuses}
         onOpenTour={tour.open}
-        importExport={importExport}
-        isDetecting={paths.isDetecting}
-        onAutoDetect={paths.handleAutoDetect}
-        hasUnsavedChanges={draft.hasUnsavedChanges}
-        isSaving={draft.isSaving}
-        savedSuccess={draft.savedSuccess}
-        onSave={draft.handleSave}
         search={
           <SettingsSearchBar
             query={search.query}
@@ -103,169 +95,67 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onSettingsSaved, onN
         }
       />
 
-      {importExport.statusMessage && (
-        <div role="status" className={`${BANNER_BASE} bg-success/10 border-success/30 text-success animate-in fade-in duration-200`}>
-          <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-          <span>{importExport.statusMessage}</span>
+      <div ref={contentRef} className="flex-1 min-w-0 min-h-0 overflow-y-auto pr-1 -mr-1">
+        <div className="max-w-5xl flex flex-col gap-4 min-h-full">
+          <SettingsSectionHeader
+            tab={activeTab}
+            actions={
+              showDetect && (
+                <button
+                  data-tour="auto-detect-button"
+                  type="button"
+                  onClick={() => void handleAutoDetect()}
+                  disabled={paths.isDetecting}
+                  className="h-9 px-3 rounded-lg border border-border bg-card hover:bg-muted text-sm font-medium text-foreground transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Sparkles className={`w-3.5 h-3.5 text-primary ${paths.isDetecting ? 'animate-pulse' : ''}`} />
+                  {paths.isDetecting ? 'Detectando…' : activeTab === 'dirs' ? 'Detectar de novo' : 'Detectar caminhos'}
+                </button>
+              )
+            }
+          />
+
+          {importExport.statusMessage && (
+            <div role="status" className={`${BANNER_BASE} bg-success/10 border-success/30 text-success`}>
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{importExport.statusMessage}</span>
+            </div>
+          )}
+
+          {draft.saveError && (
+            <div role="alert" className={`${BANNER_BASE} bg-danger/10 border-danger/30 text-danger`}>
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span>Não foi possível salvar as configurações: {draft.saveError}</span>
+            </div>
+          )}
+
+          <div className="flex-1">
+            <SettingsSectionContent
+              tab={activeTab}
+              settings={settings}
+              setSettings={setSettings}
+              paths={paths}
+              launcher={launcher}
+              lists={lists}
+              llm={llm}
+              quality={quality}
+              envProfiles={envProfiles}
+              importExport={importExport}
+              setup={setup}
+              statuses={statuses}
+              onOpenSection={setActiveTab}
+              onNavigate={onNavigate}
+            />
+          </div>
+
+          <SettingsSaveBar
+            changedCount={draft.changedCount}
+            isSaving={draft.isSaving}
+            savedSuccess={draft.savedSuccess}
+            onDiscard={draft.discard}
+            onSave={() => void draft.handleSave()}
+          />
         </div>
-      )}
-
-      {draft.saveError && (
-        <div role="alert" className={`${BANNER_BASE} bg-danger/10 border-danger/30 text-danger`}>
-          <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
-          <span>Não foi possível salvar as configurações: {draft.saveError}</span>
-        </div>
-      )}
-
-      <SetupChecklistCard checklist={setup.checklist} pendingCount={setup.pendingCount} />
-
-      <SettingsTabsNav
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        counts={{
-          services: (settings.trackedServices || []).length,
-          ports: (settings.monitoredPorts || []).length,
-          logs: (settings.realtimeLogSources || DEFAULT_LOG_SOURCES).length,
-          ai: (settings.llmProviders || []).length,
-          quality: (settings.qualitySources || []).length,
-          integration: (settings.integrationFlows || []).length
-        }}
-      />
-
-      {/* Área rolável: apenas o conteúdo da aba ativa rola, cabeçalho e abas ficam fixos */}
-      <div className="flex-1 min-h-0 overflow-y-auto pr-1 -mr-1 flex flex-col">
-        {activeTab === 'dirs' && (
-          <DirsTab
-            settings={settings}
-            setSettings={setSettings}
-            renderPathStatusBadge={renderPathStatusBadge}
-            validateSinglePath={paths.validateSinglePath}
-            handleBrowseDirectory={paths.handleBrowseDirectory}
-            handleBrowseFile={paths.handleBrowseFile}
-            handleActivateEnvironmentProfile={envProfiles.handleActivateEnvironmentProfile}
-            handleDeleteEnvironmentProfile={envProfiles.handleDeleteEnvironmentProfile}
-            newEnvironmentProfileLabel={envProfiles.newEnvironmentProfileLabel}
-            setNewEnvironmentProfileLabel={envProfiles.setNewEnvironmentProfileLabel}
-            handleSaveCurrentAsEnvironmentProfile={envProfiles.handleSaveCurrentAsEnvironmentProfile}
-          />
-        )}
-
-        {activeTab === 'routines' && (
-          <RoutinesTab
-            settings={settings}
-            setSettings={setSettings}
-            renderPathStatusBadge={renderPathStatusBadge}
-            validateSinglePath={paths.validateSinglePath}
-            handleBrowseDirectory={paths.handleBrowseDirectory}
-            launcherRows={launcher.launcherRows}
-            handleAddLauncherRow={launcher.handleAddLauncherRow}
-            handleUpdateLauncherRow={launcher.handleUpdateLauncherRow}
-            handleRemoveLauncherRow={launcher.handleRemoveLauncherRow}
-            handleBrowseLauncherPath={launcher.handleBrowseLauncherPath}
-            showWtaPassword={showWtaPassword}
-            setShowWtaPassword={setShowWtaPassword}
-          />
-        )}
-
-        {activeTab === 'karaf' && (
-          <KarafTab
-            settings={settings}
-            setSettings={setSettings}
-            showPassword={showPassword}
-            setShowPassword={setShowPassword}
-            renderPathStatusBadge={renderPathStatusBadge}
-            validateSinglePath={paths.validateSinglePath}
-            handleBrowseDirectory={paths.handleBrowseDirectory}
-            handleBrowseFile={paths.handleBrowseFile}
-          />
-        )}
-
-        {activeTab === 'azure' && (
-          <AzureTab
-            settings={settings}
-            setSettings={setSettings}
-            renderPathStatusBadge={renderPathStatusBadge}
-            onGoToDirs={() => setActiveTab('dirs')}
-          />
-        )}
-
-        {activeTab === 'services' && (
-          <ServicesTab
-            settings={settings}
-            defaultServices={DEFAULT_SERVICES}
-            defaultProcesses={DEFAULT_PROCESSES}
-            handleResetServices={lists.handleResetServices}
-            handleAddService={lists.handleAddService}
-            handleUpdateService={lists.handleUpdateService}
-            handleRemoveService={lists.handleRemoveService}
-            handleResetProcesses={lists.handleResetProcesses}
-            handleAddProcess={lists.handleAddProcess}
-            handleUpdateProcess={lists.handleUpdateProcess}
-            handleRemoveProcess={lists.handleRemoveProcess}
-          />
-        )}
-
-        {activeTab === 'ports' && (
-          <PortsTab
-            settings={settings}
-            setSettings={setSettings}
-            defaultPorts={DEFAULT_PORTS}
-            handleResetPorts={lists.handleResetPorts}
-            handleAddPort={lists.handleAddPort}
-            handleUpdatePort={lists.handleUpdatePort}
-            handleRemovePort={lists.handleRemovePort}
-          />
-        )}
-
-        {activeTab === 'automation' && (
-          <AutomationTab settings={settings} setSettings={setSettings} defaultAutomation={DEFAULT_AUTOMATION} />
-        )}
-
-        {activeTab === 'logs' && (
-          <LogsTab
-            settings={settings}
-            defaultLogSources={DEFAULT_LOG_SOURCES}
-            handleResetLogSources={lists.handleResetLogSources}
-            handleAddLogSource={lists.handleAddLogSource}
-            handleUpdateLogSource={lists.handleUpdateLogSource}
-            handleRemoveLogSource={lists.handleRemoveLogSource}
-            handleBrowseLogPath={lists.handleBrowseLogPath}
-          />
-        )}
-
-        {activeTab === 'backup' && (
-          <BackupTab settings={settings} setSettings={setSettings} handleBrowseFile={paths.handleBrowseFile} />
-        )}
-
-        {activeTab === 'modules' && <ModulesTab settings={settings} setSettings={setSettings} />}
-
-        {activeTab === 'ai' && <AiTab settings={settings} setSettings={setSettings} {...llm} />}
-
-        {activeTab === 'quality' && (
-          <QualityTab
-            settings={settings}
-            setSettings={setSettings}
-            editingQualitySource={quality.editingQualitySource}
-            setEditingQualitySource={quality.setEditingQualitySource}
-            showQualityToken={quality.showQualityToken}
-            setShowQualityToken={quality.setShowQualityToken}
-            handleApplyQualityTemplate={quality.handleApplyQualityTemplate}
-            handleSaveQualitySource={quality.handleSaveQualitySource}
-            handleDeleteQualitySource={quality.handleDeleteQualitySource}
-            handleToggleQualitySource={quality.handleToggleQualitySource}
-            handleSetActiveQualitySource={quality.handleSetActiveQualitySource}
-            handleTestQualityConnection={quality.handleTestQualityConnection}
-            testingQualityId={quality.testingQualityId}
-            testResults={quality.qualityTestResults}
-            renderPathStatusBadge={renderPathStatusBadge}
-            validateSinglePath={paths.validateSinglePath}
-            handleBrowseDirectory={paths.handleBrowseDirectory}
-          />
-        )}
-
-        {activeTab === 'integration' && <IntegrationTab settings={settings} setSettings={setSettings} />}
-
-        {activeTab === 'usage' && <UsageTab settings={settings} setSettings={setSettings} />}
       </div>
 
       <OnboardingTour

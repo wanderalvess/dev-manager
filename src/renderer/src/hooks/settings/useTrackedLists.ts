@@ -55,7 +55,7 @@ export function useTrackedLists(settings: AppSettings, setSettings: SetSettings)
     handleRemoveService: services.remove,
     handleResetServices: async () => {
       const count = services.count();
-      if (await confirmRemoval(count, 'Remover serviços monitorados?', `Remover os ${count} serviço(s) monitorado(s) configurado(s)? Essa ação só é efetivada ao clicar em "Salvar Configurações".`)) {
+      if (await confirmRemoval(count, 'Limpar a lista de serviços?', `Remover os ${count} serviço(s) monitorado(s) configurado(s)? Só vale depois de clicar em "Salvar alterações".`)) {
         services.reset();
       }
     },
@@ -67,7 +67,7 @@ export function useTrackedLists(settings: AppSettings, setSettings: SetSettings)
     handleRemoveProcess: processes.remove,
     handleResetProcesses: async () => {
       const count = processes.count();
-      if (await confirmRemoval(count, 'Remover processos conflitantes?', `Remover os ${count} processo(s) conflitante(s) configurado(s)? Essa ação só é efetivada ao clicar em "Salvar Configurações".`)) {
+      if (await confirmRemoval(count, 'Limpar a lista de processos?', `Remover os ${count} processo(s) conflitante(s) configurado(s)? Só vale depois de clicar em "Salvar alterações".`)) {
         processes.reset();
       }
     },
@@ -95,7 +95,7 @@ export function useTrackedLists(settings: AppSettings, setSettings: SetSettings)
     handleRemoveLogSource: logs.remove,
     handleResetLogSources: async () => {
       const count = logs.count();
-      if (await confirmRemoval(count, 'Remover fontes de log?', `Remover as ${count} fonte(s) de log configurada(s)? Essa ação só é efetivada ao clicar em "Salvar Configurações".`)) {
+      if (await confirmRemoval(count, 'Remover fontes de log?', `Remover as ${count} fonte(s) de log configurada(s)? Só vale depois de clicar em "Salvar alterações".`)) {
         logs.reset();
       }
     },

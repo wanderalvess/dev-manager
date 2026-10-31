@@ -8,6 +8,20 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 ### Adicionado
 - **Central de Ajuda → Guias: manual da Validação de Cenários**: a aba Guias ganhou a escolha entre os guias, e o novo *Validação de Cenários: manual de uso* explica o que preencher em Configurações antes do primeiro teste, como rodar o Bloqueio de Login (campos, as regras com o que cada uma faz e o que precisa acontecer, e o que cada status quer dizer) e a Validação de API (requisição, autenticação, tipos de regra com operadores e exemplos), como forçar uma exceção não mapeada (o formato `UNK-ERR` do WTA, o que o modelo *Exceção* confere e receitas como número inválido, data inválida, campo inexistente, tipo errado e JSON quebrado), o que cada botão de copiar e baixar leva, o Histórico, os problemas comuns e onde fica cada coisa. As tabelas de regras saem dos mesmos catálogos que a tela usa. O mesmo manual abre pelo novo botão **Como usar**, ao lado do *Histórico* na página Validação de Cenários.
 
+### Alterado
+- **Configurações reorganizadas**: as 14 abas viraram um menu lateral com 14 seções em quatro grupos (*Essencial*, *Conexões*, *Operação*, *Preferências*), cada uma marcada como pronta, com pendência (*falta 1*) ou opcional. Também:
+  - *Visão geral* é a primeira seção: os 5 essenciais com o atalho para resolver cada um, a situação de cada área e o exportar/importar em três cartões (*Para o time*, *Backup deste PC*, *Trazer de um arquivo*);
+  - uma barra única no rodapé (*N alterações não salvas · Descartar · Salvar alterações*) substitui o botão do topo; o que grava direto leva a etiqueta *aplica na hora*;
+  - *Detectar caminhos* mostra o que encontrou (ou que não havia nada novo), em vez de só mudar os campos;
+  - *Serviços & Processos* e *Automação* viraram *Preparação do debug*; *Módulos* e o seletor de tema viraram *Navegação & aparência*;
+  - as portas SSH e de debug do Karaf e a porta do receptor APM aparecem em *Portas & acesso remoto* só para consulta, com o atalho para onde são editadas;
+  - *Configurações* entrou na barra lateral, abaixo de *Integrações*.
+
+### Corrigido
+- **Configurações**: *Restaurar padrões* em Serviços e Processos apagava a lista (não há padrões); virou *Limpar lista*. O tour da página apontava para um elemento que não existia.
+- **Integrações → OpenTelemetry**: *Trocar porta* abria Configurações → Portas, onde a porta OTLP não existe; agora abre o APM.
+- **Onboarding**: *Preencher* abre Configurações na seção do item, não sempre em Diretórios.
+
 ## [1.50.0] - 2026-10-30
 ### Alterado
 - **Abertura do app**: o carregamento virou uma lista das áreas do cockpit e do servidor MCP, cada uma marcada como pronta, carregando ou na fila. Na primeira vez, a abertura já mostra as etapas da configuração (*Configurar meu cockpit* ou *Explorar sozinho*). Para quem volta, o *Entrar agora* conta 3 s antes de entrar sozinho, com os destaques da versão ao lado; *Ficar nesta tela* pausa a contagem.

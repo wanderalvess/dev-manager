@@ -6,6 +6,7 @@ import { Modal } from '../ui/Modal';
 import { showToast } from '../ToastHost';
 import { computeSetupChecklistStatus } from '../../utils/settingsListEditors';
 import { pickDetectedPaths } from '../../utils/environmentPageUtils';
+import { requestSettingsTab } from '../../utils/settingsDeepLink';
 import { WELCOME_STORAGE_KEY } from './welcomeSteps';
 import { ONBOARDING_STEPS, buildEnvSections } from './onboardingContent';
 import { OnboardingSidebar } from './steps/OnboardingSidebar';
@@ -102,8 +103,9 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onFi
     onFinish(wantsTour);
   };
 
-  const openSettings = async () => {
+  const openSettings = async (section?: string) => {
     await persistModules();
+    requestSettingsTab(section ?? 'overview');
     onOpenSettings();
   };
 
@@ -192,12 +194,12 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onFi
               hasDetected={detectedKeys !== null}
               isDetecting={isDetecting}
               onDetect={() => void detect(false)}
-              onOpenSettings={openSettings}
+              onOpenSettings={(section) => void openSettings(section)}
             />
           )}
           {step.id === 'mcp' && <McpStep exampleIndex={mcpIndex} onExampleChange={setMcpIndex} />}
           {step.id === 'done' && (
-            <DoneStep disabledModules={disabledModules} checklist={checklist} onOpenSettings={openSettings} onStartTour={() => finish(true)} />
+            <DoneStep disabledModules={disabledModules} checklist={checklist} onOpenSettings={() => void openSettings()} onStartTour={() => finish(true)} />
           )}
         </main>
 

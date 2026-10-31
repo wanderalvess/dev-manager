@@ -30,10 +30,10 @@ export const LogsTab: React.FC<LogsTabProps> = ({
 }) => {
   return (
     <div className="space-y-4 flex flex-col flex-1" id="field-logs">
-      <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
+      <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border">
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
           <div>
-            <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <ScrollText className="w-4 h-4 text-success" /> Fontes de Logs em Tempo Real (Tail -f)
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">

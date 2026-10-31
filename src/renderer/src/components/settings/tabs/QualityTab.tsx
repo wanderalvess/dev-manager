@@ -64,7 +64,7 @@ export const QualityTab: React.FC<QualityTabProps> = ({
           handleBrowseDirectory={handleBrowseDirectory}
         />
 
-        <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border bg-card">
+        <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border bg-card">
           <QualityTabHeader
             activeSource={findActiveQualitySource(sources, activeSourceId)}
             onAddManual={() => setEditingQualitySource(createNewQualitySourceDraft(Date.now()))}
