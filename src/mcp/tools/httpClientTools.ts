@@ -87,7 +87,7 @@ export function registerHttpClientTools(
       description: 'Realiza autenticação na API do WinThor com usuário e senha, retornando o accessToken gerado.',
       inputSchema: {
         login: z.string().describe('Usuário de login do WinThor (ex: PCADMIN)'),
-        senha: z.string().describe('Senha ou hash de autenticação'),
+        senha: z.string().describe('Senha do WinThor; o Hub envia o MD5 em maiúsculas que o WTA exige (um hash de 32 caracteres colado vai como está)'),
         loginUrl: z.string().optional().describe('URL do endpoint de login'),
         environmentId: z.string().optional().describe('ID do ambiente para atualizar a variável TOKEN')
       }

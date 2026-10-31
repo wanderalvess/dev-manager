@@ -142,22 +142,40 @@ export class Routine801Service {
 
     const testUrl = `${baseUrl}/winthor/ferramenta/servidor/v1/instalacao`;
     try {
-      let res = await httpRequest(testUrl, {
-        method: 'GET',
-        headers: this.getAuthHeaders(),
-        timeout: 5000
-      });
-
-      // Se retornou 401/403, tenta renovar token e tentar novamente
-      if ((res.status === 401 || res.status === 403) && (await this.renewWtaAuth(baseUrl))) {
-        res = await httpRequest(testUrl, {
+      // Sem token o WTA responde 200 com corpo vazio em vez de 401: entra antes de checar
+      const hasLogin = !!this.configService.getSettings().wtaLogin?.trim();
+      let renewed = false;
+      if (!this.configService.getSettings().wtaAuthToken && hasLogin) renewed = !!(await this.renewWtaAuth(baseUrl));
+      const get = () =>
+        httpRequest(testUrl, {
           method: 'GET',
           headers: this.getAuthHeaders(),
           timeout: 5000
         });
+      let res = await get();
+
+      // Se retornou 401/403, tenta renovar token e tentar novamente
+      if ((res.status === 401 || res.status === 403) && !renewed && (await this.renewWtaAuth(baseUrl))) {
+        renewed = true;
+        res = await get();
+      }
+      let body = res.ok ? await res.text() : '';
+      // Token vencido também vira 200 sem corpo: renova uma vez e pede de novo
+      if (res.ok && !body.trim() && !renewed && hasLogin && (await this.renewWtaAuth(baseUrl))) {
+        renewed = true;
+        res = await get();
+        body = res.ok ? await res.text() : '';
       }
 
       if (res.ok) {
+        if (!body.trim()) {
+          return {
+            ok: false,
+            status: res.status,
+            message: `O servidor em ${baseUrl} respondeu 200 sem corpo: o WTA faz isso quando a sessão não está autenticada. Confira o usuário e a senha do WTA nas Configurações${this.lastAuthError ? ` (${this.lastAuthError})` : ''}.`,
+            url: baseUrl
+          };
+        }
         return {
           ok: true,
           status: res.status,
@@ -263,7 +281,9 @@ export class Routine801Service {
 
   /** Obtém a lista de atualizações disponíveis para os pacotes instalados. */
   public fetchUpdates(customUrl?: string, trace?: (line: string) => void, winthorVersion?: number): Promise<Routine801CatalogResponse> {
-    return this.fetchCatalog(`atualizacao${routine801VersionQuery(winthorVersion)}`, 'atualizações', customUrl, trace);
+    // Sem a versão o catálogo vem vazio ou incompleto: usa a das Configurações quando quem chamou não passou
+    const version = winthorVersion ?? (parseInt(this.configService.getSettings().ccwWinthorVersion ?? '', 10) || undefined);
+    return this.fetchCatalog(`atualizacao${routine801VersionQuery(version)}`, 'atualizações', customUrl, trace);
   }
 
   /**
@@ -321,20 +341,48 @@ export class Routine801Service {
 
       try {
         const apiPath = `${baseUrl}/winthor/ferramenta/servidor/v1/sistema/instala-com-dependencias`;
-        const res = await httpRequest(apiPath, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            ...this.getAuthHeaders()
-          },
-          body: JSON.stringify(effectiveFeatures),
-          timeout: 180000
-        });
+        // Sem token o WTA responde 200 com corpo vazio e nada é instalado: entra antes de enviar
+        const hasLogin = !!this.configService.getSettings().wtaLogin?.trim();
+        let fresh = false; // login feito nesta instalação
+        if (!this.configService.getSettings().wtaAuthToken && hasLogin) fresh = !!(await this.renewWtaAuth(baseUrl));
+        const send = () =>
+          httpRequest(apiPath, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+              ...this.getAuthHeaders()
+            },
+            body: JSON.stringify(effectiveFeatures),
+            timeout: 180000
+          });
+        let res = await send();
+        let text = await res.text();
+        // Token vencido: 401/403, ou 200 sem corpo. Renova uma vez e envia de novo
+        const rejected = res.status === 401 || res.status === 403 || (res.ok && !text.trim());
+        if (rejected && !fresh && hasLogin) {
+          fresh = !!(await this.renewWtaAuth(baseUrl));
+          if (fresh) {
+            res = await send();
+            text = await res.text();
+          }
+        }
 
-        const text = await res.text();
+        const hasToken = !!this.configService.getSettings().wtaAuthToken;
+        if (res.ok && !text.trim() && (!hasToken || (hasLogin && !fresh))) {
+          // 200 sem corpo e sem sessão válida: o WTA não executou nada
+          const reason = this.lastAuthError ? ` (${this.lastAuthError})` : '';
+          const err = `O WTA respondeu 200 sem corpo e o Hub não tem sessão válida no WTA${reason}: nada foi instalado. Confira o usuário e a senha do WTA em Configurações → Rotinas WinThor.`;
+          onChunk(`[ERRO] ${err}\r\n`);
+          return { success: false, output: err, installedCount: 0, failedCount: effectiveFeatures.length };
+        }
+        if (res.ok && !text.trim()) {
+          onChunk('[API] O WTA respondeu 200 sem corpo: o Hub não consegue confirmar a instalação. Confira pelo catálogo.\r\n');
+        }
         if (res.ok) {
-          onChunk(`[API] Operação concluída com sucesso no servidor WTA!\r\n${text}\r\n`);
+          onChunk(`[API] Operação concluída com sucesso no servidor WTA!
+${text}
+`);
           return {
             success: true,
             output: text,
@@ -367,7 +415,7 @@ export class Routine801Service {
     const isRunning = await this.karafService.isKarafRunning(credentials?.port);
     if (!isRunning) {
       const port = credentials?.port || getKarafSshPort(this.configService.getSettings());
-      const err = `O contêiner Karaf/OSGi não está em execução (porta SSH ${port} fechada). Inicie o Karaf antes de executar ações no catálogo.`;
+      const err = `O contêiner Karaf/OSGi não está em execução (porta SSH ${port} fechada). Inicie o Karaf antes de executar ações no catálogo. Se o WTA roda em container (wta-<nome>), escolha a execução pela API, que não usa o SSH local.`;
       onChunk(`[ERRO] ${err}\r\n`);
       return {
         success: false,

@@ -1,4 +1,5 @@
 import http from 'http';
+import { encodeWtaPassword } from './authLockout/wtaPassword';
 import fs from 'fs';
 import path from 'path';
 import {
@@ -104,7 +105,8 @@ export class RoutinesService {
           'Content-Type': 'application/json',
           Accept: 'application/json'
         },
-        body: JSON.stringify({ login, senha }),
+        // O WTA só aceita o MD5 da senha em hexadecimal maiúsculo; um hash colado vai como está
+        body: JSON.stringify({ login, senha: encodeWtaPassword(senha) }),
         signal: AbortSignal.timeout(5000)
       });
 
@@ -160,14 +162,14 @@ export class RoutinesService {
       });
       clearTimeout(timer);
 
-      const isAlive = Boolean(res && res.status > 0);
-      return {
-        online: isAlive,
-        wtaUrl,
-        message: isAlive
-          ? `Apache Karaf / WTA online em ${wtaUrl}.`
-          : `Servidor em ${wtaUrl} não respondeu.`
-      };
+      // Só conta como no ar o que o WTA já atende: 404 (a API do WinThor ainda não subiu) e 5xx (iniciando) não
+      const status = res?.status ?? 0;
+      const isAlive = status > 0 && status < 500 && status !== 404;
+      let message = `Apache Karaf / WTA online em ${wtaUrl}.`;
+      if (status === 0) message = `Servidor em ${wtaUrl} não respondeu.`;
+      else if (status === 404) message = `O Karaf responde em ${wtaUrl}, mas a API do WinThor ainda não está no ar (HTTP 404). Se o WTA acabou de subir, espere ou conclua a configuração inicial em /instalador.`;
+      else if (status >= 500) message = `O servidor em ${wtaUrl} respondeu HTTP ${status}: provavelmente ainda está iniciando.`;
+      return { online: isAlive, wtaUrl, message };
     } catch {
       return {
         online: false,
@@ -263,7 +265,7 @@ export class RoutinesService {
           success: false,
           karafOffline: true,
           error: 'KARAF_OFFLINE',
-          message: `O Apache Karaf (WTA) não está em execução em ${wtaUrl}. O WinThor Start precisa do Karaf ativo na porta 8889 para autenticar a sessão do usuário. Inicie o Karaf antes de executar a rotina.`
+          message: `O Apache Karaf (WTA) não está em execução em ${wtaUrl}. O WinThor Start precisa do Karaf ativo para autenticar a sessão do usuário. Inicie o Karaf antes de executar a rotina.`
         };
       }
 

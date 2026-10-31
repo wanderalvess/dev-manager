@@ -56,10 +56,20 @@ describe('extractOraclePort', () => {
     expect(extractOraclePort('1533:1521')).toBe('1533');
   });
 
-  it('usa o fallback 1522 quando não há string ou não há match', () => {
-    expect(extractOraclePort(undefined)).toBe('1522');
-    expect(extractOraclePort('')).toBe('1522');
-    expect(extractOraclePort('0.0.0.0:8080->8080/tcp')).toBe('1522');
+  it('sem mapeamento usa 1521, a porta do Oracle', () => {
+    expect(extractOraclePort(undefined)).toBe('1521');
+    expect(extractOraclePort('')).toBe('1521');
+    expect(extractOraclePort('0.0.0.0:8080->8080/tcp')).toBe('1521');
+  });
+
+  it('com o container parado, o nome por versão dá a porta da versão', () => {
+    expect(extractOraclePort('', 'oracle-39')).toBe('1539');
+    expect(extractOraclePort(undefined, '/oracle-40')).toBe('1540');
+    expect(extractOraclePort('', 'oracle-develop')).toBe('1521');
+  });
+
+  it('o mapeamento real vence o nome', () => {
+    expect(extractOraclePort('0.0.0.0:1555->1521/tcp', 'oracle-39')).toBe('1555');
   });
 });
 
@@ -89,7 +99,7 @@ describe('getOracleTnsConfig', () => {
   it('usa os valores padrão quando nenhum argumento é informado', () => {
     const tns = getOracleTnsConfig();
     expect(tns).toContain('LOCAL_DOCKER =');
-    expect(tns).toContain('(PORT = 1522)');
+    expect(tns).toContain('(PORT = 1521)');
     expect(tns).toContain('(SERVICE_NAME = XE)');
   });
 });
