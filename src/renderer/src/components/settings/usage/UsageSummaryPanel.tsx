@@ -50,10 +50,10 @@ export const UsageSummaryPanel: React.FC<UsageSummaryPanelProps> = ({ summary, l
   const topRows = summary?.rows.slice(0, 8) ?? [];
 
   return (
-    <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border" id="field-usageSummary">
+    <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border" id="field-usageSummary">
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border/60">
         <div>
-          <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <Activity className="w-4 h-4 text-primary" /> Meu uso
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">

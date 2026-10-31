@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShieldCheck, Trash2 } from 'lucide-react';
 import { shortInstallId } from '../../../utils/usageViewUtils';
+import { AppliesNowTag } from '../AppliesNowTag';
 
 interface UsageControlsPanelProps {
   enabled: boolean;
@@ -27,10 +28,10 @@ const NEVER_COUNTED = [
 export const UsageControlsPanel: React.FC<UsageControlsPanelProps> = ({ enabled, onToggle, installId, hasHistory, onClear }) => {
   const hint = enabled ? 'Desligar a contagem de uso' : 'Ligar a contagem de uso';
   return (
-    <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border" id="field-usageMetricsEnabled">
+    <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border" id="field-usageMetricsEnabled">
       <div className="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-border/60">
         <div className="max-w-2xl">
-          <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-success" /> Contagem de uso (local)
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -84,6 +85,7 @@ export const UsageControlsPanel: React.FC<UsageControlsPanelProps> = ({ enabled,
             {shortInstallId(installId)}
           </span>
         </p>
+        <AppliesNowTag />
         <button
           type="button"
           onClick={onClear}

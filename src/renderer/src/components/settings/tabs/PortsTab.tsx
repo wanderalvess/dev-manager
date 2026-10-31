@@ -12,6 +12,8 @@ interface PortsTabProps {
   handleAddPort: (port?: number, label?: string) => void;
   handleUpdatePort: (index: number, field: keyof MonitoredPortConfig, value: any) => void;
   handleRemovePort: (index: number) => void;
+  onGoToKaraf: () => void;
+  onOpenApm: () => void;
 }
 
 export const PortsTab: React.FC<PortsTabProps> = ({
@@ -21,12 +23,15 @@ export const PortsTab: React.FC<PortsTabProps> = ({
   handleResetPorts,
   handleAddPort,
   handleUpdatePort,
-  handleRemovePort
+  handleRemovePort,
+  onGoToKaraf,
+  onOpenApm
 }) => {
   return (
     <div className="space-y-4 flex-1 flex flex-col" id="field-ports">
-      <PortsMainCard settings={settings} setSettings={setSettings} />
-      <RemoteControlCard />
+      <div id="field-otlpPort">
+        <PortsMainCard settings={settings} setSettings={setSettings} onGoToKaraf={onGoToKaraf} onOpenApm={onOpenApm} />
+      </div>
       <PortsMonitoredCard
         ports={settings.monitoredPorts || defaultPorts}
         onReset={handleResetPorts}
@@ -34,6 +39,7 @@ export const PortsTab: React.FC<PortsTabProps> = ({
         onUpdatePort={handleUpdatePort}
         onRemovePort={handleRemovePort}
       />
+      <RemoteControlCard />
     </div>
   );
 };

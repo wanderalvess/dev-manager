@@ -18,10 +18,10 @@ export const PortsMonitoredCard: React.FC<PortsMonitoredCardProps> = ({
   onUpdatePort,
   onRemovePort
 }) => (
-  <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border flex-1 flex flex-col">
+  <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border flex-1 flex flex-col">
     <div className="flex items-center justify-between pb-1 border-b border-border/60">
       <div>
-        <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <Radio className="w-4 h-4 text-primary" /> Lista Geral de Portas TCP Monitoradas
         </h3>
         <p className="text-2xs text-muted-foreground mt-0.5">
