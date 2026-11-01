@@ -540,6 +540,8 @@ export interface AppSettings {
   winthorStartPort?: number;
   /** URL do portal Winthor Anywhere (WTA) para obtenção de parâmetros de lançamento (padrão: http://localhost:8889) */
   wtaUrl?: string;
+  /** Ambiente (wta-<nome> na distro) que o Hub usa: a URL do WTA, a da 801 e o SSH do Karaf apontam para ele */
+  activeEnvironment?: string;
   /** URL da API da Rotina 801 (ferramenta-servidor) no Karaf (padrão: http://localhost:8889 ou a wtaUrl configurada) */
   routine801Url?: string;
   /** Porta do receptor OTLP/HTTP do APM (padrão 4318); o Karaf iniciado pelo app exporta traces para ela */

@@ -25,6 +25,7 @@ import { InfrEnvCheckService } from '../main/services/infr/InfrEnvCheckService';
 import { InfrOriginCheckService } from '../main/services/infr/InfrOriginCheckService';
 import { InfrFirstStepsService } from '../main/services/infr/InfrFirstStepsService';
 import { InfrFirstStepsActions } from '../main/services/infr/InfrFirstStepsActions';
+import { InfrActiveEnvService } from '../main/services/infr/InfrActiveEnvService';
 import { NetworkService } from '../main/services/NetworkService';
 import { DeployService } from '../main/services/DeployService';
 import { LogWatcherService } from '../main/services/LogWatcherService';
@@ -1402,6 +1403,28 @@ const infrEnvCheckService = new InfrEnvCheckService(wslService);
 const infrOriginCheckService = new InfrOriginCheckService(wslService, routine801Service);
 const infrFirstStepsService = new InfrFirstStepsService(wslService, routine801Service);
 const infrFirstStepsActions = new InfrFirstStepsActions(wslService);
+const infrActiveEnvService = new InfrActiveEnvService(infrVersionService, configService);
+
+// Ambiente ativo: qual ambiente (wta-<nome>) o Hub usa
+app.get('/api/infr/active-env', async (req, res) => {
+  try {
+    res.json(await infrActiveEnvService.list(req.query.distro as string | undefined));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message, environments: [] });
+  }
+});
+
+app.post('/api/infr/active-env', async (req, res) => {
+  try {
+    res.json(await infrActiveEnvService.apply(req.body || {}));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message, changes: [] });
+  }
+});
+
+app.delete('/api/infr/active-env', (_req, res) => {
+  res.json(infrActiveEnvService.clear());
+});
 
 // Primeiros passos: do computador sem nada ao ambiente WinThor no Docker
 app.post('/api/infr/first-steps', async (req, res) => {

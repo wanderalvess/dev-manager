@@ -4,6 +4,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Adicionado
+- **Ambiente ativo na tela WinThor & WSL**: um seletor *Ambiente* lista os ambientes da distro (`oracle-`, `wta-` e `wsh-<nome>`, com o estado de cada um) e o Hub passa a usar o escolhido. Antes, tudo supunha uma stack só, com nomes e portas fixos.
+  - **Subir WinThor** sobe os containers do ambiente escolhido, em vez do primeiro grupo com "winthor" ou "dev" no nome (que misturava ambientes de versões diferentes lado a lado).
+  - **A topologia** mostra os containers do ambiente, e a porta do WSH vem do mapeamento do Docker, não de um 8080 fixo.
+  - **Escolher o ambiente** aponta a URL do WTA, a da Rotina 801 e a porta SSH do Karaf, nas Configurações, para as portas reais do `docker ps`. Rotinas, Rotina 801, integrações e as tools do MCP já leem essas configurações, então passam a falar com o ambiente escolhido. A senha do WTA continua salva; o token da sessão anterior cai, por ser de outro WTA.
+  - O texto embaixo do seletor diz o que mudou. Se o container for recriado e a porta mudar, aparece *Atualizar portas*.
+  - Com o WTA parado, as portas vêm do padrão da versão quando o nome é um número (`39` → 8039); com outro nome, o Hub não inventa porta e só grava o ambiente.
+
 ## [1.51.2] - 2026-10-31
 ### Corrigido
 - **Login do WTA com a senha em MD5 maiúsculo** em mais dois lugares: *Executar rotina* pelo WinThor Start e o *Login WinThor* do pré-voo da Integração (e a ferramenta MCP `http_login_winthor`). Antes iam com a senha como digitada e o WTA recusava, com a mensagem de "conferir usuário e senha". Um hash colado de 32 caracteres vai como está.

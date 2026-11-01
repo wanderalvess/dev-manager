@@ -6,6 +6,7 @@ import { InfrEnvCheckService } from '../../services/infr/InfrEnvCheckService';
 import { InfrOriginCheckService } from '../../services/infr/InfrOriginCheckService';
 import { InfrFirstStepsService } from '../../services/infr/InfrFirstStepsService';
 import { InfrFirstStepsActions } from '../../services/infr/InfrFirstStepsActions';
+import { InfrActiveEnvService } from '../../services/infr/InfrActiveEnvService';
 import type { InfrFirstStepsActionRequest } from '../../../shared/infrFirstSteps';
 import type { InfrCheckCommandId } from '../../../shared/infrEnvCheck';
 import type { IpcContext } from '../ipcContext';
@@ -20,6 +21,19 @@ export function registerWslHandlers(ctx: IpcContext): void {
   const infrOriginCheckService = new InfrOriginCheckService(wslService, ctx.routine801Service);
   const infrFirstStepsService = new InfrFirstStepsService(wslService, ctx.routine801Service);
   const infrFirstStepsActions = new InfrFirstStepsActions(wslService);
+  const infrActiveEnvService = new InfrActiveEnvService(infrVersionService, ctx.configService);
+
+  ipcMain.handle('infr:active-env-list', async (_, distro?: string) => {
+    return await infrActiveEnvService.list(distro);
+  });
+
+  ipcMain.handle('infr:active-env-apply', async (_, req: { distro?: string; name: string }) => {
+    return await infrActiveEnvService.apply(req);
+  });
+
+  ipcMain.handle('infr:active-env-clear', () => {
+    return infrActiveEnvService.clear();
+  });
 
   ipcMain.handle('infr:first-steps', async (_, req: { distro?: string; infrPath?: string; version?: string }) => {
     return await infrFirstStepsService.check(req);

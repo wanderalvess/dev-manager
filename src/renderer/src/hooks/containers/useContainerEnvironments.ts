@@ -128,7 +128,12 @@ export function useContainerEnvironments(
     }
   };
 
-  const handleStartWinThorSequence = () => {
+  /** Com um ambiente ativo sobe os containers dele; sem, o grupo padrão ou os containers que parecem do WinThor. */
+  const handleStartWinThorSequence = (activeGroup?: ContainerEnvironment) => {
+    if (activeGroup) {
+      handleStartEnvironment(activeGroup);
+      return;
+    }
     const defaultEnv = findDefaultWinThorEnvironment(environments);
     if (defaultEnv) {
       handleStartEnvironment(defaultEnv);

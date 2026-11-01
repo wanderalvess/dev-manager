@@ -168,6 +168,38 @@ describe('computeStackTopology', () => {
     expect(topology.wta.port).toBe('8080');
   });
 
+  describe('com ambiente ativo', () => {
+    const lado = [
+      makeContainer({ names: '/oracle-39', state: 'running', ports: '0.0.0.0:1539->1521/tcp' }),
+      makeContainer({ names: '/wta-39', state: 'running', ports: '0.0.0.0:8039->8080/tcp' }),
+      makeContainer({ names: '/wsh-39', state: 'running', ports: '0.0.0.0:9039->9039/tcp' }),
+      makeContainer({ names: '/oracle-develop', state: 'exited' }),
+      makeContainer({ names: '/wta-develop', state: 'exited' }),
+      makeContainer({ names: '/wsh-develop', state: 'exited' })
+    ];
+
+    it('usa só os containers do ambiente, mesmo com outros lado a lado', () => {
+      const develop = computeStackTopology(lado, 'develop');
+      expect(develop.oracle.name).toBe('oracle-develop');
+      expect(develop.wta.name).toBe('wta-develop');
+      expect(develop.isStackComplete).toBe(false);
+
+      const v39 = computeStackTopology(lado, '39');
+      expect(v39.oracle.name).toBe('oracle-39');
+      expect(v39.wta.port).toBe('8039');
+      expect(v39.isStackComplete).toBe(true);
+    });
+
+    it('a porta do WSH vem do mapeamento, não de um 8080 fixo', () => {
+      expect(computeStackTopology(lado, '39').wsh.port).toBe('9039');
+    });
+
+    it('se o ambiente ativo não tem container, volta a procurar pelos nomes', () => {
+      const topology = computeStackTopology(lado, 'naoexiste');
+      expect(topology.oracle.exists).toBe(true);
+    });
+  });
+
   it('sinaliza dependência faltando quando WTA está rodando sem Oracle', () => {
     const containers = [makeContainer({ names: '/linux-winthor', state: 'running' })];
     const topology = computeStackTopology(containers);
