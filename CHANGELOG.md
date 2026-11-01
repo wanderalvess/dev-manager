@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Alterado
+- **Subir WinThor com um ambiente ativo espera cada parte ficar pronta**, em vez de tempos fixos entre os containers:
+  1. **Banco:** só libera o WTA quando o healthcheck do Oracle diz que está saudável (até 6 min). Se o container sai, a falha traz o fim do log.
+  2. **WTA:** espera a API do WinThor responder (o Karaf responde antes de carregar as features). Se o container sai ou nada responde em 6 min, é falha; se só a raiz responde, vira um aviso apontando o `/instalador`.
+  3. **WSH:** só sobe com a API no ar e o login do WTA entrando, porque sem a configuração inicial ele reinicia em loop com "Versão exigida". Com o login recusado ou a API fora do ar, o WSH não é iniciado e o motivo aparece sob o seletor de ambiente. Sem usuário e senha do WTA nas Configurações, o Hub não consegue conferir: sobe o WSH e avisa.
+  4. **WSH estável:** depois de iniciado, confere por 30 s que ele não reinicia. Se reiniciar com "Versão exigida", a falha aponta a feature abaixo da versão mínima.
+
+  O banner de progresso mostra o que está sendo esperado (ex.: "Esperando o banco ficar pronto, healthcheck starting, 1:20"). O que já estava no ar não é reiniciado. Sem ambiente ativo, Subir WinThor continua como antes.
+
 ## [1.52.0] - 2026-11-01
 ### Adicionado
 - **Ambiente ativo na tela WinThor & WSL**: um seletor *Ambiente* lista os ambientes da distro (`oracle-`, `wta-` e `wsh-<nome>`, com o estado de cada um) e o Hub passa a usar o escolhido. Antes, tudo supunha uma stack só, com nomes e portas fixos.

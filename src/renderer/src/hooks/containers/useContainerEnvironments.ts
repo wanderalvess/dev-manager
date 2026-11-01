@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { ContainerEnvironment } from '../../../../shared/types';
+import type { StartEnvResult } from '../../../../shared/infrEnvStart';
+import { showToast } from '../../components/ToastHost';
 import { getGroupContainerNames } from '../../utils/dockerContainerUtils';
 import {
   buildStartSlots,
@@ -128,20 +130,59 @@ export function useContainerEnvironments(
     }
   };
 
-  /** Com um ambiente ativo sobe os containers dele; sem, o grupo padrão ou os containers que parecem do WinThor. */
-  const handleStartWinThorSequence = (activeGroup?: ContainerEnvironment) => {
-    if (activeGroup) {
-      handleStartEnvironment(activeGroup);
-      return;
+  /**
+   * Sobe o ambiente ativo esperando cada parte ficar pronta: o banco saudável, a API do WTA, o login e só então o
+   * WSH (que reinicia em loop sem a configuração inicial do WTA). Devolve o resultado para a tela mostrar os avisos.
+   */
+  const handleStartActiveEnvironment = async (group: ContainerEnvironment): Promise<StartEnvResult | undefined> => {
+    const api = window.electronAPI;
+    if (!api?.startInfrEnvironment) {
+      await handleStartEnvironment(group);
+      return undefined;
     }
+    const first = group.containers[0];
+    const distro = group.wslDistro || selectedDistro || undefined;
+    setActiveGroupId(group.id);
+    setSequenceProgress({ running: true, index: 1, total: Math.max(group.containers.length, 1), currentName: typeof first === 'string' ? first : first?.name });
+    try {
+      const res = await api.startInfrEnvironment({ distro, name: group.name });
+      if (!res.success) {
+        handleShowError(`Falha ao subir o ambiente "${group.name}"`, res.error || 'Erro desconhecido ao subir o ambiente', {
+          distroName: distro,
+          containerName: res.failed,
+          retryAction: async () => {
+            await handleStartActiveEnvironment(group);
+          }
+        });
+      } else {
+        if (res.notes.length) showToast(`Ambiente ${group.name}: nem tudo subiu. Veja o aviso sob o seletor de ambiente.`, 'info');
+        else showToast(res.started.length ? `Ambiente ${group.name} no ar.` : `O ambiente ${group.name} já estava no ar.`, 'success');
+      }
+      await loadDockerData();
+      return res;
+    } catch (err: any) {
+      handleShowError(`Erro ao subir o ambiente "${group.name}"`, err, { distroName: distro, retryAction: async () => {
+            await handleStartActiveEnvironment(group);
+          } });
+      return undefined;
+    } finally {
+      setActiveGroupId(null);
+      setSequenceProgress({ running: false });
+    }
+  };
+
+  /** Com um ambiente ativo sobe os containers dele; sem, o grupo padrão ou os containers que parecem do WinThor. */
+  const handleStartWinThorSequence = async (activeGroup?: ContainerEnvironment): Promise<StartEnvResult | undefined> => {
+    if (activeGroup) return handleStartActiveEnvironment(activeGroup);
     const defaultEnv = findDefaultWinThorEnvironment(environments);
     if (defaultEnv) {
-      handleStartEnvironment(defaultEnv);
-      return;
+      await handleStartEnvironment(defaultEnv);
+      return undefined;
     }
     window.electronAPI?.startContainerSequence?.(buildDefaultWinThorSequence(containers))?.catch((err: any) => {
       setErrorMessage(`Erro ao iniciar sequência: ${err?.message || err}`);
     });
+    return undefined;
   };
 
   const handleSaveEnvironment = async (env: ContainerEnvironment) => {

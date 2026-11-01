@@ -26,6 +26,7 @@ import { InfrOriginCheckService } from '../main/services/infr/InfrOriginCheckSer
 import { InfrFirstStepsService } from '../main/services/infr/InfrFirstStepsService';
 import { InfrFirstStepsActions } from '../main/services/infr/InfrFirstStepsActions';
 import { InfrActiveEnvService } from '../main/services/infr/InfrActiveEnvService';
+import { InfrStartEnvService } from '../main/services/infr/InfrStartEnvService';
 import { NetworkService } from '../main/services/NetworkService';
 import { DeployService } from '../main/services/DeployService';
 import { LogWatcherService } from '../main/services/LogWatcherService';
@@ -1404,6 +1405,22 @@ const infrOriginCheckService = new InfrOriginCheckService(wslService, routine801
 const infrFirstStepsService = new InfrFirstStepsService(wslService, routine801Service);
 const infrFirstStepsActions = new InfrFirstStepsActions(wslService);
 const infrActiveEnvService = new InfrActiveEnvService(infrVersionService, configService);
+const infrStartEnvService = InfrStartEnvService.withDefaults(
+  (distro) => infrVersionService.listEnvironments(distro),
+  async (url) => {
+    const r = await routine801Service.testWtaLogin(url);
+    return { ok: r.ok, needsCredentials: r.needsCredentials, error: r.error };
+  }
+);
+
+// Sobe o ambiente esperando cada parte ficar pronta (banco saudável, API do WTA, login, WSH estável)
+app.post('/api/infr/start-environment', async (req, res) => {
+  try {
+    res.json(await infrStartEnvService.start(req.body || {}, (step) => broadcastWs('docker:sequence-progress', step)));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message, started: [], notes: [] });
+  }
+});
 
 // Ambiente ativo: qual ambiente (wta-<nome>) o Hub usa
 app.get('/api/infr/active-env', async (req, res) => {
