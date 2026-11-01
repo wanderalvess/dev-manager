@@ -29,6 +29,12 @@ export function getInfrVersionFaq(): FaqItem[] {
               em loop com &quot;Versão exigida&quot;). Se o WSH não subir, o motivo aparece sob o seletor.
             </li>
             <li>
+              <strong className="text-foreground">Karaf do WTA em container:</strong> em Configurações → Karaf, escolha <em>Container (WTA)</em>. O cliente do Karaf roda dentro do
+              container (<code className={C}>docker exec</code>, em <code className={C}>/opt/pcsist/produtos/winthor/bin/client</code>), sem Karaf instalado no Windows; o container é o
+              <code className={C}>wta-&lt;ambiente&gt;</code> escolhido na tela WinThor &amp; WSL. Bundles, features e diagnósticos rodam por esse caminho. O deploy por Maven não: o Hub compila no{' '}
+              <code className={C}>~/.m2</code> do Windows e o container instala pelo Nexus, então o jar novo não chega a ele.
+            </li>
+            <li>
               <strong className="text-foreground">Nunca instalou nada?</strong> Use <strong className="text-foreground">Primeiros passos</strong>, no topo do
               assistente (ou <em>Começar do zero</em> na tela WinThor &amp; WSL sem distro). O Hub confere WSL, distro, Docker, o clone do INFR-Docker no
               branch <code className={C}>feature/imagem-por-versao</code>, os arquivos fora do git (<code className={C}>pcsist.tar.gz</code>, dump,{' '}

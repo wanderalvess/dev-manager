@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Terminal, Monitor, RefreshCw, Network } from 'lucide-react';
+import { Terminal, Monitor, RefreshCw, Network, Container } from 'lucide-react';
 import { AppSettings, WslDistroInfo } from '../../../../../shared/types';
 import { apiBridge } from '../../../services/apiBridge';
 
@@ -37,6 +37,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
   }, [settings.karafEnvironment]);
 
   const isWsl = settings.karafEnvironment === 'wsl';
+  const isDocker = settings.karafEnvironment === 'docker';
 
   return (
     <div id="field-karafWsl" className="cockpit-panel rounded-xl p-5 space-y-4 border border-border">
@@ -56,7 +57,7 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
             type="button"
             onClick={() => setSettings({ ...settings, karafEnvironment: 'local' })}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-              !isWsl
+              !isWsl && !isDocker
                 ? 'bg-card text-foreground shadow-2xs border border-border'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
@@ -75,6 +76,18 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
           >
             <Terminal className="w-3.5 h-3.5" />
             <span>WSL 2 Linux</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setSettings({ ...settings, karafEnvironment: 'docker' })}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+              isDocker
+                ? 'bg-card text-primary shadow-2xs border border-border font-bold'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Container className="w-3.5 h-3.5" />
+            <span>Container (WTA)</span>
           </button>
         </div>
       </div>
@@ -129,6 +142,40 @@ export const KarafWslSection: React.FC<KarafWslSectionProps> = ({ settings, setS
             </span>
             <p className="text-2xs text-muted-foreground leading-relaxed">
               O Hub Manager conecta na porta SSH (<code className="font-mono text-foreground">{settings.karafSshPort ?? 8101}</code>) e JDWP (<code className="font-mono text-foreground">{settings.karafDebugPort ?? 5005}</code>). Para conexões instantâneas sem NAT, configure <code className="font-mono text-foreground">[wsl2] networkingMode=mirrored</code> no <code className="font-mono text-foreground">%USERPROFILE%\.wslconfig</code>.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Karaf de um container (o WTA do INFR-Docker) */}
+      {isDocker && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-1">
+          <div>
+            <label htmlFor="karaf-docker-container" className="block font-bold text-foreground mb-1">
+              Container do Karaf
+            </label>
+            <input
+              id="karaf-docker-container"
+              type="text"
+              value={settings.karafDockerContainer || ''}
+              onChange={(e) => setSettings({ ...settings, karafDockerContainer: e.target.value })}
+              className="w-full bg-card border border-input rounded-[10px] px-3 py-2.5 text-foreground font-mono focus:outline-hidden text-sm"
+              placeholder={settings.activeEnvironment ? `wta-${settings.activeEnvironment}` : 'wta-develop'}
+            />
+            <p className="text-2xs text-muted-foreground mt-1">
+              Vazio usa o <code className="font-mono text-foreground">wta-&lt;ambiente&gt;</code> escolhido na tela WinThor &amp; WSL
+              {settings.activeEnvironment ? ` (agora: wta-${settings.activeEnvironment})` : ' (nenhum escolhido)'}.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border/80 bg-muted/20 p-3 space-y-1.5 flex flex-col justify-center">
+            <span className="font-bold text-foreground flex items-center gap-1.5 text-xs">
+              <Network className="w-3.5 h-3.5 text-primary shrink-0" /> Como funciona
+            </span>
+            <p className="text-2xs text-muted-foreground leading-relaxed">
+              O cliente do Karaf roda dentro do container (<code className="font-mono text-foreground">docker exec</code>, na distro do Docker) e fala com o SSH dele. Não precisa de Karaf
+              instalado no Windows, e a porta é a publicada pelo container, mesmo se ele for recriado. Bundles, features e diagnósticos rodam por esse caminho; o deploy por Maven não
+              (o container instala pelo Nexus, não pelo <code className="font-mono text-foreground">~/.m2</code> do Windows).
             </p>
           </div>
         </div>
