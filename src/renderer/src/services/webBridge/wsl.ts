@@ -21,6 +21,7 @@ import type {
 import type { InfrCheckCommandId, InfrEnvCheck } from '../../../../shared/infrEnvCheck';
 import type { InfrOriginCheck } from '../../../../shared/infrOriginCheck';
 import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../../../../shared/infrFirstSteps';
+import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../../../../shared/infrActiveEnv';
 import type { InfrEnvironmentsResult } from '../../../../shared/infrWinthorVersion';
 import type { BridgeDeps } from './core';
 
@@ -246,6 +247,28 @@ export function createWslApi({ apiFetch, wsManager }: BridgeDeps) {
         return await apiFetch<{ success: boolean; output: string }>('/api/infr/first-steps/action', { method: 'POST', body: JSON.stringify(req) });
       } catch (err: any) {
         return { success: false, output: err.message };
+      }
+    },
+    listInfrActiveEnvironments: async (distro?: string): Promise<InfrActiveEnvList> => {
+      try {
+        const query = distro ? `?distro=${encodeURIComponent(distro)}` : '';
+        return await apiFetch<InfrActiveEnvList>(`/api/infr/active-env${query}`);
+      } catch (err: any) {
+        return { success: false, error: err.message, environments: [] };
+      }
+    },
+    applyInfrActiveEnvironment: async (req: { distro?: string; name: string }): Promise<InfrActiveEnvApplyResult> => {
+      try {
+        return await apiFetch<InfrActiveEnvApplyResult>('/api/infr/active-env', { method: 'POST', body: JSON.stringify(req) });
+      } catch (err: any) {
+        return { success: false, error: err.message, changes: [] };
+      }
+    },
+    clearInfrActiveEnvironment: async (): Promise<{ success: boolean }> => {
+      try {
+        return await apiFetch<{ success: boolean }>('/api/infr/active-env', { method: 'DELETE' });
+      } catch {
+        return { success: false };
       }
     },
     checkInfrEnvironment: async (params: { distro?: string; name: string }): Promise<InfrEnvCheck> => {

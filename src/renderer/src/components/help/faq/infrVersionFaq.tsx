@@ -21,6 +21,12 @@ export function getInfrVersionFaq(): FaqItem[] {
           </p>
           <ul className="list-disc pl-4 space-y-1.5">
             <li>
+              <strong className="text-foreground">Vários ambientes lado a lado:</strong> na tela WinThor &amp; WSL, o seletor <strong className="text-foreground">Ambiente</strong>{' '}
+              escolhe qual deles o Hub usa. <strong className="text-foreground">Subir WinThor</strong> e a topologia passam a ser do ambiente escolhido, e a URL do WTA, a da
+              Rotina 801 e a porta SSH do Karaf, nas Configurações, são apontadas para as portas reais dele (<code className={C}>docker ps</code>): rotinas, 801 e integrações
+              falam com ele. A senha do WTA continua salva. Se o container for recriado e a porta mudar, use <em>Atualizar portas</em>.
+            </li>
+            <li>
               <strong className="text-foreground">Nunca instalou nada?</strong> Use <strong className="text-foreground">Primeiros passos</strong>, no topo do
               assistente (ou <em>Começar do zero</em> na tela WinThor &amp; WSL sem distro). O Hub confere WSL, distro, Docker, o clone do INFR-Docker no
               branch <code className={C}>feature/imagem-por-versao</code>, os arquivos fora do git (<code className={C}>pcsist.tar.gz</code>, dump,{' '}

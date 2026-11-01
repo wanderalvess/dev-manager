@@ -10,6 +10,7 @@ import type {
   DockerContainerPortBinding
 } from '../../../shared/types';
 import { winthorVersionPorts } from '../../../shared/infrWinthorVersion';
+import { firstHostPort } from '../../../shared/infrActiveEnv';
 
 export interface PortLink {
   hostPort: number;
@@ -129,11 +130,17 @@ export interface StackTopology {
   hasMissingDependency: boolean;
 }
 
-/** Deriva o estado da stack WinThor (Oracle -> WTA -> WSH) a partir da lista de containers. */
-export function computeStackTopology(containers: DockerContainerInfo[]): StackTopology {
-  const oracle = containers.find((c) => c.names.toLowerCase().includes('oracle'));
-  const wta = containers.find((c) => c.names.toLowerCase().includes('wta') || c.names.toLowerCase().includes('linux'));
-  const wsh = containers.find((c) => c.names.toLowerCase().includes('wsh'));
+/**
+ * Deriva o estado da stack WinThor (Oracle -> WTA -> WSH) a partir da lista de containers. Com um ambiente ativo,
+ * usa os containers oracle-, wta- e wsh-<ambiente>; sem ele (ou se nenhum existe), procura pelos nomes.
+ */
+export function computeStackTopology(containers: DockerContainerInfo[], activeEnv?: string): StackTopology {
+  const exact = (role: string) => (activeEnv ? containers.find((c) => c.names.replace(/^\//, '') === `${role}-${activeEnv}`) : undefined);
+  const pinned = { oracle: exact('oracle'), wta: exact('wta'), wsh: exact('wsh') };
+  const usePinned = !!(pinned.oracle || pinned.wta || pinned.wsh);
+  const oracle = usePinned ? pinned.oracle : containers.find((c) => c.names.toLowerCase().includes('oracle'));
+  const wta = usePinned ? pinned.wta : containers.find((c) => c.names.toLowerCase().includes('wta') || c.names.toLowerCase().includes('linux'));
+  const wsh = usePinned ? pinned.wsh : containers.find((c) => c.names.toLowerCase().includes('wsh'));
 
   const oracleRunning = oracle?.state === 'running';
   const wtaRunning = wta?.state === 'running';
@@ -161,7 +168,7 @@ export function computeStackTopology(containers: DockerContainerInfo[]): StackTo
       container: wsh || null,
       name: wsh ? wsh.names.replace(/^\//, '') : 'wsh-winthor',
       running: wshRunning,
-      port: '8080',
+      port: String(firstHostPort(wsh?.ports) ?? 8080),
       exists: Boolean(wsh)
     },
     isStackComplete,

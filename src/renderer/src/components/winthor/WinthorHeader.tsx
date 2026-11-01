@@ -5,6 +5,8 @@ import { ContainersHeaderTitle } from '../containers/header/ContainersHeaderTitl
 import { ContainersRuntimeControls } from '../containers/header/ContainersRuntimeControls';
 import { ContainersSequenceBanner } from '../containers/header/ContainersSequenceBanner';
 import { ContainersDaemonAlert } from '../containers/header/ContainersDaemonAlert';
+import { WinthorActiveEnv } from './WinthorActiveEnv';
+import type { ActiveEnvironmentState } from '../../hooks/containers/useActiveEnvironment';
 
 interface WinthorHeaderProps {
   daemonStatus: DockerDaemonStatus | null;
@@ -34,6 +36,7 @@ interface WinthorHeaderProps {
   onOpenTour: () => void;
   copyWslIp: (text: string, key: string) => void;
   wslIpFeedback: string | null;
+  activeEnv: ActiveEnvironmentState;
 }
 
 const SECONDARY_BTN =
@@ -72,6 +75,8 @@ export const WinthorHeader: React.FC<WinthorHeaderProps> = (p) => (
           onDeleteEnvironmentClick={() => undefined}
           sequenceRunning={p.sequenceProgress.running}
         />
+
+        <WinthorActiveEnv env={p.activeEnv} />
 
         <div className="flex items-center gap-2" data-tour="winthor-actions">
           <button

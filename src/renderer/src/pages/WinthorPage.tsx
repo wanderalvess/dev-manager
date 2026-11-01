@@ -17,6 +17,7 @@ import { useContainerLogs } from '../hooks/containers/useContainerLogs';
 import { useContainerToolModals } from '../hooks/containers/useContainerToolModals';
 import { useWslSnapshots } from '../hooks/containers/useWslSnapshots';
 import { useInfrBootstrap } from '../hooks/containers/useInfrBootstrap';
+import { useActiveEnvironment } from '../hooks/containers/useActiveEnvironment';
 
 interface WinthorPageProps {
   isActive?: boolean;
@@ -42,7 +43,10 @@ export const WinthorPage: React.FC<WinthorPageProps> = ({ isActive }) => {
     return onInfrFirstStepsRequested(() => infr.openInfrModal('firstSteps'));
   }, [isActive]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const stackTopology = useMemo(() => computeStackTopology(data.containers), [data.containers]);
+  // Relê os ambientes quando algum container muda de estado, não a cada poll
+  const containersSignature = useMemo(() => data.containers.map((c) => `${c.names}:${c.state}`).join('|'), [data.containers]);
+  const activeEnv = useActiveEnvironment(data.selectedDistro || data.daemonStatus?.wslDistro || undefined, containersSignature);
+  const stackTopology = useMemo(() => computeStackTopology(data.containers, activeEnv.activeName), [data.containers, activeEnv.activeName]);
   // Sem distro do WinThor e sem containers: a tela vira o ponto de partida do zero
   const noWinthorDistro =
     !data.isLoading && data.containers.length === 0 && !data.availableDistros.some((d) => d.name.toLowerCase().includes('winthor'));
@@ -63,7 +67,8 @@ export const WinthorPage: React.FC<WinthorPageProps> = ({ isActive }) => {
         isStartingDaemon={wsl.isStartingDaemon}
         sequenceProgress={sequence.sequenceProgress}
         containersCount={data.containers.length}
-        onStartWinThorSequence={envs.handleStartWinThorSequence}
+        onStartWinThorSequence={() => envs.handleStartWinThorSequence(activeEnv.group)}
+        activeEnv={activeEnv}
         onOpenSnapshotsModal={snapshots.openSnapshotsModal}
         onOpenInfrModal={() => infr.openInfrModal()}
         isLoading={data.isLoading}

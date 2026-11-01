@@ -9,6 +9,7 @@ import type {
 import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
 import type { InfrOriginCheck } from '../shared/infrOriginCheck';
 import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../shared/infrFirstSteps';
+import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../shared/infrActiveEnv';
 import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
 import type {
   AppSettings,
@@ -400,6 +401,9 @@ export interface ElectronAPI {
   checkInfrOrigin?: (req: { distro?: string; infrPath?: string; fromEnv: string }) => Promise<InfrOriginCheck>;
   checkInfrFirstSteps?: (req: { distro?: string; infrPath?: string; version?: string }) => Promise<InfrFirstStepsResult>;
   runInfrFirstStepsAction?: (req: InfrFirstStepsActionRequest) => Promise<{ success: boolean; output: string }>;
+  listInfrActiveEnvironments?: (distro?: string) => Promise<InfrActiveEnvList>;
+  applyInfrActiveEnvironment?: (req: { distro?: string; name: string }) => Promise<InfrActiveEnvApplyResult>;
+  clearInfrActiveEnvironment?: () => Promise<{ success: boolean }>;
   openInfrCheckTerminal?: (req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }) => Promise<{ success: boolean; output: string }>;
   setDockerTargetWslDistro?: (distro: string | null) => Promise<DockerDaemonStatus>;
   getContainerEnvironments?: () => Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }>;
