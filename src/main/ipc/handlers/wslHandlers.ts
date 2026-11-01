@@ -7,6 +7,8 @@ import { InfrOriginCheckService } from '../../services/infr/InfrOriginCheckServi
 import { InfrFirstStepsService } from '../../services/infr/InfrFirstStepsService';
 import { InfrFirstStepsActions } from '../../services/infr/InfrFirstStepsActions';
 import { InfrActiveEnvService } from '../../services/infr/InfrActiveEnvService';
+import { InfrStartEnvService } from '../../services/infr/InfrStartEnvService';
+import { safeSend } from '../../utils/ipcSend';
 import type { InfrFirstStepsActionRequest } from '../../../shared/infrFirstSteps';
 import type { InfrCheckCommandId } from '../../../shared/infrEnvCheck';
 import type { IpcContext } from '../ipcContext';
@@ -22,6 +24,18 @@ export function registerWslHandlers(ctx: IpcContext): void {
   const infrFirstStepsService = new InfrFirstStepsService(wslService, ctx.routine801Service);
   const infrFirstStepsActions = new InfrFirstStepsActions(wslService);
   const infrActiveEnvService = new InfrActiveEnvService(infrVersionService, ctx.configService);
+  const infrStartEnvService = InfrStartEnvService.withDefaults(
+    (distro) => infrVersionService.listEnvironments(distro),
+    async (url) => {
+      const r = await ctx.routine801Service.testWtaLogin(url);
+      return { ok: r.ok, needsCredentials: r.needsCredentials, error: r.error };
+    }
+  );
+
+  // Sobe o ambiente esperando cada parte ficar pronta; o progresso vai pelo mesmo canal da sequência de containers
+  ipcMain.handle('infr:start-environment', async (_, req: { distro?: string; name: string }) => {
+    return await infrStartEnvService.start(req, (step) => safeSend(ctx.mainWindow, 'docker:sequence-progress', step));
+  });
 
   ipcMain.handle('infr:active-env-list', async (_, distro?: string) => {
     return await infrActiveEnvService.list(distro);

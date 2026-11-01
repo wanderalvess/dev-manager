@@ -10,6 +10,7 @@ import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
 import type { InfrOriginCheck } from '../shared/infrOriginCheck';
 import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../shared/infrFirstSteps';
 import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../shared/infrActiveEnv';
+import type { StartEnvResult } from '../shared/infrEnvStart';
 import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
 import type {
   AppSettings,
@@ -404,6 +405,7 @@ export interface ElectronAPI {
   listInfrActiveEnvironments?: (distro?: string) => Promise<InfrActiveEnvList>;
   applyInfrActiveEnvironment?: (req: { distro?: string; name: string }) => Promise<InfrActiveEnvApplyResult>;
   clearInfrActiveEnvironment?: () => Promise<{ success: boolean }>;
+  startInfrEnvironment?: (req: { distro?: string; name: string }) => Promise<StartEnvResult>;
   openInfrCheckTerminal?: (req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }) => Promise<{ success: boolean; output: string }>;
   setDockerTargetWslDistro?: (distro: string | null) => Promise<DockerDaemonStatus>;
   getContainerEnvironments?: () => Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }>;
@@ -413,7 +415,7 @@ export interface ElectronAPI {
     containers: { name: string; delay?: number }[]
   ) => Promise<{ success: boolean; started: string[]; failed?: string; error?: string }>;
   onContainerSequenceProgress?: (
-    callback: (step: { currentName: string; index: number; total: number; waitingSeconds?: number }) => void
+    callback: (step: { currentName: string; index: number; total: number; waitingSeconds?: number; message?: string }) => void
   ) => () => void;
 
   // Ferramentas de Manutenção Oracle (INFR-Docker)

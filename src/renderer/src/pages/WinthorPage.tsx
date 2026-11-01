@@ -67,7 +67,10 @@ export const WinthorPage: React.FC<WinthorPageProps> = ({ isActive }) => {
         isStartingDaemon={wsl.isStartingDaemon}
         sequenceProgress={sequence.sequenceProgress}
         containersCount={data.containers.length}
-        onStartWinThorSequence={() => envs.handleStartWinThorSequence(activeEnv.group)}
+        onStartWinThorSequence={async () => {
+          const res = await envs.handleStartWinThorSequence(activeEnv.group);
+          if (res?.success && res.notes.length) activeEnv.notify(res.notes.join(' '));
+        }}
         activeEnv={activeEnv}
         onOpenSnapshotsModal={snapshots.openSnapshotsModal}
         onOpenInfrModal={() => infr.openInfrModal()}

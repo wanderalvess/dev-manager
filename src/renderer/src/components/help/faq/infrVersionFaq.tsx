@@ -24,7 +24,9 @@ export function getInfrVersionFaq(): FaqItem[] {
               <strong className="text-foreground">Vários ambientes lado a lado:</strong> na tela WinThor &amp; WSL, o seletor <strong className="text-foreground">Ambiente</strong>{' '}
               escolhe qual deles o Hub usa. <strong className="text-foreground">Subir WinThor</strong> e a topologia passam a ser do ambiente escolhido, e a URL do WTA, a da
               Rotina 801 e a porta SSH do Karaf, nas Configurações, são apontadas para as portas reais dele (<code className={C}>docker ps</code>): rotinas, 801 e integrações
-              falam com ele. A senha do WTA continua salva. Se o container for recriado e a porta mudar, use <em>Atualizar portas</em>.
+              falam com ele. A senha do WTA continua salva. Se o container for recriado e a porta mudar, use <em>Atualizar portas</em>. Com um ambiente escolhido, o <strong className="text-foreground">Subir WinThor</strong>{' '}
+              espera cada parte ficar pronta: o banco saudável, a API do WTA respondendo e o login entrando, e só então sobe o WSH (sem a configuração inicial do WTA ele reinicia
+              em loop com &quot;Versão exigida&quot;). Se o WSH não subir, o motivo aparece sob o seletor.
             </li>
             <li>
               <strong className="text-foreground">Nunca instalou nada?</strong> Use <strong className="text-foreground">Primeiros passos</strong>, no topo do

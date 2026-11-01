@@ -26,6 +26,7 @@ interface WinthorHeaderProps {
     index?: number;
     total?: number;
     waitingSeconds?: number;
+    message?: string;
   };
   containersCount: number;
   onStartWinThorSequence: () => void;
@@ -129,6 +130,7 @@ export const WinthorHeader: React.FC<WinthorHeaderProps> = (p) => (
         index={p.sequenceProgress.index}
         total={p.sequenceProgress.total}
         waitingSeconds={p.sequenceProgress.waitingSeconds}
+        message={p.sequenceProgress.message}
       />
     )}
 

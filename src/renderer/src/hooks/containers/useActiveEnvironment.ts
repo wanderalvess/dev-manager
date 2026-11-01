@@ -51,7 +51,10 @@ export function useActiveEnvironment(distro: string | undefined, signature: stri
   const active: ActiveEnvInfo | undefined = useMemo(() => list?.environments.find((e) => e.name === list.active), [list]);
   const group: ContainerEnvironment | undefined = useMemo(() => (active ? activeEnvGroup(active, list?.distro) : undefined), [active, list?.distro]);
 
-  return { list, loading, message, refresh, apply, active, group, activeName: active?.name };
+  /** Mostra um aviso sob o seletor (ex.: o WSH que não subiu e por quê) */
+  const notify = useCallback((text: string) => setMessage(text), []);
+
+  return { list, loading, message, notify, refresh, apply, active, group, activeName: active?.name };
 }
 
 export type ActiveEnvironmentState = ReturnType<typeof useActiveEnvironment>;

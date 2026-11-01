@@ -20,6 +20,7 @@ import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
 import type { InfrOriginCheck } from '../shared/infrOriginCheck';
 import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../shared/infrFirstSteps';
 import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../shared/infrActiveEnv';
+import type { StartEnvResult } from '../shared/infrEnvStart';
 import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
 import type {
   AppSettings,
@@ -680,6 +681,7 @@ const electronAPI = {
   listInfrActiveEnvironments: (distro?: string): Promise<InfrActiveEnvList> => ipcRenderer.invoke('infr:active-env-list', distro),
   applyInfrActiveEnvironment: (req: { distro?: string; name: string }): Promise<InfrActiveEnvApplyResult> => ipcRenderer.invoke('infr:active-env-apply', req),
   clearInfrActiveEnvironment: (): Promise<{ success: boolean }> => ipcRenderer.invoke('infr:active-env-clear'),
+  startInfrEnvironment: (req: { distro?: string; name: string }): Promise<StartEnvResult> => ipcRenderer.invoke('infr:start-environment', req),
   openInfrCheckTerminal: (req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }): Promise<{ success: boolean; output: string }> =>
     ipcRenderer.invoke('infr:env-check-terminal', req),
   setDockerTargetWslDistro: (distro: string | null): Promise<DockerDaemonStatus> =>
@@ -695,7 +697,7 @@ const electronAPI = {
   ): Promise<{ success: boolean; started: string[]; failed?: string; error?: string }> =>
     ipcRenderer.invoke('docker:start-sequence', containers),
   onContainerSequenceProgress: (
-    callback: (step: { currentName: string; index: number; total: number; waitingSeconds?: number }) => void
+    callback: (step: { currentName: string; index: number; total: number; waitingSeconds?: number; message?: string }) => void
   ) => {
     const subscription = (_: any, data: any) => callback(data);
     ipcRenderer.on('docker:sequence-progress', subscription);
