@@ -3,10 +3,13 @@ import fs from 'fs';
 import { getKarafSshPort } from '../../../shared/types';
 import { checkPortOpen } from '../../utils/network';
 import { isWslKaraf, resolveKarafWslClient, resolveKarafWslServer } from '../../utils/karafWslUtils';
+import { dockerKarafLabel, isDockerKaraf, karafDockerContainer, publishedKarafSshPort, resolveDockerKarafDistro } from '../../utils/karafDockerUtils';
 import type { KarafContext } from './karafContext';
 
 export function getKarafClientExecutable(ctx: KarafContext): string | null {
   const settings = ctx.getSettings();
+  // Karaf de um container: o cliente roda dentro dele (docker exec), então não há caminho no Windows
+  if (isDockerKaraf(settings)) return dockerKarafLabel(karafDockerContainer(settings));
   if (!settings.karafPath) return null;
   if (isWslKaraf(settings)) {
     const wslClient = resolveKarafWslClient(settings);
@@ -68,7 +71,12 @@ export function getKarafServerExecutable(ctx: KarafContext): string | null {
  */
 export async function isKarafRunning(ctx: KarafContext, sshPort?: number): Promise<boolean> {
   const settings = ctx.getSettings();
-  const port = sshPort || getKarafSshPort(settings);
+  let port = sshPort || getKarafSshPort(settings);
+  if (isDockerKaraf(settings)) {
+    // A porta do SSH é a publicada pelo container (81NN), que muda se ele for recriado
+    const published = await publishedKarafSshPort(await resolveDockerKarafDistro(settings), karafDockerContainer(settings));
+    if (published) port = published;
+  }
   const isOpenLocal = await checkPortOpen(port, '127.0.0.1', 800);
   if (isOpenLocal) return true;
 

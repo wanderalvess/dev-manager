@@ -73,6 +73,9 @@ export function getKarafInstallStatus(
   settings: Pick<AppSettings, 'karafPath' | 'karafEnvironment'>,
   queryService: (name: string) => ServiceState = queryServiceStateSync
 ): KarafInstallInfoResponse {
+  if (settings.karafEnvironment === 'docker') {
+    return { success: true, info: { root: '', found: false, note: 'Karaf num container: a leitura do etc/ vale só para instalação no Windows.' } };
+  }
   if (settings.karafEnvironment === 'wsl') {
     return { success: true, info: { root: settings.karafPath ?? '', found: false, note: 'Karaf no WSL: a leitura do etc/ vale só para instalação no Windows.' } };
   }

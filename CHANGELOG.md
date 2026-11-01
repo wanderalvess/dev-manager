@@ -14,6 +14,17 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 
   O banner de progresso mostra o que está sendo esperado (ex.: "Esperando o banco ficar pronto, healthcheck starting, 1:20"). O que já estava no ar não é reiniciado. Sem ambiente ativo, Subir WinThor continua como antes.
 
+## [Não lançado]
+### Adicionado
+- **Karaf em container (WTA do INFR-Docker)**: em Configurações → Karaf, o ambiente de execução ganhou a opção *Container (WTA)*. O cliente do Karaf passa a rodar dentro do container, com `docker exec` na distro do Docker, em vez de exigir um Karaf instalado no Windows:
+  - bundles, features, diagnósticos de resolução OSGi, JVM e GC, e o `log:tail`/`log:display` rodam contra o `wta-<ambiente>`. As tools `karaf_*` do MCP também, porque passam pelo mesmo caminho;
+  - o container é o informado nas Configurações ou, vazio, o `wta-<ambiente>` escolhido na tela WinThor & WSL;
+  - a porta do SSH é a publicada pelo container (lida do `docker port`, com cache de 15 s), então continua certa se ele for recriado; a linha de comando não leva mais a porta do host, porque dentro do container o SSH é o 8101.
+
+### Corrigido
+- **Abrir o console do Karaf num container (botão do WTA)** procurava o cliente em `/opt/pcsist/apache-karaf/bin/client`, que não existe na imagem do WTA, e caía num `bash` solto. O Karaf do WTA é o `/opt/pcsist/produtos/winthor` (o mesmo `C:\pcsist\produtos\winthor` do Windows), e o cliente fica em `bin/client`. O caminho certo é o primeiro agora, conferido no `pcsist.tar.gz` do INFR-Docker.
+- **Deploy por Maven com o Karaf num container** para antes de compilar e explica o motivo, em vez de "atualizar" o bundle com o jar antigo e mostrar sucesso: o Hub compila no `~/.m2` do Windows e o container instala pelo Nexus, então o jar novo não chega a ele.
+
 ## [1.52.0] - 2026-11-01
 ### Adicionado
 - **Ambiente ativo na tela WinThor & WSL**: um seletor *Ambiente* lista os ambientes da distro (`oracle-`, `wta-` e `wsh-<nome>`, com o estado de cada um) e o Hub passa a usar o escolhido. Antes, tudo supunha uma stack só, com nomes e portas fixos.

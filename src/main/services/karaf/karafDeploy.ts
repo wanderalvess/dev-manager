@@ -6,6 +6,7 @@ import { runCapturedProcess } from '../../utils/process';
 import type { ChunkHandler, DeployTrigger, KarafContext, KarafDeployResult } from './karafContext';
 import { isNoDeploymentChange } from '../../utils/karafRedeployUtils';
 import { updateUnchangedBundles } from './karafRedeploy';
+import { isDockerKaraf, karafDockerContainer } from '../../utils/karafDockerUtils';
 
 const MAX_DEPLOY_HISTORY_ENTRIES = 200;
 
@@ -180,6 +181,21 @@ export async function buildAndDeployMaven(
 ): Promise<KarafDeployResult> {
   const startedAt = new Date().toISOString();
   const t0 = Date.now();
+
+  // No container o jar compilado no ~/.m2 do Windows não chega ao Karaf (ele instala pelo Nexus): melhor parar antes de compilar
+  // do que "atualizar" o bundle com o jar antigo e mostrar sucesso
+  if (isDockerKaraf(ctx.getSettings())) {
+    const container = karafDockerContainer(ctx.getSettings());
+    const err =
+      `O Karaf deste ambiente roda no container ${container}: o deploy por Maven compila no .m2 do Windows e o container instala pelo Nexus, ` +
+      `então o jar novo não chega a ele (um bundle:update reinstalaria o antigo). Publique o artefato no Nexus que o container usa ou use um Karaf local.`;
+    onChunk(`\r\n==========================================\r\n`);
+    onChunk(`❌ DEPLOY ABORTADO: ${err}\r\n`);
+    onChunk(`==========================================\r\n`);
+    const result = { success: false, error: err };
+    recordDeployHistory(ctx, request, result, startedAt, Date.now() - t0, trigger, projectPath);
+    return result;
+  }
 
   // Valida previamente se o Karaf está rodando para não gastar tempo compilando se o container estiver offline
   const isRunning = await ctx.isKarafRunning(request.port);

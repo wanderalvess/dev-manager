@@ -114,7 +114,7 @@ export async function openOracleSqlPlus(
 }
 
 /**
- * Abre um terminal interativo com o console de cliente Karaf (/opt/pcsist/apache-karaf/bin/client) no container WTA.
+ * Abre um terminal interativo com o console de cliente Karaf (/opt/pcsist/produtos/winthor/bin/client) no container WTA.
  */
 export async function openWtaKarafClient(ctx: DockerContext, containerName: string): Promise<boolean> {
   const cleanContainer = containerName.replace(/^\//, '');
@@ -123,7 +123,7 @@ export async function openWtaKarafClient(ctx: DockerContext, containerName: stri
   }
 
   const clientCmd =
-    'if [ -x /opt/pcsist/apache-karaf/bin/client ]; then /opt/pcsist/apache-karaf/bin/client; elif [ -x /opt/karaf/bin/client ]; then /opt/karaf/bin/client; else bash; fi';
+    'if [ -x /opt/pcsist/produtos/winthor/bin/client ]; then /opt/pcsist/produtos/winthor/bin/client; elif [ -x /opt/pcsist/apache-karaf/bin/client ]; then /opt/pcsist/apache-karaf/bin/client; elif [ -x /opt/karaf/bin/client ]; then /opt/karaf/bin/client; else bash; fi';
 
   try {
     if (ctx.useWsl && ctx.targetWslDistro) {

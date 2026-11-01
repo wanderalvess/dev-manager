@@ -5,6 +5,7 @@ import { getKarafSshPort } from '../../../shared/types';
 import { killProcessTree } from '../../utils/process';
 import { parseKarafStreamCommand } from '../../utils/karafStreamCommand';
 import { runClientProcess } from './karafExecute';
+import { isDockerKaraf } from '../../utils/karafDockerUtils';
 import type { ChunkHandler, KarafContext, KarafCredentials } from './karafContext';
 
 const MAX_STREAMS = 3;
@@ -44,11 +45,12 @@ export class KarafStreamManager {
 
     const user = credentials?.user || settings.karafUser || 'karaf';
     const pass = credentials?.pass || settings.karafPass || 'karaf';
-    const portArgs = sshPort && sshPort !== 8101 ? ['-a', String(sshPort)] : [];
+    const viaHostPort = !isDockerKaraf(settings) && sshPort && sshPort !== 8101;
+    const portArgs = viaHostPort ? ['-a', String(sshPort)] : [];
     const clientArgs = ['-u', user, '-p', pass, ...portArgs, parsed.command];
 
     const id = crypto.randomUUID();
-    onChunk(`> ${path.basename(karafClient)} -u ${user} -p ****${sshPort !== 8101 ? ` -a ${sshPort}` : ''} "${parsed.command}"\r\n`);
+    onChunk(`> ${path.basename(karafClient)} -u ${user} -p ****${viaHostPort ? ` -a ${sshPort}` : ''} "${parsed.command}"\r\n`);
     // Sem timeout: o stream só termina por stop() ou quando o Karaf fecha a sessão.
     void runClientProcess(settings, karafClient, clientArgs, ctx.getResolvedJavaEnv(undefined, true), onChunk, undefined, (child) => {
       this.streams.set(id, { child, command: parsed.command });

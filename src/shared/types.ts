@@ -503,7 +503,9 @@ export interface AppSettings {
   appPath?: string;
   karafPath: string;
   /** Ambiente de execução do Apache Karaf ('local' | 'wsl'). Padrão: 'local' */
-  karafEnvironment?: 'local' | 'wsl';
+  karafEnvironment?: 'local' | 'wsl' | 'docker';
+  /** Container do Karaf quando karafEnvironment === 'docker' (ex.: wta-develop). Vazio usa o wta-<ambiente ativo> */
+  karafDockerContainer?: string;
   /** Nome da distribuição WSL onde o Karaf está instalado (ex: 'Ubuntu', 'Debian'). Usado quando karafEnvironment === 'wsl' */
   karafWslDistro?: string;
   jdkPath?: string;
