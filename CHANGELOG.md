@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.52.0] - 2026-11-01
 ### Adicionado
 - **Ambiente ativo na tela WinThor & WSL**: um seletor *Ambiente* lista os ambientes da distro (`oracle-`, `wta-` e `wsh-<nome>`, com o estado de cada um) e o Hub passa a usar o escolhido. Antes, tudo supunha uma stack só, com nomes e portas fixos.
   - **Subir WinThor** sobe os containers do ambiente escolhido, em vez do primeiro grupo com "winthor" ou "dev" no nome (que misturava ambientes de versões diferentes lado a lado).
