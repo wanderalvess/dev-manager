@@ -18,6 +18,7 @@ import {
   type InfrVersionPreview,
   type InfrVersionPreviewRequest
 } from '../../../shared/infrVersionManifest';
+import { mergeDependencyFixes, resolveDependencies } from '../../../shared/infrFeatureDependencies';
 import { buildEnvFile, envFieldsFor, parseEnvLines, pickEnv, type InfrEnvTarget } from '../../../shared/infrEnvConfig';
 import type { InfrEnvSaveRequest, InfrEnvTemplate, InfrManifestSaveRequest, InfrManifestSaveResult } from '../../../shared/infrVersionManifest';
 import { INFR_NEW_VERSION_SCRIPTS, commandFailureDetail, missingNewVersionScriptsMessage } from '../../../shared/infrNewVersionScripts';
@@ -162,7 +163,14 @@ export class InfrVersionService {
       return { success: false, error: `Catálogo da rotina 801 em ${url}: ${msg}.${howTo}`, originWtaUrl: url };
     }
 
-    const upgrade = upgradeManifestFromCatalog(origin, catalog, parseInt(target, 10));
+    const upgraded = upgradeManifestFromCatalog(origin, catalog, parseInt(target, 10));
+    const resolved = resolveDependencies(upgraded, catalog, parseInt(target, 10));
+    const upgrade = { ...upgraded, manifest: resolved.manifest, changes: mergeDependencyFixes(upgraded.changes, resolved.fixes) };
+    const dep = resolved.report;
+    trace(
+      `Dependências: ${dep.checked} features conferidas, ${dep.withDependencies} declaram dependências, ${dep.fixed} ajustadas, ${dep.issues.length} pendentes` +
+        (dep.sample ? `; exemplo do catálogo: ${dep.sample}` : '')
+    );
     const header = [
       `WinThor ${target} — features da versão`,
       `Gerado pelo Hub Manager em ${new Date().toISOString().slice(0, 10)} a partir do ambiente ${from}`,
@@ -174,6 +182,7 @@ export class InfrVersionService {
       originCount: origin.features.length,
       originLine: manifestLineOf(origin),
       upgrade: { changes: upgrade.changes, behind: upgrade.behind, skipped: upgrade.skipped },
+      dependencies: dep,
       manifestText: serializeVersionManifest(upgrade.manifest, header)
     };
     const existingFile = this.manifestPath(infr.windows, target);

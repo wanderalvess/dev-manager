@@ -6,6 +6,7 @@
  */
 import type { Routine801CatalogResponse } from './types';
 import type { InfrEnvField } from './infrEnvConfig';
+import type { DependencyReport } from './infrFeatureDependencies';
 
 export interface ManifestFeature {
   name: string;
@@ -23,6 +24,8 @@ export interface ManifestChange {
   name: string;
   from: string;
   to: string;
+  /** Por que mudou, quando não é só "o catálogo tem uma versão mais nova" (ex.: exigida por outra feature) */
+  reason?: string;
 }
 
 export interface ManifestSkip {
@@ -92,6 +95,8 @@ export interface InfrVersionPreview {
   /** Linha do WinThor em que a origem está (a mais comum entre as features); maior que a alvo é downgrade */
   originLine?: number;
   upgrade?: Omit<ManifestUpgrade, 'manifest'>;
+  /** Dependências das features conferidas contra o catálogo da 801 antes do build */
+  dependencies?: DependencyReport;
   wshCheck?: WshDependencyCheck[];
   /** Erro ao ler o jar do WSH (não impede a prévia) */
   wshError?: string;
@@ -140,7 +145,7 @@ export interface InfrManifestSaveResult {
   error?: string;
 }
 
-const BLOCKED_STATUS = new Set(['BLOQUEADO', 'NENHUM']);
+export const BLOCKED_STATUS = new Set(['BLOQUEADO', 'NENHUM']);
 
 export function parseVersionManifest(text: string): VersionManifest {
   const manifest: VersionManifest = { repos: [], features: [], disabled: [] };

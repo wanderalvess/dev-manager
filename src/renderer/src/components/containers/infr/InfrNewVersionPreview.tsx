@@ -29,6 +29,7 @@ export const InfrNewVersionPreview: React.FC<{ preview: InfrVersionPreview; vers
                     <td className="px-2 py-1 text-foreground">{c.name}</td>
                     <td className="px-2 py-1 text-muted-foreground">{c.from}</td>
                     <td className="px-2 py-1 text-success">→ {c.to}</td>
+                    {c.reason && <td className="px-2 py-1 text-muted-foreground font-sans">{c.reason}</td>}
                   </tr>
                 ))}
               </tbody>
