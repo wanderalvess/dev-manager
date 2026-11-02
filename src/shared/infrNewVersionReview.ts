@@ -11,7 +11,7 @@ export type InfrReviewStatus = 'ok' | 'warn' | 'block';
 export type InfrReviewFix = 'useSourceOracle' | 'emptyOracle';
 
 export interface InfrReviewItem {
-  id: 'origem' | 'versao' | 'features' | 'wsh' | 'banco';
+  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'wsh' | 'banco';
   status: InfrReviewStatus;
   title: string;
   detail: string;
@@ -87,6 +87,8 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
     items.push({ id: 'features', status: 'ok', title: `Features da ${i.version}`, detail: `${up.changes.length} sobem pelo catálogo da 801.` });
   }
 
+  if (!useExisting) items.push(reviewDependencies(p.dependencies));
+
   const checks = useExisting && existing.wshCheck ? existing.wshCheck : p.wshCheck;
   const fails = checks?.filter((c) => !c.ok) ?? [];
   if (!i.wshJar) {
@@ -111,6 +113,39 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
 
   items.push(reviewDatabase(i));
   return items;
+}
+
+/** Dependências das features contra o que o catálogo da 801 declara (a lista da própria feature, vinda do Nexus). */
+function reviewDependencies(d: InfrVersionPreview['dependencies']): InfrReviewItem {
+  const title = 'Dependências das features';
+  if (!d || d.withDependencies === 0) {
+    return {
+      id: 'dependencias',
+      status: 'warn',
+      title,
+      detail: d
+        ? `O catálogo da 801 não trouxe dependências em nenhuma das ${d.checked} features conferidas; não deu para conferir antes do build. Se o build falhar em "Unable to resolve", é isso.`
+        : 'Não deu para conferir as dependências antes do build.'
+    };
+  }
+  const conflicts = d.issues.filter((x) => x.kind === 'conflict');
+  const describe = (x: (typeof d.issues)[number]) =>
+    x.kind === 'conflict'
+      ? `${x.feature} ${x.version} exige ${x.dependency} ${x.required} e a lista tem ${x.found}${x.fix ? '' : ' (o catálogo não oferece a versão exigida)'}`
+      : `${x.feature} ${x.version} exige ${x.dependency} ${x.required}, que o catálogo não oferece`;
+  const list = (xs: string[]) => (xs.length > 5 ? `${xs.slice(0, 5).join('; ')}; e mais ${xs.length - 5}` : xs.join('; '));
+  if (conflicts.length > 0) {
+    return { id: 'dependencias', status: 'block', title: 'Dependências que não fecham', detail: `${list(conflicts.map(describe))}. O build falharia ao resolver as features.` };
+  }
+  if (d.issues.length > 0) {
+    return { id: 'dependencias', status: 'warn', title, detail: `${list(d.issues.map(describe))}.` };
+  }
+  return {
+    id: 'dependencias',
+    status: 'ok',
+    title,
+    detail: d.fixed > 0 ? `${d.fixed} ajustadas pelo catálogo para atender às dependências; as demais já fecham.` : `${d.withDependencies} features com dependências, todas atendidas pela lista.`
+  };
 }
 
 /** Linha da origem quando ela é maior que a versão nova (downgrade); senão, undefined. */

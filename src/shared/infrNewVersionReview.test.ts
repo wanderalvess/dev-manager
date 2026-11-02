@@ -45,6 +45,23 @@ describe('conferência da versão nova', () => {
     expect(item.detail).toContain('mesmo banco da origem');
   });
 
+  it('dependências: conflito sem saída bloqueia, ajuste automático aprova, catálogo sem dependências avisa', () => {
+    const novo = { ...base, manifestSource: 'preview' as const };
+    const withDeps = (dependencies: NonNullable<InfrReviewInput['preview']['dependencies']>) => byId(reviewNewVersion({ ...novo, preview: { ...base.preview, dependencies } }), 'dependencias');
+    const conflito = { feature: 'a', version: '1.0', dependency: 'b', required: '[1.0,1.0]', found: '0.9', kind: 'conflict' as const };
+    expect(withDeps({ checked: 3, withDependencies: 2, fixed: 0, issues: [conflito] })).toMatchObject({ status: 'block' });
+    expect(withDeps({ checked: 3, withDependencies: 2, fixed: 0, issues: [{ ...conflito, kind: 'missing' as const }] }).status).toBe('warn');
+    const ok = withDeps({ checked: 3, withDependencies: 2, fixed: 1, issues: [] });
+    expect(ok.status).toBe('ok');
+    expect(ok.detail).toContain('1 ajustadas');
+    expect(withDeps({ checked: 3, withDependencies: 0, fixed: 0, issues: [] }).status).toBe('warn');
+    expect(byId(reviewNewVersion(novo), 'dependencias').status).toBe('warn');
+  });
+
+  it('usando a lista que já existe, as dependências não entram na conferência', () => {
+    expect(reviewNewVersion(base).some((i) => i.id === 'dependencias')).toBe(false);
+  });
+
   it('o WSH é conferido contra o manifesto escolhido', () => {
     const recusa = [{ service: 'winthor-integracao-config', version: '1.39.0.1', found: '1.38.17.48', ok: false }];
     const comExistente = reviewNewVersion({ ...base, preview: { ...base.preview, wshCheck: recusa } });
