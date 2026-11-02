@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { execFileAsync, isValidIdentifier } from '../../utils/security';
+import { isValidIdentifier } from '../../utils/security';
+import { execWsl } from '../../utils/wslExec';
 import {
   groupInfrEnvironments,
   isValidEnvName,
@@ -47,11 +48,7 @@ export class InfrVersionService {
     trace?.(`wsl -d ${distro}: ${script}`);
     const started = Date.now();
     try {
-      const { stdout, stderr } = await execFileAsync('wsl.exe', ['-d', distro, '--', 'bash', '-c', script], {
-        timeout,
-        windowsHide: true,
-        maxBuffer: 16 * 1024 * 1024
-      });
+      const { stdout, stderr } = await execWsl(['-d', distro, '--', 'bash', '-c', script], { timeout, maxBuffer: 16 * 1024 * 1024 });
       trace?.(`ok em ${Date.now() - started} ms${String(stderr || '').trim() ? `; stderr: ${commandFailureDetail({ stderr })}` : ''}`);
       return String(stdout);
     } catch (err: any) {

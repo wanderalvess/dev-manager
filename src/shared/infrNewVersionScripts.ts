@@ -31,6 +31,8 @@ export function commandFailureDetail(err: { message?: string; stderr?: unknown; 
     .join('\n')
     // eslint-disable-next-line no-control-regex -- tira as cores ANSI que os scripts imprimem
     .replace(/\x1b\[[0-9;]*m/g, '')
+    // eslint-disable-next-line no-control-regex -- e os bytes nulos de um UTF-16 (wsl.exe) lido como UTF-8, que enchem a tela de quadrados
+    .replace(/\u0000/g, '')
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean);
