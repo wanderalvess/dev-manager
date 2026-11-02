@@ -4,7 +4,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.53.0] - 2026-11-02
+### Adicionado
+- **Karaf em container (WTA do INFR-Docker)**: em Configurações → Karaf, o ambiente de execução ganhou a opção *Container (WTA)*. O cliente do Karaf passa a rodar dentro do container, com `docker exec` na distro do Docker, em vez de exigir um Karaf instalado no Windows:
+  - bundles, features, diagnósticos de resolução OSGi, JVM e GC, e o `log:tail`/`log:display` rodam contra o `wta-<ambiente>`. As tools `karaf_*` do MCP também, porque passam pelo mesmo caminho;
+  - o container é o informado nas Configurações ou, vazio, o `wta-<ambiente>` escolhido na tela WinThor & WSL;
+  - a porta do SSH é a publicada pelo container (lida do `docker port`, com cache de 15 s), então continua certa se ele for recriado; a linha de comando não leva mais a porta do host, porque dentro do container o SSH é o 8101.
+
 ### Alterado
 - **Subir WinThor com um ambiente ativo espera cada parte ficar pronta**, em vez de tempos fixos entre os containers:
   1. **Banco:** só libera o WTA quando o healthcheck do Oracle diz que está saudável (até 6 min). Se o container sai, a falha traz o fim do log.
@@ -13,13 +19,6 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
   4. **WSH estável:** depois de iniciado, confere por 30 s que ele não reinicia. Se reiniciar com "Versão exigida", a falha aponta a feature abaixo da versão mínima.
 
   O banner de progresso mostra o que está sendo esperado (ex.: "Esperando o banco ficar pronto, healthcheck starting, 1:20"). O que já estava no ar não é reiniciado. Sem ambiente ativo, Subir WinThor continua como antes.
-
-## [Não lançado]
-### Adicionado
-- **Karaf em container (WTA do INFR-Docker)**: em Configurações → Karaf, o ambiente de execução ganhou a opção *Container (WTA)*. O cliente do Karaf passa a rodar dentro do container, com `docker exec` na distro do Docker, em vez de exigir um Karaf instalado no Windows:
-  - bundles, features, diagnósticos de resolução OSGi, JVM e GC, e o `log:tail`/`log:display` rodam contra o `wta-<ambiente>`. As tools `karaf_*` do MCP também, porque passam pelo mesmo caminho;
-  - o container é o informado nas Configurações ou, vazio, o `wta-<ambiente>` escolhido na tela WinThor & WSL;
-  - a porta do SSH é a publicada pelo container (lida do `docker port`, com cache de 15 s), então continua certa se ele for recriado; a linha de comando não leva mais a porta do host, porque dentro do container o SSH é o 8101.
 
 ### Corrigido
 - **Abrir o console do Karaf num container (botão do WTA)** procurava o cliente em `/opt/pcsist/apache-karaf/bin/client`, que não existe na imagem do WTA, e caía num `bash` solto. O Karaf do WTA é o `/opt/pcsist/produtos/winthor` (o mesmo `C:\pcsist\produtos\winthor` do Windows), e o cliente fica em `bin/client`. O caminho certo é o primeiro agora, conferido no `pcsist.tar.gz` do INFR-Docker.
