@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { execFileAsync, isValidIdentifier } from '../../utils/security';
+import { isValidIdentifier } from '../../utils/security';
+import { execWsl } from '../../utils/wslExec';
 import { httpRequest } from '../../utils/httpRequest';
 import { isValidEnvName } from '../../../shared/infrWinthorVersion';
 import { INFR_NEW_VERSION_SCRIPTS, commandFailureDetail } from '../../../shared/infrNewVersionScripts';
@@ -31,10 +32,9 @@ export class InfrOriginCheckService {
     let state: string | undefined;
     let url: string | undefined;
     try {
-      const { stdout } = await execFileAsync(
-        'wsl.exe',
+      const { stdout } = await execWsl(
         ['-d', distro, '--', 'bash', '-c', `docker inspect -f '{{.State.Status}}' ${container} 2>/dev/null; echo '@@'; docker port ${container} 8080 2>/dev/null | head -1`],
-        { timeout: 30000, windowsHide: true }
+        { timeout: 30000 }
       );
       const [inspect, ports] = String(stdout).split('@@');
       state = inspect.trim() || undefined;

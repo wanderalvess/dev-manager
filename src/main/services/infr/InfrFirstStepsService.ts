@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { execFileAsync, isValidIdentifier } from '../../utils/security';
+import { execWsl } from '../../utils/wslExec';
 import { httpRequest } from '../../utils/httpRequest';
 import { isValidWinthorVersion } from '../../../shared/infrWinthorVersion';
 import { buildFirstSteps, parseDistroProbe, type InfrFirstStepsProbe, type InfrFirstStepsResult } from '../../../shared/infrFirstSteps';
@@ -79,7 +80,7 @@ export class InfrFirstStepsService {
       'true'
     ].join('; ');
     try {
-      const { stdout } = await execFileAsync('wsl.exe', ['-d', distro, '--', 'bash', '-c', script], { timeout: 45000, windowsHide: true });
+      const { stdout } = await execWsl(['-d', distro, '--', 'bash', '-c', script], { timeout: 45000 });
       return parseDistroProbe(String(stdout));
     } catch (err: any) {
       return { error: `Não foi possível ler a distro ${distro}: ${commandFailureDetail(err)}` };

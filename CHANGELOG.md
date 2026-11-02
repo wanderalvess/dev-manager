@@ -12,6 +12,9 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
   - se o catálogo não trouxer dependências, o ponto avisa que não deu para conferir, e o "Registro da leitura" guarda um exemplo do formato recebido.
   - Faixas OSGi (`[1.40.1.0,1.40.1.0]`, `[1.0,2.0)`) e versão solta (mínimo) são entendidas; nunca usa versão bloqueada nem de linha acima da alvo.
 
+### Corrigido
+- **Erros do WSL ilegíveis no assistente INFR**: quando o próprio `wsl.exe` falhava (distro que não existe, serviço do WSL com problema...), a tela de *Verificar ambiente*, a Nova versão, os Primeiros passos, o Subir WinThor e a conferência da origem mostravam texto embaralhado, tipo "N□ã□o□ □h□á□", porque o `wsl.exe` escreve as mensagens dele em UTF-16 e o Hub lia como UTF-8. Agora a saída é decodificada, e o motivo aparece com os acentos (ex.: "Não há distribuição com o nome fornecido. Código de erro: Wsl/Service/WSL_E_DISTRO_NOT_FOUND"). O que o comando imprime dentro da distro continua como estava.
+
 ## [1.53.0] - 2026-11-02
 ### Adicionado
 - **Karaf em container (WTA do INFR-Docker)**: em Configurações → Karaf, o ambiente de execução ganhou a opção *Container (WTA)*. O cliente do Karaf passa a rodar dentro do container, com `docker exec` na distro do Docker, em vez de exigir um Karaf instalado no Windows:

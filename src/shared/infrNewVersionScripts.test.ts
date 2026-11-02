@@ -17,6 +17,11 @@ describe('infrNewVersionScripts', () => {
     expect(commandFailureDetail(long, 2)).toBe('l8 · l9');
   });
 
+  it('tira os bytes nulos de um UTF-16 lido como UTF-8, em vez de mostrar quadrados', () => {
+    const embaralhado = 'F\u0000a\u0000l\u0000h\u0000a\u0000 \u0000a\u0000o\u0000 \u0000i\u0000n\u0000i\u0000c\u0000i\u0000a\u0000r\u0000\r\n\u0000';
+    expect(commandFailureDetail({ stdout: embaralhado })).toBe('Falha ao iniciar');
+  });
+
   it('sem saída, cai na mensagem do erro', () => {
     expect(commandFailureDetail(new Error('timeout'))).toBe('timeout');
     expect(commandFailureDetail('falhou')).toBe('falhou');

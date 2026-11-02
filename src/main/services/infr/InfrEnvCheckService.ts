@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
-import { execFileAsync, isValidIdentifier } from '../../utils/security';
+import { isValidIdentifier } from '../../utils/security';
+import { execWsl } from '../../utils/wslExec';
 import { httpRequest } from '../../utils/httpRequest';
 import { wtArg } from '../../utils/windowsTerminal';
 import { isValidEnvName } from '../../../shared/infrWinthorVersion';
@@ -40,11 +41,7 @@ export class InfrEnvCheckService {
     ).join('; ');
     let output: string;
     try {
-      const { stdout } = await execFileAsync('wsl.exe', ['-d', distro, '--', 'bash', '-c', script], {
-        timeout: 60000,
-        windowsHide: true,
-        maxBuffer: 8 * 1024 * 1024
-      });
+      const { stdout } = await execWsl(['-d', distro, '--', 'bash', '-c', script], { timeout: 60000, maxBuffer: 8 * 1024 * 1024 });
       output = String(stdout);
     } catch (err: any) {
       return { success: false, error: `Não foi possível ler os containers na distro ${distro}: ${commandFailureDetail(err)}`, distro, name: n, containers: [] };

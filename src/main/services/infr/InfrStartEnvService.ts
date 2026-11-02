@@ -1,4 +1,5 @@
-import { execFileAsync, isValidIdentifier } from '../../utils/security';
+import { isValidIdentifier } from '../../utils/security';
+import { execWsl } from '../../utils/wslExec';
 import { httpRequest } from '../../utils/httpRequest';
 import { commandFailureDetail } from '../../../shared/infrNewVersionScripts';
 import { isValidEnvName, type InfrEnvironmentsResult } from '../../../shared/infrWinthorVersion';
@@ -59,8 +60,8 @@ export class InfrStartEnvService {
       listEnvironments,
       login,
       run: async (distro, script, timeoutMs) => {
-        const { stdout } = await execFileAsync('wsl.exe', ['-d', distro, '--', 'bash', '-c', script], { timeout: timeoutMs, windowsHide: true });
-        return String(stdout);
+        const { stdout } = await execWsl(['-d', distro, '--', 'bash', '-c', script], { timeout: timeoutMs });
+        return stdout;
       },
       httpStatus: async (url, method) => {
         try {
