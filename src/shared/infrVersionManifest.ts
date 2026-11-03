@@ -10,6 +10,7 @@ import type { DryRunReport } from './infrDryRun';
 import type { ArtifactReport } from './infrFeatureArtifacts';
 import type { PreflightItem } from './infrPreflight';
 import type { DependencyReport } from './infrFeatureDependencies';
+import type { InfrCloneInfo } from './infrClone';
 
 export interface ManifestFeature {
   name: string;
@@ -69,6 +70,10 @@ export interface InfrVersionPreviewRequest {
   wshJar?: string;
   /** Ensaiar a resolução no Karaf do WTA de origem (feature:install -t); leva alguns minutos */
   dryRun?: boolean;
+  /** Clonar sem mudar nada: mesma versão da origem, sem catálogo da 801 nem troca de feature (targetVersion é ignorado) */
+  cloneOnly?: boolean;
+  /** Portas escolhidas na tela (Oracle, WTA, WSH), para a pré-checagem olhar as que valem de fato */
+  ports?: { oracle?: number; web?: number; wsh?: number };
 }
 
 /** Como a lista da prévia se compara ao manifesto que já existe da versão. */
@@ -108,6 +113,8 @@ export interface InfrVersionPreview {
   preflight?: PreflightItem[];
   /** Resultado do ensaio da resolução, quando pedido */
   dryRun?: DryRunReport;
+  /** Leitura de um clone (cloneOnly): versão e imagem da origem, e o que já existe na distro */
+  clone?: InfrCloneInfo;
   wshCheck?: WshDependencyCheck[];
   /** Erro ao ler o jar do WSH (não impede a prévia) */
   wshError?: string;

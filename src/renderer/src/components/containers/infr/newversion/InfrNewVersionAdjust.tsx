@@ -38,7 +38,7 @@ export const InfrNewVersionAdjust: React.FC<{ s: InfrNewVersionState; open: bool
             <Value label="WTA">:{form.wtaPort || '?'}</Value>
             <Value label="WSH">{form.wshJar ? `${jar} :${form.wshPort || '?'}` : 'sem'}</Value>
             <Value label="Configuração">copiada do {form.from || '—'}</Value>
-            {form.dryRun === '1' && <Value label="Ensaio no Karaf">sim</Value>}
+            {form.dryRun === '1' && !s.clone && <Value label="Ensaio no Karaf">sim</Value>}
           </span>
         )}
         <span className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-warning">
@@ -106,6 +106,7 @@ export const InfrNewVersionAdjust: React.FC<{ s: InfrNewVersionState; open: bool
 
           <InfrEnvConfigSection s={s} />
 
+          {!s.clone && (
           <div className="space-y-3 pt-1">
             <p className="text-xs font-semibold text-foreground">Avançado</p>
             <div>
@@ -122,6 +123,7 @@ export const InfrNewVersionAdjust: React.FC<{ s: InfrNewVersionState; open: bool
               </span>
             </label>
           </div>
+          )}
         </div>
       )}
     </section>
