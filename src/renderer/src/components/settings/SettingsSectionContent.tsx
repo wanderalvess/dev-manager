@@ -10,9 +10,8 @@ import { DirsTab } from './tabs/DirsTab';
 import { KarafTab } from './tabs/KarafTab';
 import { RoutinesTab } from './tabs/RoutinesTab';
 import { AzureTab } from './tabs/AzureTab';
-import { ServicesTab } from './tabs/ServicesTab';
+import { DebugPrepSection } from './debug/DebugPrepSection';
 import { PortsTab } from './tabs/PortsTab';
-import { AutomationTab } from './tabs/AutomationTab';
 import { LogsTab } from './tabs/LogsTab';
 import { BackupTab } from './tabs/BackupTab';
 import { AiTab } from './tabs/AiTab';
@@ -28,7 +27,7 @@ import type { useQualitySources } from '../../hooks/settings/useQualitySources';
 import type { useEnvironmentProfiles } from '../../hooks/settings/useEnvironmentProfiles';
 import type { useSettingsImportExport } from '../../hooks/settings/useSettingsImportExport';
 import type { useSetupChecklist } from '../../hooks/settings/useSetupChecklist';
-import { DEFAULT_AUTOMATION, DEFAULT_LOG_SOURCES, DEFAULT_PORTS, DEFAULT_PROCESSES, DEFAULT_SERVICES } from '../../utils/settingsDefaults';
+import { DEFAULT_LOG_SOURCES, DEFAULT_PORTS } from '../../utils/settingsDefaults';
 
 export interface SettingsSectionContentProps {
   tab: SettingsTab;
@@ -112,24 +111,7 @@ export const SettingsSectionContent: React.FC<SettingsSectionContentProps> = (pr
     case 'azure':
       return <AzureTab settings={settings} setSettings={setSettings} renderPathStatusBadge={renderPathStatusBadge} onGoToDirs={() => onOpenSection('dirs')} />;
     case 'debug':
-      return (
-        <div className="space-y-4">
-          <ServicesTab
-            settings={settings}
-            defaultServices={DEFAULT_SERVICES}
-            defaultProcesses={DEFAULT_PROCESSES}
-            handleResetServices={lists.handleResetServices}
-            handleAddService={lists.handleAddService}
-            handleUpdateService={lists.handleUpdateService}
-            handleRemoveService={lists.handleRemoveService}
-            handleResetProcesses={lists.handleResetProcesses}
-            handleAddProcess={lists.handleAddProcess}
-            handleUpdateProcess={lists.handleUpdateProcess}
-            handleRemoveProcess={lists.handleRemoveProcess}
-          />
-          <AutomationTab settings={settings} setSettings={setSettings} defaultAutomation={DEFAULT_AUTOMATION} />
-        </div>
-      );
+      return <DebugPrepSection settings={settings} setSettings={setSettings} lists={lists} onOpenEnvironment={props.onNavigate && (() => props.onNavigate?.('env'))} />;
     case 'ports':
       return (
         <PortsTab

@@ -3,6 +3,7 @@ import { FileCode2, FolderOpen, Layers } from 'lucide-react';
 import type { AppSettings } from '../../../../../shared/types';
 import { useDirsTabFields } from '../../../hooks/settings/useDirsTabFields';
 import { DirsPathField } from '../dirs/DirsPathField';
+import { SettingsAdvanced, SettingsCard } from '../SettingsCard';
 
 interface KarafPathsPanelProps {
   settings: AppSettings;
@@ -25,15 +26,8 @@ export const KarafPathsPanel: React.FC<KarafPathsPanelProps> = ({
   const { setField, setPathField } = useDirsTabFields({ settings, setSettings, validateSinglePath });
 
   return (
-    <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border">
-      <div className="flex items-center justify-between pb-1 border-b border-border/60">
-        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Layers className="w-3.5 h-3.5 text-warning" /> Instalação do Apache Karaf
-        </h3>
-        <span className="text-2xs text-muted-foreground font-mono">Windows Explorer</span>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs items-start">
+    <SettingsCard title="Instalação" description="A pasta do Karaf (a que tem bin/client.bat). Usada para iniciar, parar, abrir o console e fazer deploy.">
+      <div className="space-y-4 text-xs">
         <DirsPathField
           fieldId="field-karafPath"
           labelIcon={<Layers className="w-3.5 h-3.5 text-warning" />}
@@ -48,6 +42,7 @@ export const KarafPathsPanel: React.FC<KarafPathsPanelProps> = ({
           browseTitle="Selecionar pasta do Karaf"
         />
 
+        <SettingsAdvanced summary="Avançado: script de inicialização próprio" defaultOpen={Boolean(settings.karafScript)}>
         <DirsPathField
           labelIcon={<FileCode2 className="w-3.5 h-3.5 text-warning" />}
           labelText="Script de Inicialização do Karaf (Opcional):"
@@ -63,7 +58,8 @@ export const KarafPathsPanel: React.FC<KarafPathsPanelProps> = ({
             </p>
           }
         />
+        </SettingsAdvanced>
       </div>
-    </div>
+    </SettingsCard>
   );
 };
