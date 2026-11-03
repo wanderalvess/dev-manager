@@ -22,6 +22,7 @@ import { DockerService } from '../main/services/DockerService';
 import { wslService } from '../main/services/WslService';
 import { InfrVersionService } from '../main/services/infr/InfrVersionService';
 import { InfrEnvCheckService } from '../main/services/infr/InfrEnvCheckService';
+import { WeatherService } from '../main/services/WeatherService';
 import { InfrOriginCheckService } from '../main/services/infr/InfrOriginCheckService';
 import { InfrFirstStepsService } from '../main/services/infr/InfrFirstStepsService';
 import { InfrFirstStepsActions } from '../main/services/infr/InfrFirstStepsActions';
@@ -1793,6 +1794,12 @@ app.post('/api/network/probe', async (req, res) => {
 app.get('/api/system/metrics', async (_req, res) => {
   const metrics = await networkService.getSystemMetrics();
   res.json(metrics);
+});
+
+// Clima da tela de início (Open-Meteo): só o nome da cidade sai da máquina
+const weatherService = new WeatherService();
+app.get('/api/system/weather', async (req, res) => {
+  res.json(await weatherService.getWeather(String(req.query.city ?? '')));
 });
 
 // 12. Bundles Karaf

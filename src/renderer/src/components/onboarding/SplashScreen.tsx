@@ -4,7 +4,10 @@ import { AppLogo } from '../AppLogo';
 import { Modal } from '../ui/Modal';
 import { SPLASH_BOOT_ITEMS } from './onboardingContent';
 import { countdownSeconds, getSplashTiming, RETURNING_AUTO_CLOSE_MS } from './splashTiming';
-import { SplashBootPanel, SplashNewsPanel, SplashStepsPanel } from './splash/SplashPanels';
+import { SplashBootPanel, SplashStepsPanel } from './splash/SplashPanels';
+import { SplashStartPanel } from './splash/SplashStartPanel';
+import { useStartScreenData } from './splash/useStartScreenData';
+import { greeting } from './splash/startScreenUtils';
 import { extractVersionHighlights } from '../../utils/changelogUtils';
 import changelogRaw from '../../../../../CHANGELOG.md?raw';
 
@@ -55,6 +58,12 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
   const [paused, setPaused] = useState(false);
   const enterRef = useRef<HTMLButtonElement>(null);
   const news = useMemo(() => extractVersionHighlights(changelogRaw, appVersion), [appVersion]);
+  const start = useStartScreenData(isOpen && !isNewUser);
+
+  // "Abrir sempre na tela de início": a contagem nem começa
+  useEffect(() => {
+    if (isOpen && start.stay) setPaused(true);
+  }, [isOpen, start.stay]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -152,7 +161,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           )}
           {done && (
             <h1 className="m-0 text-5xl sm:text-7xl font-extrabold tracking-tighter leading-none animate-splash-rise">
-              {isNewUser ? 'Primeira vez por aqui?' : 'Bem-vindo de volta.'}
+              {isNewUser ? 'Primeira vez por aqui?' : `${greeting(new Date())}.`}
             </h1>
           )}
 
@@ -214,11 +223,31 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
               )}
             </div>
           )}
+
+          {done && !isNewUser && (
+            <label className="flex items-center gap-2.5 text-sm text-muted-foreground cursor-pointer animate-splash-rise">
+              <input
+                type="checkbox"
+                checked={start.stay}
+                onChange={(e) => {
+                  start.setStay(e.target.checked);
+                  if (e.target.checked) setPaused(true);
+                }}
+                className="w-4 h-4 accent-[hsl(var(--primary))]"
+              />
+              Abrir sempre nesta tela de início (entro quando quiser)
+            </label>
+          )}
         </section>
 
         {done && isNewUser && <SplashStepsPanel />}
-        {showNews && news && <SplashNewsPanel version={news.version} items={news.items} onWhatsNew={onWhatsNew} />}
-        {(!done || (!isNewUser && !showNews)) && <SplashBootPanel completed={completed} />}
+        {done && !isNewUser && (
+          // Mexer num cartão (digitar a cidade, ler a previsão) segura a tela: a contagem não interrompe ninguém
+          <div onPointerDownCapture={() => setPaused(true)} onFocusCapture={() => setPaused(true)} className="contents">
+            <SplashStartPanel data={start} news={showNews ? news : null} onWhatsNew={onWhatsNew} />
+          </div>
+        )}
+        {!done && <SplashBootPanel completed={completed} />}
       </main>
 
       <footer className="relative h-20 shrink-0 px-6 sm:px-16 lg:px-24 flex items-center justify-between gap-4 font-mono text-xs text-muted-foreground">

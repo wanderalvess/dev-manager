@@ -1,9 +1,8 @@
 import React from 'react';
-import { ArrowRight, Check } from 'lucide-react';
-import type { ChangelogHighlight } from '../../../utils/changelogUtils';
+import { Check } from 'lucide-react';
 import { ONBOARDING_STEPS, SPLASH_BOOT_ITEMS, bootItemState } from '../onboardingContent';
 
-// Cartão da direita da abertura: o que está carregando, as etapas do onboarding ou as novidades da versão.
+// Cartão da direita da abertura: o que está carregando ou as etapas do onboarding (a tela de início fica em SplashStartPanel).
 
 const PANEL = 'w-full max-w-xl justify-self-center lg:justify-self-end rounded-3xl border border-border bg-card p-6 sm:p-8 flex flex-col gap-5';
 const EYEBROW = 'font-mono text-xs font-bold tracking-[0.14em] text-muted-foreground';
@@ -73,33 +72,5 @@ export const SplashStepsPanel: React.FC = () => (
         </li>
       ))}
     </ol>
-  </section>
-);
-
-export const SplashNewsPanel: React.FC<{ version: string; items: ChangelogHighlight[]; onWhatsNew: () => void }> = ({
-  version,
-  items,
-  onWhatsNew
-}) => (
-  <section aria-label="Novidades desta versão" className={`${PANEL} animate-splash-rise`}>
-    <span className={EYEBROW}>NOVIDADES · v{version}</span>
-    {items.map((item) => (
-      <article key={item.title} className="rounded-2xl bg-muted/60 p-5 flex flex-col gap-2">
-        {item.section && (
-          <span className={`font-mono text-xs font-bold uppercase ${item.section === 'Corrigido' ? 'text-info' : 'text-success'}`}>
-            {item.section}
-          </span>
-        )}
-        <h2 className="m-0 text-lg font-bold">{item.title}</h2>
-        {item.summary && <p className="m-0 text-sm leading-relaxed text-muted-foreground">{item.summary}</p>}
-      </article>
-    ))}
-    <button
-      type="button"
-      onClick={onWhatsNew}
-      className="self-start min-h-11 flex items-center gap-2 font-bold text-primary cursor-pointer hover:underline"
-    >
-      Ver todas as novidades <ArrowRight className="w-4 h-4" />
-    </button>
   </section>
 );

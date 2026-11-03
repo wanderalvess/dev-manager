@@ -4,6 +4,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Adicionado
+- **Tela de início na abertura**: para quem já usa o app, a abertura virou uma tela de início com o que é útil ver num relance:
+  - *Este PC*: nome, processador e memória (atualizam a cada 5 s) e há quanto tempo está ligado;
+  - *Sua semana no Hub*: automações dos últimos 7 dias, tempo economizado (a mesma conta do Meu uso) e os módulos mais usados;
+  - *Clima*: temperatura, sensação, umidade, vento e a previsão de 3 dias da cidade que você informar ali mesmo. Usa o Open-Meteo (gratuito, sem chave) e **só o nome da cidade sai da máquina**; sem cidade, nada é consultado;
+  - *Ambientes WinThor*: cada ambiente da distro, no ar, em parte ou parado;
+  - *Novidades* da versão, com o atalho para ver todas.
+- **Abrir sempre na tela de início**: uma opção na própria abertura faz o Hub não entrar sozinho; você entra quando quiser (Enter ou *Entrar*).
+
+### Alterado
+- **A abertura fica 8 s** antes de entrar sozinha (eram 3 s, sem tempo para ler), com a contagem no botão *Entrar agora*. Mexer num cartão (digitar a cidade, por exemplo) ou clicar em *Ficar nesta tela* segura a tela.
+
 ## [1.60.0] - 2026-11-03
 ### Adicionado
 - **Causa do build que falhou, completa (Assistente INFR → Verificar)**: quando o build da Nova versão falha ao instalar as features, o log tem uma linha `[ERRO] ... não ficou instalada` por feature (151 numa lista de 140), mas só a **primeira falha de resolução do lote** é a causa. O Hub agora lê o log inteiro (não só o fim), acha esse primeiro erro e mostra: o que não resolveu (feature, bundle e pacote, cada um com a faixa de versão), a cadeia `caused by` do Karaf **sem cortar no meio**, "N falhas no log, mas só a primeira é a causa", um *Como resolver* e o texto completo do Karaf recolhido, com *Copiar*. Um `No matching features` que vem depois aparece à parte como outro problema (feature que nenhum repositório da lista tem).

@@ -5,6 +5,7 @@ import path from 'path';
 import { SelectFileOptions, SystemAppInfo } from '../../../shared/types';
 import { isSafeUrl } from '../../utils/security';
 import type { IpcContext } from '../ipcContext';
+import { WeatherService } from '../../services/WeatherService';
 
 /** Sistema, diálogos nativos e informações do app. Canais: dialog:*, shell:*, system:* */
 export function registerSystemHandlers(ctx: IpcContext): void {
@@ -155,4 +156,8 @@ export function registerSystemHandlers(ctx: IpcContext): void {
   ipcMain.handle('system:get-metrics', async () => {
     return await networkService.getSystemMetrics();
   });
+
+  // Clima da tela de início: só o nome da cidade sai da máquina (validado no WeatherService)
+  const weatherService = new WeatherService();
+  ipcMain.handle('system:get-weather', async (_, city: string) => weatherService.getWeather(String(city ?? '')));
 }
