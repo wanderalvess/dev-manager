@@ -1,19 +1,13 @@
 import React from 'react';
 import {
-  Rocket,
   BookOpen,
-  Zap,
-  LifeBuoy,
-  Info,
   Settings,
   Download,
   ExternalLink,
   Check,
   Copy,
   RotateCcw,
-  Activity,
-  Compass,
-  LucideIcon
+  Activity
 } from 'lucide-react';
 import { getModulesFaq } from './faq/modulesFaq';
 import { getLogsFaq } from './faq/logsFaq';
@@ -27,14 +21,7 @@ import { getInfrVersionFaq } from './faq/infrVersionFaq';
 import { McpSafetyNote } from './modules/McpSafetyNote';
 import { MCP_TOOL_COUNT } from '../../../../shared/mcpCatalog';
 
-export type HelpCategory = 'overview' | 'modules' | 'guides' | 'shortcuts' | 'faq' | 'about';
-
-export interface HelpCategoryItem {
-  id: HelpCategory;
-  label: string;
-  icon: LucideIcon;
-  badge?: string;
-}
+export type { HelpCategory } from './helpSections';
 
 export const MCP_ADD_COMMAND = 'claude mcp add dev-manager --scope user -- cmd /c C:\\DevManager\\mcp\\dev-manager-mcp.cmd';
 
@@ -678,10 +665,10 @@ export function getFaqList({
             <span className="font-semibold text-foreground block pt-1 text-xs text-primary">Arquivos gerados na pasta release/:</span>
             <ul className="list-disc pl-4 space-y-1">
               <li>
-                <strong className="text-foreground">Hub Manager {appInfo?.appVersion || '1.55.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
+                <strong className="text-foreground">Hub Manager {appInfo?.appVersion || '1.56.0'}.exe (Portátil):</strong> Não precisa instalar. Basta clicar duas vezes e usar. Ideal para rodar de pendrives ou pastas de rede.
               </li>
               <li>
-                <strong className="text-foreground">Hub Manager Setup {appInfo?.appVersion || '1.55.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
+                <strong className="text-foreground">Hub Manager Setup {appInfo?.appVersion || '1.56.0'}.exe (Instalador):</strong> Instalador assistido (NSIS) que cria atalhos no Desktop e Menu Iniciar.
               </li>
               <li>
                 <strong className="text-foreground">LEIA-ME.txt, instalar-extras.cmd e mcp\\:</strong> guia do usuário com os links dos downloads opcionais, script que instala o modelo do RAG e o Oracle Instant Client colocados na pasta, e o servidor MCP pronto para uso. Para regenerar só esses arquivos: <code className="font-mono text-primary">npm run release:folder</code>.
@@ -1375,7 +1362,7 @@ export function getFaqList({
             <span className="font-semibold text-foreground block text-xs text-primary">Como acessar e navegar:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
-                <strong className="text-foreground">Badge no Header:</strong> Clique diretamente na etiqueta de versão (<code className="font-mono text-primary font-bold">v{appInfo?.appVersion || '1.55.0'}</code>) no topo esquerdo do cockpit para abrir o modal.
+                <strong className="text-foreground">Badge no Header:</strong> Clique diretamente na etiqueta de versão (<code className="font-mono text-primary font-bold">v{appInfo?.appVersion || '1.56.0'}</code>) no topo esquerdo do cockpit para abrir o modal.
               </li>
               <li>
                 <strong className="text-foreground">Navegação entre releases:</strong> No cabeçalho do modal, utilize os botões rápidos <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">&lt;</kbd> e <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">&gt;</kbd> (ou os atalhos <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">Alt + ←</kbd> e <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">Alt + →</kbd>) para folhear versão a versão.
@@ -1774,16 +1761,5 @@ export function getKeyboardShortcuts(debugPort: number) {
     { key: 'Shift + F9', desc: `Depuração Remota JVM no IntelliJ IDEA (Porta :${debugPort})`, category: 'Desenvolvimento' },
     { key: 'Enter', desc: 'Enviar comando no Terminal Integrado do Shell Karaf', category: 'Terminal' },
     { key: 'Ctrl + C / Esc', desc: 'Interromper comando ou diagnóstico em execução no terminal (ou botão Interromper)', category: 'Terminal' }
-  ];
-}
-
-export function getHelpCategories(faqCount: number, appVersion: string = '1.55.0'): HelpCategoryItem[] {
-  return [
-    { id: 'overview', label: 'Visão Geral & Início', icon: Rocket, badge: 'Launchpad' },
-    { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '14 Módulos' },
-    { id: 'guides', label: 'Guias', icon: Compass, badge: '2 Guias' },
-    { id: 'shortcuts', label: 'Atalhos & Dicas Pro', icon: Zap, badge: 'Produtividade' },
-    { id: 'faq', label: 'FAQ & Resolução de Dúvidas', icon: LifeBuoy, badge: `${faqCount}` },
-    { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appVersion}` }
   ];
 }

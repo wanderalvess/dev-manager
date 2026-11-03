@@ -111,7 +111,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                     <HelpCircle className="w-3.5 h-3.5 shrink-0" />
                     <span className="text-xs truncate">Central de Ajuda</span>
                   </div>
-                  <span className="text-2xs font-mono opacity-80 shrink-0 ml-2">Alt+9</span>
+                  <span className="text-2xs font-mono opacity-80 shrink-0 ml-2">Alt+H</span>
                 </button>
                 <button
                   type="button"

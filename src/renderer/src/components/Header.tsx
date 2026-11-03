@@ -159,7 +159,7 @@ export const Header: React.FC<HeaderProps> = ({
           data-tour="help"
           onClick={() => setActiveTab('help')}
           tone={activeTab === 'help' ? 'active' : 'neutral'}
-          label="Central de Ajuda, FAQ e Diagnósticos (Alt+9)"
+          label="Central de Ajuda, FAQ e Diagnósticos (Alt+H)"
           icon={<HelpCircle className="w-4 h-4" />}
         />
 

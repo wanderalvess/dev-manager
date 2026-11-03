@@ -637,9 +637,10 @@ O mesmo conjunto de services alimenta o IPC do Electron, a API REST e o servidor
 | `Alt + 6` | Navega para a aba **Catálogo de Rotinas** |
 | `Alt + 7` | Navega para a aba **Documentação & RAG** |
 | `Alt + 8` | Navega para a aba **Logs em Tempo Real** |
-| `Alt + 9` | Navega para a aba **Ajuda & Diagnóstico** |
+| `Alt + 9` | Navega para a aba **API Studio** |
 | `Alt + 0` | Navega para a aba **APM & Traces** |
 | `Alt + Q` | Navega para a aba **Central de Qualidade (QA Studio)** |
+| `Alt + H` | Navega para a **Central de Ajuda** |
 
 **Ajuda** e **Configurações** contam com botões dedicados de acesso rápido no canto direito do cabeçalho (ou via `Ctrl + K`).
 
