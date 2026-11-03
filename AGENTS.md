@@ -233,11 +233,14 @@ Ajuda também foi atualizada, no mesmo commit/PR.** Não deixe para depois: a Aj
 várias versões atrás (APM, Statement Tracer, WinThor Start, criptografia de segredos e
 contagem de tools MCP ausentes ou desatualizadas).
 
+A página segue o desenho das Configurações: menu lateral por grupos (`components/help/helpSections.ts`), busca no menu
+(`utils/helpSearch.ts`, que indexa FAQ, módulos e atalhos) e uma seção por vez em `components/help/tabs`. Seção nova entra
+em `HELP_SECTIONS` e `HELP_SECTION_GROUPS`; o `Ctrl+K` é do Quick Launcher, não da busca da Ajuda.
+
 Checklist ao entregar uma funcionalidade:
 
-- **Guia dos Módulos** (`activeCategory === 'modules'`): adicione um bullet no card do
-  módulo afetado ou crie um card novo para página nova (e atualize o `badge` "N Módulos" em
-  `categories`).
+- **Guia dos Módulos** (seção `modules`): adicione um bullet no card do módulo afetado ou crie um
+  card novo para página nova.
 - **Visão Geral → Ecossistema & Módulos**: página nova ganha um card de acesso rápido com o
   atalho correspondente.
 - **FAQ** (`faqList`): se o uso não for óbvio (pré-requisito, configuração, permissão,

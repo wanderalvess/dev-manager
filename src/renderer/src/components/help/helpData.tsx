@@ -1,19 +1,13 @@
 import React from 'react';
 import {
-  Rocket,
   BookOpen,
-  Zap,
-  LifeBuoy,
-  Info,
   Settings,
   Download,
   ExternalLink,
   Check,
   Copy,
   RotateCcw,
-  Activity,
-  Compass,
-  LucideIcon
+  Activity
 } from 'lucide-react';
 import { getModulesFaq } from './faq/modulesFaq';
 import { getLogsFaq } from './faq/logsFaq';
@@ -27,14 +21,7 @@ import { getInfrVersionFaq } from './faq/infrVersionFaq';
 import { McpSafetyNote } from './modules/McpSafetyNote';
 import { MCP_TOOL_COUNT } from '../../../../shared/mcpCatalog';
 
-export type HelpCategory = 'overview' | 'modules' | 'guides' | 'shortcuts' | 'faq' | 'about';
-
-export interface HelpCategoryItem {
-  id: HelpCategory;
-  label: string;
-  icon: LucideIcon;
-  badge?: string;
-}
+export type { HelpCategory } from './helpSections';
 
 export const MCP_ADD_COMMAND = 'claude mcp add dev-manager --scope user -- cmd /c C:\\DevManager\\mcp\\dev-manager-mcp.cmd';
 
@@ -1774,16 +1761,5 @@ export function getKeyboardShortcuts(debugPort: number) {
     { key: 'Shift + F9', desc: `Depuração Remota JVM no IntelliJ IDEA (Porta :${debugPort})`, category: 'Desenvolvimento' },
     { key: 'Enter', desc: 'Enviar comando no Terminal Integrado do Shell Karaf', category: 'Terminal' },
     { key: 'Ctrl + C / Esc', desc: 'Interromper comando ou diagnóstico em execução no terminal (ou botão Interromper)', category: 'Terminal' }
-  ];
-}
-
-export function getHelpCategories(faqCount: number, appVersion: string = '1.55.0'): HelpCategoryItem[] {
-  return [
-    { id: 'overview', label: 'Visão Geral & Início', icon: Rocket, badge: 'Launchpad' },
-    { id: 'modules', label: 'Guia dos Módulos', icon: BookOpen, badge: '14 Módulos' },
-    { id: 'guides', label: 'Guias', icon: Compass, badge: '2 Guias' },
-    { id: 'shortcuts', label: 'Atalhos & Dicas Pro', icon: Zap, badge: 'Produtividade' },
-    { id: 'faq', label: 'FAQ & Resolução de Dúvidas', icon: LifeBuoy, badge: `${faqCount}` },
-    { id: 'about', label: 'Sobre & Diagnóstico', icon: Info, badge: `v${appVersion}` }
   ];
 }

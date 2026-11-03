@@ -5,7 +5,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
 ## [Não lançado]
+### Alterado
+- **Central de Ajuda refeita** no desenho das Configurações: menu lateral por grupos (*Aprender*, *Suporte* e *Referência*) no lugar das abas horizontais, com busca no menu e os tours no rodapé dele.
+  - *Busca*: acha perguntas, módulos e atalhos ao mesmo tempo, sem diferenciar acento (`configuracoes` acha *Configurações*). Escolher uma pergunta abre a resposta no lugar e rola até ela.
+  - *Resolver problemas* (antes *FAQ*): campo para filtrar pelo texto do erro, assuntos com a quantidade de perguntas (os 8 maiores à vista e *Mais N assuntos* para o resto) e respostas fechadas por padrão, abertas quando há filtro. No fim, o atalho para perguntar à IA em Documentação.
+  - *Visão geral*: ganhou *Comece pelo seu papel* (Desenvolvedor, QA, PO/SME) e *Problemas mais comuns*; a faixa de abertura ficou só com a situação deste PC e o próximo passo.
+
 ### Corrigido
+- **Atalho da Central de Ajuda**: o cabeçalho, o menu lateral e o README diziam `Alt+9`, mas esse atalho abre o API Studio. A Ajuda abre com `Alt+H`. O API Studio, que faltava na lista de módulos da Visão geral, entrou com o `Alt+9`.
 - **Configurações → IA & LLM**: revisão da tela usando-a de ponta a ponta.
   - *Timeout*: dava para digitar só valores como 55 (o "4" de 45 já virava 5 a cada tecla); agora o piso de 5 s vale ao sair do campo.
   - *Presets*: escolher um preset depois de colar a chave não apaga mais a chave nem o prompt de sistema; a grade deixou de cortar os nomes com o menu lateral aberto; o formulário rola até a vista ao abrir (ficava abaixo da lista, parecendo que nada acontecera) e o exemplo da chave mostra o formato do provedor (`sk-ant-...`, `AIzaSy...`).
