@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.57.0] - 2026-11-03
 ### Alterado
 - **Assistente INFR redesenhado, sem menu lateral**: abre em *Ambientes*, com cada ambiente da distro como Oracle → WTA → WSH (estado e porta de cada parte) e a ação que faz sentido: *Iniciar*, *Abrir o WinThor*, *Verificar* ou *Copiar para outra versão*. As tarefas (Nova versão, Montar do zero, Verificar) abrem numa tela própria com o caminho de volta no cabeçalho; *Subir só o banco/WTA/WSH* e *Scripts e pasta* continuam acessíveis.
 - **Nova versão numa tela só**: os quatro passos viraram uma frase ("Criar o ambiente v40 na versão 40, a partir do local, com o banco copiado"), *Ajustes* fechado com os valores à vista (portas, WSH, configuração, avançado) e *Antes de gerar*, uma lista única com a conferência da origem e a leitura do catálogo da 801. O que impede vem primeiro, com a ação ali mesmo (ex.: *Iniciar o local* quando a origem está parada); o que passou fica numa linha. O catálogo é lido sozinho quando a origem passa, e o rodapé diz o que será criado e tem o único *Gerar*.
