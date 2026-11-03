@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Corrigido
+- **Configurações → IA & LLM**: o cartão do motor mostra o estado do teto de tokens assim que o motor é salvo no formulário (antes só depois de *Salvar alterações*), e o prompt de sistema do motor deixou de se perder ao editar; no painel *Meu uso → Uso de IA*, as tabelas por provedor, modelo e origem empilham em telas médias.
+
 ## [1.58.0] - 2026-11-03
 ### Adicionado
 - **Uso de IA e teto de tokens**: cada chamada de IA que passa pelo Hub (tela, API REST e MCP) tem os tokens de entrada/saída registrados localmente por dia, provedor, modelo e origem (*IA conduz*, *Perguntar à documentação*, *Diagnóstico HTTP*, *MCP*), sem guardar prompt, resposta nem chave, e respeitando a *Contagem de uso*.
