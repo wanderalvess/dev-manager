@@ -7,6 +7,7 @@ import type {
   InfrVersionPreviewRequest
 } from '../shared/infrVersionManifest';
 import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
+import type { WeatherReport } from '../shared/weather';
 import type { InfrOriginCheck } from '../shared/infrOriginCheck';
 import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../shared/infrFirstSteps';
 import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../shared/infrActiveEnv';
@@ -472,6 +473,8 @@ export interface ElectronAPI {
 
   // Métricas do Sistema
   getSystemMetrics: () => Promise<SystemMetrics>;
+  /** Clima da tela de início pelo Open-Meteo (só o nome da cidade sai da máquina) */
+  getWeather?: (city: string) => Promise<WeatherReport>;
 
   // Leitor e Monitor de Logs em Tempo Real (Tail -f)
   startLogWatch: (

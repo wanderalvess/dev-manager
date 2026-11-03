@@ -12,6 +12,7 @@ import type {
 } from '../../../../shared/types';
 import type { ElectronAPI } from '../../../../preload/index';
 import type { BridgeDeps } from './core';
+import type { WeatherReport } from '../../../../shared/weather';
 
 /** Adaptador web (REST/WebSocket) dos canais: Diálogos Nativos do Sistema & Verificação de Caminhos; Rede & Detecção de IPs (Local e WSL); Métricas do Sistema; Auto-update (No modo Web/Docker operações de auto-update desktop são no-op). */
 export function createSystemApi({ apiFetch }: BridgeDeps) {
@@ -116,6 +117,14 @@ export function createSystemApi({ apiFetch }: BridgeDeps) {
           usedMemoryMb: 4096,
           memoryUsagePercent: 50
         };
+      }
+    },
+
+    getWeather: async (city: string): Promise<WeatherReport> => {
+      try {
+        return await apiFetch<WeatherReport>(`/api/system/weather?city=${encodeURIComponent(city)}`);
+      } catch (err) {
+        return { success: false, error: err instanceof Error ? err.message : 'Não foi possível ler o clima.' };
       }
     },
 

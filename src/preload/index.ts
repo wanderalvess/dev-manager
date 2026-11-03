@@ -17,6 +17,7 @@ import type {
   InfrVersionPreviewRequest
 } from '../shared/infrVersionManifest';
 import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
+import type { WeatherReport } from '../shared/weather';
 import type { InfrOriginCheck } from '../shared/infrOriginCheck';
 import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../shared/infrFirstSteps';
 import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../shared/infrActiveEnv';
@@ -795,6 +796,7 @@ const electronAPI = {
 
   // Métricas do Sistema
   getSystemMetrics: (): Promise<SystemMetrics> => ipcRenderer.invoke('system:get-metrics'),
+  getWeather: (city: string): Promise<WeatherReport> => ipcRenderer.invoke('system:get-weather', city),
 
   // Leitor e Monitor de Logs em Tempo Real (Tail -f)
   startLogWatch: (
