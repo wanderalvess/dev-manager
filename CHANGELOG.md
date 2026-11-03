@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.61.0] - 2026-11-03
 ### Adicionado
 - **Tela de início na abertura**: para quem já usa o app, a abertura virou uma tela de início com o que é útil ver num relance:
   - *Este PC*: nome, processador e memória (atualizam a cada 5 s) e há quanto tempo está ligado;
