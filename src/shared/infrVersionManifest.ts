@@ -6,7 +6,9 @@
  */
 import type { Routine801CatalogResponse } from './types';
 import type { InfrEnvField } from './infrEnvConfig';
+import type { DryRunReport } from './infrDryRun';
 import type { ArtifactReport } from './infrFeatureArtifacts';
+import type { PreflightItem } from './infrPreflight';
 import type { DependencyReport } from './infrFeatureDependencies';
 
 export interface ManifestFeature {
@@ -65,6 +67,8 @@ export interface InfrVersionPreviewRequest {
   originWtaUrl?: string;
   /** Jar do WSH da versão alvo, caminho no WSL (/opt/wsh/40/winthor-integracao-core.jar) */
   wshJar?: string;
+  /** Ensaiar a resolução no Karaf do WTA de origem (feature:install -t); leva alguns minutos */
+  dryRun?: boolean;
 }
 
 /** Como a lista da prévia se compara ao manifesto que já existe da versão. */
@@ -100,6 +104,10 @@ export interface InfrVersionPreview {
   dependencies?: DependencyReport;
   /** Repositórios novos da lista testados no Nexus que o WTA de origem usa */
   artifacts?: ArtifactReport;
+  /** Portas, disco, memória e rede da distro para o ambiente novo */
+  preflight?: PreflightItem[];
+  /** Resultado do ensaio da resolução, quando pedido */
+  dryRun?: DryRunReport;
   wshCheck?: WshDependencyCheck[];
   /** Erro ao ler o jar do WSH (não impede a prévia) */
   wshError?: string;

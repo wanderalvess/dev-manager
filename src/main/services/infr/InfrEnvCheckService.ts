@@ -13,6 +13,7 @@ import {
   type InfrCheckCommandId,
   type InfrEnvCheck
 } from '../../../shared/infrEnvCheck';
+import { analyzeBuildLog, buildLogPath } from '../../../shared/infrBuildLog';
 import { commandFailureDetail } from '../../../shared/infrNewVersionScripts';
 import type { WslService } from '../WslService';
 
@@ -59,6 +60,7 @@ export class InfrEnvCheckService {
         wtaHttp = { url, error: String(err?.message || err) };
       }
     }
+    const buildLog = await this.readBuildLog(distro, n);
     return {
       success: true,
       name: n,
@@ -66,8 +68,22 @@ export class InfrEnvCheckService {
       checkedAt: new Date().toISOString(),
       containers,
       wtaHttp,
-      summary: summarizeEnvCheck(containers, wtaHttp)
+      buildLog,
+      summary: summarizeEnvCheck(containers, wtaHttp, buildLog)
     };
+  }
+
+  /** Fim do log que o terminal do Gerar grava em /tmp da distro; sem o arquivo, não há relatório. */
+  private async readBuildLog(distro: string, name: string): Promise<InfrEnvCheck['buildLog']> {
+    const path = buildLogPath(name);
+    if (!path) return undefined;
+    try {
+      const { stdout } = await execWsl(['-d', distro, '--', 'bash', '-c', `test -f ${path} && tail -n 200 ${path} || echo '@@semlog'`], { timeout: 15000, maxBuffer: 4 * 1024 * 1024 });
+      const text = String(stdout);
+      return text.trim() === '@@semlog' ? undefined : analyzeBuildLog(path, text);
+    } catch {
+      return undefined;
+    }
   }
 
   /**

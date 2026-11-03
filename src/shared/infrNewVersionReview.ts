@@ -11,7 +11,7 @@ export type InfrReviewStatus = 'ok' | 'warn' | 'block';
 export type InfrReviewFix = 'useSourceOracle' | 'emptyOracle';
 
 export interface InfrReviewItem {
-  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'artefatos' | 'wsh' | 'banco';
+  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'artefatos' | 'ensaio' | 'portas' | 'disco' | 'memoria' | 'rede' | 'wsh' | 'banco';
   status: InfrReviewStatus;
   title: string;
   detail: string;
@@ -91,7 +91,9 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
     items.push(reviewDependencies(p.dependencies));
     const artifacts = reviewArtifacts(p.artifacts);
     if (artifacts) items.push(artifacts);
+    if (p.dryRun) items.push(reviewDryRun(p.dryRun));
   }
+  items.push(...(p.preflight ?? []));
 
   const checks = useExisting && existing.wshCheck ? existing.wshCheck : p.wshCheck;
   const fails = checks?.filter((c) => !c.ok) ?? [];
@@ -117,6 +119,21 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
 
   items.push(reviewDatabase(i));
   return items;
+}
+
+/** O Karaf de origem simulou a instalação das features trocadas? Só avisa: ele ainda tem o estado da versão antiga. */
+function reviewDryRun(d: NonNullable<InfrVersionPreview['dryRun']>): InfrReviewItem {
+  const title = 'Ensaio da resolução no Karaf';
+  if (d.skipped) return { id: 'ensaio', status: 'warn', title: 'Ensaio da resolução não rodou', detail: `${d.skipped}.` };
+  if (d.errors.length) {
+    return {
+      id: 'ensaio',
+      status: 'warn',
+      title: 'O Karaf não resolveu as features',
+      detail: `${d.errors.slice(0, 3).join(' · ')}${d.errors.length > 3 ? ` · e mais ${d.errors.length - 3}` : ''}. O build tende a falhar do mesmo jeito.`
+    };
+  }
+  return { id: 'ensaio', status: 'ok', title, detail: `${d.simulated} features simuladas (feature:install -t) sem erro de resolução.` };
 }
 
 /** Os repositórios novos existem no Nexus do WTA? Só avisa: o teste pode não enxergar um espelho ou um login. */

@@ -1,4 +1,5 @@
 import fs from 'fs';
+import net from 'net';
 import path from 'path';
 import { isValidIdentifier } from '../../utils/security';
 import { execWsl } from '../../utils/wslExec';
@@ -27,6 +28,17 @@ import {
   parsePaxRepositories,
   type ArtifactReport
 } from '../../../shared/infrFeatureArtifacts';
+import { buildDryRunCommands, parseDryRunOutput, type DryRunReport } from '../../../shared/infrDryRun';
+import {
+  buildPreflightScript,
+  describePreflight,
+  evaluatePreflight,
+  expectedPorts,
+  parsePreflightOutput,
+  type PreflightItem,
+  type PreflightSnapshot
+} from '../../../shared/infrPreflight';
+import { KARAF_CONTAINER_CLIENT } from '../../utils/karafDockerUtils';
 import { mergeDependencyFixes, resolveDependencies } from '../../../shared/infrFeatureDependencies';
 import { buildEnvFile, envFieldsFor, parseEnvLines, pickEnv, type InfrEnvTarget } from '../../../shared/infrEnvConfig';
 import type { InfrEnvSaveRequest, InfrEnvTemplate, InfrManifestSaveRequest, InfrManifestSaveResult } from '../../../shared/infrVersionManifest';
@@ -181,6 +193,7 @@ export class InfrVersionService {
       `Gerado pelo Hub Manager em ${new Date().toISOString().slice(0, 10)} a partir do ambiente ${from}`,
       `e do catálogo de atualizações da rotina 801 (${upgrade.changes.length} atualizadas, ${upgrade.behind.length} sem versão da linha ${target}).`
     ];
+    const repositories = await this.karafRepositories(distro, container, trace);
     const result: InfrVersionPreview = {
       success: true,
       originWtaUrl: url,
@@ -188,7 +201,8 @@ export class InfrVersionService {
       originLine: manifestLineOf(origin),
       upgrade: { changes: upgrade.changes, behind: upgrade.behind, skipped: upgrade.skipped },
       dependencies: dep,
-      artifacts: await this.checkArtifacts(distro, container, origin, upgrade.manifest, catalog, upgrade.changes, trace),
+      artifacts: await this.checkArtifacts(distro, container, repositories, origin, upgrade.manifest, catalog, upgrade.changes, trace),
+      preflight: await this.preflight(distro, target, repositories, trace),
       manifestText: serializeVersionManifest(upgrade.manifest, header)
     };
     const existingFile = this.manifestPath(infr.windows, target);
@@ -207,6 +221,7 @@ export class InfrVersionService {
         result.wshError = `Não foi possível ler o dependencies.json de ${req.wshJar}: ${commandFailureDetail(err)}`;
       }
     }
+    if (req.dryRun) result.dryRun = await this.dryRun(distro, container, newRepoProbes(upgrade.manifest, origin).map((p) => p.mvn), upgrade.changes, trace);
     return result;
   }
 
@@ -217,6 +232,7 @@ export class InfrVersionService {
   private async checkArtifacts(
     distro: string,
     container: string,
+    repositories: string[] | null,
     origin: Parameters<typeof newRepoProbes>[1],
     manifest: Parameters<typeof newRepoProbes>[0],
     catalog: Parameters<typeof featuresWithoutRepo>[1],
@@ -231,19 +247,86 @@ export class InfrVersionService {
       return report;
     }
     try {
-      const cfg = await this.run(distro, `docker exec ${container} sh -c 'cat /opt/pcsist/produtos/winthor/etc/org.ops4j.pax.url.mvn.cfg'`, 30000);
-      const repositories = parsePaxRepositories(cfg);
-      trace(`Repositórios do Karaf: ${repositories.join(', ') || '(nenhum http no org.ops4j.pax.url.mvn.cfg)'}`);
-      if (repositories.length === 0) return { ...report, checked: probes.length, unverified: probes.length, error: 'o Karaf não lista repositórios http' };
+      if (!repositories?.length) return { ...report, checked: probes.length, unverified: probes.length, error: 'o Karaf não lista repositórios http (ou o container não deixou ler o org.ops4j.pax.url.mvn.cfg)' };
       const script = buildArtifactProbeScript(repositories, probes).replace(/'/g, `'${String.fromCharCode(92)}''`);
       const out = await this.run(distro, `docker exec ${container} sh -c '${script}'`, 180000);
       report = { ...parseArtifactProbeOutput(out, probes, repositories), withoutRepo };
+      trace(`Resposta por artefato: ${out.trim().split(/\r?\n/).join(' | ') || '(vazia)'}`);
       trace(`Artefatos: ${report.checked} testados, ${report.missing.length} ausentes, ${report.unverified} sem resposta`);
     } catch (err: any) {
       trace(`Artefatos não conferidos: ${commandFailureDetail(err)}`);
       report = { ...report, checked: probes.length, unverified: probes.length, error: commandFailureDetail(err) };
     }
     return report;
+  }
+
+  /** Repositórios http que o Karaf do container usa (org.ops4j.pax.url.mvn.cfg); null se não deu para ler. */
+  private async karafRepositories(distro: string, container: string, trace: Trace): Promise<string[] | null> {
+    try {
+      const cfg = await this.run(distro, `docker exec ${container} sh -c 'cat /opt/pcsist/produtos/winthor/etc/org.ops4j.pax.url.mvn.cfg'`, 30000);
+      const repositories = parsePaxRepositories(cfg);
+      trace(`Repositórios do Karaf: ${repositories.join(', ') || '(nenhum http no org.ops4j.pax.url.mvn.cfg)'}`);
+      return repositories;
+    } catch (err: any) {
+      trace(`Repositórios do Karaf não lidos: ${commandFailureDetail(err)}`);
+      return null;
+    }
+  }
+
+  /** Porta livre no Windows? Quem ocupa (um programa, um proxy) impede o `docker run -p` de publicar. */
+  private portFreeOnWindows(port: number): Promise<boolean> {
+    return new Promise((resolve) => {
+      const server = net.createServer();
+      server.once('error', () => resolve(false));
+      server.once('listening', () => server.close(() => resolve(true)));
+      server.listen(port, '0.0.0.0');
+    });
+  }
+
+  /** Portas, disco, memória e Nexus: o que costuma derrubar o build ou o primeiro boot, lido em segundos. */
+  private async preflight(distro: string, target: string, repositories: string[] | null, trace: Trace): Promise<PreflightItem[]> {
+    let snap: PreflightSnapshot = { usedPorts: [] };
+    try {
+      snap = parsePreflightOutput(await this.run(distro, buildPreflightScript(repositories ?? []), 60000));
+    } catch (err: any) {
+      trace(`Pré-checagem na distro falhou: ${commandFailureDetail(err)}`);
+    }
+    const windowsUsed: number[] = [];
+    for (const e of expectedPorts(target)) if (!(await this.portFreeOnWindows(e.port))) windowsUsed.push(e.port);
+    describePreflight(snap, windowsUsed).forEach((l) => trace(l));
+    const items = evaluatePreflight(target, snap, windowsUsed);
+    trace(`Pré-checagem: ${items.map((i) => `${i.id}=${i.status}`).join(', ')}`);
+    return items;
+  }
+
+  /**
+   * Ensaio da resolução no Karaf do WTA de origem: acrescenta os repositórios novos, simula (-t) cada feature trocada e
+   * retira os repositórios. Um comando por chamada do cliente, porque o primeiro erro interromperia um roteiro (-f) e
+   * deixaria os repositórios acrescentados na origem.
+   */
+  private async dryRun(distro: string, container: string, newRepos: string[], changes: { name: string; to: string }[], trace: Trace): Promise<DryRunReport> {
+    const MAX = 40;
+    const commands = buildDryRunCommands(newRepos, changes.slice(0, MAX));
+    const simulated = commands.filter((c) => c.startsWith('feature:install')).length;
+    if (simulated === 0) {
+      trace('Ensaio: nenhuma feature trocada para simular');
+      return { simulated: 0, errors: [], tail: [], skipped: 'nenhuma feature trocada' };
+    }
+    if (changes.length > MAX) trace(`Ensaio limitado às ${MAX} primeiras das ${changes.length} features trocadas`);
+    const b64 = Buffer.from(commands.join('\n') + '\n').toString('base64');
+    const script = `echo ${b64} | base64 -d > /tmp/hub-ensaio.txt; while IFS= read -r l; do echo "> $l"; ${KARAF_CONTAINER_CLIENT} "$l" 2>&1; done < /tmp/hub-ensaio.txt; rm -f /tmp/hub-ensaio.txt`;
+    trace(`Ensaio: ${simulated} features, ${newRepos.length} repositórios acrescentados e retirados do Karaf de ${container}`);
+    try {
+      const out = await this.run(distro, `docker exec ${container} sh -c '${script}'`, 600000);
+      const report = parseDryRunOutput(out, simulated);
+      trace(`Ensaio: ${report.errors.length} erro(s) do Karaf${report.errors.length ? `: ${report.errors.join(' | ')}` : ''}`);
+      trace(`Fim da saída do ensaio: ${report.tail.join(' | ')}`);
+      return report;
+    } catch (err: any) {
+      const reason = commandFailureDetail(err);
+      trace(`Ensaio não rodou: ${reason}`);
+      return { simulated, errors: [], tail: [], skipped: reason };
+    }
   }
 
   private manifestPath(infrWindows: string, version: string): string {

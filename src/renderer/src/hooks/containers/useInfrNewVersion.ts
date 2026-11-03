@@ -26,11 +26,13 @@ export interface InfrNewVersionForm {
   wshPort: string;
   wshJar: string;
   originWtaUrl: string;
+  /** '1' = ensaiar a resolução no Karaf de origem na prévia */
+  dryRun: string;
 }
 
 const EMPTY: InfrNewVersionForm = {
   from: '', version: '', name: '', dbMode: 'clone', dbSource: '', dbContainer: '',
-  oraclePort: '', wtaPort: '', wshPort: '', wshJar: '', originWtaUrl: ''
+  oraclePort: '', wtaPort: '', wshPort: '', wshJar: '', originWtaUrl: '', dryRun: ''
 };
 
 /** Campos que seguem a versão, a origem e o nome enquanto o usuário não os edita. */
@@ -185,7 +187,8 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
         fromEnv: form.from,
         targetVersion: form.version,
         wshJar: form.wshJar || undefined,
-        originWtaUrl: form.originWtaUrl || undefined
+        originWtaUrl: form.originWtaUrl || undefined,
+        dryRun: form.dryRun === '1'
       });
       setPreview(res);
       setManifestSource(res.existing ? 'existing' : 'preview');

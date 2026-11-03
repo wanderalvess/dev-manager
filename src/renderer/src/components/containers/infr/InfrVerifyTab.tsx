@@ -80,6 +80,19 @@ export const InfrVerifyTab: React.FC<{ v: InfrEnvCheckState; envNames: string[] 
         </div>
       )}
 
+      {r?.success && r.buildLog && r.buildLog.tail.length > 0 && (
+        <details open={!!r.buildLog.failure} className="rounded-xl border border-border/80 bg-card p-4">
+          <summary className="text-sm font-bold text-foreground cursor-pointer">
+            Log do build{r.buildLog.failure ? ' · falhou' : ''}
+            <span className="font-normal text-2xs text-muted-foreground ml-2">{r.buildLog.path}</span>
+          </summary>
+          {r.buildLog.stage && <p className="text-2xs text-muted-foreground mt-2">Última etapa: {r.buildLog.stage}</p>}
+          <pre className="mt-2 max-h-64 overflow-auto p-2.5 bg-[#090D14] rounded-lg text-2xs font-mono text-emerald-400 whitespace-pre-wrap break-all select-text">
+            {r.buildLog.tail.join('\n')}
+          </pre>
+        </details>
+      )}
+
       {r?.success && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           {r.containers.map((c) => {
