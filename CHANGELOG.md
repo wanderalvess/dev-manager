@@ -11,6 +11,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
   - Campos que quase ninguém usa ficam em *Avançado*, recolhido: cookie e payload do WTA, programa por extensão, cookie da CCW, script próprio do Karaf e os parâmetros do motor de IA (nome, endereço, protocolo, temperatura, timeout e teto de uso). O *Avançado* já abre se tiver algo preenchido, e a busca abre o do campo encontrado.
   - Um só liga/desliga em serviços, processos, portas vigiadas, WinThor Start, Módulos e Uso (antes eram três desenhos).
   - *Salvar Motor* e *Salvar Fonte de Teste* viraram *Adicionar motor*/*Aplicar* e *Aplicar fonte*: só mudam o rascunho, que se salva na barra do rodapé.
+### Corrigido
+- **Configurações → IA & LLM**: o cartão do motor mostra o estado do teto de tokens assim que o motor é salvo no formulário (antes só depois de *Salvar alterações*), e o prompt de sistema do motor deixou de se perder ao editar; no painel *Meu uso → Uso de IA*, as tabelas por provedor, modelo e origem empilham em telas médias.
 
 ## [1.58.0] - 2026-11-03
 ### Adicionado

@@ -11,7 +11,7 @@ import type {
 } from '../../shared/types';
 import { AI_USAGE_SOURCE_LABELS, normalizeAiUsageSource } from '../../shared/aiUsageTypes';
 import { addDays, dayKey, isDayKey } from '../../shared/usageDates';
-import { evaluateLimit } from './aiUsageLimits';
+import { evaluateLimit } from '../../shared/aiUsageLimits';
 
 /** Dias guardados: o suficiente para "tudo" cobrir mais de um ano sem o arquivo crescer sem fim. */
 export const AI_USAGE_RETENTION_DAYS = 400;
@@ -176,7 +176,7 @@ export function buildAiUsageReport(
     byProvider: finish(groups.provider),
     byModel: finish(groups.model),
     bySource: finish(groups.source),
-    limits: providers.map((p) => limitStatusFor(days, p, now)).filter((s) => s.dayLimit || s.monthLimit)
+    limits: providers.map((p) => limitStatusFor(days, p, now))
   };
 }
 

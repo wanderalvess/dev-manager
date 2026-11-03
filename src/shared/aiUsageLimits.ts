@@ -1,4 +1,4 @@
-import type { AiLimitStatus, LlmProviderConfig } from '../../shared/types';
+import type { AiLimitStatus, LlmProviderConfig } from './types';
 
 /** A partir deste percentual do teto o Hub avisa; ao chegar a 100% a chamada é bloqueada. */
 export const AI_LIMIT_WARNING_RATIO = 0.8;
