@@ -4,6 +4,7 @@ import { AppSettings } from '../../../../../shared/types';
 import { getEnabledModuleIds, isModuleEnabled } from '../../../../../shared/appModules';
 import { NAV_THEME_GROUPS } from '../../header/headerNavConfig';
 import { toggleModule } from '../../../utils/moduleVisibility';
+import { Switch } from '../../ui/Switch';
 
 interface ModulesTabProps {
   settings: AppSettings;
@@ -80,24 +81,7 @@ export const ModulesTab: React.FC<ModulesTabProps> = ({ settings, setSettings })
                         <div className="text-2xs text-muted-foreground truncate">{item.description}</div>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={checked}
-                      aria-label={hint}
-                      title={hint}
-                      disabled={isLast}
-                      onClick={() => setModule(item.id, !checked)}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60 ${
-                        checked ? 'bg-primary' : 'bg-muted-foreground/30'
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                          checked ? 'translate-x-5' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
+                    <Switch checked={checked} onChange={(v) => setModule(item.id, v)} label={hint} disabled={isLast} />
                   </div>
                 );
               })}

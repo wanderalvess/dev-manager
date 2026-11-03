@@ -1,69 +1,55 @@
 import React from 'react';
-import { Download } from 'lucide-react';
 import { AppSettings } from '../../../../../shared/types';
+import { SETTINGS_INPUT_CLASS, SettingsAdvanced, SettingsCard, SettingsField } from '../SettingsCard';
 
 interface DirsCcwPanelProps {
   settings: AppSettings;
   setField: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void;
 }
 
-const INPUT_CLASS =
-  'w-full bg-muted/40 border border-border rounded-lg px-2.5 py-1.5 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary';
-
+/** Central de Controle WinThor: de onde o Catálogo de Rotinas baixa e atualiza executáveis. */
 export const DirsCcwPanel: React.FC<DirsCcwPanelProps> = ({ settings, setField }) => (
-  <div id="field-ccw" className="bg-card border border-border/80 rounded-xl p-3 space-y-3 shadow-xs">
-    <div className="flex items-center justify-between">
-      <div>
-        <span className="font-bold text-xs text-foreground flex items-center gap-1.5">
-          <Download className="w-4 h-4 text-info" /> Central de Controle WinThor (CCW)
-        </span>
-        <p className="text-2xs text-muted-foreground mt-0.5">
-          Download e atualização automática de rotinas e executáveis da nuvem direto para o ambiente local.
-        </p>
-      </div>
-    </div>
-
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 border-t border-border/40">
-      <div>
-        <label htmlFor="dirs-ccw-panel-1" className="block text-2xs font-semibold text-foreground mb-1">
-          URL Base da Central de Controle:
-        </label>
-        <input id="dirs-ccw-panel-1"
-          type="text"
+  <SettingsCard id="field-ccw" title="Central de Controle WinThor (CCW)" description="De onde o Catálogo de Rotinas baixa e atualiza executáveis.">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <SettingsField label="Endereço da CCW" htmlFor="ccw-url">
+        <input
+          id="ccw-url"
           value={settings.ccwBaseUrl || 'https://centraldecontrole.pcinformatica.com.br'}
           onChange={(e) => setField('ccwBaseUrl', e.target.value)}
-          className={INPUT_CLASS}
+          className={SETTINGS_INPUT_CLASS}
           placeholder="https://centraldecontrole.pcinformatica.com.br"
         />
-      </div>
-      <div>
-        <label htmlFor="dirs-ccw-panel-2" className="block text-2xs font-semibold text-foreground mb-1">
-          Versão WinThor Padrão (CCW):
-        </label>
-        <input id="dirs-ccw-panel-2"
-          type="text"
+      </SettingsField>
+      <SettingsField label="Versão padrão do WinThor" htmlFor="ccw-version">
+        <input
+          id="ccw-version"
           value={settings.ccwWinthorVersion || '37.00'}
           onChange={(e) => setField('ccwWinthorVersion', e.target.value)}
-          className={INPUT_CLASS}
+          className={SETTINGS_INPUT_CLASS}
           placeholder="37.00"
         />
-      </div>
+      </SettingsField>
     </div>
-
-    <div>
-      <label htmlFor="dirs-ccw-panel-3" className="block text-2xs font-semibold text-foreground mb-1">
-        Cookie de Autenticação CCW (<code>auth_token</code> ou similar, opcional):
-      </label>
-      <input id="dirs-ccw-panel-3"
-        type="password"
-        value={settings.ccwAuthCookie || ''}
-        onChange={(e) => setField('ccwAuthCookie', e.target.value)}
-        className={INPUT_CLASS}
-        placeholder="Cole o cookie da sessão web se necessário para rotinas restritas"
-      />
-      <p className="text-2xs text-muted-foreground mt-0.5">
-        Para download direto pelo número da rotina, a CCW não exige autenticação. O cookie é usado para carregar toda a árvore de módulos e rotinas.
-      </p>
-    </div>
-  </div>
+    <SettingsAdvanced summary="Avançado: cookie da CCW" defaultOpen={Boolean(settings.ccwAuthCookie)}>
+      <SettingsField
+        label={
+          <>
+            Cookie de autenticação (<code>auth_token</code> ou similar)
+          </>
+        }
+        htmlFor="ccw-cookie"
+        optional
+        hint="Baixar pelo número da rotina não exige login. O cookie só serve para carregar a árvore completa de módulos e rotinas."
+      >
+        <input
+          id="ccw-cookie"
+          type="password"
+          value={settings.ccwAuthCookie || ''}
+          onChange={(e) => setField('ccwAuthCookie', e.target.value)}
+          className={SETTINGS_INPUT_CLASS}
+          placeholder="Cole o cookie da sessão web"
+        />
+      </SettingsField>
+    </SettingsAdvanced>
+  </SettingsCard>
 );

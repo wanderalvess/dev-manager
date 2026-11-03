@@ -1,7 +1,8 @@
 import React from 'react';
-import { FileCode2, FolderOpen, Plus, Trash2 } from 'lucide-react';
+import { FolderOpen, Plus, Trash2 } from 'lucide-react';
 import { AppSettings } from '../../../../../shared/types';
 import { formatRoutineExtensions, parseRoutineExtensions } from '../../../utils/dirsTabParsers';
+import { SETTINGS_BUTTON_CLASS, SETTINGS_INPUT_CLASS, SettingsAdvanced, SettingsField } from '../SettingsCard';
 
 interface DirsRoutineExtensionsFieldsProps {
   settings: AppSettings;
@@ -13,6 +14,9 @@ interface DirsRoutineExtensionsFieldsProps {
   handleBrowseLauncherPath: (index: number) => Promise<void>;
 }
 
+const ICON_BUTTON = 'h-9 w-9 shrink-0 rounded-lg flex items-center justify-center cursor-pointer';
+
+/** Extensões que contam como rotina e, em Avançado, o programa que abre cada formato que não roda sozinho. */
 export const DirsRoutineExtensionsFields: React.FC<DirsRoutineExtensionsFieldsProps> = ({
   settings,
   onExtensionsChange,
@@ -23,78 +27,63 @@ export const DirsRoutineExtensionsFields: React.FC<DirsRoutineExtensionsFieldsPr
   handleBrowseLauncherPath
 }) => (
   <>
-    {/* Extensões e Launchers do Catálogo de Rotinas */}
-    <div className="space-y-1.5">
-      <label htmlFor="dirs-routine-extensions-fields-1" className="font-bold text-foreground flex items-center gap-1.5">
-        <FileCode2 className="w-3.5 h-3.5 text-primary" />
-        Extensões Reconhecidas como Rotina:
-      </label>
-      <input id="dirs-routine-extensions-fields-1"
-        type="text"
+    <SettingsField
+      label="Extensões que contam como rotina"
+      htmlFor="routine-extensions"
+      hint="Separadas por vírgula. Arquivos com essas extensões aparecem no Catálogo de Rotinas."
+    >
+      <input
+        id="routine-extensions"
         value={formatRoutineExtensions(settings.routineFileExtensions)}
         onChange={(e) => onExtensionsChange(parseRoutineExtensions(e.target.value))}
-        className="w-full bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden transition-colors shadow-xs"
+        className={SETTINGS_INPUT_CLASS}
         placeholder=".EXE, .BAT"
       />
-      <p className="text-2xs text-muted-foreground">
-        Separadas por vírgula. Arquivos com essas extensões aparecem no Catálogo de Rotinas.
-      </p>
-    </div>
+    </SettingsField>
 
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between">
-        <span className="font-bold text-foreground flex items-center gap-1.5">
-          <FileCode2 className="w-3.5 h-3.5 text-primary" />
-          Launchers por Extensão (opcional):
-        </span>
-        <button
-          type="button"
-          onClick={handleAddLauncherRow}
-          className="px-2 py-1 bg-card hover:bg-muted border border-border rounded-lg text-2xs font-semibold text-foreground transition-all flex items-center gap-1"
-        >
-          <Plus className="w-3 h-3" />
-          <span>Adicionar</span>
-        </button>
-      </div>
-      <p className="text-2xs text-muted-foreground">
-        Para formatos que não rodam sozinhos (ex: um arquivo de rotina que precisa ser aberto por outro
-        programa), aponte aqui a extensão e o executável que deve abri-lo.
+    <SettingsAdvanced summary="Avançado: abrir uma extensão com outro programa" defaultOpen={launcherRows.length > 0}>
+      <p className="text-xs text-muted-foreground">
+        Para formatos que não rodam sozinhos, aponte a extensão e o executável que deve abri-la.
       </p>
       {launcherRows.map((row, index) => (
-        <div key={index} className="flex items-center gap-2">
-          <input aria-label={`Extensão do launcher ${index + 1}`}
-            type="text"
+        <div key={index} className="flex flex-wrap items-center gap-2">
+          <input
+            aria-label={`Extensão do launcher ${index + 1}`}
             value={row.ext}
             onChange={(e) => handleUpdateLauncherRow(index, 'ext', e.target.value)}
             placeholder=".PC"
-            className="w-20 bg-card border border-border rounded-lg px-2 py-1.5 text-foreground font-mono text-xs focus:outline-hidden focus:border-primary shadow-xs"
+            className={`${SETTINGS_INPUT_CLASS} w-24`}
           />
           <input
             aria-label={`Executável do launcher ${index + 1}`}
-            type="text"
             value={row.path}
             onChange={(e) => handleUpdateLauncherRow(index, 'path', e.target.value)}
-            placeholder="Caminho do executável launcher"
-            className="flex-1 bg-card border border-input rounded-[10px] px-2 py-2.5 text-foreground font-mono text-sm focus:outline-hidden shadow-xs"
+            placeholder="Caminho do executável"
+            className={`${SETTINGS_INPUT_CLASS} flex-1 min-w-48`}
           />
           <button
             type="button"
-            onClick={() => handleBrowseLauncherPath(index)}
-            className="p-1.5 bg-card hover:bg-muted border border-border rounded-lg shrink-0"
-            title="Selecionar executável" aria-label="Selecionar executável"
+            onClick={() => void handleBrowseLauncherPath(index)}
+            className={`${ICON_BUTTON} border border-border bg-card hover:bg-muted text-muted-foreground`}
+            title="Selecionar executável"
+            aria-label="Selecionar executável"
           >
-            <FolderOpen className="w-3.5 h-3.5 text-success" />
+            <FolderOpen className="w-4 h-4" />
           </button>
           <button
             type="button"
             onClick={() => handleRemoveLauncherRow(index)}
-            className="p-1.5 text-muted-foreground hover:text-danger transition-colors shrink-0"
-            title="Remover" aria-label="Remover"
+            className={`${ICON_BUTTON} text-muted-foreground hover:text-danger hover:bg-danger/10`}
+            title="Remover"
+            aria-label={`Remover o launcher ${index + 1}`}
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       ))}
-    </div>
+      <button type="button" onClick={handleAddLauncherRow} className={`${SETTINGS_BUTTON_CLASS} self-start`}>
+        <Plus className="w-3.5 h-3.5" /> {launcherRows.length ? 'Outra extensão' : 'Adicionar extensão'}
+      </button>
+    </SettingsAdvanced>
   </>
 );

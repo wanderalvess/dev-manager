@@ -5,6 +5,12 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
 ## [Não lançado]
+### Alterado
+- **Configurações: cards das seções no desenho novo**:
+  - *Preparação do debug* virou dois passos numerados: *Liberar a máquina* (serviços e processos) e *Subir o ambiente*. Os perfis de automação aparecem só para consulta, com o atalho *Editar em Ambiente Dev*. Lista vazia diz o que adicionar.
+  - Campos que quase ninguém usa ficam em *Avançado*, recolhido: cookie e payload do WTA, programa por extensão, cookie da CCW, script próprio do Karaf e os parâmetros do motor de IA (nome, endereço, protocolo, temperatura, timeout e teto de uso). O *Avançado* já abre se tiver algo preenchido, e a busca abre o do campo encontrado.
+  - Um só liga/desliga em serviços, processos, portas vigiadas, WinThor Start, Módulos e Uso (antes eram três desenhos).
+  - *Salvar Motor* e *Salvar Fonte de Teste* viraram *Adicionar motor*/*Aplicar* e *Aplicar fonte*: só mudam o rascunho, que se salva na barra do rodapé.
 ### Corrigido
 - **Configurações → IA & LLM**: o cartão do motor mostra o estado do teto de tokens assim que o motor é salvo no formulário (antes só depois de *Salvar alterações*), e o prompt de sistema do motor deixou de se perder ao editar; no painel *Meu uso → Uso de IA*, as tabelas por provedor, modelo e origem empilham em telas médias.
 
