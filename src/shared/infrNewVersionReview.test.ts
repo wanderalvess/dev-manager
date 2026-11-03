@@ -26,6 +26,32 @@ const base: InfrReviewInput = {
 
 const byId = (items: ReturnType<typeof reviewNewVersion>, id: string) => items.find((i) => i.id === id)!;
 
+describe('repositório de cada feature (build do Nathan)', () => {
+  const withRepair = (repair: NonNullable<NonNullable<InfrReviewInput['preview']['existing']>['repair']>, repairText?: string): InfrReviewInput => ({
+    ...base,
+    preview: { ...base.preview, existing: { ...base.preview.existing!, repair, ...(repairText ? { repairText } : {}) } }
+  });
+
+  it('lista existente com versão sem repositório: avisa que o Gerar a corrige', () => {
+    const items = reviewNewVersion(withRepair({ repairs: [{ name: 'winthor-integracao-2650', from: '1.40.1.2', to: '1.40.0.2' }], unresolved: [] }, 'x'));
+    expect(byId(items, 'repositorios')).toMatchObject({ status: 'warn', title: 'A lista da 39 é corrigida ao gerar' });
+    expect(byId(items, 'repositorios').detail).toContain('winthor-integracao-2650 1.40.1.2 → 1.40.0.2');
+    expect(byId(items, 'features').detail).toContain('só as versões sem repositório são trocadas');
+  });
+
+  it('feature que nenhum repositório da lista tem, em versão nenhuma, impede com o como resolver', () => {
+    const items = reviewNewVersion(withRepair({ repairs: [], unresolved: [{ name: 'winthor-integracao-2650', version: '1.40.1.2' }] }));
+    expect(byId(items, 'repositorios')).toMatchObject({ status: 'block', title: 'Feature sem repositório na lista' });
+    expect(byId(items, 'repositorios').detail).toContain('Como resolver');
+    expect(reviewBlocks(items)).toBe(true);
+  });
+
+  it('sem conferência (algum XML não veio), não mostra nada; conferida e limpa, ok', () => {
+    expect(reviewNewVersion(base).some((i) => i.id === 'repositorios')).toBe(false);
+    expect(byId(reviewNewVersion(withRepair({ repairs: [], unresolved: [] })), 'repositorios').status).toBe('ok');
+  });
+});
+
 describe('conferência da versão nova', () => {
   it('reconhece a imagem do Oracle do INFR-Docker', () => {
     expect(isInfrXeImage('oracle-winthor:11.2.0.2-xe')).toBe(true);

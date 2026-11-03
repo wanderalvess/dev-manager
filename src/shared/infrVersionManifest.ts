@@ -87,11 +87,21 @@ export interface ManifestComparison {
 }
 
 /** `versions/<versão>.features` que já existe no INFR-Docker. */
+/** Features da lista que nenhum repositório dela tem: as que voltam para uma versão que ele tem e as que não têm saída. */
+export interface ManifestRepoRepair {
+  repairs: ManifestChange[];
+  unresolved: { name: string; version: string }[];
+}
+
 export interface ExistingVersionManifest {
   path: string;
   count: number;
   comparison: ManifestComparison;
   wshCheck?: WshDependencyCheck[];
+  /** Conferida pelos features.xml dos repositórios dela (ausente = não deu para conferir) */
+  repair?: ManifestRepoRepair;
+  /** O arquivo com as versões corrigidas, que o Gerar grava no lugar do existente */
+  repairText?: string;
 }
 
 /** Qual manifesto a geração usa: o que já existe da versão ou o montado pela prévia. */
@@ -119,6 +129,8 @@ export interface InfrVersionPreview {
   /** Erro ao ler o jar do WSH (não impede a prévia) */
   wshError?: string;
   manifestText?: string;
+  /** Lista nova conferida pelos features.xml; `manifestText` já sai com as correções */
+  repair?: ManifestRepoRepair;
   /** Manifesto da versão que já existe: a geração só o substitui se o usuário escolher */
   existing?: ExistingVersionManifest;
   /** Registro de cada passo (comandos, respostas HTTP, login sem senha), para mostrar e copiar */
@@ -189,6 +201,19 @@ export function serializeVersionManifest(manifest: VersionManifest, header: stri
     ...(manifest.disabled.length ? ['', ...manifest.disabled] : []),
     ''
   ].join('\n');
+}
+
+/** Troca só a versão das linhas `feature <nome> <versão>` indicadas; comentários, repositórios e o resto ficam como estão. */
+export function rewriteFeatureVersions(text: string, changes: ManifestChange[]): string {
+  const to = new Map(changes.map((c) => [`${c.name} ${c.from}`, c.to]));
+  return text
+    .split(/(\r?\n)/)
+    .map((line) => {
+      const m = /^(\s*feature\s+)(\S+)(\s+)(\S+)(.*)$/.exec(line);
+      const next = m ? to.get(`${m[2]} ${m[4]}`) : undefined;
+      return m && next ? `${m[1]}${m[2]}${m[3]}${next}${m[5]}` : line;
+    })
+    .join('');
 }
 
 /** Compara versões por segmento numérico (1.39.20.3 > 1.39.5.0); sufixos não numéricos valem 0. */
