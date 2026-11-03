@@ -162,7 +162,7 @@ export const QualitySourceForm: React.FC<QualitySourceFormProps> = ({
         className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 hover:bg-primary/90 transition shadow-2xs cursor-pointer"
       >
         <Save className="w-3.5 h-3.5" />
-        <span>Salvar Fonte de Teste</span>
+        <span>Aplicar fonte</span>
       </button>
     </div>
   </div>

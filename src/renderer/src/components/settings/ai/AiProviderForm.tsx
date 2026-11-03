@@ -8,6 +8,7 @@ import {
   secondsToTimeoutMs,
   switchProviderType
 } from '../../../utils/aiTabUtils';
+import { SETTINGS_INPUT_CLASS, SETTINGS_GHOST_BUTTON_CLASS, SETTINGS_PRIMARY_BUTTON_CLASS, SettingsAdvanced } from '../SettingsCard';
 
 interface AiProviderFormProps {
   provider: Partial<LlmProviderConfig>;
@@ -45,7 +46,7 @@ const TimeoutInput: React.FC<{ timeoutMs: number | undefined; onCommit: (timeout
       value={text}
       onChange={(e) => handleChange(e.target.value)}
       onBlur={() => setText(formatTimeoutSeconds(timeoutMs))}
-      className="w-full bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden"
+      className={SETTINGS_INPUT_CLASS}
     />
   );
 };
@@ -66,7 +67,7 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
   }, [provider.id]);
 
   return (
-  <div ref={rootRef} className="p-5 rounded-xl border border-primary/40 bg-card shadow-lg space-y-4 animate-in fade-in-0">
+  <div ref={rootRef} className="p-5 rounded-xl border border-primary/40 bg-card space-y-4 animate-in fade-in-0">
     <div className="flex items-center justify-between pb-2 border-b border-border">
       <h4 className="font-bold text-sm text-foreground flex items-center gap-2">
         <Sliders className="w-4 h-4 text-primary" />
@@ -82,47 +83,6 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-      {/* Nome de Exibição */}
-      <div className="space-y-1">
-        <label htmlFor="ai-provider-form-1" className="font-semibold text-foreground">Nome de Identificação</label>
-        <input id="ai-provider-form-1"
-          type="text"
-          value={provider.name || ''}
-          onChange={(e) => onChange({ ...provider, name: e.target.value })}
-          placeholder="Ex: OpenAI Produtivo, Ollama Local"
-          className="w-full bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground text-sm focus:outline-hidden"
-        />
-      </div>
-
-      {/* Família de Provedor */}
-      <div className="space-y-1">
-        <label htmlFor="ai-provider-form-2" className="font-semibold text-foreground">Tipo de Provedor / Protocolo</label>
-        <select id="ai-provider-form-2"
-          value={provider.provider || 'openai'}
-          onChange={(e) => onChange(switchProviderType(provider, e.target.value as LlmProviderType))}
-          className="w-full bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground text-sm focus:outline-hidden cursor-pointer"
-        >
-          <option value="openai">OpenAI / Compatível (OpenAI, Groq, DeepSeek)</option>
-          <option value="gemini">Google Gemini (REST nativo v1beta)</option>
-          <option value="anthropic">Anthropic Claude (Messages API)</option>
-          <option value="ollama">Ollama (Modelo Local Offline)</option>
-          <option value="openrouter">OpenRouter</option>
-          <option value="custom">Personalizado (OpenAI compatible)</option>
-        </select>
-      </div>
-
-      {/* URL Base */}
-      <div className="space-y-1">
-        <label htmlFor="ai-provider-form-3" className="font-semibold text-foreground">URL Base do Endpoint</label>
-        <input id="ai-provider-form-3"
-          type="text"
-          value={provider.baseUrl || ''}
-          onChange={(e) => onChange({ ...provider, baseUrl: e.target.value })}
-          placeholder="Ex: https://api.openai.com/v1 ou http://localhost:11434/v1"
-          className="w-full bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden"
-        />
-      </div>
-
       {/* Nome do Modelo */}
       <div className="space-y-1">
         <label htmlFor="ai-provider-form-4" className="font-semibold text-foreground">Identificador do Modelo</label>
@@ -131,7 +91,7 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
           value={provider.model || ''}
           onChange={(e) => onChange({ ...provider, model: e.target.value })}
           placeholder="Ex: gpt-4o-mini, gemini-2.0-flash, claude-sonnet-5-5, llama3.2"
-          className="w-full bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden"
+          className={SETTINGS_INPUT_CLASS}
         />
       </div>
 
@@ -151,17 +111,62 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
             value={provider.apiKey || ''}
             onChange={(e) => onChange({ ...provider, apiKey: e.target.value })}
             placeholder={apiKeyPlaceholder(provider.provider)}
-            className="flex-1 bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden"
+            className={`${SETTINGS_INPUT_CLASS} flex-1`}
           />
           <button
             type="button"
             onClick={() => onToggleShowKey(!showKey)}
-            className="p-2 bg-card hover:bg-muted border border-border rounded-xl text-muted-foreground hover:text-foreground shadow-2xs cursor-pointer"
+            className="h-9 w-9 shrink-0 flex items-center justify-center bg-card hover:bg-muted border border-border rounded-lg text-muted-foreground hover:text-foreground cursor-pointer"
             title={showKey ? 'Ocultar chave' : 'Mostrar chave'} aria-label={showKey ? 'Ocultar chave' : 'Mostrar chave'}
           >
             {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
+      </div>
+
+    </div>
+
+    <SettingsAdvanced summary="Avançado: nome, endereço, protocolo, temperatura e timeout" defaultOpen={provider.provider === 'custom' || !provider.baseUrl}>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+      {/* Nome de Exibição */}
+      <div className="space-y-1">
+        <label htmlFor="ai-provider-form-1" className="font-semibold text-foreground">Nome de Identificação</label>
+        <input id="ai-provider-form-1"
+          type="text"
+          value={provider.name || ''}
+          onChange={(e) => onChange({ ...provider, name: e.target.value })}
+          placeholder="Ex: OpenAI Produtivo, Ollama Local"
+          className={SETTINGS_INPUT_CLASS.replace('font-mono', 'font-sans')}
+        />
+      </div>
+
+      {/* Família de Provedor */}
+      <div className="space-y-1">
+        <label htmlFor="ai-provider-form-2" className="font-semibold text-foreground">Tipo de Provedor / Protocolo</label>
+        <select id="ai-provider-form-2"
+          value={provider.provider || 'openai'}
+          onChange={(e) => onChange(switchProviderType(provider, e.target.value as LlmProviderType))}
+          className={`${SETTINGS_INPUT_CLASS.replace('font-mono', 'font-sans')} cursor-pointer`}
+        >
+          <option value="openai">OpenAI / Compatível (OpenAI, Groq, DeepSeek)</option>
+          <option value="gemini">Google Gemini (REST nativo v1beta)</option>
+          <option value="anthropic">Anthropic Claude (Messages API)</option>
+          <option value="ollama">Ollama (Modelo Local Offline)</option>
+          <option value="openrouter">OpenRouter</option>
+          <option value="custom">Personalizado (OpenAI compatible)</option>
+        </select>
+      </div>
+
+      {/* URL Base */}
+      <div className="space-y-1">
+        <label htmlFor="ai-provider-form-3" className="font-semibold text-foreground">URL Base do Endpoint</label>
+        <input id="ai-provider-form-3"
+          type="text"
+          value={provider.baseUrl || ''}
+          onChange={(e) => onChange({ ...provider, baseUrl: e.target.value })}
+          placeholder="Ex: https://api.openai.com/v1 ou http://localhost:11434/v1"
+          className={SETTINGS_INPUT_CLASS}
+        />
       </div>
 
       {/* Temperatura Slider */}
@@ -195,22 +200,23 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
         />
       </div>
     </div>
+    </SettingsAdvanced>
 
     <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
       <button
         type="button"
         onClick={() => onChange(null)}
-        className="px-3 py-1.5 rounded-xl border border-border text-foreground hover:bg-muted text-xs font-semibold transition-all cursor-pointer"
+        className={SETTINGS_GHOST_BUTTON_CLASS}
       >
         Cancelar
       </button>
       <button
         type="button"
         onClick={onSave}
-        className="px-4 py-1.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+        className={SETTINGS_PRIMARY_BUTTON_CLASS}
       >
         <Save className="w-3.5 h-3.5" />
-        Salvar Motor
+        {provider.id ? 'Aplicar' : 'Adicionar motor'}
       </button>
     </div>
   </div>
