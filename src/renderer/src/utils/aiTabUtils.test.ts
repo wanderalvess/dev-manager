@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { LlmProviderConfig } from '../../../shared/types';
 import {
+  apiKeyPlaceholder,
+  applyTemplateToDraft,
   createNewLlmProviderDraft,
+  llmProviderNeedsKey,
   describeTemperature,
   findActiveLlmProvider,
   formatEndpoint,
@@ -60,6 +63,27 @@ describe('aiTabUtils', () => {
 
   it('createNewLlmProviderDraft gera id com timestamp', () => {
     expect(createNewLlmProviderDraft(42).id).toBe('llm-42');
+  });
+
+  it('apiKeyPlaceholder mostra o formato da chave de cada provedor', () => {
+    expect(apiKeyPlaceholder('anthropic')).toBe('sk-ant-...');
+    expect(apiKeyPlaceholder('gemini')).toBe('AIzaSy...');
+    expect(apiKeyPlaceholder('ollama')).toContain('Ollama');
+    expect(apiKeyPlaceholder(undefined)).toBe('sk-...');
+  });
+
+  it('llmProviderNeedsKey exige chave, exceto no Ollama local', () => {
+    expect(llmProviderNeedsKey(makeProvider({ apiKey: '' }))).toBe(true);
+    expect(llmProviderNeedsKey(makeProvider({ apiKey: '   ' }))).toBe(true);
+    expect(llmProviderNeedsKey(makeProvider({ apiKey: 'sk-1' }))).toBe(false);
+    expect(llmProviderNeedsKey(makeProvider({ provider: 'ollama', apiKey: '' }))).toBe(false);
+  });
+
+  it('applyTemplateToDraft mantém id e chave já digitados ao escolher um preset', () => {
+    const template = { name: 'Anthropic Claude', provider: 'anthropic', model: 'm', enabled: true } as Omit<LlmProviderConfig, 'id'>;
+    const out = applyTemplateToDraft({ id: 'llm-1', apiKey: 'sk-ant-1', systemPrompt: 'sp' }, template, 'llm-9');
+    expect(out).toMatchObject({ id: 'llm-1', apiKey: 'sk-ant-1', systemPrompt: 'sp', provider: 'anthropic' });
+    expect(applyTemplateToDraft(null, template, 'llm-9').id).toBe('llm-9');
   });
 
   it('switchProviderType preserva valores sem template', () => {

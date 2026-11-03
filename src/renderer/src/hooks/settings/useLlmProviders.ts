@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { LlmProviderConfig, LlmProviderType, LlmTestResult } from '../../../../shared/types';
+import { showToast } from '../../components/ToastHost';
+import { applyTemplateToDraft } from '../../utils/aiTabUtils';
 import { removeById, upsertById } from '../../utils/settingsListEditors';
 import type { SetSettings } from './settingsHookTypes';
 
@@ -11,7 +13,7 @@ export function useLlmProviders(setSettings: SetSettings) {
   const [showLlmFormKey, setShowLlmFormKey] = useState(false);
 
   const handleApplyLlmTemplate = (template: Omit<LlmProviderConfig, 'id'>) => {
-    setEditingLlmProvider({ ...template, id: editingLlmProvider?.id || `llm-${Date.now()}` });
+    setEditingLlmProvider(applyTemplateToDraft(editingLlmProvider, template, `llm-${Date.now()}`));
   };
 
   const handleSaveLlmProvider = () => {
@@ -38,6 +40,7 @@ export function useLlmProviders(setSettings: SetSettings) {
       activeLlmProviderId: prev.activeLlmProviderId || id
     }));
     setEditingLlmProvider(null);
+    showToast(`Motor "${provider.name}" incluído nas alterações. Clique em Salvar no topo para gravar.`, 'info');
   };
 
   const handleDeleteLlmProvider = (id: string) => {
