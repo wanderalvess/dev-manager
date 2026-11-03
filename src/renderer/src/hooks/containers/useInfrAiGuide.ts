@@ -5,7 +5,8 @@ import {
   describeEnvCheckForAi,
   parseGuideReply,
   type GuideAction,
-  type GuideContext
+  type GuideContext,
+  type GuideField
 } from '../../../../shared/infrAiGuide';
 import type { InfrNewVersionState } from './useInfrNewVersion';
 
@@ -20,6 +21,19 @@ export interface InfrAiGuideEntry {
 const MAX_TURNS = 12;
 const settle = () => new Promise((r) => setTimeout(r, 80));
 
+/** Nome de cada campo como a tela mostra, para o registro do que a IA fez. */
+const FIELD_LABEL: Record<GuideField, string> = {
+  from: 'Origem',
+  version: 'Versão',
+  name: 'Nome',
+  dbMode: 'Banco',
+  oraclePort: 'Porta do Oracle',
+  wtaPort: 'Porta do WTA',
+  wshPort: 'Porta do WSH',
+  dryRun: 'Ensaio no Karaf'
+};
+const DB_MODE_LABEL: Record<string, string> = { clone: 'copiado', existing: 'um Oracle que já existe', empty: 'vazio' };
+
 /**
  * IA conduzindo a Nova versão. O modelo responde com uma ação por turno; o Hub valida e executa, e só o clique do
  * usuário gera o ambiente. A tela de sempre (formulário, conferência) continua sendo a fonte da verdade.
@@ -31,6 +45,8 @@ export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
   distroRef.current = distro;
   const [status, setStatus] = useState<InfrAiGuideStatus>('idle');
   const [log, setLog] = useState<InfrAiGuideEntry[]>([]);
+  // Campos que a IA preencheu e a pessoa ainda não mexeu (a tela marca com "IA")
+  const [filled, setFilled] = useState<GuideField[]>([]);
   const goal = useRef('');
   const history = useRef<string[]>([]);
   const verify = useRef<GuideContext['verify']>(undefined);
@@ -69,12 +85,16 @@ export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
     switch (a.action) {
       case 'set':
         cur.update(a.field, a.value);
-        push({ kind: 'hub', text: `${a.field} = ${a.value || '(vazio)'} — ${a.why}` });
+        setFilled((f) => (f.includes(a.field) ? f : [...f, a.field]));
+        push({
+          kind: 'hub',
+          text: `${FIELD_LABEL[a.field]}: ${(a.field === 'dbMode' ? DB_MODE_LABEL[a.value] : a.value) || '(vazio)'}. ${a.why}`
+        });
         note(`set ${a.field}=${a.value}`);
         await settle();
         return true;
       case 'preview': {
-        push({ kind: 'hub', text: `Lendo a origem e o catálogo da 801 — ${a.why}` });
+        push({ kind: 'hub', text: `Leu a origem e o catálogo da 801. ${a.why}` });
         const res = await cur.runPreview();
         await settle();
         note(res ? (res.success ? 'preview: lido' : `preview: falhou (${res.error ?? 'erro'})`) : 'preview: não pôde rodar (origem, versão ou nome incompletos)');
@@ -101,7 +121,7 @@ export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
           note('verify: indisponível');
           return true;
         }
-        push({ kind: 'hub', text: `Conferindo os containers de ${name} — ${a.why}` });
+        push({ kind: 'hub', text: `Conferiu os containers de ${name}. ${a.why}` });
         const check = await api.checkInfrEnvironment({ distro: distroRef.current, name });
         verify.current = describeEnvCheckForAi(check);
         push({ kind: 'hub', text: verify.current.status });
@@ -134,7 +154,8 @@ export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
           ],
           temperature: 0.1,
           maxTokens: 700,
-          noThinking: true
+          noThinking: true,
+          source: 'ia-conduz'
         });
         text = res.text;
       } catch (err) {
@@ -173,13 +194,24 @@ export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
     verify.current = undefined;
     latest.current.resetPreview();
     setLog([]);
+    setFilled([]);
     void run();
   };
+
+  /** Continua o mesmo pedido de onde parou (ex.: depois de a pessoa iniciar a origem que estava parada). */
+  const resume = () => {
+    if (!goal.current || status === 'thinking') return;
+    note('o usuário pediu para continuar (pode ter resolvido o que bloqueava)');
+    void run();
+  };
+
+  /** A pessoa mexeu no campo: a marca "IA" sai dele. */
+  const unmark = (field: string) => setFilled((f) => f.filter((x) => x !== field));
 
   /** O usuário confirmou o Gerar: roda o fluxo de sempre e espera o build terminar para conferir. */
   const confirmGenerate = async () => {
     setStatus('building');
-    push({ kind: 'hub', text: 'Gerando: abri o terminal com o build (leva uns 30 minutos). Quando terminar, clique em "Conferir o ambiente".' });
+    push({ kind: 'hub', text: 'Você clicou em Gerar: o terminal abriu com o build, que leva uns 30 minutos.' });
     const ok = await latest.current.generate();
     note(ok ? 'generate: terminal aberto, build em andamento' : 'generate: falhou ao iniciar');
     if (!ok) {
@@ -206,7 +238,7 @@ export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
     push({ kind: 'hub', text: 'Interrompido.' });
   };
 
-  return { status, log, start, stop, confirmGenerate, declineGenerate, checkEnvironment };
+  return { status, log, filled, goal: goal.current, start, resume, unmark, stop, confirmGenerate, declineGenerate, checkEnvironment };
 }
 
 export type InfrAiGuideState = ReturnType<typeof useInfrAiGuide>;

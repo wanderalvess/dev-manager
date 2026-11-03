@@ -16,6 +16,7 @@ import type { LogWatcherService } from '../services/LogWatcherService';
 import type { KarafLogPersistenceService } from '../services/KarafLogPersistenceService';
 import type { AutoUpdateService } from '../services/AutoUpdateService';
 import type { LlmService } from '../services/LlmService';
+import type { AiUsageService } from '../services/AiUsageService';
 import type { Routine801Service } from '../services/Routine801Service';
 import type { ApmService } from '../services/ApmService';
 import type { OracleTracerCaptureService } from '../services/OracleTracerCaptureService';
@@ -63,6 +64,7 @@ export interface IpcContext {
   httpClientService: HttpClientService;
   httpCollectionService: HttpCollectionService;
   usageMetricsService: UsageMetricsService;
+  aiUsageService: AiUsageService;
   delphiBuildService: DelphiBuildService;
   remoteControlService: RemoteControlService;
   integrationTraceService: IntegrationTraceService;

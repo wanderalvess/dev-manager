@@ -9,6 +9,7 @@ import {
   switchProviderType
 } from '../../../utils/aiTabUtils';
 import { SETTINGS_INPUT_CLASS, SETTINGS_GHOST_BUTTON_CLASS, SETTINGS_PRIMARY_BUTTON_CLASS, SettingsAdvanced } from '../SettingsCard';
+import { AiProviderLimitsFields } from './AiProviderLimitsFields';
 
 interface AiProviderFormProps {
   provider: Partial<LlmProviderConfig>;
@@ -126,7 +127,7 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
 
     </div>
 
-    <SettingsAdvanced summary="Avançado: nome, endereço, protocolo, temperatura e timeout" defaultOpen={provider.provider === 'custom' || !provider.baseUrl}>
+    <SettingsAdvanced summary="Avançado: nome, endereço, protocolo, temperatura, timeout e teto de uso" defaultOpen={provider.provider === 'custom' || !provider.baseUrl}>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
       {/* Nome de Exibição */}
       <div className="space-y-1">
@@ -199,6 +200,8 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
           onCommit={(timeoutMs) => onChange({ ...provider, timeoutMs })}
         />
       </div>
+
+      <AiProviderLimitsFields key={provider.id ?? 'novo'} provider={provider} onChange={onChange} />
     </div>
     </SettingsAdvanced>
 

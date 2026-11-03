@@ -1,6 +1,8 @@
 import type {
   AppSettings,
   UsageDays,
+  AiUsagePeriod,
+  AiUsageReport,
   UsageSummary,
   UsageSummaryQuery
 } from '../../../../shared/types';
@@ -37,6 +39,10 @@ export function createSettingsApi({ apiFetch }: BridgeDeps) {
 
     getUsageDays: async (): Promise<UsageDays> => {
       return apiFetch<UsageDays>('/api/usage/days');
+    },
+
+    getAiUsage: async (period?: AiUsagePeriod): Promise<AiUsageReport> => {
+      return apiFetch<AiUsageReport>(`/api/usage/ai${period ? `?period=${period}` : ''}`);
     },
 
     clearUsageMetrics: async (): Promise<void> => {

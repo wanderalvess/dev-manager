@@ -4,6 +4,30 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Alterado
+- **Configurações: cards das seções no desenho novo**:
+  - *Preparação do debug* virou dois passos numerados: *Liberar a máquina* (serviços e processos) e *Subir o ambiente*. Os perfis de automação aparecem só para consulta, com o atalho *Editar em Ambiente Dev*. Lista vazia diz o que adicionar.
+  - Campos que quase ninguém usa ficam em *Avançado*, recolhido: cookie e payload do WTA, programa por extensão, cookie da CCW, script próprio do Karaf e os parâmetros do motor de IA (nome, endereço, protocolo, temperatura, timeout e teto de uso). O *Avançado* já abre se tiver algo preenchido, e a busca abre o do campo encontrado.
+  - Um só liga/desliga em serviços, processos, portas vigiadas, WinThor Start, Módulos e Uso (antes eram três desenhos).
+  - *Salvar Motor* e *Salvar Fonte de Teste* viraram *Adicionar motor*/*Aplicar* e *Aplicar fonte*: só mudam o rascunho, que se salva na barra do rodapé.
+
+## [1.58.0] - 2026-11-03
+### Adicionado
+- **Uso de IA e teto de tokens**: cada chamada de IA que passa pelo Hub (tela, API REST e MCP) tem os tokens de entrada/saída registrados localmente por dia, provedor, modelo e origem (*IA conduz*, *Perguntar à documentação*, *Diagnóstico HTTP*, *MCP*), sem guardar prompt, resposta nem chave, e respeitando a *Contagem de uso*.
+  - *Configurações → Meu uso → Uso de IA (tokens)*: totais de 7 dias, 30 dias ou tudo, por provedor, modelo e origem; o cartão de cada motor em *IA & LLM* mostra o resumo dos últimos 30 dias.
+  - *Teto de uso* por motor (editar o motor): tokens por dia e por mês, vazio = sem teto. Aos 80% a resposta traz um aviso; ao atingir, a chamada é bloqueada no `LlmService` (vale para tela, REST e MCP) com mensagem em pt-BR dizendo qual teto estourou e como ajustar.
+  - Preço por milhão de tokens (entrada/saída) opcional, digitado por você, para mostrar o custo estimado; o Hub não embute tabela de preços.
+  - O contador é local e só enxerga o que passa pelo Hub: o limite de gastos do painel do provedor continua sendo a proteção real. *Apagar histórico* também zera o uso de IA.
+
+## [1.57.0] - 2026-11-03
+### Alterado
+- **Assistente INFR redesenhado, sem menu lateral**: abre em *Ambientes*, com cada ambiente da distro como Oracle → WTA → WSH (estado e porta de cada parte) e a ação que faz sentido: *Iniciar*, *Abrir o WinThor*, *Verificar* ou *Copiar para outra versão*. As tarefas (Nova versão, Montar do zero, Verificar) abrem numa tela própria com o caminho de volta no cabeçalho; *Subir só o banco/WTA/WSH* e *Scripts e pasta* continuam acessíveis.
+- **Nova versão numa tela só**: os quatro passos viraram uma frase ("Criar o ambiente v40 na versão 40, a partir do local, com o banco copiado"), *Ajustes* fechado com os valores à vista (portas, WSH, configuração, avançado) e *Antes de gerar*, uma lista única com a conferência da origem e a leitura do catálogo da 801. O que impede vem primeiro, com a ação ali mesmo (ex.: *Iniciar o local* quando a origem está parada); o que passou fica numa linha. O catálogo é lido sozinho quando a origem passa, e o rodapé diz o que será criado e tem o único *Gerar*.
+- **IA conduzindo numa linha**: o pedido sai da tela de ambientes ou da própria Nova versão. A IA mostra a última coisa que disse e *Continuar* quando parou num bloqueio; os campos que ela preencheu ficam marcados e o que ela fez fica em *O que a IA fez*. O Gerar é o mesmo botão do rodapé, sem confirmação à parte.
+- **Montar do zero** (antes *Primeiros passos*): as etapas feitas viram uma linha, a etapa da vez ocupa a tela e as seguintes aparecem apagadas.
+- **Verificar**: o ambiente se escolhe por botões (sem digitar o nome); as três partes aparecem lado a lado e clicar numa abre o log dela em largura total, com o log do build quando houver. Os testes de terminal ficam recolhidos.
+
 ## [1.56.0] - 2026-11-03
 ### Adicionado
 - **Deixar a IA conduzir (Assistente INFR → Nova versão)**: com um motor cadastrado em Configurações → IA & LLM, a pessoa descreve o que quer ("criar a versão 40 a partir do ambiente local, com o nome v40") e a IA preenche o formulário, lê a origem e confere, mostrando cada passo e o motivo. Ela só pode usar ações fixas (preencher campo, ler a origem, pedir o Gerar, conferir os containers, explicar); qualquer outra resposta é recusada. O que está bloqueado em vermelho ela não contorna: propõe a saída que a própria conferência oferece (por exemplo, banco vazio no lugar do clone) ou explica. **Quem confirma o Gerar é você** (o build leva uns 30 minutos); depois do build, *Conferir o ambiente* leva a verificação dos containers e o fim do log para a IA diagnosticar. Credenciais (senha do Nexus, tokens) são mascaradas antes de ir ao modelo, e os comandos que a IA sugere vêm só com *Copiar*, sem os que apagam ou param containers.
