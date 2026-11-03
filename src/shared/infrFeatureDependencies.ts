@@ -23,6 +23,8 @@ export interface DependencyIssue {
   kind: DependencyKind;
   /** Versão que o catálogo oferece e que atende à exigida */
   fix?: string;
+  /** De onde veio a dependência: o catálogo da 801 (padrão) ou o features.xml do Nexus */
+  source?: 'catalog' | 'xml';
 }
 
 export interface DependencyReport {
@@ -35,6 +37,8 @@ export interface DependencyReport {
   fixed: number;
   /** Um exemplo do que o catálogo traz, para ver o formato (nome → exigida versão) */
   sample?: string;
+  /** O que a conferência pelos features.xml do Nexus fez (repositórios baixados, features achadas, por que não deu) */
+  xml?: { repos: number; fetched: number; missing: number; checked: number; withDependencies: number; error?: string };
 }
 
 export interface VersionRange {

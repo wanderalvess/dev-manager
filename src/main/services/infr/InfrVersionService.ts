@@ -45,6 +45,8 @@ import { buildEnvFile, envFieldsFor, parseEnvLines, pickEnv, type InfrEnvTarget 
 import type { InfrEnvSaveRequest, InfrEnvTemplate, InfrManifestSaveRequest, InfrManifestSaveResult } from '../../../shared/infrVersionManifest';
 import { INFR_NEW_VERSION_SCRIPTS, commandFailureDetail, missingNewVersionScriptsMessage, originContainerMessage } from '../../../shared/infrNewVersionScripts';
 import { previewClone } from './infrClonePreview';
+import { checkXmlDependencies } from './infrXmlDependencies';
+import { withXmlDependencies } from '../../../shared/infrFeatureXml';
 import type { Routine801Service } from '../Routine801Service';
 import type { WslService } from '../WslService';
 
@@ -213,13 +215,14 @@ export class InfrVersionService {
       `e do catálogo de atualizações da rotina 801 (${upgrade.changes.length} atualizadas, ${upgrade.behind.length} sem versão da linha ${target}).`
     ];
     const repositories = await this.karafRepositories(distro, container, trace);
+    const xmlDeps = await checkXmlDependencies((script, ms) => this.runScriptInContainer(distro, container, script, ms), repositories, upgrade.manifest, trace);
     const result: InfrVersionPreview = {
       success: true,
       originWtaUrl: url,
       originCount: origin.features.length,
       originLine: manifestLineOf(origin),
       upgrade: { changes: upgrade.changes, behind: upgrade.behind, skipped: upgrade.skipped },
-      dependencies: dep,
+      dependencies: withXmlDependencies(dep, xmlDeps),
       artifacts: await this.checkArtifacts(distro, container, repositories, origin, upgrade.manifest, catalog, upgrade.changes, trace),
       preflight: await this.preflight(distro, target, repositories, trace),
       manifestText: serializeVersionManifest(upgrade.manifest, header)

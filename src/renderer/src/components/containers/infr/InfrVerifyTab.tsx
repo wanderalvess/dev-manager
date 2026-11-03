@@ -6,6 +6,7 @@ import type { InfrAiGuideState } from '../../../hooks/containers/useInfrAiGuide'
 import { InfrCommandLine } from './InfrCommandLine';
 import { InfrAiGuideLine } from './newversion/InfrAiGuideLine';
 import { InfrVerifyNode } from './verify/InfrVerifyNode';
+import { InfrBuildCause } from './verify/InfrBuildCause';
 import { infrCheckBadge } from '../../../utils/infrBootstrapModalUtils';
 
 const SUMMARY: Record<InfrEnvStatus, React.ReactNode> = {
@@ -163,6 +164,7 @@ export const InfrVerifyTab: React.FC<{ v: InfrEnvCheckState; ai: InfrAiGuideStat
                 </button>
               )}
             </div>
+            {shown === 'build' && build?.cause && <InfrBuildCause cause={build.cause} />}
             {shown === 'build' && build?.stage && <p className="px-4 pt-2 text-2xs text-muted-foreground">Última etapa: {build.stage}</p>}
             <pre className="m-0 px-4 py-3 min-h-[12rem] max-h-[22rem] overflow-auto bg-[#090D14] text-xs font-mono text-emerald-400 whitespace-pre-wrap break-all select-text">
               {shown === 'build' ? build?.tail.join('\n') : sel?.exists ? sel.logTail.join('\n') || '(log vazio)' : 'Este container ainda não existe.'}

@@ -39,6 +39,78 @@ describe('conferência da versão nova', () => {
     expect(reviewBlocks(reviewNewVersion({ ...base, dbSourceImage: 'oracle-winthor:11.2.0.2-xe' }))).toBe(false);
   });
 
+  describe('dependências pelos features.xml do Nexus', () => {
+    const preview = (dependencies: NonNullable<InfrReviewInput['preview']['dependencies']>): InfrReviewInput => ({
+      ...base,
+      version: '40',
+      manifestSource: 'preview',
+      preview: { success: true, originWtaUrl: 'http://x', upgrade: { changes: [], behind: [], skipped: [] }, dependencies }
+    });
+    const dep = (o: Partial<NonNullable<InfrReviewInput['preview']['dependencies']>> = {}) => ({ checked: 7, withDependencies: 0, issues: [], fixed: 0, ...o });
+    const xml = { repos: 59, fetched: 58, missing: 1, checked: 60, withDependencies: 11 };
+    const get = (d: NonNullable<InfrReviewInput['preview']['dependencies']>) => byId(reviewNewVersion(preview(d)), 'dependencias');
+
+    it('conflito achado pelo XML bloqueia, sem a frase do catálogo, e sugere a saída', () => {
+      const r = get(dep({ withDependencies: 11, xml, issues: [{ feature: 'winthor-fornecedor', version: '0.38.0.0', dependency: 'winthor-core-data', required: '[1.8,2)', found: '2.0.0.1', kind: 'conflict', source: 'xml' }] }));
+      expect(r.status).toBe('block');
+      expect(r.detail).toContain('winthor-fornecedor 0.38.0.0 exige winthor-core-data [1.8,2) e a lista tem 2.0.0.1');
+      expect(r.detail).not.toContain('o catálogo não oferece');
+      expect(r.detail).toContain('Saída provável');
+    });
+
+    it('sem conflito: ok, conta o que o XML conferiu e avisa que pacote entre bundles não é visto', () => {
+      const r = get(dep({ withDependencies: 11, xml }));
+      expect(r.status).toBe('ok');
+      expect(r.detail).toContain('11 conferidas pelos features.xml do Nexus (58 repositórios)');
+      expect(r.detail).toContain('osgi.wiring.package');
+    });
+
+    it('nem catálogo nem XML declararam dependência: aviso que diz o que foi tentado', () => {
+      const r = get(dep({ xml: { ...xml, withDependencies: 0 } }));
+      expect(r.status).toBe('warn');
+      expect(r.detail).toContain('58 de 59 baixados');
+      expect(r.detail).toContain('ensaio no Karaf');
+    });
+
+    it('XML que não deu para baixar entra com o motivo, sem derrubar nada', () => {
+      const r = get(dep({ xml: { repos: 3, fetched: 0, missing: 0, checked: 0, withDependencies: 0, error: 'o container não tem curl' } }));
+      expect(r.status).toBe('warn');
+      expect(r.detail).toContain('não foram conferidos (o container não tem curl)');
+    });
+  });
+
+  describe('features que ficam na versão anterior', () => {
+    const behind = [
+      { name: 'winthor-integracao-config', version: '1.38.17.48' },
+      { name: 'winthor-utils', version: '0.35.0.1' },
+      { name: 'winthor-filial', version: '1.36.0.1' },
+      { name: 'winthor-rca', version: '0.36.0.1' },
+      { name: 'winthor-hub-carga-dados', version: '1.39.6.1' }
+    ];
+    const fresh: InfrReviewInput = { ...base, version: '40', manifestSource: 'preview', preview: { success: true, originWtaUrl: 'http://x', upgrade: { changes: [], behind, skipped: [] } } };
+
+    it('cita as mais atrasadas (2+ linhas) e sugere o ensaio quando nada conferiu o conflito', () => {
+      const f = byId(reviewNewVersion(fresh), 'features');
+      expect(f.status).toBe('warn');
+      expect(f.detail).toContain('5 features sem versão da linha 40');
+      expect(f.detail).toContain('4 delas estão 2 ou mais linhas atrás (winthor-utils 0.35.0.1, winthor-filial 1.36.0.1, winthor-rca 0.36.0.1 e mais)');
+      expect(f.detail).toContain('ligue o ensaio no Karaf de origem');
+    });
+
+    it('não repete a sugestão se o ensaio rodou ou se as dependências foram conferidas', () => {
+      const withDry = reviewNewVersion({ ...fresh, preview: { ...fresh.preview, dryRun: { simulated: 3, errors: [], tail: [] } } });
+      expect(byId(withDry, 'features').detail).not.toContain('ligue o ensaio');
+      const withDeps = reviewNewVersion({ ...fresh, preview: { ...fresh.preview, dependencies: { checked: 3, withDependencies: 2, issues: [], fixed: 0 } } });
+      expect(byId(withDeps, 'features').detail).not.toContain('ligue o ensaio');
+    });
+
+    it('uma só linha atrás não vira alerta de "muito atrás", mas a sugestão do ensaio continua', () => {
+      const one = reviewNewVersion({ ...fresh, preview: { ...fresh.preview, upgrade: { changes: [], behind: [{ name: 'winthor-hub-carga-dados', version: '1.39.6.1' }], skipped: [] } } });
+      expect(byId(one, 'features').detail).not.toContain('2 ou mais linhas');
+      expect(byId(one, 'features').detail).toContain('ligue o ensaio');
+    });
+  });
+
   it('usar o banco da própria origem avisa que a versão nova pode alterá-lo', () => {
     const item = byId(reviewNewVersion({ ...base, dbMode: 'existing', dbContainer: 'oracle-local' }), 'banco');
     expect(item.status).toBe('warn');
