@@ -148,7 +148,7 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
           <InfrVerifyTab v={verify} ai={ai} envNames={envs?.environments.map((e) => e.name) ?? []} onNewVersion={copyFrom} />
         ) : (
           <div className="flex-1 min-w-0 overflow-auto scrollbar-thin">
-            <div className="max-w-3xl mx-auto px-5 md:px-6 py-8 space-y-4">
+            <div className="max-w-6xl mx-auto px-5 md:px-6 py-8 space-y-4">
               {view !== 'scripts' && <InfrVersionField version={state.winthorVersion} onChange={state.setWinthorVersion} />}
 
               {view === 'oracle' && (

@@ -54,7 +54,7 @@ export const InfrHomeTab: React.FC<{
 
   return (
     <div className="flex-1 min-w-0 overflow-auto scrollbar-thin">
-      <div className="max-w-5xl mx-auto px-5 md:px-6 py-8 space-y-8">
+      <div className="max-w-6xl mx-auto px-5 md:px-6 py-8 space-y-8">
         <section aria-label="Pedir à IA" className="flex flex-col items-center text-center gap-2.5">
           <h2 className="text-2xl font-bold text-foreground tracking-tight">O que você quer fazer?</h2>
           <p className="text-sm text-foreground/80">Escreva e a IA preenche a Nova versão. Ela confere tudo, mas quem cria o ambiente é você.</p>
