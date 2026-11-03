@@ -2462,7 +2462,7 @@ export const DEFAULT_LLM_PROVIDER_TEMPLATES: Omit<LlmProviderConfig, 'id'>[] = [
     name: 'Anthropic Claude',
     provider: 'anthropic',
     baseUrl: 'https://api.anthropic.com',
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-sonnet-5-5',
     temperature: 0.7,
     maxTokens: 2048,
     timeoutMs: 30000,

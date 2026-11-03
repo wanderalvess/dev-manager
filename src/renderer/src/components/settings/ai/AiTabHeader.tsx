@@ -1,6 +1,7 @@
 import React from 'react';
 import { Bot, AlertTriangle, Plus } from 'lucide-react';
 import { LlmProviderConfig } from '../../../../../shared/types';
+import { llmProviderNeedsKey } from '../../../utils/aiTabUtils';
 
 interface AiTabHeaderProps {
   activeProvider: LlmProviderConfig | undefined;
@@ -15,10 +16,15 @@ export const AiTabHeader: React.FC<AiTabHeaderProps> = ({ activeProvider, onNewP
           <Bot className="w-5 h-5 text-primary" />
           Provedores de IA & Motores LLM (BYOK)
         </h3>
-        {activeProvider ? (
+        {activeProvider && llmProviderNeedsKey(activeProvider) ? (
+          <span className="px-2.5 py-0.5 rounded-full bg-warning/10 text-warning font-mono text-2xs font-bold flex items-center gap-1.5">
+            <AlertTriangle className="w-3 h-3" />
+            SEM CHAVE · {activeProvider.name} ({activeProvider.model})
+          </span>
+        ) : activeProvider ? (
           <span className="px-2.5 py-0.5 rounded-full bg-success/10 text-success font-mono text-2xs font-bold flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-success" />
-            ONLINE · {activeProvider.name} ({activeProvider.model})
+            ATIVO · {activeProvider.name} ({activeProvider.model})
           </span>
         ) : (
           <span className="px-2.5 py-0.5 rounded-full bg-warning/10 text-warning font-mono text-2xs font-bold flex items-center gap-1.5">

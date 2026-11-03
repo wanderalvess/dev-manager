@@ -4,6 +4,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Corrigido
+- **Configurações → IA & LLM**: revisão da tela usando-a de ponta a ponta.
+  - *Timeout*: dava para digitar só valores como 55 (o "4" de 45 já virava 5 a cada tecla); agora o piso de 5 s vale ao sair do campo.
+  - *Presets*: escolher um preset depois de colar a chave não apaga mais a chave nem o prompt de sistema; a grade deixou de cortar os nomes com o menu lateral aberto; o formulário rola até a vista ao abrir (ficava abaixo da lista, parecendo que nada acontecera) e o exemplo da chave mostra o formato do provedor (`sk-ant-...`, `AIzaSy...`).
+  - *Salvar Motor* avisa que a alteração só é gravada em *Salvar Configurações* (o selo *Não salvo* já aparecia, mas nada dizia o motivo).
+  - O selo do cabeçalho não diz mais "ONLINE" sem testar nada: mostra *ATIVO* ou, em amarelo, *SEM CHAVE* (o Ollama local dispensa chave).
+  - O modelo padrão do preset Anthropic e do `LlmService` passou de `claude-3-5-sonnet-20241022` para `claude-sonnet-5-5`. Motores já salvos não mudam.
+
 ## [1.55.0] - 2026-11-02
 ### Adicionado
 - **Pré-checagem da Nova versão**: a revisão do passo 4 agora olha o que costuma derrubar o build ou o primeiro boot, lido em segundos pela distro:

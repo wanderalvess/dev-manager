@@ -93,7 +93,7 @@ export class LlmService {
             'anthropic-version': '2023-06-01'
           },
           body: JSON.stringify({
-            model: config.model || 'claude-3-5-sonnet-20241022',
+            model: config.model || 'claude-sonnet-5-5',
             max_tokens: 5,
             messages: [{ role: 'user', content: 'ping' }]
           }),
@@ -409,7 +409,7 @@ export class LlmService {
     }));
 
     const body: any = {
-      model: provider.model || 'claude-3-5-sonnet-20241022',
+      model: provider.model || 'claude-sonnet-5-5',
       max_tokens: request.maxTokens ?? provider.maxTokens ?? 2048,
       temperature: request.temperature ?? provider.temperature ?? 0.7,
       messages

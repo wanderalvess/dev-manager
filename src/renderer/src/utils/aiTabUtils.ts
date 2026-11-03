@@ -66,3 +66,41 @@ export function switchProviderType(
 export function secondsToTimeoutMs(seconds: number): number {
   return Math.max(5000, seconds * 1000);
 }
+
+/** Exemplo do formato da chave de cada provedor (o Ollama local dispensa chave). */
+export function apiKeyPlaceholder(provider: LlmProviderType | undefined): string {
+  switch (provider) {
+    case 'anthropic':
+      return 'sk-ant-...';
+    case 'gemini':
+      return 'AIzaSy...';
+    case 'openrouter':
+      return 'sk-or-...';
+    case 'ollama':
+      return 'Deixe em branco (Ollama local)';
+    default:
+      return 'sk-...';
+  }
+}
+
+/** Provedor em nuvem sem chave não consegue responder; o Ollama local dispensa. */
+export function llmProviderNeedsKey(provider: Pick<LlmProviderConfig, 'apiKey' | 'provider'>): boolean {
+  return provider.provider !== 'ollama' && !provider.apiKey?.trim();
+}
+
+/**
+ * Carrega um preset no formulário. Mantém o id e o que o preset não define (chave de API e
+ * prompt de sistema já digitados), para que escolher o preset depois de colar a chave não a apague.
+ */
+export function applyTemplateToDraft(
+  draft: Partial<LlmProviderConfig> | null,
+  template: Omit<LlmProviderConfig, 'id'>,
+  fallbackId: string
+): Partial<LlmProviderConfig> {
+  return {
+    ...template,
+    id: draft?.id || fallbackId,
+    apiKey: template.apiKey || draft?.apiKey,
+    systemPrompt: template.systemPrompt || draft?.systemPrompt
+  };
+}
