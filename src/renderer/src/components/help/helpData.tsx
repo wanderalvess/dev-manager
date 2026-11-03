@@ -1703,6 +1703,30 @@ export function getFaqList({
       )
     },
     {
+      id: 'ai-usage-limit',
+      question: 'Como ver o consumo de tokens da IA e definir um teto de uso por motor?',
+      category: 'Segurança & Configurações',
+      tags: ['ia', 'tokens', 'teto', 'limite', 'custo', 'gasto', 'consumo', 'llm', 'byok', 'bloqueio', 'preço'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Cada chamada de IA que passa pelo Hub (tela, API REST e MCP) tem seus tokens somados <strong className="text-foreground">só nesta máquina</strong>: data, motor, modelo, origem e quantidade. <strong className="text-foreground">Prompt, resposta e chave nunca são gravados.</strong>
+          </p>
+          <div className="p-3 rounded-xl bg-card/80 border border-border space-y-1.5 shadow-xs">
+            <ul className="list-disc pl-4 space-y-1">
+              <li>Em <strong className="text-foreground">Configurações → Meu uso → Uso de IA (tokens)</strong>: totais de 7 dias, 30 dias ou tudo, por provedor, modelo e origem. O cartão de cada motor em <strong className="text-foreground">Configurações → IA &amp; LLM</strong> mostra o resumo dos últimos 30 dias.</li>
+              <li>Em <strong className="text-foreground">Sliders (editar motor) → Teto de uso</strong> defina tokens por dia e por mês. Vazio = sem teto. Aos 80% o Hub avisa; ao atingir, bloqueia as chamadas a esse motor com uma mensagem dizendo qual teto estourou e como ajustar.</li>
+              <li>Os campos de preço por milhão de tokens são opcionais e digitados por você (o Hub não traz tabela de preços); só com eles aparece o custo estimado.</li>
+              <li>Com a <strong className="text-foreground">Contagem de uso</strong> desligada nada é registrado e o teto não é aplicado.</li>
+            </ul>
+          </div>
+          <p>
+            <strong className="text-foreground">Atenção:</strong> o contador só enxerga o que passa pelo Hub. O limite de gastos do painel do provedor continua sendo a proteção real.
+          </p>
+        </div>
+      )
+    },
+    {
       id: 'usage-impact',
       question: 'Como o "tempo economizado" é calculado e por que parte dele aparece como estimativa?',
       category: 'Segurança & Configurações',

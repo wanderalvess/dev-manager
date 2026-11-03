@@ -2398,6 +2398,13 @@ export interface LlmProviderConfig {
   systemPrompt?: string;
   enabled: boolean;
   isDefault?: boolean;
+  /** Teto de tokens por dia (local) para este provedor. Vazio = sem teto. */
+  dailyTokenLimit?: number;
+  /** Teto de tokens por mês (calendário local) para este provedor. Vazio = sem teto. */
+  monthlyTokenLimit?: number;
+  /** Preço informado pelo usuário (por milhão de tokens) para a estimativa de custo. O Hub não traz tabela de preços. */
+  priceInPerMillion?: number;
+  priceOutPerMillion?: number;
 }
 
 export interface LlmChatMessage {
@@ -2410,6 +2417,8 @@ export interface LlmChatRequest {
   messages: LlmChatMessage[];
   temperature?: number;
   maxTokens?: number;
+  /** Origem do uso, para o contador de tokens (ex.: 'ia-conduz'). Valor fora da lista conhecida vira 'outros'. */
+  source?: string;
   /** Pede resposta direta, sem raciocínio longo (modelos locais com "thinking" gastam o limite de tokens pensando e devolvem vazio) */
   noThinking?: boolean;
 }
@@ -2419,6 +2428,8 @@ export interface LlmChatResponse {
   provider: string;
   model: string;
   usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+  /** Aviso de que o uso chegou a 80% do teto de tokens do provedor. */
+  usageWarning?: string;
 }
 
 export interface LlmTestResult {
@@ -2437,6 +2448,7 @@ export interface LlmRagQueryRequest {
 export interface LlmRagQueryResponse {
   answer: string;
   sources: Array<{ title: string; path: string; score: number }>;
+  usageWarning?: string;
 }
 
 export const DEFAULT_LLM_PROVIDER_TEMPLATES: Omit<LlmProviderConfig, 'id'>[] = [
@@ -2926,6 +2938,7 @@ export interface TautEnvSyncResult {
 
 export * from './httpClientTypes';
 export * from './usageMetricsTypes';
+export * from './aiUsageTypes';
 export * from './azurePipelineTypes';
 export * from './oracleTracerAnalysis';
 export * from './delphiTypes';

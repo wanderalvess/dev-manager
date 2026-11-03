@@ -21,6 +21,7 @@ import { LogWatcherService } from './services/LogWatcherService';
 import { KarafLogPersistenceService } from './services/KarafLogPersistenceService';
 import { AutoUpdateService } from './services/AutoUpdateService';
 import { LlmService } from './services/LlmService';
+import { AiUsageService } from './services/AiUsageService';
 import { Routine801Service } from './services/Routine801Service';
 import { DelphiBuildService } from './services/DelphiBuildService';
 import { UsageMetricsService } from './services/UsageMetricsService';
@@ -170,7 +171,8 @@ function createWindow() {
       openExternal: (url) => shell.openExternal(url)
     }
   );
-  const llmService = new LlmService(configService, docsIndexService);
+  const aiUsageService = new AiUsageService(configService);
+  const llmService = new LlmService(configService, docsIndexService, aiUsageService);
   const routine801Service = new Routine801Service(configService, karafService);
   const apmService = new ApmService(5000, { configService, queryHandleFile: getApmReceiverHandlePath() });
   const qaRegressionService = new QaRegressionService(configService, databaseService);
@@ -240,6 +242,7 @@ function createWindow() {
     httpClientService,
     httpCollectionService,
     usageMetricsService,
+    aiUsageService,
     remoteControlService,
     integrationTraceService,
     authLockoutTestService,

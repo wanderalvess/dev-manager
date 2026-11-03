@@ -12,6 +12,7 @@ import {
 } from '../../../utils/usageImpactViewUtils';
 import { requestConfirm } from '../../ui/confirmService';
 import { showToast } from '../../ToastHost';
+import { AiUsagePanel } from '../usage/AiUsagePanel';
 import { UsageControlsPanel } from '../usage/UsageControlsPanel';
 import { UsageImpactPanel } from '../usage/UsageImpactPanel';
 import { UsageSummaryPanel } from '../usage/UsageSummaryPanel';
@@ -76,6 +77,7 @@ export const UsageTab: React.FC<UsageTabProps> = ({ settings, setSettings }) => 
         onExport={handleExport}
       />
       <UsageSummaryPanel summary={summary} loading={loading} error={error} range={range} onRangeChange={setRange} />
+      <AiUsagePanel />
     </div>
   );
 };

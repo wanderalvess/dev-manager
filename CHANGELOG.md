@@ -4,6 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Adicionado
+- **Uso de IA e teto de tokens**: cada chamada de IA que passa pelo Hub (tela, API REST e MCP) tem os tokens de entrada/saída registrados localmente por dia, provedor, modelo e origem (*IA conduz*, *Perguntar à documentação*, *Diagnóstico HTTP*, *MCP*), sem guardar prompt, resposta nem chave, e respeitando a *Contagem de uso*.
+  - *Configurações → Meu uso → Uso de IA (tokens)*: totais de 7 dias, 30 dias ou tudo, por provedor, modelo e origem; o cartão de cada motor em *IA & LLM* mostra o resumo dos últimos 30 dias.
+  - *Teto de uso* por motor (editar o motor): tokens por dia e por mês, vazio = sem teto. Aos 80% a resposta traz um aviso; ao atingir, a chamada é bloqueada no `LlmService` (vale para tela, REST e MCP) com mensagem em pt-BR dizendo qual teto estourou e como ajustar.
+  - Preço por milhão de tokens (entrada/saída) opcional, digitado por você, para mostrar o custo estimado; o Hub não embute tabela de preços.
+  - O contador é local e só enxerga o que passa pelo Hub: o limite de gastos do painel do provedor continua sendo a proteção real. *Apagar histórico* também zera o uso de IA.
+
 ## [1.57.0] - 2026-11-03
 ### Alterado
 - **Assistente INFR redesenhado, sem menu lateral**: abre em *Ambientes*, com cada ambiente da distro como Oracle → WTA → WSH (estado e porta de cada parte) e a ação que faz sentido: *Iniciar*, *Abrir o WinThor*, *Verificar* ou *Copiar para outra versão*. As tarefas (Nova versão, Montar do zero, Verificar) abrem numa tela própria com o caminho de volta no cabeçalho; *Subir só o banco/WTA/WSH* e *Scripts e pasta* continuam acessíveis.

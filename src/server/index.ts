@@ -34,6 +34,7 @@ import { KarafLogPersistenceService } from '../main/services/KarafLogPersistence
 import { ConfluenceSource } from '../main/services/docSources/ConfluenceSource';
 import { JiraSource } from '../main/services/docSources/JiraSource';
 import { LlmService } from '../main/services/LlmService';
+import { AiUsageService } from '../main/services/AiUsageService';
 import { Routine801Service } from '../main/services/Routine801Service';
 import {
   ApmService,
@@ -193,7 +194,8 @@ const dockerService = new DockerService();
 const deployService = new DeployService(configService, karafService, dockerService, windowsService, networkService);
 const karafLogPersistenceService = new KarafLogPersistenceService();
 const logWatcherService = new LogWatcherService();
-const llmService = new LlmService(configService, docsIndexService);
+const aiUsageService = new AiUsageService(configService);
+const llmService = new LlmService(configService, docsIndexService, aiUsageService);
 const routine801Service = new Routine801Service(configService, karafService);
 const apmService = new ApmService(5000, { configService, queryHandleFile: getApmReceiverHandlePath() });
 const qaRegressionService = new QaRegressionService(configService, databaseService);
@@ -821,7 +823,8 @@ const llmChatRequestSchema = z.object({
   ),
   providerId: z.string().optional(),
   temperature: z.number().min(0).max(2).optional(),
-  maxTokens: z.number().int().min(1).max(32768).optional()
+  maxTokens: z.number().int().min(1).max(32768).optional(),
+  source: z.string().max(40).optional()
 });
 
 const llmAskDocsRequestSchema = z.object({
@@ -902,8 +905,14 @@ app.get('/api/usage/impact', (_req, res) => {
   res.json(usageMetricsService.getImpact());
 });
 
+app.get('/api/usage/ai', (req, res) => {
+  const period = req.query.period;
+  res.json(aiUsageService.getReport(period === '7d' || period === 'all' ? period : '30d'));
+});
+
 app.post('/api/usage/clear', (_req, res) => {
   usageMetricsService.clear();
+  aiUsageService.clear();
   res.json({ success: true });
 });
 
