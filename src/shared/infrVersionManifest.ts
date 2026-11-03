@@ -233,10 +233,34 @@ export function manifestLineOf(manifest: VersionManifest): number | undefined {
   return best;
 }
 
+/** Versão de um `mvn:grupo/artefato/versão/xml/features`. */
+const mvnVersionOf = (url: string): string | undefined => /^mvn:[^/]+\/[^/]+\/([^/]+)\//.exec(url)?.[1];
+
+/**
+ * Repositório Maven que tem a feature nesta versão, pelo catálogo da 801. Só serve repositório da mesma versão: a
+ * 801 às vezes liga a feature a um repositório de outra versão, e o build não acha a feature nele. Sem o da própria
+ * feature, vale o artefato com o nome dela (winthor-core-features serve a winthor-core-data); artefato de outra
+ * feature, mesmo na mesma versão, não serve.
+ */
+export function catalogRepoFor(name: string, version: string, catalog: Routine801CatalogResponse): string | undefined {
+  const own = catalog.funcionalidades.find((f) => f.nome === name && f.versao === version && f.featureMavenUrl && mvnVersionOf(f.featureMavenUrl) === version);
+  if (own) return own.featureMavenUrl;
+  let best: { url: string; base: number } | undefined;
+  for (const { repositorio: r } of catalog.repositorios) {
+    if (r.version !== version || !r.featureMavenUrl) continue;
+    const base = r.artifactId.replace(/-(features?|service)$/, '');
+    if ((name === base || name.startsWith(`${base}-`)) && (!best || base.length > best.base)) best = { url: r.featureMavenUrl, base: base.length };
+  }
+  return best?.url;
+}
+
+export const NO_REPO_REASON = 'a 801 não informou o repositório Maven desta versão';
+
 /**
  * Sobe a lista de origem para a versão alvo pelo catálogo `/atualizacao` da rotina 801: cada
  * feature recebe a versão do catálogo quando ela é mais nova e não passa da linha alvo
- * (a 41 não entra numa 40). O repositório Maven da versão nova entra no manifesto.
+ * (a 41 não entra numa 40). O repositório Maven da versão nova entra no manifesto; versão sem
+ * repositório não sobe, porque o build não teria onde achar a feature.
  */
 export function upgradeManifestFromCatalog(
   origin: VersionManifest,
@@ -254,7 +278,8 @@ export function upgradeManifestFromCatalog(
   const whyNot = (f: Routine801CatalogResponse['funcionalidades'][number]): string | null => {
     if (BLOCKED_STATUS.has(String(f.status).toUpperCase())) return `status ${f.status} na rotina 801`;
     const line = winthorLineOf(f.versao);
-    return line !== undefined && line > target ? `linha ${line}, acima da ${target}` : null;
+    if (line !== undefined && line > target) return `linha ${line}, acima da ${target}`;
+    return catalogRepoFor(f.nome, f.versao, catalog) ? null : NO_REPO_REASON;
   };
 
   const features = origin.features.map((feature) => {
@@ -267,11 +292,8 @@ export function upgradeManifestFromCatalog(
       skipped.push({ name: feature.name, version: newer[0].versao, reason: whyNot(newer[0]) as string });
       return feature;
     }
-    const repo =
-      update.featureMavenUrl ||
-      catalog.repositorios.find((r) => r.repositorio.version === update.versao && r.repositorio.featureMavenUrl)?.repositorio
-        .featureMavenUrl;
-    if (repo && !repos.includes(repo)) repos.push(repo);
+    const repo = catalogRepoFor(update.nome, update.versao, catalog) as string;
+    if (!repos.includes(repo)) repos.push(repo);
     changes.push({ name: feature.name, from: feature.version, to: update.versao });
     return { name: feature.name, version: update.versao };
   });
