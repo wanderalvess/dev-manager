@@ -26,7 +26,6 @@ export function useStartScreenData(active: boolean) {
   const [usageOff, setUsageOff] = useState(false);
   const [envs, setEnvs] = useState<InfrEnvironment[] | null>(null);
   const [city, setCity] = useState('');
-  const [stay, setStayState] = useState(false);
   const [weather, setWeather] = useState<WeatherReport | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
 
@@ -49,7 +48,6 @@ export function useStartScreenData(active: boolean) {
     api?.getSettings?.()
       .then(async (s) => {
         if (!alive) return;
-        setStayState(!!s.startScreenStay);
         setCity(s.startCity ?? '');
         if (s.startCity) void loadWeather(s.startCity);
         if (s.usageMetricsEnabled === false) {
@@ -84,13 +82,7 @@ export function useStartScreenData(active: boolean) {
     return null;
   };
 
-  /** Abrir sempre na tela de início, sem fechar sozinha. */
-  const setStay = (value: boolean) => {
-    setStayState(value);
-    void window.electronAPI?.saveSettings?.({ startScreenStay: value });
-  };
-
-  return { appInfo, metrics, week, usageOff, envs, city, weather, weatherLoading, saveCity, stay, setStay };
+  return { appInfo, metrics, week, usageOff, envs, city, weather, weatherLoading, saveCity };
 }
 
 export type StartScreenData = ReturnType<typeof useStartScreenData>;

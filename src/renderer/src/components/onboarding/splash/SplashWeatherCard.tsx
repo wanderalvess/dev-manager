@@ -15,7 +15,7 @@ const ICONS: Record<WeatherIcon, LucideIcon> = {
   storm: CloudLightning
 };
 
-const CARD = 'rounded-2xl bg-muted/60 p-5 flex flex-col gap-3 min-w-0';
+const CARD = 'rounded-2xl border border-border/70 bg-card/80 p-5 flex flex-col gap-3 min-w-0';
 const EYEBROW = 'font-mono text-xs font-bold tracking-[0.14em] text-muted-foreground';
 
 /** Clima da cidade escolhida. Sem cidade, um campo para informar; só o nome dela sai da máquina. */

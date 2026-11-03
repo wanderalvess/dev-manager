@@ -5,7 +5,7 @@ import type { StartScreenData } from './useStartScreenData';
 import { SplashWeatherCard } from './SplashWeatherCard';
 import { ENV_STATE_LABEL, envState, formatSaved, formatUptime, topModules, type EnvState } from './startScreenUtils';
 
-const CARD = 'rounded-2xl bg-muted/60 p-5 flex flex-col gap-3 min-w-0';
+const CARD = 'rounded-2xl border border-border/70 bg-card/80 p-5 flex flex-col gap-3 min-w-0';
 const EYEBROW = 'font-mono text-xs font-bold tracking-[0.14em] text-muted-foreground';
 const STATE_DOT: Record<EnvState, string> = { up: 'bg-success', partial: 'bg-warning', down: 'bg-muted-foreground/50' };
 
@@ -37,7 +37,7 @@ export const SplashStartPanel: React.FC<{ data: StartScreenData; news: { version
   const envs = data.envs ?? [];
 
   return (
-    <section aria-label="Tela de início" className="w-full max-w-2xl justify-self-center lg:justify-self-end grid grid-cols-1 sm:grid-cols-2 gap-3 animate-splash-rise">
+    <section aria-label="Tela de início" className="w-full grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
       <article aria-label="Este PC" className={CARD}>
         <span className={EYEBROW}>ESTE PC</span>
         <p className="m-0 text-lg font-bold truncate">{data.appInfo?.osHostname ?? '—'}</p>
@@ -114,19 +114,21 @@ export const SplashStartPanel: React.FC<{ data: StartScreenData; news: { version
       </article>
 
       {news && news.items.length > 0 && (
-        <article aria-label="Novidades desta versão" className={`${CARD} sm:col-span-2`}>
-          <span className={EYEBROW}>NOVIDADES · v{news.version}</span>
-          <ul className="m-0 pl-4 flex flex-col gap-1 text-sm">
+        <article aria-label="Novidades desta versão" className={`${CARD} col-span-full`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className={EYEBROW}>NOVIDADES · v{news.version}</span>
+            <button type="button" onClick={onWhatsNew} className="min-h-9 flex items-center gap-2 text-sm font-bold text-primary cursor-pointer hover:underline">
+              Ver todas as novidades <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+          <ul className="m-0 p-0 list-none grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
             {news.items.slice(0, 3).map((item) => (
-              <li key={item.title}>
+              <li key={item.title} className="rounded-xl bg-muted/50 px-4 py-3">
                 <strong>{item.title}</strong>
                 {item.section === 'Corrigido' && <span className="text-info text-xs"> · corrigido</span>}
               </li>
             ))}
           </ul>
-          <button type="button" onClick={onWhatsNew} className="self-start min-h-9 flex items-center gap-2 text-sm font-bold text-primary cursor-pointer hover:underline">
-            Ver todas as novidades <ArrowRight className="w-4 h-4" />
-          </button>
         </article>
       )}
     </section>
