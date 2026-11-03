@@ -43,7 +43,7 @@ import { KARAF_CONTAINER_CLIENT } from '../../utils/karafDockerUtils';
 import { mergeDependencyFixes, resolveDependencies } from '../../../shared/infrFeatureDependencies';
 import { buildEnvFile, envFieldsFor, parseEnvLines, pickEnv, type InfrEnvTarget } from '../../../shared/infrEnvConfig';
 import type { InfrEnvSaveRequest, InfrEnvTemplate, InfrManifestSaveRequest, InfrManifestSaveResult } from '../../../shared/infrVersionManifest';
-import { INFR_NEW_VERSION_SCRIPTS, commandFailureDetail, missingNewVersionScriptsMessage } from '../../../shared/infrNewVersionScripts';
+import { INFR_NEW_VERSION_SCRIPTS, commandFailureDetail, missingNewVersionScriptsMessage, originContainerMessage } from '../../../shared/infrNewVersionScripts';
 import type { Routine801Service } from '../Routine801Service';
 import type { WslService } from '../WslService';
 
@@ -153,6 +153,10 @@ export class InfrVersionService {
     const container = `wta-${from}`;
     const tmp = `/tmp/hub-origem-${from}.features`;
     let originText: string;
+    // O export_features.sh sai calado quando o container está parado (set -e no docker exec): checa antes
+    const status = (await this.run(distro, `docker inspect -f '{{.State.Status}}' ${container} 2>/dev/null || echo missing`, 20000, trace).catch(() => '')).trim();
+    const stopped = originContainerMessage(container, status);
+    if (stopped) return { success: false, error: stopped };
     try {
       await this.run(
         distro,

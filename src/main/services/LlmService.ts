@@ -11,6 +11,9 @@ import { DocsIndexService } from './DocsIndexService';
 import { isSafeUrl } from '../utils/security';
 
 export class LlmService {
+  /** Modelos Anthropic que responderam 400 por causa do `temperature` */
+  private readonly modelsWithoutTemperature = new Set<string>();
+
   constructor(
     private readonly configService: ConfigService,
     private readonly docsIndexService?: DocsIndexService
@@ -295,7 +298,9 @@ export class LlmService {
       model: provider.model || (provider.provider === 'ollama' ? 'llama3.2' : 'gpt-4o-mini'),
       messages: request.messages,
       temperature: request.temperature ?? provider.temperature ?? 0.7,
-      max_tokens: request.maxTokens ?? provider.maxTokens ?? 2048
+      max_tokens: request.maxTokens ?? provider.maxTokens ?? 2048,
+      // Ollama: modelos com "thinking" (qwen3, etc.) pensam até o limite e devolvem o texto vazio
+      ...(request.noThinking && provider.provider === 'ollama' ? { reasoning_effort: 'none' } : {})
     };
 
     const res = await fetch(url, {
@@ -408,31 +413,44 @@ export class LlmService {
       content: m.content
     }));
 
+    const model = provider.model || 'claude-sonnet-5-5';
     const body: any = {
-      model: provider.model || 'claude-sonnet-5-5',
+      model,
       max_tokens: request.maxTokens ?? provider.maxTokens ?? 2048,
-      temperature: request.temperature ?? provider.temperature ?? 0.7,
       messages
     };
+    // Os modelos Claude mais novos recusam `temperature` (deprecated): quem já recusou não recebe mais
+    if (!this.modelsWithoutTemperature.has(model)) {
+      body.temperature = request.temperature ?? provider.temperature ?? 0.7;
+    }
 
     if (systemMessages.length > 0) {
       body.system = systemMessages.map((m) => m.content).join('\n\n');
     }
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify(body),
-      signal
-    });
+    const post = () =>
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify(body),
+        signal
+      });
 
+    let res = await post();
     if (!res.ok) {
       const errDetail = await this.parseErrorBody(res);
-      throw new Error(`Erro do Anthropic Claude (${res.status}): ${errDetail}`);
+      if (res.status === 400 && 'temperature' in body && /temperature/i.test(errDetail)) {
+        this.modelsWithoutTemperature.add(model);
+        delete body.temperature;
+        res = await post();
+        if (!res.ok) throw new Error(`Erro do Anthropic Claude (${res.status}): ${await this.parseErrorBody(res)}`);
+      } else {
+        throw new Error(`Erro do Anthropic Claude (${res.status}): ${errDetail}`);
+      }
     }
 
     const data: any = await res.json();

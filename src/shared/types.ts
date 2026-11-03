@@ -2410,6 +2410,8 @@ export interface LlmChatRequest {
   messages: LlmChatMessage[];
   temperature?: number;
   maxTokens?: number;
+  /** Pede resposta direta, sem raciocínio longo (modelos locais com "thinking" gastam o limite de tokens pensando e devolvem vazio) */
+  noThinking?: boolean;
 }
 
 export interface LlmChatResponse {

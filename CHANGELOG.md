@@ -5,6 +5,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
 ## [Não lançado]
+### Adicionado
+- **Deixar a IA conduzir (Assistente INFR → Nova versão)**: com um motor cadastrado em Configurações → IA & LLM, a pessoa descreve o que quer ("criar a versão 40 a partir do ambiente local, com o nome v40") e a IA preenche o formulário, lê a origem e confere, mostrando cada passo e o motivo. Ela só pode usar ações fixas (preencher campo, ler a origem, pedir o Gerar, conferir os containers, explicar); qualquer outra resposta é recusada. O que está bloqueado em vermelho ela não contorna: propõe a saída que a própria conferência oferece (por exemplo, banco vazio no lugar do clone) ou explica. **Quem confirma o Gerar é você** (o build leva uns 30 minutos); depois do build, *Conferir o ambiente* leva a verificação dos containers e o fim do log para a IA diagnosticar. Credenciais (senha do Nexus, tokens) são mascaradas antes de ir ao modelo, e os comandos que a IA sugere vêm só com *Copiar*, sem os que apagam ou param containers.
+- **Prévia da Nova versão com o WTA de origem parado**: em vez de "Command failed", a mensagem diz que o `wta-<origem>` está parado (ou não existe) e como subir o banco e o WTA. Antes o script de leitura saía calado.
+
 ### Alterado
 - **Central de Ajuda refeita** no desenho das Configurações: menu lateral por grupos (*Aprender*, *Suporte* e *Referência*) no lugar das abas horizontais, com busca no menu e os tours no rodapé dele.
   - *Busca*: acha perguntas, módulos e atalhos ao mesmo tempo, sem diferenciar acento (`configuracoes` acha *Configurações*). Escolher uma pergunta abre a resposta no lugar e rola até ela.
@@ -12,6 +16,8 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
   - *Visão geral*: ganhou *Comece pelo seu papel* (Desenvolvedor, QA, PO/SME) e *Problemas mais comuns*; a faixa de abertura ficou só com a situação deste PC e o próximo passo.
 
 ### Corrigido
+- **Claude (Anthropic) recusando `temperature`**: modelos novos respondem 400 dizendo que o parâmetro está obsoleto. O Hub refaz a chamada sem ele e não o envia mais para aquele modelo.
+- **Modelos locais com "thinking" (Ollama, ex.: qwen3)** gastavam o limite de tokens pensando e devolviam texto vazio no modo guiado; o Hub agora pede resposta direta ao Ollama nesse caso.
 - **Atalho da Central de Ajuda**: o cabeçalho, o menu lateral e o README diziam `Alt+9`, mas esse atalho abre o API Studio. A Ajuda abre com `Alt+H`. O API Studio, que faltava na lista de módulos da Visão geral, entrou com o `Alt+9`.
 - **Configurações → IA & LLM**: revisão da tela usando-a de ponta a ponta.
   - *Timeout*: dava para digitar só valores como 55 (o "4" de 45 já virava 5 a cada tecla); agora o piso de 5 s vale ao sair do campo.
