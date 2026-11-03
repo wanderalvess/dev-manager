@@ -4,6 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.57.0] - 2026-11-03
+### Alterado
+- **Assistente INFR redesenhado, sem menu lateral**: abre em *Ambientes*, com cada ambiente da distro como Oracle → WTA → WSH (estado e porta de cada parte) e a ação que faz sentido: *Iniciar*, *Abrir o WinThor*, *Verificar* ou *Copiar para outra versão*. As tarefas (Nova versão, Montar do zero, Verificar) abrem numa tela própria com o caminho de volta no cabeçalho; *Subir só o banco/WTA/WSH* e *Scripts e pasta* continuam acessíveis.
+- **Nova versão numa tela só**: os quatro passos viraram uma frase ("Criar o ambiente v40 na versão 40, a partir do local, com o banco copiado"), *Ajustes* fechado com os valores à vista (portas, WSH, configuração, avançado) e *Antes de gerar*, uma lista única com a conferência da origem e a leitura do catálogo da 801. O que impede vem primeiro, com a ação ali mesmo (ex.: *Iniciar o local* quando a origem está parada); o que passou fica numa linha. O catálogo é lido sozinho quando a origem passa, e o rodapé diz o que será criado e tem o único *Gerar*.
+- **IA conduzindo numa linha**: o pedido sai da tela de ambientes ou da própria Nova versão. A IA mostra a última coisa que disse e *Continuar* quando parou num bloqueio; os campos que ela preencheu ficam marcados e o que ela fez fica em *O que a IA fez*. O Gerar é o mesmo botão do rodapé, sem confirmação à parte.
+- **Montar do zero** (antes *Primeiros passos*): as etapas feitas viram uma linha, a etapa da vez ocupa a tela e as seguintes aparecem apagadas.
+- **Verificar**: o ambiente se escolhe por botões (sem digitar o nome); as três partes aparecem lado a lado e clicar numa abre o log dela em largura total, com o log do build quando houver. Os testes de terminal ficam recolhidos.
+
 ## [1.56.0] - 2026-11-03
 ### Adicionado
 - **Deixar a IA conduzir (Assistente INFR → Nova versão)**: com um motor cadastrado em Configurações → IA & LLM, a pessoa descreve o que quer ("criar a versão 40 a partir do ambiente local, com o nome v40") e a IA preenche o formulário, lê a origem e confere, mostrando cada passo e o motivo. Ela só pode usar ações fixas (preencher campo, ler a origem, pedir o Gerar, conferir os containers, explicar); qualquer outra resposta é recusada. O que está bloqueado em vermelho ela não contorna: propõe a saída que a própria conferência oferece (por exemplo, banco vazio no lugar do clone) ou explica. **Quem confirma o Gerar é você** (o build leva uns 30 minutos); depois do build, *Conferir o ambiente* leva a verificação dos containers e o fim do log para a IA diagnosticar. Credenciais (senha do Nexus, tokens) são mascaradas antes de ir ao modelo, e os comandos que a IA sugere vêm só com *Copiar*, sem os que apagam ou param containers.

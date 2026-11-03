@@ -12,7 +12,7 @@ export const WinthorEmptyState: React.FC<{ hasWsl: boolean; onStart: () => void;
     <p className="text-xs font-bold font-mono tracking-[0.14em] text-warning">NADA INSTALADO AINDA</p>
     <h2 className="text-xl font-bold text-foreground">Nenhuma distro do WinThor neste computador</h2>
     <p className="text-sm text-foreground/80 leading-relaxed">
-      {hasWsl ? 'O WSL está aqui, mas nenhuma distro tem "winthor" no nome.' : 'O WSL não respondeu ou não tem distros.'} O Assistente INFR abre em Primeiros passos,
+      {hasWsl ? 'O WSL está aqui, mas nenhuma distro tem "winthor" no nome.' : 'O WSL não respondeu ou não tem distros.'} O Assistente INFR abre em Montar do zero,
       confere o que já existe e guia o resto, até o ambiente com banco, WTA e WSH. Leva de 40 minutos a 1 hora, a maior parte esperando downloads e o dump.
     </p>
     <ol className="grid grid-cols-1 sm:grid-cols-2 sm:grid-flow-col sm:grid-rows-4 gap-x-6 gap-y-1.5 list-decimal pl-5 text-sm text-foreground">

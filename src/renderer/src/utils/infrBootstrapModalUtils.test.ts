@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   infrBootstrapModalParsePort,
   infrBootstrapModalPreviewCommand,
+  infrCheckBadge,
+  infrContainerStateText,
   infrFolderStatus,
-  INFR_ASSISTANT_NAV
+  infrImageVersion,
+  INFR_VIEW_TITLE
 } from './infrBootstrapModalUtils';
 
 describe('infrBootstrapModalUtils', () => {
@@ -23,10 +26,34 @@ describe('infrBootstrapModalUtils', () => {
     );
   });
 
-  it('navegação cobre cada aba uma vez, com o que ela faz', () => {
-    const items = INFR_ASSISTANT_NAV.flatMap((g) => g.items);
-    expect(items.map((i) => i.tab).sort()).toEqual(['firstSteps', 'newVersion', 'oracle', 'scripts', 'verify', 'wsh', 'wta']);
-    expect(items.every((i) => i.hint.length > 10)).toBe(true);
+  it('toda tela tem nome no cabeçalho', () => {
+    expect(Object.keys(INFR_VIEW_TITLE).sort()).toEqual(['firstSteps', 'home', 'newVersion', 'oracle', 'scripts', 'verify', 'wsh', 'wta']);
+    expect(Object.values(INFR_VIEW_TITLE).every((t) => t.length > 3)).toBe(true);
+  });
+
+  it('estado do container em palavras', () => {
+    expect(infrContainerStateText(undefined)).toBe('não tem');
+    expect(infrContainerStateText({ state: 'running' })).toBe('no ar');
+    expect(infrContainerStateText({ state: 'exited' })).toBe('parado');
+    expect(infrContainerStateText({ state: 'dead' })).toBe('dead');
+    expect(infrContainerStateText({ state: '' })).toBe('estado desconhecido');
+  });
+
+  it('selo do container no Verificar', () => {
+    expect(infrCheckBadge({ exists: false })).toEqual({ text: 'não criado', tone: 'none' });
+    expect(infrCheckBadge({ exists: true, state: 'running' })).toEqual({ text: 'no ar', tone: 'up' });
+    expect(infrCheckBadge({ exists: true, state: 'running', health: 'healthy' })).toEqual({ text: 'no ar · healthy', tone: 'up' });
+    expect(infrCheckBadge({ exists: true, state: 'running', health: 'starting' }).tone).toBe('wait');
+    expect(infrCheckBadge({ exists: true, state: 'running', health: 'unhealthy' }).tone).toBe('down');
+    expect(infrCheckBadge({ exists: true, state: 'restarting' }).tone).toBe('wait');
+    expect(infrCheckBadge({ exists: true, state: 'exited' })).toEqual({ text: 'exited', tone: 'down' });
+  });
+
+  it('versão pela imagem do WTA', () => {
+    expect(infrImageVersion('linux-winthor:40-debian')).toBe('40');
+    expect(infrImageVersion('linux-winthor:38')).toBe('38');
+    expect(infrImageVersion('linux-winthor:latest')).toBeUndefined();
+    expect(infrImageVersion(undefined)).toBeUndefined();
   });
 
   it('pasta do INFR-Docker: a digitada vence a detectada; faltando script não está ok', () => {

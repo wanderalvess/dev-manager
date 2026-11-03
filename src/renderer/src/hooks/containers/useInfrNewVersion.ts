@@ -11,8 +11,8 @@ import type { InfrEnvTemplate, InfrManifestSource, InfrVersionPreview } from '..
 import { reviewBlocks, reviewNewVersion, type InfrReviewFix } from '../../../../shared/infrNewVersionReview';
 import { useInfrOriginCheck } from './useInfrOriginCheck';
 
-/** Passos da Nova versão: 1 origem e versão, 2 banco, 3 WTA/WSH e portas, 4 revisar e gerar. */
-export type InfrNewVersionStep = 1 | 2 | 3 | 4;
+/** Campos que a leitura da origem usa: mudar um deles descarta a leitura; portas e banco não, a conferência recalcula na hora. */
+const PREVIEW_KEYS: (keyof InfrNewVersionForm)[] = ['from', 'version', 'wshJar', 'originWtaUrl', 'dryRun'];
 
 export interface InfrNewVersionForm {
   from: string;
@@ -104,7 +104,7 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
     if (['dbSource', 'dbContainer', 'oraclePort', 'wtaPort', 'wshPort'].includes(key)) nextEdited.add(key as Derived);
     setEdited(nextEdited);
     setForm((f) => derive({ ...f, [key]: key === 'version' ? value.replace(/\D/g, '').slice(0, 3) : value }, nextEdited));
-    setPreview(null);
+    if (PREVIEW_KEYS.includes(key)) setPreview(null);
   };
 
   const newEnv = {
@@ -122,32 +122,25 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
   const canPreview = isValidWinthorVersion(form.version) && isValidEnvName(form.from) && !busy;
 
   const origin = useInfrOriginCheck(distro, infrPath, form.from);
-  const [step, setStep] = useState<InfrNewVersionStep>(1);
   const isPort = (v: string) => /^\d{2,5}$/.test(v.trim());
-  // O que falta em cada passo para seguir (vazio = pode seguir)
-  const stepIssue: Record<InfrNewVersionStep, string> = {
-    1: !form.from
-      ? 'Escolha o ambiente de origem.'
-      : !isValidWinthorVersion(form.version)
-        ? 'Informe a versão nova (ex.: 40).'
-        : !isValidEnvName(form.name) || form.name === form.from
-          ? 'Dê um nome ao ambiente novo, diferente da origem.'
-          : origin.loading && !origin.result
-            ? 'Conferindo a origem (pasta, WTA e login)...'
-            : origin.blocked
-              ? 'Resolva o que está em vermelho na conferência da origem.'
-              : '',
-    2: !isValidEnvName(form.dbContainer)
-      ? 'Escolha o Oracle do ambiente novo.'
-      : form.dbMode === 'clone' && !isValidEnvName(form.dbSource)
-        ? 'Escolha o Oracle de onde clonar.'
-        : form.dbMode !== 'existing' && !isPort(form.oraclePort)
-          ? 'Informe a porta do Oracle.'
-          : '',
-    3: !isPort(form.wtaPort) ? 'Informe a porta do WTA.' : form.wshJar && !isPort(form.wshPort) ? 'Informe a porta do WSH.' : '',
-    4: ''
-  };
-  const canReach = (target: InfrNewVersionStep) => ([1, 2, 3] as const).filter((s) => s < target).every((s) => !stepIssue[s]);
+  // O primeiro dado que falta no formulário (vazio = completo); a conferência da origem e a leitura vêm depois
+  const formIssue = !form.from
+    ? 'Escolha o ambiente de origem.'
+    : !isValidWinthorVersion(form.version)
+      ? 'Informe a versão nova (ex.: 40).'
+      : !isValidEnvName(form.name) || form.name === form.from
+        ? 'Dê um nome ao ambiente novo, diferente da origem.'
+        : !isValidEnvName(form.dbContainer)
+          ? 'Escolha o Oracle do ambiente novo (em Ajustes).'
+          : form.dbMode === 'clone' && !isValidEnvName(form.dbSource)
+            ? 'Escolha o Oracle de onde copiar o banco (em Ajustes).'
+            : form.dbMode !== 'existing' && !isPort(form.oraclePort)
+              ? 'Informe a porta do Oracle (em Ajustes).'
+              : !isPort(form.wtaPort)
+                ? 'Informe a porta do WTA (em Ajustes).'
+                : form.wshJar && !isPort(form.wshPort)
+                  ? 'Informe a porta do WSH (em Ajustes).'
+                  : '';
 
   const sourceImage = envs?.oracles.find((o) => o.name === form.dbSource)?.image;
   const review = preview
@@ -164,8 +157,23 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
       })
     : [];
   const blocked = reviewBlocks(review);
+  // O que impede o Gerar agora, na ordem em que a pessoa resolve (vazio = pode gerar)
+  const issue =
+    formIssue ||
+    (origin.loading && !origin.result
+      ? 'Conferindo a origem (pasta, WTA e login)...'
+      : origin.blocked
+        ? 'Resolva o que está em vermelho em Antes de gerar.'
+        : busy === 'preview'
+          ? 'Lendo a origem e o catálogo da 801...'
+          : !preview
+            ? 'Falta ler a origem e o catálogo da 801.'
+            : !preview.success || blocked
+              ? 'Resolva o que está em vermelho em Antes de gerar.'
+              : '');
+  const canGenerate = !issue && !!command && busy === null;
 
-  /** Saídas do passo 4 quando o clone não serve: usar o Oracle de origem direto ou subir um vazio. */
+  /** Saídas da conferência quando o clone não serve: usar o Oracle de origem direto ou subir um vazio. */
   const applyFix = (fix: InfrReviewFix) => {
     if (fix === 'useSourceOracle') {
       const next = new Set(edited).add('dbContainer');
@@ -236,20 +244,12 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
     }
   };
 
-  /** Vai a um passo já liberado; o passo 4 lê a origem e o catálogo na hora, se ainda não leu. */
-  const goTo = (target: InfrNewVersionStep) => {
-    if (!canReach(target)) return;
-    setStep(target);
-    if (target === 4 && !preview) runPreview();
-  };
-
   return {
-    goTo,
     form, update, envs, loadingEnvs, loadEnvironments, preview, busy, message, command, canPreview, runPreview, generate,
     /** Descarta a prévia lida (um novo pedido da IA começa lendo a origem de novo) */
     resetPreview: () => setPreview(null),
     envTemplate, edits, editEnv, manifestSource, setManifestSource,
-    step, setStep, stepIssue, canReach, review, blocked, applyFix, origin
+    formIssue, issue, canGenerate, review, blocked, applyFix, origin
   };
 }
 

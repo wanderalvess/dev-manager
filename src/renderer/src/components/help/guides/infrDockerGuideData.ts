@@ -73,16 +73,16 @@ export interface GuideHubTask {
 }
 
 export const GUIDE_HUB_TASKS: GuideHubTask[] = [
-  { task: 'Começar do zero', manual: 'MANUAL_INSTALACAO.md inteiro', hub: 'Assistente INFR → Primeiros passos (confere cada etapa e diz o que falta)' },
+  { task: 'Começar do zero', manual: 'MANUAL_INSTALACAO.md inteiro', hub: 'Assistente INFR → Montar do zero (confere cada etapa e diz o que falta)' },
   { task: 'Escolher o ambiente que o Hub usa', manual: 'editar a URL do WTA, a da 801 e a porta SSH à mão', hub: 'WinThor & WSL → Ambiente (aponta Subir WinThor, topologia, WTA, 801 e Karaf para ele)' },
-  { task: 'Ver o que está rodando', manual: 'docker ps, docker logs', hub: 'WinThor & WSL (topologia) e a tela Containers' },
-  { task: 'Subir o banco', manual: 'oracle_setup.sh + import_dump.sh', hub: 'Assistente INFR → Banco Oracle; o dump, em Primeiros passos' },
-  { task: 'Subir o WTA', manual: 'criar wta.env + wta_setup.sh', hub: 'Assistente INFR → WTA (a versão preenche nome e portas)' },
-  { task: 'Subir o WSH', manual: 'criar .env + wsh_setup.sh', hub: 'Assistente INFR → WSH' },
+  { task: 'Ver o que está rodando', manual: 'docker ps, docker logs', hub: 'Assistente INFR → Ambientes, WinThor & WSL (topologia) e a tela Containers' },
+  { task: 'Subir o banco', manual: 'oracle_setup.sh + import_dump.sh', hub: 'Assistente INFR → Montar do zero; avulso, Subir só o banco; o dump, em Montar do zero' },
+  { task: 'Subir o WTA', manual: 'criar wta.env + wta_setup.sh', hub: 'Assistente INFR → Montar do zero; avulso, Subir só o WTA (a versão preenche nome e portas)' },
+  { task: 'Subir o WSH', manual: 'criar .env + wsh_setup.sh', hub: 'Assistente INFR → Montar do zero; avulso, Subir só o WSH' },
   {
     task: 'Ambiente numa versão nova',
     manual: 'exportar features, montar manifesto, build_version.sh, clonar banco, dois .env, new_version_env.sh',
-    hub: 'Assistente INFR → Nova versão (4 passos, confere tudo antes de gerar)'
+    hub: 'Assistente INFR → Nova versão (uma tela, confere tudo antes de gerar)'
   },
   { task: 'Conferir os scripts da pasta', manual: 'ls em cada pasta', hub: 'Cabeçalho do assistente e Scripts e pasta' },
   { task: 'Subir tudo na ordem', manual: 'três comandos, esperando cada um', hub: 'Botão Subir WinThor' },
