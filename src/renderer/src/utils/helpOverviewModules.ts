@@ -8,6 +8,7 @@ import {
   Layers,
   GitPullRequest,
   Grid,
+  Globe,
   FileSearch,
   FileText,
   Activity,
@@ -181,9 +182,24 @@ export const HELP_OVERVIEW_MODULES: HelpOverviewModule[] = [
     icon: HelpCircle,
     title: 'Central de Ajuda',
     description: 'Tutoriais, documentação dos módulos, FAQ e atalhos globais.',
+    shortcut: 'Alt+H',
+    hoverBorderClass: 'hover:border-primary/50',
+    iconClass: 'text-primary',
+    titleHoverClass: 'group-hover:text-primary'
+  },
+  {
+    navTarget: 'http-client',
+    icon: Globe,
+    title: 'API Studio',
+    description: 'Cliente HTTP estilo Postman: coleções, variáveis e testes de APIs REST.',
     shortcut: 'Alt+9',
     hoverBorderClass: 'hover:border-primary/50',
     iconClass: 'text-primary',
     titleHoverClass: 'group-hover:text-primary'
   }
 ];
+
+/** Título e resumo de cada módulo, para o índice de busca da Ajuda. */
+export function getModuleSearchSources(): { title: string; description: string }[] {
+  return HELP_OVERVIEW_MODULES.map((m) => ({ title: m.title, description: m.description }));
+}

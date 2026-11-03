@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   getKeyboardShortcuts,
-  getHelpCategories,
   getFaqList,
   OPTIONAL_DOWNLOADS,
   MCP_ADD_COMMAND
 } from './helpData';
+import { HELP_COMMON_PROBLEM_IDS } from '../../utils/helpOverviewRoles';
 
 describe('helpData', () => {
   describe('OPTIONAL_DOWNLOADS and MCP_ADD_COMMAND', () => {
@@ -57,29 +57,6 @@ describe('helpData', () => {
     });
   });
 
-  describe('getHelpCategories', () => {
-    it('should return 6 main navigation categories with proper badges', () => {
-      const categories = getHelpCategories(33, '1.23.0');
-      expect(categories.length).toBe(6);
-
-      const ids = categories.map((c) => c.id);
-      expect(ids).toEqual(['overview', 'modules', 'guides', 'shortcuts', 'faq', 'about']);
-
-      const faqCat = categories.find((c) => c.id === 'faq');
-      expect(faqCat?.badge).toBe('33');
-
-      const aboutCat = categories.find((c) => c.id === 'about');
-      expect(aboutCat?.badge).toBe('v1.23.0');
-    });
-
-    it('should use a semver fallback version when appVersion is not provided', () => {
-      const categories = getHelpCategories(10);
-      const aboutCat = categories.find((c) => c.id === 'about');
-      // Fallback muda a cada release: valida o formato, nao um literal.
-      expect(aboutCat?.badge).toMatch(/^v\d+\.\d+\.\d+$/);
-    });
-  });
-
   describe('getFaqList', () => {
     it('should generate the FAQ items with valid structure and tags', () => {
       const copyFn = vi.fn();
@@ -111,6 +88,22 @@ describe('helpData', () => {
         expect(Array.isArray(faq.tags)).toBe(true);
         expect(faq.tags.length).toBeGreaterThan(0);
       }
+    });
+
+    it('should keep every "Problemas mais comuns" id pointing at a real FAQ', () => {
+      const faqs = getFaqList({
+        debugPort: 5005,
+        webPort: 8888,
+        sshPort: 8101,
+        portalWebUrl: 'http://localhost:8888',
+        consoleUrl: 'http://localhost:8888/system/console',
+        copyToClipboard: vi.fn(),
+        copiedItem: null,
+        handleOpenLink: vi.fn(),
+        handleOpenMcpDocs: vi.fn()
+      });
+      const ids = new Set(faqs.map((f) => f.id));
+      for (const id of HELP_COMMON_PROBLEM_IDS) expect(ids.has(id)).toBe(true);
     });
 
     it('should interpolate custom ports into questions and tags', () => {

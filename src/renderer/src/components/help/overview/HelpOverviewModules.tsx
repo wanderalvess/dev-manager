@@ -12,7 +12,7 @@ export const HelpOverviewModules: React.FC<HelpOverviewModulesProps> = ({ onNavi
     <HelpOverviewSectionHeader
       icon={Boxes}
       title="Ecossistema & Módulos do Sistema"
-      subtitle="Atalhos globais de acesso direto (Alt + 0..9)"
+      subtitle="Atalhos globais de acesso direto (Alt + 0..9, Alt+Q e Alt+H)"
     />
 
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 gap-3">
