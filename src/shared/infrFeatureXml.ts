@@ -11,7 +11,7 @@
  */
 import { SAFE_REPO_URL, mvnFeaturePath } from './infrFeatureArtifacts';
 import { satisfiesSpec, type DependencyIssue, type DependencyReport } from './infrFeatureDependencies';
-import type { VersionManifest } from './infrVersionManifest';
+import { compareVersions, type ManifestChange, type VersionManifest } from './infrVersionManifest';
 
 export interface XmlFeatureDependency {
   name: string;
@@ -62,18 +62,18 @@ export function parseFeaturesXml(xml: string): XmlFeature[] {
 }
 
 const SAFE_PATH = /^[A-Za-z0-9_./-]+$/;
-/** No máximo estes repositórios por prévia: protege o tempo e a rede. */
-export const MAX_XML_REPOS = 80;
+/** No máximo estes repositórios por prévia (a lista nova e a existente juntas): protege o tempo e a rede. */
+export const MAX_XML_REPOS = 140;
 const MAX_XML_BYTES = 120000;
 
-/** Repositórios da lista (`repo mvn:...`) e o caminho do features.xml de cada um no Maven. */
-export function featureXmlPaths(manifest: VersionManifest): { mvn: string; path: string }[] {
+/** Repositórios da lista (`repo mvn:...`) e o caminho do features.xml de cada um no Maven; `all` sem o limite. */
+export function featureXmlPaths(manifest: VersionManifest, all = false): { mvn: string; path: string }[] {
   const out: { mvn: string; path: string }[] = [];
   for (const mvn of manifest.repos) {
     const path = mvnFeaturePath(mvn);
     if (path && SAFE_PATH.test(path)) out.push({ mvn, path });
   }
-  return out.slice(0, MAX_XML_REPOS);
+  return all ? out : out.slice(0, MAX_XML_REPOS);
 }
 
 /**
@@ -147,8 +147,22 @@ export interface XmlDependencyReport {
   checked: number;
   withDependencies: number;
   issues: DependencyIssue[];
+  /** Features da lista nova que nenhum repositório dela define (só quando todos os XML da lista vieram) */
+  absent?: AbsentFeature[];
+  /** O mesmo para o versions/<versão>.features que já existe */
+  existingAbsent?: AbsentFeature[];
   /** Por que não deu para conferir (sem curl, sem repositórios, falha do comando) */
   error?: string;
+}
+
+/**
+ * Features ausentes de uma lista, olhando só os XML dos repositórios DELA (o build não vê os da outra lista). Undefined se
+ * algum XML da lista não veio: sem ele, uma feature pareceria ausente sem estar.
+ */
+export function absentForManifest(manifest: VersionManifest, files: Map<string, string>): AbsentFeature[] | undefined {
+  const paths = featureXmlPaths(manifest, true).map((p) => p.path);
+  if (paths.some((p) => !files.has(p))) return undefined;
+  return featuresAbsentFromXml(manifest, paths.flatMap((p) => parseFeaturesXml(files.get(p) as string)));
 }
 
 /**
@@ -177,6 +191,44 @@ export function checkManifestWithFeatureXml(manifest: VersionManifest, features:
     }
   }
   return { checked, withDependencies, issues };
+}
+
+/** Feature da lista que nenhum features.xml dos repositórios dela define nessa versão, e as versões que eles têm. */
+export interface AbsentFeature {
+  name: string;
+  version: string;
+  available: string[];
+}
+
+/**
+ * Features da lista que o build não acharia: o install_features.sh só procura nos `repo mvn:` da própria lista e para em
+ * "Feature X/versão não existe em nenhum repositório da lista". `features` deve vir só dos XML desses repositórios.
+ */
+export function featuresAbsentFromXml(manifest: VersionManifest, features: XmlFeature[]): AbsentFeature[] {
+  const versions = new Map<string, Set<string>>();
+  for (const f of features) versions.set(f.name, (versions.get(f.name) ?? new Set()).add(f.version));
+  return manifest.features
+    .filter((f) => !versions.get(f.name)?.has(f.version))
+    .map((f) => ({ name: f.name, version: f.version, available: [...(versions.get(f.name) ?? [])].sort((a, b) => compareVersions(b, a)) }));
+}
+
+/**
+ * Volta cada feature ausente para a versão mais nova que os repositórios da lista têm dela; a que não tem nenhuma fica em
+ * `unresolved` (precisa de um `repo mvn:` novo, que só a pessoa sabe qual é).
+ */
+export function repairAbsentFeatures(manifest: VersionManifest, absent: AbsentFeature[]): { manifest: VersionManifest; repairs: ManifestChange[]; unresolved: AbsentFeature[] } {
+  const repairs: ManifestChange[] = [];
+  const unresolved: AbsentFeature[] = [];
+  const target = new Map<string, string>();
+  for (const a of absent) {
+    if (a.available.length === 0) unresolved.push(a);
+    else {
+      target.set(a.name, a.available[0]);
+      repairs.push({ name: a.name, from: a.version, to: a.available[0], reason: `a ${a.version} não está em nenhum repositório da lista` });
+    }
+  }
+  const features = manifest.features.map((f) => (target.has(f.name) ? { name: f.name, version: target.get(f.name) as string } : f));
+  return { manifest: { ...manifest, features }, repairs, unresolved };
 }
 
 /** Junta o que os features.xml acharam ao relatório de dependências do catálogo, sem repetir o mesmo conflito. */

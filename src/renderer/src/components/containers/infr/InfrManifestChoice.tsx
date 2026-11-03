@@ -17,7 +17,9 @@ export const InfrManifestChoice: React.FC<{ s: InfrNewVersionState }> = ({ s }) 
       source: 'existing',
       label: `Manter a lista da ${version}`,
       badge: 'Recomendado',
-      hint: `${existing.count} features, já montadas para a ${version}. Nada é regravado.`
+      hint: existing.repair?.repairs.length
+        ? `${existing.count} features, já montadas para a ${version}. ${existing.repair.repairs.length} sem repositório na lista voltam para a versão que ele tem.`
+        : `${existing.count} features, já montadas para a ${version}. Nada é regravado.`
     },
     {
       source: 'preview',

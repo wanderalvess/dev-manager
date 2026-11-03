@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   MAX_XML_REPOS,
+  absentForManifest,
+  featuresAbsentFromXml,
+  repairAbsentFeatures,
   buildFeatureXmlFetchScript,
   checkManifestWithFeatureXml,
   featureXmlPaths,
@@ -38,6 +41,44 @@ const FORNECEDOR = `<features name="winthor-fornecedor-features-0.38.0.0" xmlns=
 
 const manifest = (features: [string, string][], repos: string[] = []): VersionManifest => ({ repos, features: features.map(([name, version]) => ({ name, version })), disabled: [] });
 
+describe('feature que nenhum repositório da lista tem', () => {
+  const lista: VersionManifest = {
+    repos: ['mvn:g/winthor-integracao-2650-features/1.40.0.2/xml/features', 'mvn:g/winthor-core-features/1.40.0.3/xml/features'],
+    features: [
+      { name: 'winthor-integracao-2650', version: '1.40.1.2' },
+      { name: 'winthor-core-data', version: '1.40.0.3' },
+      { name: 'winthor-sumida', version: '1.0.0' }
+    ],
+    disabled: []
+  };
+  const xml = (name: string, version: string) => ({ name, version, dependencies: [] });
+
+  it('aponta a versão que falta e as que os repositórios têm (a mais nova primeiro)', () => {
+    const absent = featuresAbsentFromXml(lista, [xml('winthor-integracao-2650', '1.40.0.1'), xml('winthor-integracao-2650', '1.40.0.2'), xml('winthor-core-data', '1.40.0.3')]);
+    expect(absent).toEqual([
+      { name: 'winthor-integracao-2650', version: '1.40.1.2', available: ['1.40.0.2', '1.40.0.1'] },
+      { name: 'winthor-sumida', version: '1.0.0', available: [] }
+    ]);
+    const r = repairAbsentFeatures(lista, absent);
+    expect(r.repairs.map((c) => [c.name, c.from, c.to])).toEqual([['winthor-integracao-2650', '1.40.1.2', '1.40.0.2']]);
+    expect(r.unresolved.map((a) => a.name)).toEqual(['winthor-sumida']);
+    expect(r.manifest.features[0]).toEqual({ name: 'winthor-integracao-2650', version: '1.40.0.2' });
+  });
+
+  it('só confere com todos os XML da lista; os de outra lista não contam', () => {
+    const p1 = 'g/winthor-integracao-2650-features/1.40.0.2/winthor-integracao-2650-features-1.40.0.2-features.xml';
+    const p2 = 'g/winthor-core-features/1.40.0.3/winthor-core-features-1.40.0.3-features.xml';
+    const outra = 'g/outra/1.0/outra-1.0-features.xml';
+    expect(absentForManifest(lista, new Map([[p1, '<features/>']]))).toBeUndefined();
+    const files = new Map([
+      [p1, '<features><feature name="winthor-integracao-2650" version="1.40.0.2"/></features>'],
+      [p2, '<features><feature name="winthor-core-data" version="1.40.0.3"/></features>'],
+      [outra, '<features><feature name="winthor-sumida" version="1.0.0"/></features>']
+    ]);
+    expect(absentForManifest(lista, files)?.map((a) => a.name)).toEqual(['winthor-integracao-2650', 'winthor-sumida']);
+  });
+});
+
 describe('parseFeaturesXml', () => {
   it('lê as features e as dependências (com e sem faixa), ignorando comentário, bundle e <repository>', () => {
     expect(parseFeaturesXml(CORE)).toEqual([
@@ -69,13 +110,14 @@ describe('parseFeaturesXml', () => {
 
 describe('coleta dos features.xml', () => {
   it('traduz os repositórios da lista em caminhos do Maven e limita a quantidade', () => {
-    const m = manifest([], ['mvn:br.com.pcsist.winthor.core/winthor-core-features/1.39.0.1/xml/features', 'mvn:fora/do/padrao', ...Array.from({ length: 100 }, (_, i) => `mvn:g/a${i}/1.0/xml/features`)]);
+    const m = manifest([], ['mvn:br.com.pcsist.winthor.core/winthor-core-features/1.39.0.1/xml/features', 'mvn:fora/do/padrao', ...Array.from({ length: 200 }, (_, i) => `mvn:g/a${i}/1.0/xml/features`)]);
     const paths = featureXmlPaths(m);
     expect(paths[0]).toEqual({
       mvn: 'mvn:br.com.pcsist.winthor.core/winthor-core-features/1.39.0.1/xml/features',
       path: 'br/com/pcsist/winthor/core/winthor-core-features/1.39.0.1/winthor-core-features-1.39.0.1-features.xml'
     });
     expect(paths).toHaveLength(MAX_XML_REPOS);
+    expect(featureXmlPaths(m, true)).toHaveLength(201);
   });
 
   it('o roteiro só leva repositório http seguro e caminho seguro, em paralelo de 8 em 8', () => {

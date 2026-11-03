@@ -3,7 +3,7 @@
  * diz se está ok, se merece atenção ou se impede o ambiente de subir, numa frase.
  */
 import type { InfrDbMode } from './infrWinthorVersion';
-import { winthorLineOf, type InfrManifestSource, type InfrVersionPreview } from './infrVersionManifest';
+import { winthorLineOf, type InfrManifestSource, type InfrVersionPreview, type ManifestRepoRepair } from './infrVersionManifest';
 
 export type InfrReviewStatus = 'ok' | 'warn' | 'block';
 
@@ -11,7 +11,7 @@ export type InfrReviewStatus = 'ok' | 'warn' | 'block';
 export type InfrReviewFix = 'useSourceOracle' | 'emptyOracle';
 
 export interface InfrReviewItem {
-  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'artefatos' | 'ensaio' | 'portas' | 'disco' | 'memoria' | 'rede' | 'wsh' | 'banco' | 'imagem' | 'manifesto' | 'portasfixas' | 'arquivosenv';
+  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'artefatos' | 'ensaio' | 'portas' | 'disco' | 'memoria' | 'rede' | 'wsh' | 'banco' | 'imagem' | 'manifesto' | 'portasfixas' | 'arquivosenv' | 'repositorios';
   status: InfrReviewStatus;
   title: string;
   detail: string;
@@ -68,7 +68,7 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
         : `Não há versions/${i.version}.features no INFR-Docker, e a lista nova manteria as features da ${from} num ambiente ${i.version}. Gere a lista de um WTA ${i.version} (export_features.sh) ou use Montar do zero.`
     });
   } else if (useExisting) {
-    items.push({ id: 'features', status: 'ok', title: `Features da ${i.version}`, detail: `Usa a lista que já existe (${existing.count} features); nada é regravado.` });
+    items.push({ id: 'features', status: 'ok', title: `Features da ${i.version}`, detail: `Usa a lista que já existe (${existing.count} features); ${existing.repairText ? 'só as versões sem repositório são trocadas.' : 'nada é regravado.'}` });
   } else if (existing && existing.comparison.older > 0) {
     items.push({
       id: 'features',
@@ -86,6 +86,9 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
   } else {
     items.push({ id: 'features', status: 'ok', title: `Features da ${i.version}`, detail: `${up.changes.length} sobem pelo catálogo da 801.` });
   }
+
+  const coverage = reviewRepoCoverage(useExisting ? existing.repair : p.repair, i.version, useExisting);
+  if (coverage) items.push(coverage);
 
   if (!useExisting) {
     items.push(reviewDependencies(p.dependencies));
@@ -119,6 +122,38 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
 
   items.push(reviewDatabase(i));
   return items;
+}
+
+/**
+ * Cada feature da lista está num repositório dela? É o que o build confere primeiro ("Feature X/versão não existe em
+ * nenhum repositório da lista"); aqui sai dos features.xml baixados na leitura. Sem conferência (algum XML não veio), nada.
+ */
+function reviewRepoCoverage(r: ManifestRepoRepair | undefined, version: string, existing: boolean): InfrReviewItem | null {
+  if (!r) return null;
+  const file = `versions/${version}.features`;
+  const names = (xs: { name: string; version: string }[]) => (xs.length > 3 ? `${xs.slice(0, 3).map((x) => `${x.name} ${x.version}`).join(', ')} e mais ${xs.length - 3}` : xs.map((x) => `${x.name} ${x.version}`).join(', '));
+  if (r.unresolved.length > 0) {
+    return {
+      id: 'repositorios',
+      status: 'block',
+      title: 'Feature sem repositório na lista',
+      detail:
+        `${names(r.unresolved)}: nenhum "repo mvn:" da lista tem essa feature, em nenhuma versão, e o build pararia em "não existe em nenhum repositório da lista". ` +
+        `Como resolver: acrescente em ${file} a linha "repo mvn:<grupo>/<artefato>/<versão>/xml/features" do Nexus que tem a feature, ou tire a feature da lista, e confira de novo.`
+    };
+  }
+  if (r.repairs.length > 0) {
+    const list = r.repairs.map((c) => `${c.name} ${c.from} → ${c.to}`);
+    return {
+      id: 'repositorios',
+      status: 'warn',
+      title: existing ? `A lista da ${version} é corrigida ao gerar` : 'Lista corrigida pelos repositórios',
+      detail:
+        `${list.length > 3 ? `${list.slice(0, 3).join(', ')} e mais ${list.length - 3}` : list.join(', ')}: a versão pedida não está em nenhum repositório da lista, e o build pararia nela. ` +
+        `${existing ? `O Gerar regrava ${file} com a versão que os repositórios têm.` : 'A lista nova já sai com a versão que os repositórios têm.'} Para manter a mais nova, acrescente o "repo mvn:" dela na lista.`
+    };
+  }
+  return { id: 'repositorios', status: 'ok', title: 'Repositório de cada feature', detail: 'Toda feature da lista está num repositório dela (conferido nos features.xml do Nexus).' };
 }
 
 /** O Karaf de origem simulou a instalação das features trocadas? Só avisa: ele ainda tem o estado da versão antiga. */

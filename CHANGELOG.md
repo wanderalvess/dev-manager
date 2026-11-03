@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.65.0] - 2026-11-03
+### Alterado
+- **A tela de início fica até você entrar**: sem contagem, sem *Ficar nesta tela* e sem a opção *Abrir sempre nesta tela de início*. Ao abrir o Hub, ela mostra o resumo e entra só quando você clica em *Entrar no cockpit* (ou aperta Enter).
+- **Tela de início reorganizada como painel**: saudação, data e *Entrar no cockpit* no topo; Este PC, Sua semana, Clima e Ambientes WinThor lado a lado numa grade da largura da tela (um embaixo do outro em tela estreita); Novidades da versão numa faixa embaixo.
+
+### Corrigido
+- **Nova versão: a lista que já existe também é conferida pelos repositórios**. O "Manter a lista da 40" reaproveitava o `versions/40.features` gravado antes da correção da 1.62.0, com feature numa versão que nenhum `repo mvn:` da lista tinha, e o build continuava parando em "não existe em nenhum repositório da lista". Agora a leitura baixa os features.xml das duas listas (a nova e a existente) e, antes de gerar:
+  - a feature cuja versão não está em nenhum repositório da lista volta para a versão mais nova que eles têm, e o Gerar regrava só essa linha (a lista anterior fica ao lado como `.bak`);
+  - a feature que nenhum repositório da lista tem, em versão nenhuma, impede o Gerar com o como resolver.
+
 ## [1.64.0] - 2026-11-03
 ### Alterado
 - **Telas do INFR-Docker mais largas**: Nova versão, Primeiros passos, Início e as telas de Oracle, WTA e WSH usavam uma coluna estreita no meio do modal; agora usam a mesma largura do Verificar.

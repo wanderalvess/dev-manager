@@ -280,7 +280,10 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
           ? await api.saveInfrVersionManifest({ infrPath, targetVersion: form.version, manifestText: preview.manifestText, overwrite: false })
           : { success: true, path: `versions/${form.version}.features (mantido)` }
         : keepExisting
-          ? { success: true, path: `${preview.existing!.path} (mantido)` }
+          ? preview.existing!.repairText
+            ? // A lista existente com as features sem repositório de volta à versão que os repositórios dela têm
+              await api.saveInfrVersionManifest({ infrPath, targetVersion: form.version, manifestText: preview.existing!.repairText, overwrite: true })
+            : { success: true, path: `${preview.existing!.path} (mantido)` }
           : await api.saveInfrVersionManifest({ infrPath, targetVersion: form.version, manifestText: preview.manifestText!, overwrite: !!preview.existing });
       if (!saved.success) {
         setMessage(saved.error || 'Não foi possível gravar o manifesto.');

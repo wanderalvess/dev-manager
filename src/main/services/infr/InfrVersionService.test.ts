@@ -81,7 +81,7 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
     const XML = `<features><feature name="winthor-integracao-config" version="1.39.20.3"><feature version="[1.39,1.40)">winthor-core-data</feature></feature></features>`;
 
     it('baixa os features.xml de dentro do container e bloqueia o conflito que o catálogo da 801 não declara', async () => {
-      xmlOut = `@@FILE ${PATH}\n${XML}\n@@END\n@@MISS g/outro/1.0/outro-1.0-features.xml\n`;
+      xmlOut = `@@FILE ${PATH}\n${XML}\n@@END\n@@MISS g/winthor-core-features/1.40.0.3/winthor-core-features-1.40.0.3-features.xml\n`;
       const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
       expect(res.success).toBe(true);
       expect(res.dependencies?.issues).toEqual([
@@ -106,6 +106,29 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
       expect(res.success).toBe(true);
       expect(res.dependencies?.xml?.error).toContain('docker caiu');
       expect(res.log?.some((l) => l.includes('Dependências pelos features.xml não conferidas'))).toBe(true);
+    });
+
+    it('lista existente com feature sem repositório (build do Nathan): volta para a versão que o repositório tem e regrava só essa linha', async () => {
+      const versions = path.join(dir, 'linux-winthor', 'versions');
+      fs.mkdirSync(versions, { recursive: true });
+      fs.writeFileSync(
+        path.join(versions, '40.features'),
+        '# lista da 40\nrepo mvn:g/winthor-integracao-2650-features/1.40.0.2/xml/features\nrepo mvn:g/winthor-core-features/1.40.0.3/xml/features\n\nfeature winthor-integracao-2650 1.40.1.2\nfeature winthor-core-data 1.40.0.3\n'
+      );
+      const file = (art: string, v: string, body: string) => `@@FILE g/${art}/${v}/${art}-${v}-features.xml\n<features>${body}</features>\n@@END`;
+      xmlOut = [
+        file('winthor-integracao-2650-features', '1.40.0.2', '<feature name="winthor-integracao-2650" version="1.40.0.2"/>'),
+        file('winthor-core-features', '1.40.0.3', '<feature name="winthor-core-data" version="1.40.0.3"/>'),
+        file('winthor-core-features', '1.39.0.1', '<feature name="winthor-core-data" version="1.39.0.1"/><feature name="winthor-integracao-config" version="1.39.20.3"/>')
+      ].join('\n');
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+      expect(res.existing?.repair).toEqual({
+        repairs: [{ name: 'winthor-integracao-2650', from: '1.40.1.2', to: '1.40.0.2', reason: 'a 1.40.1.2 não está em nenhum repositório da lista' }],
+        unresolved: []
+      });
+      expect(res.existing?.repairText).toContain('# lista da 40\n');
+      expect(res.existing?.repairText).toContain('feature winthor-integracao-2650 1.40.0.2\nfeature winthor-core-data 1.40.0.3');
+      expect(res.repair).toEqual({ repairs: [], unresolved: [] });
     });
 
     it('o clone não baixa features.xml', async () => {
