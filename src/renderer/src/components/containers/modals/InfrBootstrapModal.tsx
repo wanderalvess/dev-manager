@@ -114,7 +114,7 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
         {state.activeTab === 'firstSteps' ? (
           <InfrFirstStepsTab f={firstSteps} onGoTo={selectTab} />
         ) : state.activeTab === 'newVersion' ? (
-          <InfrNewVersionTab s={newVersion} onClose={onClose} />
+          <InfrNewVersionTab s={newVersion} distro={distro} onClose={onClose} />
         ) : state.activeTab === 'verify' ? (
           <InfrVerifyTab v={verify} envNames={newVersion.envs?.environments.map((e) => e.name) ?? []} />
         ) : (

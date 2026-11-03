@@ -3,6 +3,8 @@ import { ArrowLeft, ArrowRight, Check, Play, RotateCw } from 'lucide-react';
 import type { InfrNewVersionState, InfrNewVersionStep } from '../../../hooks/containers/useInfrNewVersion';
 import { StepDatabase, StepOrigin, StepRuntime } from './InfrNewVersionSteps';
 import { InfrNewVersionReview } from './InfrNewVersionReview';
+import { InfrAiGuidePanel } from './InfrAiGuidePanel';
+import { useInfrAiGuide } from '../../../hooks/containers/useInfrAiGuide';
 import { InfrNewVersionSummary } from './InfrNewVersionSummary';
 
 const STEPS: { step: InfrNewVersionStep; title: string; intro: string }[] = [
@@ -13,8 +15,9 @@ const STEPS: { step: InfrNewVersionStep; title: string; intro: string }[] = [
 ];
 
 /** Nova versão a partir de um ambiente: quatro passos, o resumo do que será criado e o Gerar no fim. */
-export const InfrNewVersionTab: React.FC<{ s: InfrNewVersionState; onClose: () => void }> = ({ s, onClose }) => {
+export const InfrNewVersionTab: React.FC<{ s: InfrNewVersionState; distro?: string; onClose: () => void }> = ({ s, distro, onClose }) => {
   const { envs, loadEnvironments, step } = s;
+  const ai = useInfrAiGuide(s, distro);
   useEffect(() => {
     if (!envs) loadEnvironments();
   }, [envs, loadEnvironments]);
@@ -41,6 +44,8 @@ export const InfrNewVersionTab: React.FC<{ s: InfrNewVersionState; onClose: () =
               e WSH próprios. O ambiente de origem não é alterado.
             </p>
           </div>
+
+          <InfrAiGuidePanel ai={ai} name={s.form.name} />
 
           <ol aria-label="Passos" className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {STEPS.map((st) => {

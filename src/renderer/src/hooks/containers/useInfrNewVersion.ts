@@ -176,8 +176,8 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
     }
   };
 
-  const runPreview = async () => {
-    if (!window.electronAPI?.previewInfrVersion || !canPreview) return;
+  const runPreview = async (): Promise<InfrVersionPreview | undefined> => {
+    if (!window.electronAPI?.previewInfrVersion || !canPreview) return undefined;
     setBusy('preview');
     setMessage('');
     try {
@@ -192,14 +192,15 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
       });
       setPreview(res);
       setManifestSource(res.existing ? 'existing' : 'preview');
+      return res;
     } finally {
       setBusy(null);
     }
   };
 
-  const generate = async () => {
+  const generate = async (): Promise<boolean> => {
     const api = window.electronAPI;
-    if (!api?.saveInfrVersionManifest || !api.runInfrSetupScript || !preview?.manifestText || !command) return;
+    if (!api?.saveInfrVersionManifest || !api.runInfrSetupScript || !preview?.manifestText || !command) return false;
     setBusy('generate');
     try {
       const keepExisting = !!preview.existing && manifestSource === 'existing';
@@ -208,7 +209,7 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
         : await api.saveInfrVersionManifest({ infrPath, targetVersion: form.version, manifestText: preview.manifestText, overwrite: !!preview.existing });
       if (!saved.success) {
         setMessage(saved.error || 'Não foi possível gravar o manifesto.');
-        return;
+        return false;
       }
       const env = await api.saveInfrEnvFiles?.({
         distro,
@@ -224,11 +225,12 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
       });
       if (env && !env.success) {
         setMessage(env.error || 'Não foi possível gravar a configuração do WTA/WSH.');
-        return;
+        return false;
       }
       const res = await api.runInfrSetupScript('version', { distro, infrPath, winthorVersion: form.version, newEnv });
       setMessage(`Manifesto: ${saved.path}. Configuração: ${env?.path ?? '—'}. ${res.output}`);
       if (res.success) onGenerated?.(form.name.trim());
+      return !!res.success;
     } finally {
       setBusy(null);
     }
@@ -244,6 +246,8 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
   return {
     goTo,
     form, update, envs, loadingEnvs, loadEnvironments, preview, busy, message, command, canPreview, runPreview, generate,
+    /** Descarta a prévia lida (um novo pedido da IA começa lendo a origem de novo) */
+    resetPreview: () => setPreview(null),
     envTemplate, edits, editEnv, manifestSource, setManifestSource,
     step, setStep, stepIssue, canReach, review, blocked, applyFix, origin
   };

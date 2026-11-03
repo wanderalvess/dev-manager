@@ -32,12 +32,14 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
   };
   let probeCode = '200';
   let dryOut = '';
+  let originStatus = 'running';
   const service = () => new InfrVersionService(wsl as any, routine801 as any);
 
   beforeEach(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'infr-'));
     vi.spyOn(InfrVersionService.prototype as any, 'portFreeOnWindows').mockResolvedValue(true);
     dryOut = '';
+    originStatus = 'running';
     fs.mkdirSync(path.join(dir, 'linux-winthor', 'scripts'), { recursive: true });
     for (const s of INFR_NEW_VERSION_SCRIPTS) fs.writeFileSync(path.join(dir, s), '#!/bin/bash\n');
     execFileAsync.mockImplementation(async (_cmd: string, args: string[]) => {
@@ -47,6 +49,7 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
       const script = b64 ? raw + String.fromCharCode(10) + Buffer.from(b64, 'base64').toString() : raw;
       if (script.startsWith('cat ')) return { stdout: ORIGIN };
       if (script.startsWith('docker port')) return { stdout: '0.0.0.0:8086\n' };
+      if (script.startsWith('docker inspect')) return { stdout: originStatus + NL };
       if (script.startsWith('python3')) return { stdout: DEPS };
       if (script.includes('pax.url.mvn.cfg')) return { stdout: 'org.ops4j.pax.url.mvn.repositories=https://nexus.exemplo.com/repository/releases@id=rel\n' };
       if (script.includes('@@docker')) return { stdout: '@@docker' + NL + 'wta-39|0.0.0.0:8040->8080/tcp' + NL + '@@disk' + NL + '/dev/sdc 100 50 ' + 20 * 1024 * 1024 + ' 50% /' + NL + '@@mem' + NL + 'MemTotal: 16000000 kB' + NL + 'MemAvailable: 1000000 kB' + NL };
@@ -56,6 +59,18 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
     });
   });
   afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('WTA de origem parado ou inexistente: diz o que fazer em vez de rodar o export calado', async () => {
+    originStatus = 'exited';
+    const stopped = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+    expect(stopped.success).toBe(false);
+    expect(stopped.error).toContain('wta-master) está parado (exited)');
+    expect(stopped.error).toContain('docker start oracle-master wta-master');
+    expect(execFileAsync.mock.calls.some((c) => String(c[1].at(-1)).includes('export_features.sh'))).toBe(false);
+
+    originStatus = 'missing';
+    expect((await service().preview({ fromEnv: 'master', targetVersion: '40' })).error).toContain('não existe nesta distro');
+  });
 
   it('testa no Nexus, de dentro do container de origem, o repositório novo da lista', async () => {
     probeCode = '404';
@@ -148,6 +163,7 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
           stderr: 'Error response from daemon: No such container: wta-master\n'
         });
       }
+      if (String(args.at(-1)).startsWith('docker inspect')) return { stdout: 'running\n' };
       return { stdout: '' };
     });
     const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });

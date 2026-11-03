@@ -21,6 +21,24 @@ export function missingNewVersionScriptsMessage(folder: string, missing: string[
 }
 
 /**
+ * A Nova versão lê as features pelo console do Karaf do WTA de origem, então o container precisa estar rodando.
+ * `status` é o `docker inspect -f '{{.State.Status}}'` (vazio ou "missing" quando o container não existe).
+ * Devolve a mensagem com o "Como resolver", ou null quando está rodando.
+ */
+export function originContainerMessage(container: string, status: string): string | null {
+  const s = status.trim().toLowerCase();
+  if (s === 'running') return null;
+  const oracle = container.replace(/^wta-/, 'oracle-');
+  if (!s || s === 'missing') {
+    return `O WTA de origem (${container}) não existe nesta distro. Como resolver: escolha na origem um ambiente que já tenha o WTA criado (docker ps -a mostra os containers) ou monte o ambiente antes.`;
+  }
+  return (
+    `O WTA de origem (${container}) está parado (${s}). A Nova versão lê as features pelo console do Karaf dele, então ele precisa estar no ar. ` +
+    `Como resolver: suba o banco e o WTA e espere o Karaf iniciar (leva alguns minutos), por exemplo "docker start ${oracle} ${container}", e leia a origem de novo.`
+  );
+}
+
+/**
  * Detalhe de um comando que falhou: o execFile só diz "Command failed: <comando>", e o motivo
  * fica no stderr/stdout. Devolve as últimas linhas não vazias (o fim é onde o script diz o erro).
  */
