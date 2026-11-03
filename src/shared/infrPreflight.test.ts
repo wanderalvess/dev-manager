@@ -6,8 +6,8 @@ const OUT = [
   'wta-40|0.0.0.0:8040->8080/tcp, :::8040->8080/tcp, 0.0.0.0:8140->8101/tcp',
   'oracle-39|0.0.0.0:1539->1521/tcp',
   '@@ss',
-  '0.0.0.0:22',
-  '[::]:61640',
+  'LISTEN 0      4096       0.0.0.0:22     0.0.0.0:*',
+  'LISTEN 0      4096          [::]:61640     [::]:*',
   '@@disk',
   '/dev/sdc 1056855000 400000000 604000000 40% /',
   '@@mem',
@@ -61,6 +61,11 @@ describe('infrPreflight', () => {
 
   it('sem dados de disco, memória ou rede, não inventa pontos', () => {
     expect(evaluatePreflight('41', { usedPorts: [] }, []).map((i) => i.id)).toEqual(['portas']);
+  });
+
+  it('o Nexus com credenciais na URL aparece mascarado na coleta', () => {
+    const s = parsePreflightOutput('@@nexus' + String.fromCharCode(10) + '200 http://u:p@repo.exemplo.com/nexus');
+    expect(s.nexus).toEqual([{ code: '200', url: 'http://***@repo.exemplo.com/nexus' }]);
   });
 
   it('o script só leva repositórios http válidos, e o registro resume o que foi coletado', () => {

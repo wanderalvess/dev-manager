@@ -4,6 +4,7 @@
  * wsh 90NN), espaço em disco e memória da distro, e se o Nexus responde de dentro do WSL. Aqui só a parte pura: montar
  * o script que coleta e transformar a saída em pontos para a revisão.
  */
+import { SAFE_REPO_URL, maskUrlCredentials } from './infrFeatureArtifacts';
 import { winthorVersionPorts } from './infrWinthorVersion';
 
 export type PreflightStatus = 'ok' | 'warn' | 'block';
@@ -42,10 +43,10 @@ export function expectedPorts(version: string, overrides: { oracle?: number; web
 
 /** Script (bash, na distro) que imprime `@@seção` e os dados crus de cada coisa que a pré-checagem olha. */
 export function buildPreflightScript(nexusRepos: string[]): string {
-  const repos = nexusRepos.filter((r) => /^https?:\/\/[A-Za-z0-9._:/%+~-]+$/.test(r)).slice(0, 4);
+  const repos = nexusRepos.filter((r) => SAFE_REPO_URL.test(r)).slice(0, 4);
   return [
     "echo '@@docker'; docker ps --format '{{.Names}}|{{.Ports}}' 2>/dev/null",
-    "echo '@@ss'; (ss -ltnH 2>/dev/null || netstat -ltn 2>/dev/null | tail -n +3) | awk '{print $4}'",
+    "echo '@@ss'; ss -ltnH 2>/dev/null || netstat -ltn 2>/dev/null | tail -n +3",
     "echo '@@disk'; df -Pk \"$(docker info -f '{{.DockerRootDir}}' 2>/dev/null || echo /)\" 2>/dev/null | tail -n 1",
     "echo '@@mem'; grep -E '^(MemTotal|MemAvailable):' /proc/meminfo",
     "echo '@@nexus'",
@@ -81,7 +82,11 @@ export function parsePreflightOutput(output: string): PreflightSnapshot {
       for (let p = from; p <= Math.min(to, from + 50); p++) add(p, `docker:${name}`);
     }
   }
-  for (const line of sections.get('ss') ?? []) add(parseInt(line.slice(line.lastIndexOf(':') + 1), 10), 'wsl');
+  for (const line of sections.get('ss') ?? []) {
+    // ss: `LISTEN 0 4096 127.0.0.1:5432 0.0.0.0:*`; netstat: `tcp 0 0 127.0.0.1:5432 0.0.0.0:* LISTEN`
+    const local = line.split(/\s+/)[3] ?? '';
+    add(parseInt(local.slice(local.lastIndexOf(':') + 1), 10), 'wsl');
+  }
   const disk = (sections.get('disk') ?? [])[0]?.split(/\s+/);
   if (disk && disk.length >= 4 && /^\d+$/.test(disk[3])) snap.diskFreeGb = Math.round((parseInt(disk[3], 10) / GB) * 10) / 10;
   for (const line of sections.get('mem') ?? []) {
@@ -92,7 +97,7 @@ export function parsePreflightOutput(output: string): PreflightSnapshot {
     else snap.memAvailableGb = gb;
   }
   const nexus = (sections.get('nexus') ?? []).map((l) => /^(\d{3}) (\S+)$/.exec(l)).filter((m): m is RegExpExecArray => !!m);
-  if (nexus.length) snap.nexus = nexus.map((m) => ({ code: m[1], url: m[2] }));
+  if (nexus.length) snap.nexus = nexus.map((m) => ({ code: m[1], url: maskUrlCredentials(m[2]) }));
   return snap;
 }
 
@@ -144,7 +149,7 @@ export function evaluatePreflight(version: string, snap: PreflightSnapshot, wind
     } else if (auth.length) {
       items.push({ id: 'rede', status: 'warn', title: 'Nexus pede login', detail: `${auth.map((a) => `${a.url} (HTTP ${a.code})`).join(', ')}: o build precisa das credenciais no settings.xml do Maven.` });
     } else {
-      items.push({ id: 'rede', status: 'ok', title: 'Nexus alcançável', detail: snap.nexus.map((n) => `${n.url} (HTTP ${n.code})`).join(', ') + '.' });
+      items.push({ id: 'rede', status: 'ok', title: 'Nexus alcançável', detail: snap.nexus.map((n) => `${n.url} respondeu (HTTP ${n.code})`).join(', ') + '.' });
     }
   }
   return items;

@@ -15,6 +15,12 @@ describe('infrDryRun', () => {
     expect(cmds).toEqual(['feature:install -t -v ok/1.0']);
   });
 
+  it('cliente que não existe ou não conecta não vale como ensaio bem-sucedido', () => {
+    const r = parseDryRunOutput('> feature:install -t -v a/1' + String.fromCharCode(10) + '/tmp/x.sh: line 6: /opt/pcsist/produtos/winthor/bin/client: not found' + String.fromCharCode(10), 1);
+    expect(r.skipped).toContain('o console do Karaf não respondeu');
+    expect(parseDryRunOutput('> feature:install -t -v a/1' + String.fromCharCode(10), 1).skipped).toBeUndefined();
+  });
+
   it('acha os erros do Karaf sem as cores, sem repetir', () => {
     const out = '\x1b[31mError executing command: Unable to resolve root: missing requirement [root] osgi.identity\x1b[0m\nError executing command: Unable to resolve root: missing requirement [root] osgi.identity\nok\n';
     const r = parseDryRunOutput(out, 3);

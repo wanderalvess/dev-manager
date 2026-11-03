@@ -37,5 +37,7 @@ export function parseDryRunOutput(output: string, simulated: number): DryRunRepo
   const lines = output.replace(ANSI, '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   const errors = lines.filter((l) => /Unable to resolve|missing requirement|Error executing command|Can't install|No matching features|Cannot resolve/i.test(l));
   const unique = [...new Set(errors)].slice(0, 8);
-  return { simulated, errors: unique, tail: lines.slice(-6) };
+  // O cliente nem rodou (não achado, sem conexão, sem permissão): não é uma resolução bem-sucedida
+  const tooling = lines.find((l) => /bin\/client.*(not found|No such file|Permission denied)|java command not found|Connection refused|Failed to (?:get the session|connect)|Authentication failed|Authentication to/i.test(l));
+  return { simulated, errors: unique, tail: lines.slice(-6), ...(tooling ? { skipped: `o console do Karaf não respondeu: ${tooling.slice(0, 200)}` } : {}) };
 }

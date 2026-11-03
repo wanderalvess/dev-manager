@@ -25,6 +25,7 @@ import {
   featuresWithoutRepo,
   newRepoProbes,
   parseArtifactProbeOutput,
+  maskUrlCredentials,
   parsePaxRepositories,
   type ArtifactReport
 } from '../../../shared/infrFeatureArtifacts';
@@ -48,6 +49,12 @@ import type { WslService } from '../WslService';
 
 type Trace = (line: string) => void;
 
+/** O roteiro numa linha só, para o registro (o comando de verdade leva o roteiro em base64). */
+const scriptLabel = (script: string) => {
+  const oneLine = maskUrlCredentials(script).split(/\r?\n/).filter(Boolean).join(' ⏎ ');
+  return oneLine.length > 700 ? `${oneLine.slice(0, 700)}…` : oneLine;
+};
+
 const WSL_FILE =/^\/[a-zA-Z0-9_./-]+$/;
 const SAFE_URL = /^https?:\/\/[a-zA-Z0-9.-]+(:\d{2,5})?$/;
 
@@ -64,8 +71,8 @@ export class InfrVersionService {
     private readonly routine801: Pick<Routine801Service, 'fetchUpdates'>
   ) {}
 
-  private async run(distro: string, script: string, timeout = 120000, trace?: Trace): Promise<string> {
-    trace?.(`wsl -d ${distro}: ${script}`);
+  private async run(distro: string, script: string, timeout = 120000, trace?: Trace, label?: string): Promise<string> {
+    trace?.(`wsl -d ${distro}: ${label ?? script}`);
     const started = Date.now();
     try {
       const { stdout, stderr } = await execWsl(['-d', distro, '--', 'bash', '-c', script], { timeout, maxBuffer: 16 * 1024 * 1024 });
@@ -248,9 +255,8 @@ export class InfrVersionService {
     }
     try {
       if (!repositories?.length) return { ...report, checked: probes.length, unverified: probes.length, error: 'o Karaf não lista repositórios http (ou o container não deixou ler o org.ops4j.pax.url.mvn.cfg)' };
-      const script = buildArtifactProbeScript(repositories, probes).replace(/'/g, `'${String.fromCharCode(92)}''`);
-      const out = await this.run(distro, `docker exec ${container} sh -c '${script}'`, 180000);
-      report = { ...parseArtifactProbeOutput(out, probes, repositories), withoutRepo };
+      const out = await this.runScriptInContainer(distro, container, buildArtifactProbeScript(repositories, probes), 180000);
+      report = { ...parseArtifactProbeOutput(out, probes, repositories.map(maskUrlCredentials)), withoutRepo };
       trace(`Resposta por artefato: ${out.trim().split(/\r?\n/).join(' | ') || '(vazia)'}`);
       trace(`Artefatos: ${report.checked} testados, ${report.missing.length} ausentes, ${report.unverified} sem resposta`);
     } catch (err: any) {
@@ -260,12 +266,33 @@ export class InfrVersionService {
     return report;
   }
 
+  /**
+   * Roda um script (bash) na distro. O wsl.exe expande o `$` antes de chegar ao bash, mesmo entre aspas simples, então
+   * o script vai em base64 e é decodificado dentro da distro: nada do que há nele passa por outro shell.
+   */
+  private runScript(distro: string, script: string, timeout: number, trace?: Trace): Promise<string> {
+    return this.run(distro, `echo ${Buffer.from(script).toString('base64')} | base64 -d | bash`, timeout, trace, scriptLabel(script));
+  }
+
+  /** Igual ao runScript, mas dentro do container: o script vai para um arquivo e roda com `sh`, sem disputar o stdin. */
+  private runScriptInContainer(distro: string, container: string, script: string, timeout: number, trace?: Trace): Promise<string> {
+    const file = '/tmp/hub-script.sh';
+    const b64 = Buffer.from(script).toString('base64');
+    return this.run(
+      distro,
+      `echo ${b64} | base64 -d | docker exec -i ${container} sh -c 'cat > ${file}' && docker exec ${container} sh ${file} < /dev/null; docker exec ${container} rm -f ${file}`,
+      timeout,
+      trace,
+      `docker exec ${container} sh (roteiro): ${scriptLabel(script)}`
+    );
+  }
+
   /** Repositórios http que o Karaf do container usa (org.ops4j.pax.url.mvn.cfg); null se não deu para ler. */
   private async karafRepositories(distro: string, container: string, trace: Trace): Promise<string[] | null> {
     try {
       const cfg = await this.run(distro, `docker exec ${container} sh -c 'cat /opt/pcsist/produtos/winthor/etc/org.ops4j.pax.url.mvn.cfg'`, 30000);
       const repositories = parsePaxRepositories(cfg);
-      trace(`Repositórios do Karaf: ${repositories.join(', ') || '(nenhum http no org.ops4j.pax.url.mvn.cfg)'}`);
+      trace(`Repositórios do Karaf: ${repositories.map(maskUrlCredentials).join(', ') || '(nenhum http no org.ops4j.pax.url.mvn.cfg)'}`);
       return repositories;
     } catch (err: any) {
       trace(`Repositórios do Karaf não lidos: ${commandFailureDetail(err)}`);
@@ -287,7 +314,7 @@ export class InfrVersionService {
   private async preflight(distro: string, target: string, repositories: string[] | null, trace: Trace): Promise<PreflightItem[]> {
     let snap: PreflightSnapshot = { usedPorts: [] };
     try {
-      snap = parsePreflightOutput(await this.run(distro, buildPreflightScript(repositories ?? []), 60000));
+      snap = parsePreflightOutput(await this.runScript(distro, buildPreflightScript(repositories ?? []), 60000));
     } catch (err: any) {
       trace(`Pré-checagem na distro falhou: ${commandFailureDetail(err)}`);
     }
@@ -313,14 +340,16 @@ export class InfrVersionService {
       return { simulated: 0, errors: [], tail: [], skipped: 'nenhuma feature trocada' };
     }
     if (changes.length > MAX) trace(`Ensaio limitado às ${MAX} primeiras das ${changes.length} features trocadas`);
-    const b64 = Buffer.from(commands.join('\n') + '\n').toString('base64');
-    const script = `echo ${b64} | base64 -d > /tmp/hub-ensaio.txt; while IFS= read -r l; do echo "> $l"; ${KARAF_CONTAINER_CLIENT} "$l" 2>&1; done < /tmp/hub-ensaio.txt; rm -f /tmp/hub-ensaio.txt`;
+    // Um comando por linha de um arquivo (o cliente não pode ler o stdin do roteiro)
+    const list = commands.join('\n');
+    const script = `cat > /tmp/hub-ensaio.txt <<'HUB_EOF'\n${list}\nHUB_EOF\nwhile IFS= read -r l; do echo "> $l"; ${KARAF_CONTAINER_CLIENT} "$l" < /dev/null 2>&1; done < /tmp/hub-ensaio.txt\nrm -f /tmp/hub-ensaio.txt\n`;
     trace(`Ensaio: ${simulated} features, ${newRepos.length} repositórios acrescentados e retirados do Karaf de ${container}`);
     try {
-      const out = await this.run(distro, `docker exec ${container} sh -c '${script}'`, 600000);
+      const out = await this.runScriptInContainer(distro, container, script, 600000);
       const report = parseDryRunOutput(out, simulated);
       trace(`Ensaio: ${report.errors.length} erro(s) do Karaf${report.errors.length ? `: ${report.errors.join(' | ')}` : ''}`);
       trace(`Fim da saída do ensaio: ${report.tail.join(' | ')}`);
+      if (report.skipped) trace(`Ensaio não concluído: ${report.skipped}`);
       return report;
     } catch (err: any) {
       const reason = commandFailureDetail(err);

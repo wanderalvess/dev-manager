@@ -41,13 +41,16 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
     fs.mkdirSync(path.join(dir, 'linux-winthor', 'scripts'), { recursive: true });
     for (const s of INFR_NEW_VERSION_SCRIPTS) fs.writeFileSync(path.join(dir, s), '#!/bin/bash\n');
     execFileAsync.mockImplementation(async (_cmd: string, args: string[]) => {
-      const script = args[args.length - 1];
+      const raw = args[args.length - 1];
+      // Os scripts vão em base64 (o wsl.exe expande o $): o fake enxerga o texto decodificado
+      const b64 = /^echo (\S+) \| base64 -d/.exec(raw)?.[1];
+      const script = b64 ? raw + String.fromCharCode(10) + Buffer.from(b64, 'base64').toString() : raw;
       if (script.startsWith('cat ')) return { stdout: ORIGIN };
       if (script.startsWith('docker port')) return { stdout: '0.0.0.0:8086\n' };
       if (script.startsWith('python3')) return { stdout: DEPS };
       if (script.includes('pax.url.mvn.cfg')) return { stdout: 'org.ops4j.pax.url.mvn.repositories=https://nexus.exemplo.com/repository/releases@id=rel\n' };
       if (script.includes('@@docker')) return { stdout: '@@docker' + NL + 'wta-39|0.0.0.0:8040->8080/tcp' + NL + '@@disk' + NL + '/dev/sdc 100 50 ' + 20 * 1024 * 1024 + ' 50% /' + NL + '@@mem' + NL + 'MemTotal: 16000000 kB' + NL + 'MemAvailable: 1000000 kB' + NL };
-      if (script.includes('base64')) return { stdout: dryOut };
+      if (script.includes('feature:install -t')) return { stdout: dryOut };
       if (script.includes('curl')) return { stdout: `${probeCode} g/winthor-core-features/1.40.0.3/winthor-core-features-1.40.0.3-features.xml\n` };
       return { stdout: '[OK] Manifesto gerado' };
     });
@@ -58,9 +61,11 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
     probeCode = '404';
     const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
     expect(res.artifacts).toMatchObject({ checked: 1, missing: ['mvn:g/winthor-core-features/1.40.0.3/xml/features'], unverified: 0 });
-    const probe = execFileAsync.mock.calls.find((c) => String(c[1].at(-1)).includes('curl'));
-    expect(probe?.[1].at(-1)).toContain('docker exec wta-master sh -c');
-    expect(probe?.[1].at(-1)).toContain('https://nexus.exemplo.com/repository/releases');
+    const probe = execFileAsync.mock.calls.find((c) => /base64 -d \| docker exec -i wta-master/.test(String(c[1].at(-1))));
+    const m = /^echo (\S+) \| base64 -d/.exec(String(probe?.[1].at(-1)));
+    const script = Buffer.from(m![1], 'base64').toString();
+    expect(script).toContain('https://nexus.exemplo.com/repository/releases');
+    expect(script).toContain('curl');
     probeCode = '200';
     expect((await service().preview({ fromEnv: 'master', targetVersion: '40' })).artifacts).toMatchObject({ checked: 1, missing: [] });
   });
@@ -87,11 +92,15 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
     const res = await service().preview({ fromEnv: 'master', targetVersion: '40', dryRun: true });
     expect(res.dryRun).toMatchObject({ simulated: 1 });
     expect(res.dryRun?.errors[0]).toContain('Unable to resolve root');
-    const call = execFileAsync.mock.calls.find((c) => String(c[1].at(-1)).includes('base64'));
-    expect(call?.[1].at(-1)).toContain('docker exec wta-master sh -c');
-    expect(call?.[1].at(-1)).toContain('/opt/pcsist/produtos/winthor/bin/client');
-    const b64 = /echo (\S+) \| base64 -d/.exec(String(call?.[1].at(-1)))![1];
-    expect(Buffer.from(b64, 'base64').toString()).toContain('feature:install -t -v winthor-core-data/1.40.0.3');
+    const decode = (raw: string) => {
+      const m = /^echo (\S+) \| base64 -d/.exec(raw);
+      return m ? Buffer.from(m[1], 'base64').toString() : '';
+    };
+    const call = execFileAsync.mock.calls.find((c) => decode(String(c[1].at(-1))).includes('feature:install -t'));
+    expect(String(call?.[1].at(-1))).toContain('docker exec -i wta-master sh -c');
+    const script = decode(String(call?.[1].at(-1)));
+    expect(script).toContain('/opt/pcsist/produtos/winthor/bin/client');
+    expect(script).toContain('feature:install -t -v winthor-core-data/1.40.0.3');
     expect(res.log?.some((l) => l.includes('Ensaio: 1 erro(s) do Karaf'))).toBe(true);
   });
 
