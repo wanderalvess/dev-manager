@@ -33,6 +33,8 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
   let probeCode = '200';
   let dryOut = '';
   let originStatus = 'running';
+  let xmlOut = '';
+  let xmlFails = false;
   let cloneInspect = 'linux-winthor:39-debian|running';
   let cloneImageExists = 'yes';
   const service = () => new InfrVersionService(wsl as any, routine801 as any);
@@ -45,6 +47,8 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
     originStatus = 'running';
     cloneInspect = 'linux-winthor:39-debian|running';
     cloneImageExists = 'yes';
+    xmlOut = '';
+    xmlFails = false;
     fs.mkdirSync(path.join(dir, 'linux-winthor', 'scripts'), { recursive: true });
     for (const s of INFR_NEW_VERSION_SCRIPTS) fs.writeFileSync(path.join(dir, s), '#!/bin/bash\n');
     execFileAsync.mockImplementation(async (_cmd: string, args: string[]) => {
@@ -61,11 +65,54 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
       if (script.includes('pax.url.mvn.cfg')) return { stdout: 'org.ops4j.pax.url.mvn.repositories=https://nexus.exemplo.com/repository/releases@id=rel\n' };
       if (script.includes('@@docker')) return { stdout: '@@docker' + NL + 'wta-39|0.0.0.0:8040->8080/tcp' + NL + '@@disk' + NL + '/dev/sdc 100 50 ' + 20 * 1024 * 1024 + ' 50% /' + NL + '@@mem' + NL + 'MemTotal: 16000000 kB' + NL + 'MemAvailable: 1000000 kB' + NL };
       if (script.includes('feature:install -t')) return { stdout: dryOut };
+      if (script.includes('hub-xml')) {
+        if (xmlFails) throw new Error('docker caiu');
+        return { stdout: xmlOut };
+      }
       if (script.includes('curl')) return { stdout: `${probeCode} g/winthor-core-features/1.40.0.3/winthor-core-features-1.40.0.3-features.xml\n` };
       return { stdout: '[OK] Manifesto gerado' };
     });
   });
   afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  describe('dependências pelos features.xml do Nexus', () => {
+    const PATH = 'g/winthor-core-features/1.39.0.1/winthor-core-features-1.39.0.1-features.xml';
+    // winthor-integracao-config 1.39.20.3 (da origem) exige core-data na linha 39; o catálogo sobe o core-data para 1.40.0.3
+    const XML = `<features><feature name="winthor-integracao-config" version="1.39.20.3"><feature version="[1.39,1.40)">winthor-core-data</feature></feature></features>`;
+
+    it('baixa os features.xml de dentro do container e bloqueia o conflito que o catálogo da 801 não declara', async () => {
+      xmlOut = `@@FILE ${PATH}\n${XML}\n@@END\n@@MISS g/outro/1.0/outro-1.0-features.xml\n`;
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+      expect(res.success).toBe(true);
+      expect(res.dependencies?.issues).toEqual([
+        { feature: 'winthor-integracao-config', version: '1.39.20.3', dependency: 'winthor-core-data', required: '[1.39,1.40)', found: '1.40.0.3', kind: 'conflict', source: 'xml' }
+      ]);
+      expect(res.dependencies?.xml).toMatchObject({ fetched: 1, missing: 1, withDependencies: 1 });
+      const call = execFileAsync.mock.calls.find((c) => /base64 -d \| docker exec -i wta-master/.test(String(c[1].at(-1))) && Buffer.from(/^echo (\S+)/.exec(String(c[1].at(-1)))![1], 'base64').toString().includes('hub-xml'));
+      expect(call).toBeTruthy();
+      expect(res.log?.some((l) => l.includes('Conflitos pelos features.xml: winthor-integracao-config 1.39.20.3 exige winthor-core-data [1.39,1.40)'))).toBe(true);
+    });
+
+    it('sem conflito, a conferência só soma o que o XML declara', async () => {
+      xmlOut = `@@FILE ${PATH}\n<features><feature name="winthor-integracao-config" version="1.39.20.3"><feature version="[1.39,2)">winthor-core-data</feature></feature></features>\n@@END\n`;
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+      expect(res.dependencies?.issues).toEqual([]);
+      expect(res.dependencies?.withDependencies).toBeGreaterThanOrEqual(1);
+    });
+
+    it('se o download falhar, a prévia segue e a conferência fica marcada como não feita', async () => {
+      xmlFails = true;
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+      expect(res.success).toBe(true);
+      expect(res.dependencies?.xml?.error).toContain('docker caiu');
+      expect(res.log?.some((l) => l.includes('Dependências pelos features.xml não conferidas'))).toBe(true);
+    });
+
+    it('o clone não baixa features.xml', async () => {
+      await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true });
+      expect(execFileAsync.mock.calls.some((c) => String(c[1].at(-1)).includes('base64') && Buffer.from(/^echo (\S+)/.exec(String(c[1].at(-1)))?.[1] ?? '', 'base64').toString().includes('hub-xml'))).toBe(false);
+    });
+  });
 
   describe('clonar sem mudar nada (cloneOnly)', () => {
     const versions = () => path.join(dir, 'linux-winthor', 'versions');

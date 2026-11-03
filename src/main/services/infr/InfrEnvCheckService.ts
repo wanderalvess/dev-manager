@@ -13,7 +13,7 @@ import {
   type InfrCheckCommandId,
   type InfrEnvCheck
 } from '../../../shared/infrEnvCheck';
-import { analyzeBuildLog, buildLogPath } from '../../../shared/infrBuildLog';
+import { buildLogPath, buildLogProbeScript, parseBuildLogProbe } from '../../../shared/infrBuildLog';
 import { commandFailureDetail } from '../../../shared/infrNewVersionScripts';
 import type { WslService } from '../WslService';
 
@@ -78,9 +78,10 @@ export class InfrEnvCheckService {
     const path = buildLogPath(name);
     if (!path) return undefined;
     try {
-      const { stdout } = await execWsl(['-d', distro, '--', 'bash', '-c', `test -f ${path} && tail -n 200 ${path} || echo '@@semlog'`], { timeout: 15000, maxBuffer: 4 * 1024 * 1024 });
-      const text = String(stdout);
-      return text.trim() === '@@semlog' ? undefined : analyzeBuildLog(path, text);
+      // O wsl.exe expande o `$` antes do bash: o roteiro vai em base64 e é decodificado dentro da distro
+      const b64 = Buffer.from(buildLogProbeScript(path)).toString('base64');
+      const { stdout } = await execWsl(['-d', distro, '--', 'bash', '-c', `echo ${b64} | base64 -d | bash`], { timeout: 20000, maxBuffer: 4 * 1024 * 1024 });
+      return parseBuildLogProbe(path, String(stdout));
     } catch {
       return undefined;
     }

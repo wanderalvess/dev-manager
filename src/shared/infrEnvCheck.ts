@@ -132,6 +132,18 @@ function knownFailure(c: InfrContainerCheck): string | undefined {
 export function summarizeEnvCheck(containers: InfrContainerCheck[], wtaHttp?: InfrEnvCheck['wtaHttp'], buildLog?: BuildLogReport): NonNullable<InfrEnvCheck['summary']> {
   const present = containers.filter((c) => c.exists);
   if (present.length === 0 && buildLog?.failure) {
+    const c = buildLog.cause;
+    if (c) {
+      const total = c.failures ?? (c.symptoms > 1 ? c.symptoms : undefined);
+      const parts = [
+        `${c.headline.charAt(0).toUpperCase()}${c.headline.slice(1)}${c.causedBy[0] ? `, porque ${c.causedBy[0]}` : ''}.`,
+        total && total > 1 ? `${total} falhas no log, mas só a primeira é a causa: as outras são consequência dela.` : '',
+        c.hint ?? '',
+        c.others?.length ? `Outro problema no log: ${c.others.join('; ')}.` : '',
+        buildLog.stage ? `Etapa: ${buildLog.stage}.` : ''
+      ].filter(Boolean);
+      return { status: 'fail', title: 'O build falhou antes de criar os containers', detail: parts.join(' ') };
+    }
     return {
       status: 'fail',
       title: 'O build falhou antes de criar os containers',

@@ -3,7 +3,7 @@
  * diz se está ok, se merece atenção ou se impede o ambiente de subir, numa frase.
  */
 import type { InfrDbMode } from './infrWinthorVersion';
-import type { InfrManifestSource, InfrVersionPreview } from './infrVersionManifest';
+import { winthorLineOf, type InfrManifestSource, type InfrVersionPreview } from './infrVersionManifest';
 
 export type InfrReviewStatus = 'ok' | 'warn' | 'block';
 
@@ -81,7 +81,7 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
       id: 'features',
       status: 'warn',
       title: `Features da ${i.version}`,
-      detail: `${up.behind.length} features sem versão da linha ${i.version} no catálogo ficam como na origem.`
+      detail: `${up.behind.length} features sem versão da linha ${i.version} no catálogo ficam como na origem.${behindAdvice(i, p)}`
     });
   } else {
     items.push({ id: 'features', status: 'ok', title: `Features da ${i.version}`, detail: `${up.changes.length} sobem pelo catálogo da 801.` });
@@ -156,37 +156,72 @@ function reviewArtifacts(a: InfrVersionPreview['artifacts']): InfrReviewItem | n
   return { id: 'artefatos', status: a.withoutRepo.length ? 'warn' : 'ok', title, detail: `${a.checked} repositórios novos encontrados no Nexus.${extra}` };
 }
 
-/** Dependências das features contra o que o catálogo da 801 declara (a lista da própria feature, vinda do Nexus). */
+/**
+ * Dependências das features contra o que o catálogo da 801 declara e contra os features.xml dos repositórios do Nexus.
+ * As duas fontes só veem dependência entre FEATURES; conflito de pacote entre bundles só aparece no ensaio no Karaf.
+ */
 function reviewDependencies(d: InfrVersionPreview['dependencies']): InfrReviewItem {
   const title = 'Dependências das features';
+  const xml = d?.xml;
+  const BUNDLES = ' Conflito de pacote entre bundles (osgi.wiring.package) não aparece aqui: só o ensaio no Karaf de origem o mostra antes do build.';
   if (!d || d.withDependencies === 0) {
+    const xmlNote = xml
+      ? xml.error
+        ? ` Os features.xml do Nexus também não foram conferidos (${xml.error}).`
+        : ` Os features.xml do Nexus (${xml.fetched} de ${xml.repos} baixados, ${xml.checked} features achadas) também não declaram dependências entre elas.`
+      : '';
     return {
       id: 'dependencias',
       status: 'warn',
       title,
       detail: d
-        ? `O catálogo da 801 não trouxe dependências em nenhuma das ${d.checked} features conferidas; não deu para conferir antes do build. Se o build falhar em "Unable to resolve", é isso.`
+        ? `O catálogo da 801 não trouxe dependências em nenhuma das ${d.checked} features conferidas.${xmlNote} Não deu para conferir antes do build; se ele falhar em "Unable to resolve", é isso.${BUNDLES}`
         : 'Não deu para conferir as dependências antes do build.'
     };
   }
   const conflicts = d.issues.filter((x) => x.kind === 'conflict');
   const describe = (x: (typeof d.issues)[number]) =>
     x.kind === 'conflict'
-      ? `${x.feature} ${x.version} exige ${x.dependency} ${x.required} e a lista tem ${x.found}${x.fix ? '' : ' (o catálogo não oferece a versão exigida)'}`
+      ? `${x.feature} ${x.version} exige ${x.dependency} ${x.required} e a lista tem ${x.found}${x.fix || x.source === 'xml' ? '' : ' (o catálogo não oferece a versão exigida)'}`
       : `${x.feature} ${x.version} exige ${x.dependency} ${x.required}, que o catálogo não oferece`;
   const list = (xs: string[]) => (xs.length > 5 ? `${xs.slice(0, 5).join('; ')}; e mais ${xs.length - 5}` : xs.join('; '));
   if (conflicts.length > 0) {
-    return { id: 'dependencias', status: 'block', title: 'Dependências que não fecham', detail: `${list(conflicts.map(describe))}. O build falharia ao resolver as features.` };
+    const fromXml = conflicts.some((x) => x.source === 'xml');
+    return {
+      id: 'dependencias',
+      status: 'block',
+      title: 'Dependências que não fecham',
+      detail: `${list(conflicts.map(describe))}. O build falharia ao resolver as features.${fromXml ? ' Saída provável: pôr na lista a versão que atende à faixa, ou voltar a feature que exige para a versão da origem.' : ''}`
+    };
   }
   if (d.issues.length > 0) {
     return { id: 'dependencias', status: 'warn', title, detail: `${list(d.issues.map(describe))}.` };
   }
+  const xmlOk = xml && !xml.error && xml.withDependencies > 0 ? ` ${xml.withDependencies} conferidas pelos features.xml do Nexus (${xml.fetched} repositórios).` : '';
   return {
     id: 'dependencias',
     status: 'ok',
     title,
-    detail: d.fixed > 0 ? `${d.fixed} ajustadas pelo catálogo para atender às dependências; as demais já fecham.` : `${d.withDependencies} features com dependências, todas atendidas pela lista.`
+    detail: `${d.fixed > 0 ? `${d.fixed} ajustadas pelo catálogo para atender às dependências; as demais já fecham.` : `${d.withDependencies} features com dependências, todas atendidas pela lista.`}${xmlOk}${xmlOk ? BUNDLES : ''}`
   };
+}
+
+/**
+ * As features que ficam na versão anterior convivem com as que sobem; quando uma exige de outra uma faixa que a lista nova
+ * não atende, o build só descobre isso depois de ~30 minutos. Ficar para trás é comum (muitas features passam anos na mesma
+ * linha), então isto não bloqueia: cita as mais atrasadas e, se nenhuma conferência olhou o conflito, sugere o ensaio no Karaf.
+ */
+function behindAdvice(i: InfrReviewInput, p: InfrVersionPreview): string {
+  const target = parseInt(i.version, 10);
+  const far = (p.upgrade?.behind ?? [])
+    .map((f) => ({ f, line: winthorLineOf(f.version) }))
+    .filter((x): x is { f: (typeof x)['f']; line: number } => x.line !== undefined && target - x.line >= 2)
+    .sort((a, b) => a.line - b.line);
+  const worst = far.slice(0, 3).map((x) => `${x.f.name} ${x.f.version}`);
+  const farText = far.length > 0 ? ` ${far.length} delas estão 2 ou mais linhas atrás (${worst.join(', ')}${far.length > 3 ? ' e mais' : ''}).` : '';
+  const conferred = !!p.dryRun || (!!p.dependencies && p.dependencies.withDependencies > 0);
+  const advice = conferred ? '' : ' O conflito entre elas e as que sobem só aparece no build; ligue o ensaio no Karaf de origem (Ajustes → Avançado) para ver antes.';
+  return `${farText}${advice}`;
 }
 
 /** Linha da origem quando ela é maior que a versão nova (downgrade); senão, undefined. */
