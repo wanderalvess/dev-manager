@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import type { FaqItem } from '../components/help/helpData';
 import {
   helpPageFaqCategories,
+  helpPageFaqCategoryCounts,
+  helpPageVisibleCategories,
   helpPageFilterFaqs,
   helpPageIsValidChangelog,
   helpPageIsValidMcpDocs
@@ -49,5 +51,33 @@ describe('validação de conteúdo dinâmico', () => {
     expect(helpPageIsValidMcpDocs('# Documentação não encontrada')).toBe(false);
     expect(helpPageIsValidMcpDocs('# Erro ao ler documentação')).toBe(false);
     expect(helpPageIsValidMcpDocs(null)).toBe(false);
+  });
+});
+
+describe('helpPageFaqCategoryCounts', () => {
+  it('soma todas e separa por categoria', () => {
+    expect(helpPageFaqCategoryCounts(faqs, '')).toEqual({ all: 3, Rede: 2, Banco: 1 });
+  });
+
+  it('respeita o termo de busca, sem acento', () => {
+    expect(helpPageFaqCategoryCounts(faqs, 'ORACLE')).toEqual({ all: 1, Banco: 1 });
+    expect(helpPageFaqCategoryCounts([{ ...faqs[0], question: 'Configurações' }], 'configuracoes').all).toBe(1);
+  });
+});
+
+describe('helpPageVisibleCategories', () => {
+  const cats = ['all', 'A', 'B', 'C', 'D'];
+  const counts = { all: 10, A: 1, B: 5, C: 3, D: 1 };
+
+  it('ordena pelos assuntos com mais perguntas e respeita o limite', () => {
+    expect(helpPageVisibleCategories(cats, counts, 'all', false, 2)).toEqual(['all', 'B', 'C']);
+  });
+
+  it('mantém visível o assunto selecionado fora do corte', () => {
+    expect(helpPageVisibleCategories(cats, counts, 'D', false, 2)).toEqual(['all', 'B', 'C', 'D']);
+  });
+
+  it('mostra todos quando expandido, no mesmo critério de ordem', () => {
+    expect(helpPageVisibleCategories(cats, counts, 'all', true, 2)).toEqual(['all', 'B', 'C', 'A', 'D']);
   });
 });
