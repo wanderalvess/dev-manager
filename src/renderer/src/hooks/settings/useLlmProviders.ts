@@ -27,6 +27,7 @@ export function useLlmProviders(setSettings: SetSettings) {
       apiKey: editingLlmProvider.apiKey?.trim() || '',
       baseUrl: editingLlmProvider.baseUrl?.trim() || undefined,
       model: editingLlmProvider.model?.trim() || 'gpt-4o-mini',
+      systemPrompt: editingLlmProvider.systemPrompt,
       temperature: editingLlmProvider.temperature ?? 0.7,
       maxTokens: editingLlmProvider.maxTokens ?? 2048,
       timeoutMs: editingLlmProvider.timeoutMs ?? 30000,

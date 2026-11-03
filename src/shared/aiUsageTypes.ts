@@ -60,7 +60,7 @@ export interface AiUsageGroup extends AiUsageTotals {
 
 export type AiLimitLevel = 'ok' | 'warning' | 'blocked';
 
-/** Situação do teto de um provedor (tokens do dia e do mês corrente). */
+/** Uso do dia e do mês corrente de um provedor e a situação do teto (se houver). */
 export interface AiLimitStatus {
   providerId: string;
   providerName: string;

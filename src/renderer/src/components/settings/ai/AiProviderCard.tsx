@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { AiLimitStatus, AiUsageGroup, LlmProviderConfig, LlmTestResult } from '../../../../../shared/types';
 import { formatEndpoint, formatTimeoutSeconds, maskApiKey } from '../../../utils/aiTabUtils';
+import { evaluateLimit } from '../../../../../shared/aiUsageLimits';
 import { describeLimits, formatCost, formatTokens } from '../../../utils/aiUsageViewUtils';
 
 interface AiProviderCardProps {
@@ -19,6 +20,7 @@ interface AiProviderCardProps {
   testResult: LlmTestResult | undefined;
   /** Tokens dos últimos 30 dias deste motor (contador local). */
   usage?: AiUsageGroup;
+  /** Uso do dia e do mês (gravado); o teto vem do próprio `provider`, então a edição aparece sem salvar. */
   limit?: AiLimitStatus;
   onSetActive: (id: string) => void;
   onTest: (provider: LlmProviderConfig) => Promise<void>;
@@ -39,7 +41,9 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
   onToggle,
   onEdit,
   onDelete
-}) => (
+}) => {
+  const limitState = evaluateLimit(provider, limit?.dayUsed ?? 0, limit?.monthUsed ?? 0);
+  return (
   <div
     className={`p-4 rounded-xl border transition-all flex flex-col justify-between space-y-3.5 ${
       isActive
@@ -111,13 +115,13 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
 
     <div
       className={`px-2.5 py-1.5 rounded-xl border text-2xs font-mono space-y-0.5 ${
-        limit?.level === 'blocked'
+        limitState?.level === 'blocked'
           ? 'bg-danger/10 border-danger/25 text-danger'
-          : limit?.level === 'warning'
+          : limitState?.level === 'warning'
             ? 'bg-warning/10 border-warning/25 text-warning'
             : 'bg-muted/30 border-border/60 text-muted-foreground'
       }`}
-      title={limit?.message ?? 'Contador local: só enxerga o que passa pelo Hub. O limite de gastos do painel do provedor continua sendo a proteção real.'}
+      title={limitState?.message ?? 'Contador local: só enxerga o que passa pelo Hub. O limite de gastos do painel do provedor continua sendo a proteção real.'}
     >
       <div className="flex items-center justify-between gap-2">
         <span>Uso 30 dias:</span>
@@ -126,12 +130,12 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
           {usage?.costEstimate !== undefined ? ` · ~${formatCost(usage.costEstimate)}` : ''}
         </span>
       </div>
-      {describeLimits(limit) && (
+      {describeLimits(limitState) && (
         <div className="flex items-center justify-between gap-2">
           <span>Teto:</span>
           <span className="font-bold">
-            {describeLimits(limit)}
-            {limit?.level === 'warning' ? ' · 80%+' : limit?.level === 'blocked' ? ' · bloqueado' : ''}
+            {describeLimits(limitState)}
+            {limitState?.level === 'warning' ? ' · 80%+' : limitState?.level === 'blocked' ? ' · bloqueado' : ''}
           </span>
         </div>
       )}
@@ -211,3 +215,4 @@ export const AiProviderCard: React.FC<AiProviderCardProps> = ({
     </div>
   </div>
 );
+};
