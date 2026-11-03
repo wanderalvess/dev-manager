@@ -150,7 +150,8 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
     dbContainer: form.dbContainer || undefined,
     oraclePort: toPort(form.oraclePort),
     wtaPort: toPort(form.wtaPort),
-    wshPort: toPort(form.wshPort)
+    wshPort: toPort(form.wshPort),
+    tagImage: clone ? preview?.clone?.tagFrom : undefined
   };
   const command = buildNewVersionEnvCommand({ ...newEnv, version: form.version });
   const canPreview = isValidWinthorVersion(form.version) && isValidEnvName(form.from) && !busy;
@@ -164,8 +165,8 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
   // O primeiro dado que falta no formulário (vazio = completo); a conferência da origem e a leitura vêm depois
   const formIssue = !form.from
     ? 'Escolha o ambiente de origem.'
-    : clone && !originVersion
-      ? `Não deu para saber a versão do ${form.from} pela imagem do WTA (${originImage || 'sem imagem'}). Use Atualizar para outra versão.`
+    : clone && !originVersion && !isValidWinthorVersion(form.version)
+      ? `A imagem do WTA do ${form.from} (${originImage || 'sem imagem'}) não diz a versão: informe a versão do ${form.from} na frase.`
       : !isValidWinthorVersion(form.version)
       ? 'Informe a versão nova (ex.: 40).'
       : !isValidEnvName(form.name) || form.name === form.from

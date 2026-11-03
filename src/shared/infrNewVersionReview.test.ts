@@ -183,11 +183,11 @@ describe('downgrade (versão nova menor que a da origem)', () => {
     dbContainer: 'oracle-suport_38'
   };
 
-  it('avisa o downgrade e bloqueia o clone do banco, oferecendo um Oracle vazio', () => {
+  it('avisa o downgrade e o banco copiado da linha de cima, sem impedir; o Oracle vazio fica como opção', () => {
     const items = reviewNewVersion(down);
     expect(byId(items, 'versao')).toMatchObject({ status: 'warn', title: 'Downgrade: a origem está na 39' });
-    expect(byId(items, 'banco')).toMatchObject({ status: 'block', title: 'O banco da 39 não serve para a 38', fixes: ['emptyOracle'] });
-    expect(reviewBlocks(items)).toBe(true);
+    expect(byId(items, 'banco')).toMatchObject({ status: 'warn', title: 'O banco vem da 39', fixes: ['emptyOracle'] });
+    expect(reviewBlocks(items)).toBe(false);
     expect(new Set(items.map((i) => i.id)).size).toBe(items.length);
   });
 
@@ -205,8 +205,8 @@ describe('downgrade (versão nova menor que a da origem)', () => {
     expect(byId(listaNova, 'features').status).toBe('block');
   });
 
-  it('usar o banco da própria origem também bloqueia; outro Oracle só pede para conferir', () => {
-    expect(byId(reviewNewVersion({ ...down, dbMode: 'existing', dbContainer: 'oracle-master' }), 'banco').status).toBe('block');
+  it('usar o banco da própria origem também só avisa; outro Oracle pede para conferir', () => {
+    expect(byId(reviewNewVersion({ ...down, dbMode: 'existing', dbContainer: 'oracle-master' }), 'banco')).toMatchObject({ status: 'warn', title: 'O banco vem da 39' });
     expect(byId(reviewNewVersion({ ...down, dbMode: 'existing', dbContainer: 'oracle-38' }), 'banco')).toMatchObject({ status: 'warn' });
   });
 
