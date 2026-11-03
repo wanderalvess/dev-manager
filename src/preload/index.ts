@@ -16,10 +16,18 @@ import type {
   InfrVersionPreview,
   InfrVersionPreviewRequest
 } from '../shared/infrVersionManifest';
+import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
+import type { WeatherReport } from '../shared/weather';
+import type { InfrOriginCheck } from '../shared/infrOriginCheck';
+import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../shared/infrFirstSteps';
+import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../shared/infrActiveEnv';
+import type { StartEnvResult } from '../shared/infrEnvStart';
 import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
 import type {
   AppSettings,
   UsageDays,
+  AiUsagePeriod,
+  AiUsageReport,
   UsageSummary,
   UsageSummaryQuery,
   KarafDeployRequest,
@@ -542,6 +550,7 @@ const electronAPI = {
   // Métricas locais de uso (só contadores e durações)
   getUsageSummary: (query?: UsageSummaryQuery): Promise<UsageSummary> => ipcRenderer.invoke('usage:get-summary', query),
   getUsageDays: (): Promise<UsageDays> => ipcRenderer.invoke('usage:get-days'),
+  getAiUsage: (period?: AiUsagePeriod): Promise<AiUsageReport> => ipcRenderer.invoke('usage:get-ai', period),
   clearUsageMetrics: (): Promise<void> => ipcRenderer.invoke('usage:clear'),
 
   importSettings: (jsonString: string): Promise<{ success: boolean; error?: string; settings?: AppSettings; warnings?: string[] }> =>
@@ -667,6 +676,18 @@ const electronAPI = {
   previewInfrVersion: (req: InfrVersionPreviewRequest): Promise<InfrVersionPreview> => ipcRenderer.invoke('infr:version-preview', req),
   saveInfrVersionManifest: (req: InfrManifestSaveRequest): Promise<InfrManifestSaveResult> =>
     ipcRenderer.invoke('infr:version-save', req),
+  checkInfrEnvironment: (params: { distro?: string; name: string }): Promise<InfrEnvCheck> => ipcRenderer.invoke('infr:env-check', params),
+  checkInfrOrigin: (req: { distro?: string; infrPath?: string; fromEnv: string }): Promise<InfrOriginCheck> => ipcRenderer.invoke('infr:origin-check', req),
+  checkInfrFirstSteps: (req: { distro?: string; infrPath?: string; version?: string }): Promise<InfrFirstStepsResult> =>
+    ipcRenderer.invoke('infr:first-steps', req),
+  runInfrFirstStepsAction: (req: InfrFirstStepsActionRequest): Promise<{ success: boolean; output: string }> =>
+    ipcRenderer.invoke('infr:first-steps-action', req),
+  listInfrActiveEnvironments: (distro?: string): Promise<InfrActiveEnvList> => ipcRenderer.invoke('infr:active-env-list', distro),
+  applyInfrActiveEnvironment: (req: { distro?: string; name: string }): Promise<InfrActiveEnvApplyResult> => ipcRenderer.invoke('infr:active-env-apply', req),
+  clearInfrActiveEnvironment: (): Promise<{ success: boolean }> => ipcRenderer.invoke('infr:active-env-clear'),
+  startInfrEnvironment: (req: { distro?: string; name: string }): Promise<StartEnvResult> => ipcRenderer.invoke('infr:start-environment', req),
+  openInfrCheckTerminal: (req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }): Promise<{ success: boolean; output: string }> =>
+    ipcRenderer.invoke('infr:env-check-terminal', req),
   setDockerTargetWslDistro: (distro: string | null): Promise<DockerDaemonStatus> =>
     ipcRenderer.invoke('docker:set-target-wsl-distro', distro),
   getContainerEnvironments: (): Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }> =>
@@ -680,7 +701,7 @@ const electronAPI = {
   ): Promise<{ success: boolean; started: string[]; failed?: string; error?: string }> =>
     ipcRenderer.invoke('docker:start-sequence', containers),
   onContainerSequenceProgress: (
-    callback: (step: { currentName: string; index: number; total: number; waitingSeconds?: number }) => void
+    callback: (step: { currentName: string; index: number; total: number; waitingSeconds?: number; message?: string }) => void
   ) => {
     const subscription = (_: any, data: any) => callback(data);
     ipcRenderer.on('docker:sequence-progress', subscription);
@@ -775,6 +796,7 @@ const electronAPI = {
 
   // Métricas do Sistema
   getSystemMetrics: (): Promise<SystemMetrics> => ipcRenderer.invoke('system:get-metrics'),
+  getWeather: (city: string): Promise<WeatherReport> => ipcRenderer.invoke('system:get-weather', city),
 
   // Leitor e Monitor de Logs em Tempo Real (Tail -f)
   startLogWatch: (

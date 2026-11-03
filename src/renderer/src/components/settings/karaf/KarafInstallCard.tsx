@@ -75,10 +75,10 @@ export const KarafInstallCard: React.FC<KarafInstallCardProps> = ({ settings, se
   const applyAll = () => setSettings((previous) => mismatches.reduce((next, m) => ({ ...next, ...applyMismatch(next, m) }), previous));
 
   return (
-    <section className="cockpit-panel rounded-xl p-5 space-y-3 shadow-xl border border-border" aria-label="Instalação do Karaf">
+    <section className="cockpit-panel rounded-xl p-5 space-y-3 border border-border" aria-label="Instalação do Karaf">
       <div className="flex items-start justify-between gap-3 pb-1 border-b border-border/60">
         <div>
-          <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <FolderSearch className="w-3.5 h-3.5 text-primary" /> O que a instalação diz
           </h3>
           <p className="text-2xs text-muted-foreground mt-0.5">

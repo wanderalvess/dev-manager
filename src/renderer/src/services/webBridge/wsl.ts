@@ -18,6 +18,11 @@ import type {
   InfrVersionPreview,
   InfrVersionPreviewRequest
 } from '../../../../shared/infrVersionManifest';
+import type { InfrCheckCommandId, InfrEnvCheck } from '../../../../shared/infrEnvCheck';
+import type { InfrOriginCheck } from '../../../../shared/infrOriginCheck';
+import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../../../../shared/infrFirstSteps';
+import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../../../../shared/infrActiveEnv';
+import type { StartEnvResult } from '../../../../shared/infrEnvStart';
 import type { InfrEnvironmentsResult } from '../../../../shared/infrWinthorVersion';
 import type { BridgeDeps } from './core';
 
@@ -222,6 +227,70 @@ export function createWslApi({ apiFetch, wsManager }: BridgeDeps) {
         return await apiFetch<InfrManifestSaveResult>('/api/infr/version/save', { method: 'POST', body: JSON.stringify(req) });
       } catch (err: any) {
         return { success: false, error: err.message };
+      }
+    },
+    checkInfrOrigin: async (req: { distro?: string; infrPath?: string; fromEnv: string }): Promise<InfrOriginCheck> => {
+      try {
+        return await apiFetch<InfrOriginCheck>('/api/infr/origin-check', { method: 'POST', body: JSON.stringify(req) });
+      } catch (err: any) {
+        return { success: false, error: err.message, items: [] };
+      }
+    },
+    checkInfrFirstSteps: async (req: { distro?: string; infrPath?: string; version?: string }): Promise<InfrFirstStepsResult> => {
+      try {
+        return await apiFetch<InfrFirstStepsResult>('/api/infr/first-steps', { method: 'POST', body: JSON.stringify(req) });
+      } catch (err: any) {
+        return { success: false, error: err.message, steps: [] };
+      }
+    },
+    runInfrFirstStepsAction: async (req: InfrFirstStepsActionRequest) => {
+      try {
+        return await apiFetch<{ success: boolean; output: string }>('/api/infr/first-steps/action', { method: 'POST', body: JSON.stringify(req) });
+      } catch (err: any) {
+        return { success: false, output: err.message };
+      }
+    },
+    listInfrActiveEnvironments: async (distro?: string): Promise<InfrActiveEnvList> => {
+      try {
+        const query = distro ? `?distro=${encodeURIComponent(distro)}` : '';
+        return await apiFetch<InfrActiveEnvList>(`/api/infr/active-env${query}`);
+      } catch (err: any) {
+        return { success: false, error: err.message, environments: [] };
+      }
+    },
+    applyInfrActiveEnvironment: async (req: { distro?: string; name: string }): Promise<InfrActiveEnvApplyResult> => {
+      try {
+        return await apiFetch<InfrActiveEnvApplyResult>('/api/infr/active-env', { method: 'POST', body: JSON.stringify(req) });
+      } catch (err: any) {
+        return { success: false, error: err.message, changes: [] };
+      }
+    },
+    startInfrEnvironment: async (req: { distro?: string; name: string }): Promise<StartEnvResult> => {
+      try {
+        return await apiFetch<StartEnvResult>('/api/infr/start-environment', { method: 'POST', body: JSON.stringify(req) });
+      } catch (err: any) {
+        return { success: false, error: err.message, started: [], notes: [] };
+      }
+    },
+    clearInfrActiveEnvironment: async (): Promise<{ success: boolean }> => {
+      try {
+        return await apiFetch<{ success: boolean }>('/api/infr/active-env', { method: 'DELETE' });
+      } catch {
+        return { success: false };
+      }
+    },
+    checkInfrEnvironment: async (params: { distro?: string; name: string }): Promise<InfrEnvCheck> => {
+      try {
+        return await apiFetch<InfrEnvCheck>('/api/infr/env-check', { method: 'POST', body: JSON.stringify(params) });
+      } catch (err: any) {
+        return { success: false, error: err.message, containers: [] };
+      }
+    },
+    openInfrCheckTerminal: async (req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }) => {
+      try {
+        return await apiFetch<{ success: boolean; output: string }>('/api/infr/env-check/terminal', { method: 'POST', body: JSON.stringify(req) });
+      } catch (err: any) {
+        return { success: false, output: err.message };
       }
     },
     setDockerTargetWslDistro: async (distro: string | null): Promise<DockerDaemonStatus> => {

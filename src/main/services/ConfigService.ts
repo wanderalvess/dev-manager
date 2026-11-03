@@ -854,6 +854,8 @@ export class ConfigService {
       if (typeof parsed.winthorStartEnabled === 'boolean') merged.winthorStartEnabled = parsed.winthorStartEnabled;
       if (typeof parsed.winthorStartPort === 'number') merged.winthorStartPort = parsed.winthorStartPort;
       if (typeof parsed.wtaUrl === 'string') merged.wtaUrl = parsed.wtaUrl;
+      if (typeof parsed.activeEnvironment === 'string') merged.activeEnvironment = parsed.activeEnvironment;
+      if (typeof parsed.karafDockerContainer === 'string') merged.karafDockerContainer = parsed.karafDockerContainer;
       if (typeof parsed.wtaLogin === 'string') merged.wtaLogin = parsed.wtaLogin;
       if (typeof parsed.wtaPassword === 'string') merged.wtaPassword = parsed.wtaPassword;
       if (typeof parsed.wtaAuthToken === 'string') merged.wtaAuthToken = parsed.wtaAuthToken;

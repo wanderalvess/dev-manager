@@ -20,10 +20,10 @@ export const AzureTab: React.FC<AzureTabProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1" id="field-azure">
       <div className="lg:col-span-12 space-y-4 flex flex-col">
-        <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
+        <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
             <div>
-              <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <GitBranch className="w-4 h-4 text-info" /> Configurações do Git & Azure DevOps
               </h3>
               <p className="text-2xs text-muted-foreground mt-0.5">

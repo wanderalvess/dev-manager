@@ -4,6 +4,251 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Adicionado
+- **Tela de início na abertura**: para quem já usa o app, a abertura virou uma tela de início com o que é útil ver num relance:
+  - *Este PC*: nome, processador e memória (atualizam a cada 5 s) e há quanto tempo está ligado;
+  - *Sua semana no Hub*: automações dos últimos 7 dias, tempo economizado (a mesma conta do Meu uso) e os módulos mais usados;
+  - *Clima*: temperatura, sensação, umidade, vento e a previsão de 3 dias da cidade que você informar ali mesmo. Usa o Open-Meteo (gratuito, sem chave) e **só o nome da cidade sai da máquina**; sem cidade, nada é consultado;
+  - *Ambientes WinThor*: cada ambiente da distro, no ar, em parte ou parado;
+  - *Novidades* da versão, com o atalho para ver todas.
+- **Abrir sempre na tela de início**: uma opção na própria abertura faz o Hub não entrar sozinho; você entra quando quiser (Enter ou *Entrar*).
+
+### Alterado
+- **A abertura fica 8 s** antes de entrar sozinha (eram 3 s, sem tempo para ler), com a contagem no botão *Entrar agora*. Mexer num cartão (digitar a cidade, por exemplo) ou clicar em *Ficar nesta tela* segura a tela.
+
+## [1.60.0] - 2026-11-03
+### Adicionado
+- **Causa do build que falhou, completa (Assistente INFR → Verificar)**: quando o build da Nova versão falha ao instalar as features, o log tem uma linha `[ERRO] ... não ficou instalada` por feature (151 numa lista de 140), mas só a **primeira falha de resolução do lote** é a causa. O Hub agora lê o log inteiro (não só o fim), acha esse primeiro erro e mostra: o que não resolveu (feature, bundle e pacote, cada um com a faixa de versão), a cadeia `caused by` do Karaf **sem cortar no meio**, "N falhas no log, mas só a primeira é a causa", um *Como resolver* e o texto completo do Karaf recolhido, com *Copiar*. Um `No matching features` que vem depois aparece à parte como outro problema (feature que nenhum repositório da lista tem).
+- **Dependências pelos `features.xml` do Nexus (Nova versão → Antes de gerar)**: o catálogo da 801 quase não declara dependências entre features, então a conferência ficava vazia. O Hub agora baixa, de dentro do container do WTA de origem (mesma rede e mesmo login do build), o `features.xml` de cada repositório da lista (até 80, 8 por vez, uns 25 s) e confere a lista contra as faixas declaradas ("A exige B em [1.8,2), mas a lista tem B 2.0.0.1"): conflito bloqueia e diz a saída provável. Se não der para baixar, vira aviso e a prévia segue. Conferido contra os manifestos reais 38 e 39 (62 e 59 repositórios): 0 conflitos, sem falso positivo. **Limite**: só vê dependência declarada entre features; conflito de pacote entre bundles (`osgi.wiring.package`) vem dos jars e só o *ensaio no Karaf de origem* mostra antes do build, e a revisão diz isso.
+- **Features que ficam na versão anterior**: o aviso passa a citar as mais atrasadas (2 ou mais linhas) e, se nenhuma conferência olhou o conflito delas com as que sobem, sugere ligar o ensaio no Karaf de origem. Ficar para trás é comum (muitas features passam anos na mesma linha), então não bloqueia.
+
+## [1.59.0] - 2026-11-03
+### Adicionado
+- **Só clonar, sem mudar nada (Assistente INFR → Nova versão)**: ao lado de *Atualizar para uma versão*, a opção *Só clonar, sem mudar nada* cria o ambiente novo na **mesma versão** da origem (lida da imagem do WTA dela, ex.: `linux-winthor:39-debian` → 39), com a imagem que já existe: **sem o build de ~30 minutos e sem mexer nas features**. Não lê o catálogo da 801, não troca feature e não passa pela conferência de dependências, que foi o que derrubou o build de uma versão nova. O Hub confere a imagem, `versions/<versão>.features` (se faltar e o WTA de origem estiver no ar, grava a lista dele como está), as portas (propõe as próximas livres, já que as da versão estão com a origem), disco, memória e o banco.
+  - O script fixa SSH, JMX e JMS do WTA pela versão: se o WTA de origem estiver no ar, o clone bloqueia e diz qual container parar.
+  - Aviso: `wta.env.<versão>` e `.env.<versão>` são por versão e passam a apontar para o banco do clone; recriar a origem depois com eles a ligaria ao banco novo.
+  - O WTA de origem parado e o login do WTA não impedem o clone (não há leitura do catálogo).
+
+### Alterado
+- **Configurações: cards das seções no desenho novo**:
+  - *Preparação do debug* virou dois passos numerados: *Liberar a máquina* (serviços e processos) e *Subir o ambiente*. Os perfis de automação aparecem só para consulta, com o atalho *Editar em Ambiente Dev*. Lista vazia diz o que adicionar.
+  - Campos que quase ninguém usa ficam em *Avançado*, recolhido: cookie e payload do WTA, programa por extensão, cookie da CCW, script próprio do Karaf e os parâmetros do motor de IA (nome, endereço, protocolo, temperatura, timeout e teto de uso). O *Avançado* já abre se tiver algo preenchido, e a busca abre o do campo encontrado.
+  - Um só liga/desliga em serviços, processos, portas vigiadas, WinThor Start, Módulos e Uso (antes eram três desenhos).
+  - *Salvar Motor* e *Salvar Fonte de Teste* viraram *Adicionar motor*/*Aplicar* e *Aplicar fonte*: só mudam o rascunho, que se salva na barra do rodapé.
+### Corrigido
+- **Configurações → IA & LLM**: o cartão do motor mostra o estado do teto de tokens assim que o motor é salvo no formulário (antes só depois de *Salvar alterações*), e o prompt de sistema do motor deixou de se perder ao editar; no painel *Meu uso → Uso de IA*, as tabelas por provedor, modelo e origem empilham em telas médias.
+
+## [1.58.0] - 2026-11-03
+### Adicionado
+- **Uso de IA e teto de tokens**: cada chamada de IA que passa pelo Hub (tela, API REST e MCP) tem os tokens de entrada/saída registrados localmente por dia, provedor, modelo e origem (*IA conduz*, *Perguntar à documentação*, *Diagnóstico HTTP*, *MCP*), sem guardar prompt, resposta nem chave, e respeitando a *Contagem de uso*.
+  - *Configurações → Meu uso → Uso de IA (tokens)*: totais de 7 dias, 30 dias ou tudo, por provedor, modelo e origem; o cartão de cada motor em *IA & LLM* mostra o resumo dos últimos 30 dias.
+  - *Teto de uso* por motor (editar o motor): tokens por dia e por mês, vazio = sem teto. Aos 80% a resposta traz um aviso; ao atingir, a chamada é bloqueada no `LlmService` (vale para tela, REST e MCP) com mensagem em pt-BR dizendo qual teto estourou e como ajustar.
+  - Preço por milhão de tokens (entrada/saída) opcional, digitado por você, para mostrar o custo estimado; o Hub não embute tabela de preços.
+  - O contador é local e só enxerga o que passa pelo Hub: o limite de gastos do painel do provedor continua sendo a proteção real. *Apagar histórico* também zera o uso de IA.
+
+## [1.57.0] - 2026-11-03
+### Alterado
+- **Assistente INFR redesenhado, sem menu lateral**: abre em *Ambientes*, com cada ambiente da distro como Oracle → WTA → WSH (estado e porta de cada parte) e a ação que faz sentido: *Iniciar*, *Abrir o WinThor*, *Verificar* ou *Copiar para outra versão*. As tarefas (Nova versão, Montar do zero, Verificar) abrem numa tela própria com o caminho de volta no cabeçalho; *Subir só o banco/WTA/WSH* e *Scripts e pasta* continuam acessíveis.
+- **Nova versão numa tela só**: os quatro passos viraram uma frase ("Criar o ambiente v40 na versão 40, a partir do local, com o banco copiado"), *Ajustes* fechado com os valores à vista (portas, WSH, configuração, avançado) e *Antes de gerar*, uma lista única com a conferência da origem e a leitura do catálogo da 801. O que impede vem primeiro, com a ação ali mesmo (ex.: *Iniciar o local* quando a origem está parada); o que passou fica numa linha. O catálogo é lido sozinho quando a origem passa, e o rodapé diz o que será criado e tem o único *Gerar*.
+- **IA conduzindo numa linha**: o pedido sai da tela de ambientes ou da própria Nova versão. A IA mostra a última coisa que disse e *Continuar* quando parou num bloqueio; os campos que ela preencheu ficam marcados e o que ela fez fica em *O que a IA fez*. O Gerar é o mesmo botão do rodapé, sem confirmação à parte.
+- **Montar do zero** (antes *Primeiros passos*): as etapas feitas viram uma linha, a etapa da vez ocupa a tela e as seguintes aparecem apagadas.
+- **Verificar**: o ambiente se escolhe por botões (sem digitar o nome); as três partes aparecem lado a lado e clicar numa abre o log dela em largura total, com o log do build quando houver. Os testes de terminal ficam recolhidos.
+
+## [1.56.0] - 2026-11-03
+### Adicionado
+- **Deixar a IA conduzir (Assistente INFR → Nova versão)**: com um motor cadastrado em Configurações → IA & LLM, a pessoa descreve o que quer ("criar a versão 40 a partir do ambiente local, com o nome v40") e a IA preenche o formulário, lê a origem e confere, mostrando cada passo e o motivo. Ela só pode usar ações fixas (preencher campo, ler a origem, pedir o Gerar, conferir os containers, explicar); qualquer outra resposta é recusada. O que está bloqueado em vermelho ela não contorna: propõe a saída que a própria conferência oferece (por exemplo, banco vazio no lugar do clone) ou explica. **Quem confirma o Gerar é você** (o build leva uns 30 minutos); depois do build, *Conferir o ambiente* leva a verificação dos containers e o fim do log para a IA diagnosticar. Credenciais (senha do Nexus, tokens) são mascaradas antes de ir ao modelo, e os comandos que a IA sugere vêm só com *Copiar*, sem os que apagam ou param containers.
+- **Prévia da Nova versão com o WTA de origem parado**: em vez de "Command failed", a mensagem diz que o `wta-<origem>` está parado (ou não existe) e como subir o banco e o WTA. Antes o script de leitura saía calado.
+
+### Alterado
+- **Central de Ajuda refeita** no desenho das Configurações: menu lateral por grupos (*Aprender*, *Suporte* e *Referência*) no lugar das abas horizontais, com busca no menu e os tours no rodapé dele.
+  - *Busca*: acha perguntas, módulos e atalhos ao mesmo tempo, sem diferenciar acento (`configuracoes` acha *Configurações*). Escolher uma pergunta abre a resposta no lugar e rola até ela.
+  - *Resolver problemas* (antes *FAQ*): campo para filtrar pelo texto do erro, assuntos com a quantidade de perguntas (os 8 maiores à vista e *Mais N assuntos* para o resto) e respostas fechadas por padrão, abertas quando há filtro. No fim, o atalho para perguntar à IA em Documentação.
+  - *Visão geral*: ganhou *Comece pelo seu papel* (Desenvolvedor, QA, PO/SME) e *Problemas mais comuns*; a faixa de abertura ficou só com a situação deste PC e o próximo passo.
+
+### Corrigido
+- **Claude (Anthropic) recusando `temperature`**: modelos novos respondem 400 dizendo que o parâmetro está obsoleto. O Hub refaz a chamada sem ele e não o envia mais para aquele modelo.
+- **Modelos locais com "thinking" (Ollama, ex.: qwen3)** gastavam o limite de tokens pensando e devolviam texto vazio no modo guiado; o Hub agora pede resposta direta ao Ollama nesse caso.
+- **Atalho da Central de Ajuda**: o cabeçalho, o menu lateral e o README diziam `Alt+9`, mas esse atalho abre o API Studio. A Ajuda abre com `Alt+H`. O API Studio, que faltava na lista de módulos da Visão geral, entrou com o `Alt+9`.
+- **Configurações → IA & LLM**: revisão da tela usando-a de ponta a ponta.
+  - *Timeout*: dava para digitar só valores como 55 (o "4" de 45 já virava 5 a cada tecla); agora o piso de 5 s vale ao sair do campo.
+  - *Presets*: escolher um preset depois de colar a chave não apaga mais a chave nem o prompt de sistema; a grade deixou de cortar os nomes com o menu lateral aberto; o formulário rola até a vista ao abrir (ficava abaixo da lista, parecendo que nada acontecera) e o exemplo da chave mostra o formato do provedor (`sk-ant-...`, `AIzaSy...`).
+  - *Salvar Motor* avisa que a alteração só é gravada em *Salvar Configurações* (o selo *Não salvo* já aparecia, mas nada dizia o motivo).
+  - O selo do cabeçalho não diz mais "ONLINE" sem testar nada: mostra *ATIVO* ou, em amarelo, *SEM CHAVE* (o Ollama local dispensa chave).
+  - O modelo padrão do preset Anthropic e do `LlmService` passou de `claude-3-5-sonnet-20241022` para `claude-sonnet-5-5`. Motores já salvos não mudam.
+
+## [1.55.0] - 2026-11-02
+### Adicionado
+- **Pré-checagem da Nova versão**: a revisão do passo 4 agora olha o que costuma derrubar o build ou o primeiro boot, lido em segundos pela distro:
+  - *Portas do host*: as da versão (Oracle 15NN, WTA 80NN, SSH 81NN, JMX 10NN, JMS 616NN, WSH 90NN) em uso por um programa do Windows ou da distro bloqueiam; em uso por um container só avisam, porque pode ser o próprio ambiente que será recriado;
+  - *Disco e memória*: avisa com menos de 15 GB livres para o Docker ou menos de 6 GB de memória disponível na distro (com a dica do `.wslconfig`);
+  - *Rede*: avisa se a distro não alcança o Nexus do Karaf ou se ele pede login.
+- **Ensaio da resolução (opcional)**: em *Avançado*, a opção *Ensaiar a resolução no Karaf de origem* faz o próprio Karaf do `wta-<origem>` simular (`feature:install -t`) cada feature trocada, com os repositórios novos acrescentados e retirados no fim. Erros de resolução aparecem na revisão antes de 30 minutos de build.
+- **Log do build no Verificar ambiente**: o terminal do Gerar passa a gravar a saída também em `/tmp/hub-nova-versao-<nome>.log` na distro. O *Verificar ambiente* mostra o fim desse log e, se o build falhou antes de criar os containers, o resumo traz a causa (ex.: "Unable to resolve") e a etapa em que parou.
+- **Registro da leitura mais detalhado**: a prévia registra os repositórios do Karaf, a resposta do Nexus por artefato, as portas em uso (e de quem), disco, memória e a saída do ensaio.
+
+## [1.54.0] - 2026-11-02
+### Adicionado
+- **Dependências conferidas antes do build (Assistente INFR → Nova versão)**: o passo *Revisar e gerar* agora lê as `dependencias` que o catálogo da rotina 801 declara em cada feature (o mesmo que o WTA enxerga no Nexus) e confere a lista final:
+  - quando uma feature exige outra numa versão que a lista não tem (a causa de um build de 30 minutos que terminava em "Unable to resolve"), o Hub ajusta a lista para a versão que o catálogo oferece e mostra o motivo ("exigida por …") na tabela de mudanças;
+  - o que o catálogo não consegue resolver aparece como um ponto *Dependências das features*: bloqueia quando há conflito sem saída e avisa quando a feature exigida nem existe no catálogo;
+  - se o catálogo não trouxer dependências, o ponto avisa que não deu para conferir, e o "Registro da leitura" guarda um exemplo do formato recebido.
+  - Faixas OSGi (`[1.40.1.0,1.40.1.0]`, `[1.0,2.0)`) e versão solta (mínimo) são entendidas; nunca usa versão bloqueada nem de linha acima da alvo.
+- **Repositórios novos conferidos no Nexus antes do build (Assistente INFR → Nova versão)**: os `repo mvn:...` que a lista nova acrescenta à origem são testados de dentro do `wta-<origem>` (mesma rede e mesmo acesso do build), nos repositórios que o próprio Karaf usa (`org.ops4j.pax.url.mvn.cfg`):
+  - um repositório que nenhum deles tem vira o aviso *Repositório que o Nexus não tem* na revisão, em vez de um "Unable to resolve" depois de 30 minutos de build;
+  - sem curl no container, sem rede ou com o Nexus pedindo login, o ponto diz que não deu para conferir (a prévia segue);
+  - features trocadas que o catálogo não trouxe com repositório próprio também são apontadas.
+
+### Corrigido
+- **Erros do WSL ilegíveis no assistente INFR**: quando o próprio `wsl.exe` falhava (distro que não existe, serviço do WSL com problema...), a tela de *Verificar ambiente*, a Nova versão, os Primeiros passos, o Subir WinThor e a conferência da origem mostravam texto embaralhado, tipo "N□ã□o□ □h□á□", porque o `wsl.exe` escreve as mensagens dele em UTF-16 e o Hub lia como UTF-8. Agora a saída é decodificada, e o motivo aparece com os acentos (ex.: "Não há distribuição com o nome fornecido. Código de erro: Wsl/Service/WSL_E_DISTRO_NOT_FOUND"). O que o comando imprime dentro da distro continua como estava.
+
+## [1.53.0] - 2026-11-02
+### Adicionado
+- **Karaf em container (WTA do INFR-Docker)**: em Configurações → Karaf, o ambiente de execução ganhou a opção *Container (WTA)*. O cliente do Karaf passa a rodar dentro do container, com `docker exec` na distro do Docker, em vez de exigir um Karaf instalado no Windows:
+  - bundles, features, diagnósticos de resolução OSGi, JVM e GC, e o `log:tail`/`log:display` rodam contra o `wta-<ambiente>`. As tools `karaf_*` do MCP também, porque passam pelo mesmo caminho;
+  - o container é o informado nas Configurações ou, vazio, o `wta-<ambiente>` escolhido na tela WinThor & WSL;
+  - a porta do SSH é a publicada pelo container (lida do `docker port`, com cache de 15 s), então continua certa se ele for recriado; a linha de comando não leva mais a porta do host, porque dentro do container o SSH é o 8101.
+
+### Alterado
+- **Subir WinThor com um ambiente ativo espera cada parte ficar pronta**, em vez de tempos fixos entre os containers:
+  1. **Banco:** só libera o WTA quando o healthcheck do Oracle diz que está saudável (até 6 min). Se o container sai, a falha traz o fim do log.
+  2. **WTA:** espera a API do WinThor responder (o Karaf responde antes de carregar as features). Se o container sai ou nada responde em 6 min, é falha; se só a raiz responde, vira um aviso apontando o `/instalador`.
+  3. **WSH:** só sobe com a API no ar e o login do WTA entrando, porque sem a configuração inicial ele reinicia em loop com "Versão exigida". Com o login recusado ou a API fora do ar, o WSH não é iniciado e o motivo aparece sob o seletor de ambiente. Sem usuário e senha do WTA nas Configurações, o Hub não consegue conferir: sobe o WSH e avisa.
+  4. **WSH estável:** depois de iniciado, confere por 30 s que ele não reinicia. Se reiniciar com "Versão exigida", a falha aponta a feature abaixo da versão mínima.
+
+  O banner de progresso mostra o que está sendo esperado (ex.: "Esperando o banco ficar pronto, healthcheck starting, 1:20"). O que já estava no ar não é reiniciado. Sem ambiente ativo, Subir WinThor continua como antes.
+
+### Corrigido
+- **Abrir o console do Karaf num container (botão do WTA)** procurava o cliente em `/opt/pcsist/apache-karaf/bin/client`, que não existe na imagem do WTA, e caía num `bash` solto. O Karaf do WTA é o `/opt/pcsist/produtos/winthor` (o mesmo `C:\pcsist\produtos\winthor` do Windows), e o cliente fica em `bin/client`. O caminho certo é o primeiro agora, conferido no `pcsist.tar.gz` do INFR-Docker.
+- **Deploy por Maven com o Karaf num container** para antes de compilar e explica o motivo, em vez de "atualizar" o bundle com o jar antigo e mostrar sucesso: o Hub compila no `~/.m2` do Windows e o container instala pelo Nexus, então o jar novo não chega a ele.
+
+## [1.52.0] - 2026-11-01
+### Adicionado
+- **Ambiente ativo na tela WinThor & WSL**: um seletor *Ambiente* lista os ambientes da distro (`oracle-`, `wta-` e `wsh-<nome>`, com o estado de cada um) e o Hub passa a usar o escolhido. Antes, tudo supunha uma stack só, com nomes e portas fixos.
+  - **Subir WinThor** sobe os containers do ambiente escolhido, em vez do primeiro grupo com "winthor" ou "dev" no nome (que misturava ambientes de versões diferentes lado a lado).
+  - **A topologia** mostra os containers do ambiente, e a porta do WSH vem do mapeamento do Docker, não de um 8080 fixo.
+  - **Escolher o ambiente** aponta a URL do WTA, a da Rotina 801 e a porta SSH do Karaf, nas Configurações, para as portas reais do `docker ps`. Rotinas, Rotina 801, integrações e as tools do MCP já leem essas configurações, então passam a falar com o ambiente escolhido. A senha do WTA continua salva; o token da sessão anterior cai, por ser de outro WTA.
+  - O texto embaixo do seletor diz o que mudou. Se o container for recriado e a porta mudar, aparece *Atualizar portas*.
+  - Com o WTA parado, as portas vêm do padrão da versão quando o nome é um número (`39` → 8039); com outro nome, o Hub não inventa porta e só grava o ambiente.
+
+## [1.51.2] - 2026-10-31
+### Corrigido
+- **Login do WTA com a senha em MD5 maiúsculo** em mais dois lugares: *Executar rotina* pelo WinThor Start e o *Login WinThor* do pré-voo da Integração (e a ferramenta MCP `http_login_winthor`). Antes iam com a senha como digitada e o WTA recusava, com a mensagem de "conferir usuário e senha". Um hash colado de 32 caracteres vai como está.
+- **Rotina 801**:
+  - o catálogo de atualizações usa a versão do WinThor das Configurações (a página e o MCP pediam sem `versaoWinthor` e recebiam o catálogo vazio ou incompleto);
+  - a checagem do servidor e a instalação pela API entram no WTA antes de pedir. Um 200 sem corpo, que o WTA devolve sem sessão, não conta mais como "online" nem como "instalado": a instalação diz que nada foi instalado e o que configurar;
+  - com o token vencido (401, ou 200 sem corpo), a checagem e a instalação pela API renovam o login e repetem uma vez. Se o login é recusado, a mensagem traz o motivo que o WTA deu;
+  - a mensagem do modo Karaf CLI passa a apontar a execução pela API para quem usa o WTA em container.
+- **Status do WTA nas rotinas**: 404 (a API do WinThor ainda não subiu) e 5xx (iniciando) deixam de aparecer como "online"; a mensagem cita o `/instalador`.
+- **Encerrar o Karaf da distro WSL** não derruba mais o WTA dos containers: o `pkill -f karaf` casava com o JVM de todos os `wta-<nome>` da distro. Agora só encerra o que não está num cgroup de docker/containerd.
+- **Textos e modelos antigos**:
+  - o texto do MD5 no WSH confundia o login do WTA com a conexão do WSH ao banco (a falha real é a senha em maiúsculas no `Winthor.ini`, ORA-01017);
+  - o modelo do `wta.env` usava `DB_HOST=172.17.0.1`, e agora mostra o nome do container do banco (`oracle-<ambiente>`);
+  - a aba *Modo Desenvolvedor* dizia que o container monta o `~/.m2` do host, o que o `wta_setup.sh` não faz;
+  - a porta do Oracle para o TNS com o container parado vem do nome (`oracle-39` → 1539), ou 1521, e não mais da inexistente 1522.
+
+## [1.51.1] - 2026-10-31
+### Adicionado
+- **Onboarding → Ambiente: Começar do zero**: a etapa Ambiente ganhou o cartão *Ambiente WinThor no Docker*. O botão *Começar do zero* fecha o onboarding, vai para a tela WinThor & WSL e abre o Assistente INFR em *Primeiros passos*.
+
+## [1.51.0] - 2026-10-30
+### Adicionado
+- **Assistente INFR → Primeiros passos: do computador sem nada ao ambiente WinThor no Docker**: uma aba nova, no topo de *Montar do zero*, confere o computador sozinha e mostra o que falta em 8 etapas:
+  1. WSL;
+  2. a distro do WinThor;
+  3. o Docker na distro;
+  4. o clone do INFR-Docker no branch dos scripts por versão;
+  5. os arquivos fora do git (pcsist.tar.gz, dump, Winthor.ini e jar do WSH);
+  6. banco, dump, configuração, WTA e WSH da versão;
+  7. a configuração inicial do WTA;
+  8. os endereços do ambiente pronto.
+
+  Cada etapa traz o comando com *Copiar* e uma ação:
+  - instalar o WSL como administrador;
+  - importar o `.tar` da distro pelo próprio Hub;
+  - clonar ou trocar de branch num terminal;
+  - abrir as pastas onde soltar os arquivos;
+  - criar o `wta.env.<versão>` e o `.env.<versão>` a partir dos modelos, com os nomes e portas da versão (usuário, senha, loja e empresa ficam para a pessoa);
+  - subir banco, WTA e WSH;
+  - importar o dump: a senha do *system* é pedida no terminal e não passa pelo Hub.
+
+  A tela confere de novo a cada 20 s enquanto falta algo.
+- **Tela WinThor & WSL sem distro do WinThor**: no lugar da topologia vazia, o caminho do zero, com *Começar do zero* (abre o assistente em Primeiros passos) e *Snapshots WSL* para quem já tem o `.tar`.
+- **Central de Ajuda → Guias: manual da Validação de Cenários**: a aba Guias ganhou a escolha entre os guias, e o novo *Validação de Cenários: manual de uso* explica o que preencher em Configurações antes do primeiro teste, como rodar o Bloqueio de Login (campos, as regras com o que cada uma faz e o que precisa acontecer, e o que cada status quer dizer) e a Validação de API (requisição, autenticação, tipos de regra com operadores e exemplos), como forçar uma exceção não mapeada (o formato `UNK-ERR` do WTA, o que o modelo *Exceção* confere e receitas como número inválido, data inválida, campo inexistente, tipo errado e JSON quebrado), o que cada botão de copiar e baixar leva, o Histórico, os problemas comuns e onde fica cada coisa. As tabelas de regras saem dos mesmos catálogos que a tela usa. O mesmo manual abre pelo novo botão **Como usar**, ao lado do *Histórico* na página Validação de Cenários.
+
+### Alterado
+- **INFR-Docker no Diretório de Repositórios Git**: o assistente (cabeçalho, Nova versão e Primeiros passos) passa a procurar o INFR-Docker primeiro na pasta de projetos das Configurações. Antes, só procurava em `%USERPROFILE%\Projetos` e em `C:\projetos`.
+- **Configurações reorganizadas**: as 14 abas viraram um menu lateral com 14 seções em quatro grupos (*Essencial*, *Conexões*, *Operação*, *Preferências*), cada uma marcada como pronta, com pendência (*falta 1*) ou opcional. Também:
+  - *Visão geral* é a primeira seção: os 5 essenciais com o atalho para resolver cada um, a situação de cada área e o exportar/importar em três cartões (*Para o time*, *Backup deste PC*, *Trazer de um arquivo*);
+  - uma barra única no rodapé (*N alterações não salvas · Descartar · Salvar alterações*) substitui o botão do topo; o que grava direto leva a etiqueta *aplica na hora*;
+  - *Detectar caminhos* mostra o que encontrou (ou que não havia nada novo), em vez de só mudar os campos;
+  - *Serviços & Processos* e *Automação* viraram *Preparação do debug*; *Módulos* e o seletor de tema viraram *Navegação & aparência*;
+  - as portas SSH e de debug do Karaf e a porta do receptor APM aparecem em *Portas & acesso remoto* só para consulta, com o atalho para onde são editadas;
+  - *Configurações* entrou na barra lateral, abaixo de *Integrações*.
+
+### Corrigido
+- **Configurações**: *Restaurar padrões* em Serviços e Processos apagava a lista (não há padrões); virou *Limpar lista*. O tour da página apontava para um elemento que não existia.
+- **Integrações → OpenTelemetry**: *Trocar porta* abria Configurações → Portas, onde a porta OTLP não existe; agora abre o APM.
+- **Onboarding**: *Preencher* abre Configurações na seção do item, não sempre em Diretórios.
+
+## [1.50.0] - 2026-10-30
+### Alterado
+- **Abertura do app**: o carregamento virou uma lista das áreas do cockpit e do servidor MCP, cada uma marcada como pronta, carregando ou na fila. Na primeira vez, a abertura já mostra as etapas da configuração (*Configurar meu cockpit* ou *Explorar sozinho*). Para quem volta, o *Entrar agora* conta 3 s antes de entrar sozinho, com os destaques da versão ao lado; *Ficar nesta tela* pausa a contagem.
+- **Onboarding em 6 etapas**: *Ambiente* e *Checklist* viraram uma etapa só, com os essenciais no topo, a contagem por seção, a marca *detectado agora* e o botão *Preencher* em cada item que falta. A detecção de caminhos roda sozinha ao chegar na etapa se algum caminho essencial estiver vazio. Também:
+  - *Módulos*: contagem de ligados por área e *Ligar todos*/*Desligar todos* por área;
+  - *Tema*: prévia grande do cockpit no tema escolhido;
+  - *IA & MCP*: o exemplo virou uma conversa (pedido, tools chamadas e resultado);
+  - *Pronto*: resumo do que ficou configurado (módulos, tema e o que falta no ambiente) e o tour guiado em destaque;
+  - *Terminar depois* na barra lateral fecha o onboarding; antes o *Pular* do rodapé fazia isso e parecia pular só a etapa.
+- **Instalador do Windows**: nova tela de boas-vindas, conclusão com texto próprio (*Abrir o Hub Manager agora*) e imagens laterais e de cabeçalho no visual escuro da abertura.
+
+## [1.49.5] - 2026-10-30
+### Alterado
+- **Nova versão confere a origem logo no passo 1**: antes, pasta, WTA e login só eram testados no passo 4, depois de a pessoa preencher tudo. Agora, ao escolher a origem, o Hub confere três coisas e só libera o *Próximo* quando as três passam:
+  - a pasta do INFR-Docker, que precisa ter os scripts da Nova versão;
+  - o `wta-<origem>`, que precisa estar rodando e respondendo;
+  - o login no WTA com o usuário das Configurações, num login de verdade.
+
+  Sem usuário, ou com o login recusado (a resposta do WTA aparece), o próprio passo 1 pede usuário e senha. *Salvar e testar* grava em Configurações → Rotinas WinThor, criptografado, e confere de novo. A senha não volta para a tela. Um WTA parado ou ainda subindo aparece em vermelho, com o que fazer, e há o botão *Conferir de novo*.
+
+## [1.49.4] - 2026-10-30
+### Adicionado
+- **Assistente INFR: Verificar ambiente**: aba nova, aberta sozinha depois do Gerar, que mostra se o ambiente subiu. Para `oracle-`, `wta-` e `wsh-<nome>` mostra:
+  - o estado (no ar, iniciando, reiniciando, parado ou não existe), o health, os reinícios, a imagem e as portas;
+  - as últimas 30 linhas do log;
+  - se o WTA responde pela porta publicada.
+
+  Um resumo diz *Ambiente no ar*, *Subindo: 2 de 3*, *Falhou* (com o motivo tirado do log, como o WSH recusando a versão do WTA ou um `ORA-`) ou *Nenhum container*. Enquanto o ambiente sobe, a leitura se repete a cada 15 s. Os mesmos testes aparecem como comandos (`docker ps`, `docker logs` de cada container, `curl` no WTA), cada um com **Copiar** e **Executar**; o Executar abre o Windows Terminal na distro. O Hub monta o comando pelo tipo, a tela nunca manda texto livre para rodar.
+
+### Alterado
+- **Assistente INFR mais largo**: o modal ocupa até 1680 px (96% da tela) e 92% da altura. O painel *O que será criado* ficou mais largo e não quebra mais nome de arquivo no meio da palavra. Em tela grande, a revisão do passo 4 mostra as conferências em duas colunas. O comando do Gerar aparece com uma opção por linha e o botão **Copiar**.
+
+### Corrigido
+- **Gerar (e os scripts do Assistente INFR) abriam várias janelas no Windows Terminal**: o `wt.exe` usa `;` para separar os próprios comandos, mesmo dentro do comando passado ao bash. O `...; echo ''; echo 'Pressione Enter...'; read -r` do fim virava uma janela por pedaço, e a janela do script fechava sem esperar o Enter. Agora o `;` vai escapado (`\;`) e o comando chega inteiro ao bash. A mesma correção vale para o Karaf em modo debug no WSL, o Karaf Client do WTA e as etapas em abas do Windows Terminal.
+
+## [1.49.3] - 2026-10-30
+### Corrigido
+- **Catálogo da 801 vazio sem login**: o WTA 40 responde *200 com corpo vazio* (não 401) quando a consulta vem sem login, e o Hub só entrava no WTA depois de um 401. Agora, sem token salvo e com usuário configurado, o Hub entra antes de pedir o catálogo. Se um token vencido também voltar vazio, renova uma vez e pede de novo. O Registro da leitura mostra cada tentativa.
+
+### Adicionado
+- **Nova versão: proteção contra downgrade**: a prévia passa a mostrar a linha do WinThor em que a origem está, pelo núcleo (`winthor-core-*`), já que muitas features ficam anos numa linha antiga. Quando a versão nova é menor (ex.: um 38 a partir de um 39), a revisão avisa o downgrade e bloqueia o que não funcionaria:
+  - o clone do banco ou o uso do banco da própria origem, porque eles têm as tabelas da versão mais nova; o botão *Criar um Oracle vazio* troca por um banco vazio, para importar o dump da versão;
+  - as features sem a lista `versions/<versão>.features` pronta, porque a Nova versão só sobe features.
+
+  Com a lista pronta e um Oracle vazio, o downgrade passa com aviso. O outro caminho é o *Montar do zero* com um dump da versão.
+
+## [1.49.2] - 2026-10-30
+### Corrigido
+- **Nova versão: catálogo da 801 vazio no WTA 40**: o WTA mais novo só devolve o catálogo de atualizações quando a consulta traz a versão do WinThor (`versaoWinthor=40.00&versaoWinthorMinima=37.00`), como faz a tela da própria 801; sem isso, respondia vazio. A Nova versão agora manda a versão alvo. Quando o catálogo traz várias versões da mesma feature (ex.: 1.40.4.2 e 1.40.4.1), o Hub escolhe a mais nova que cabe na linha alvo; antes ficava com a última da lista, e uma 41 no catálogo fazia pular a 40 que também estava lá.
+
+## [1.49.1] - 2026-10-30
+### Adicionado
+- **Nova versão: registro da leitura**: o passo *Revisar e gerar* ganhou o painel *Registro da leitura*, com o horário de cada passo da prévia: distro e pasta usadas, scripts encontrados, cada comando no WSL (tempo, código de saída e as últimas linhas do que ele disse), a URL do WTA de origem, se há usuário do WTA configurado, cada requisição ao catálogo da 801 (status, content-type, tempo e começo do corpo), o login automático e as contagens. Abre sozinho quando a leitura falha e tem botão *Copiar* para mandar a quem está ajudando. Senha e token não aparecem.
+
+### Corrigido
+- **Catálogo da 801 que "não é um JSON válido"**: quando o WTA responde com sucesso mas sem JSON, o erro agora diz o que veio e como resolver. Se o corpo veio vazio, o WTA não alcançou o servidor de atualizações. Se veio uma página HTML (com o título dela), o WTA está na Configuração inicial ou ainda subindo. Em qualquer outro caso, o erro mostra o começo da resposta. Vale para a Nova versão do Assistente INFR e para o Catálogo de Rotinas.
+- **Nova versão: "Não foi possível ler a origem" sem motivo**: o erro mostrava só o comando que falhou. Agora mostra o que o script disse (ex.: container que não existe, Karaf fora do ar). Antes de rodar qualquer coisa, o Hub confere se a pasta do INFR-Docker tem os scripts da Nova versão (`export_features.sh`, `build_version.sh` e `new_version_env.sh`); eles só existem no branch `feature/imagem-por-versao`, e uma pasta no `main` agora recebe o *Como resolver* com o `git checkout` desse branch.
+
 ## [1.49.0] - 2026-10-30
 ### Adicionado
 - **Central de Ajuda: aba Guias, com Ambientes WinThor no Docker**: um guia para quem nunca mexeu no INFR-Docker, com o diagrama de como Hub, WSL e os containers se encaixam, o que é cada projeto (oracle-winthor, linux-winthor, wsh-winthor e o Hub) e por que existe, a ordem em que um ambiente sobe, as portas por versão (da mesma regra que o Hub usa para sugerir), cada tarefa na mão comparada com onde fazer no Hub, o passo a passo das tarefas comuns, os problemas conhecidos com como resolver e onde está cada coisa. Também abre pelo botão *Como funciona* no cabeçalho do Assistente INFR.

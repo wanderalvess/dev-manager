@@ -17,7 +17,7 @@ const ENVIRONMENT_PROFILE_FIELDS = [
 
 /**
  * Presets de ambiente (ex.: "Cliente A", "Homologação"). Diferente do resto da tela, salvar/ativar/excluir aqui grava
- * na hora, só os campos do preset, sem esperar o botão "Salvar Configurações".
+ * na hora, só os campos do preset, sem esperar a barra "Salvar alterações".
  */
 export function useEnvironmentProfiles(
   settings: AppSettings,

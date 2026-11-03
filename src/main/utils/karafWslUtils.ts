@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { spawn } from 'child_process';
+import { wtArg } from './windowsTerminal';
 import { AppSettings } from '../../shared/types';
 import { execFileAsync, isValidIdentifier } from './security';
 
@@ -173,7 +174,7 @@ export function launchWslServerDebug(
         '-w', 'dev-manager', 'new-tab',
         '--title', title,
         'wsl.exe', '-d', distro, '--',
-        'bash', '-c', `${bashCmd}; echo ''; echo 'Sessão encerrada. Pressione Enter para fechar...'; read -r`
+        'bash', '-c', wtArg(`${bashCmd}; echo ''; echo 'Sessão encerrada. Pressione Enter para fechar...'; read -r`)
       ];
 
       const wtProc = spawn('wt.exe', wtArgs, { detached: true, stdio: 'ignore' });
@@ -200,15 +201,28 @@ export function launchWslServerDebug(
 }
 
 /**
- * Encerra processos do Karaf rodando dentro da distro WSL.
+ * Script que encerra só o Karaf solto na distro. Os JVMs dos containers (wta-<nome>) aparecem no PID
+ * namespace da distro com "karaf" na linha de comando: um `pkill -f karaf` derrubaria todos os ambientes,
+ * então fica de fora quem está num cgroup de docker/containerd/kubepods. O `kara[f]` evita casar com o próprio bash.
+ */
+export function buildKillKarafScript(): string {
+  return (
+    'for pid in $(pgrep -f "kara[f]"); do ' +
+    "grep -qE 'docker|containerd|kubepods' /proc/$pid/cgroup 2>/dev/null || kill $pid 2>/dev/null; " +
+    'done; true'
+  );
+}
+
+/**
+ * Encerra processos do Karaf rodando dentro da distro WSL, sem tocar nos de containers.
  */
 export async function killWslKarafProcesses(distro: string): Promise<boolean> {
   if (!distro || !isValidIdentifier(distro)) return false;
   try {
-    await execFileAsync('wsl.exe', ['-d', distro, '--', 'pkill', '-f', 'karaf'], { timeout: 5000 });
+    await execFileAsync('wsl.exe', ['-d', distro, '--', 'bash', '-c', buildKillKarafScript()], { timeout: 8000 });
     return true;
   } catch {
-    // pkill retorna exit code 1 se nenhum processo correspondente for encontrado
+    // Sem processo para encerrar ou wsl.exe indisponível
     return false;
   }
 }

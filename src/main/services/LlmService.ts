@@ -9,11 +9,16 @@ import {
 import { ConfigService } from './ConfigService';
 import { DocsIndexService } from './DocsIndexService';
 import { isSafeUrl } from '../utils/security';
+import type { AiUsageService } from './AiUsageService';
 
 export class LlmService {
+  /** Modelos Anthropic que responderam 400 por causa do `temperature` */
+  private readonly modelsWithoutTemperature = new Set<string>();
+
   constructor(
     private readonly configService: ConfigService,
-    private readonly docsIndexService?: DocsIndexService
+    private readonly docsIndexService?: DocsIndexService,
+    private readonly aiUsageService?: AiUsageService
   ) {}
 
   /**
@@ -93,7 +98,7 @@ export class LlmService {
             'anthropic-version': '2023-06-01'
           },
           body: JSON.stringify({
-            model: config.model || 'claude-3-5-sonnet-20241022',
+            model: config.model || 'claude-sonnet-5-5',
             max_tokens: 5,
             messages: [{ role: 'user', content: 'ping' }]
           }),
@@ -170,18 +175,23 @@ export class LlmService {
       throw new Error(`A chave de API para o provedor "${provider.name}" não foi informada.`);
     }
 
+    // Teto de tokens: vale aqui, no service, para os três transportes (tela, REST e MCP).
+    this.aiUsageService?.assertWithinLimit(provider);
+
     const timeoutMs = request.maxTokens ? Math.max(provider.timeoutMs || 30000, 45000) : (provider.timeoutMs || 30000);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
+      let response: LlmChatResponse;
       if (provider.provider === 'gemini') {
-        return await this.callGemini(provider, request, controller.signal);
+        response = await this.callGemini(provider, request, controller.signal);
+      } else if (provider.provider === 'anthropic') {
+        response = await this.callAnthropic(provider, request, controller.signal);
+      } else {
+        response = await this.callOpenAiCompatible(provider, request, controller.signal);
       }
-      if (provider.provider === 'anthropic') {
-        return await this.callAnthropic(provider, request, controller.signal);
-      }
-      return await this.callOpenAiCompatible(provider, request, controller.signal);
+      return this.trackUsage(provider, response, request.source);
     } catch (err: any) {
       if (err.name === 'AbortError') {
         throw new Error(`Tempo esgotado (${timeoutMs / 1000}s) aguardando resposta do modelo ${provider.model}.`);
@@ -257,13 +267,23 @@ export class LlmService {
         { role: 'system', content: systemInstruction },
         { role: 'user', content: userPrompt }
       ],
-      temperature: 0.3 // Temperatura menor para respostas mais ancoradas no RAG
+      temperature: 0.3, // Temperatura menor para respostas mais ancoradas no RAG
+      source: 'perguntar-ia'
     });
 
     return {
       answer: chatResponse.text,
-      sources
+      sources,
+      ...(chatResponse.usageWarning ? { usageWarning: chatResponse.usageWarning } : {})
     };
+  }
+
+  /** Registra os tokens da chamada e anexa o aviso de 80% do teto, se for o caso. Nunca lança. */
+  private trackUsage(provider: LlmProviderConfig, response: LlmChatResponse, source?: string): LlmChatResponse {
+    if (!this.aiUsageService) return response;
+    this.aiUsageService.record(provider, response, source);
+    const status = this.aiUsageService.getLimitStatus(provider);
+    return status.level === 'ok' ? response : { ...response, usageWarning: status.message };
   }
 
   // ==========================================
@@ -295,7 +315,9 @@ export class LlmService {
       model: provider.model || (provider.provider === 'ollama' ? 'llama3.2' : 'gpt-4o-mini'),
       messages: request.messages,
       temperature: request.temperature ?? provider.temperature ?? 0.7,
-      max_tokens: request.maxTokens ?? provider.maxTokens ?? 2048
+      max_tokens: request.maxTokens ?? provider.maxTokens ?? 2048,
+      // Ollama: modelos com "thinking" (qwen3, etc.) pensam até o limite e devolvem o texto vazio
+      ...(request.noThinking && provider.provider === 'ollama' ? { reasoning_effort: 'none' } : {})
     };
 
     const res = await fetch(url, {
@@ -408,31 +430,44 @@ export class LlmService {
       content: m.content
     }));
 
+    const model = provider.model || 'claude-sonnet-5-5';
     const body: any = {
-      model: provider.model || 'claude-3-5-sonnet-20241022',
+      model,
       max_tokens: request.maxTokens ?? provider.maxTokens ?? 2048,
-      temperature: request.temperature ?? provider.temperature ?? 0.7,
       messages
     };
+    // Os modelos Claude mais novos recusam `temperature` (deprecated): quem já recusou não recebe mais
+    if (!this.modelsWithoutTemperature.has(model)) {
+      body.temperature = request.temperature ?? provider.temperature ?? 0.7;
+    }
 
     if (systemMessages.length > 0) {
       body.system = systemMessages.map((m) => m.content).join('\n\n');
     }
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify(body),
-      signal
-    });
+    const post = () =>
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify(body),
+        signal
+      });
 
+    let res = await post();
     if (!res.ok) {
       const errDetail = await this.parseErrorBody(res);
-      throw new Error(`Erro do Anthropic Claude (${res.status}): ${errDetail}`);
+      if (res.status === 400 && 'temperature' in body && /temperature/i.test(errDetail)) {
+        this.modelsWithoutTemperature.add(model);
+        delete body.temperature;
+        res = await post();
+        if (!res.ok) throw new Error(`Erro do Anthropic Claude (${res.status}): ${await this.parseErrorBody(res)}`);
+      } else {
+        throw new Error(`Erro do Anthropic Claude (${res.status}): ${errDetail}`);
+      }
     }
 
     const data: any = await res.json();

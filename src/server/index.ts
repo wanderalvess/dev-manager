@@ -21,6 +21,13 @@ import { mergeBackupConfig, validateBackupConfig } from '../main/utils/backupCon
 import { DockerService } from '../main/services/DockerService';
 import { wslService } from '../main/services/WslService';
 import { InfrVersionService } from '../main/services/infr/InfrVersionService';
+import { InfrEnvCheckService } from '../main/services/infr/InfrEnvCheckService';
+import { WeatherService } from '../main/services/WeatherService';
+import { InfrOriginCheckService } from '../main/services/infr/InfrOriginCheckService';
+import { InfrFirstStepsService } from '../main/services/infr/InfrFirstStepsService';
+import { InfrFirstStepsActions } from '../main/services/infr/InfrFirstStepsActions';
+import { InfrActiveEnvService } from '../main/services/infr/InfrActiveEnvService';
+import { InfrStartEnvService } from '../main/services/infr/InfrStartEnvService';
 import { NetworkService } from '../main/services/NetworkService';
 import { DeployService } from '../main/services/DeployService';
 import { LogWatcherService } from '../main/services/LogWatcherService';
@@ -28,6 +35,7 @@ import { KarafLogPersistenceService } from '../main/services/KarafLogPersistence
 import { ConfluenceSource } from '../main/services/docSources/ConfluenceSource';
 import { JiraSource } from '../main/services/docSources/JiraSource';
 import { LlmService } from '../main/services/LlmService';
+import { AiUsageService } from '../main/services/AiUsageService';
 import { Routine801Service } from '../main/services/Routine801Service';
 import {
   ApmService,
@@ -187,7 +195,8 @@ const dockerService = new DockerService();
 const deployService = new DeployService(configService, karafService, dockerService, windowsService, networkService);
 const karafLogPersistenceService = new KarafLogPersistenceService();
 const logWatcherService = new LogWatcherService();
-const llmService = new LlmService(configService, docsIndexService);
+const aiUsageService = new AiUsageService(configService);
+const llmService = new LlmService(configService, docsIndexService, aiUsageService);
 const routine801Service = new Routine801Service(configService, karafService);
 const apmService = new ApmService(5000, { configService, queryHandleFile: getApmReceiverHandlePath() });
 const qaRegressionService = new QaRegressionService(configService, databaseService);
@@ -815,7 +824,8 @@ const llmChatRequestSchema = z.object({
   ),
   providerId: z.string().optional(),
   temperature: z.number().min(0).max(2).optional(),
-  maxTokens: z.number().int().min(1).max(32768).optional()
+  maxTokens: z.number().int().min(1).max(32768).optional(),
+  source: z.string().max(40).optional()
 });
 
 const llmAskDocsRequestSchema = z.object({
@@ -896,8 +906,14 @@ app.get('/api/usage/impact', (_req, res) => {
   res.json(usageMetricsService.getImpact());
 });
 
+app.get('/api/usage/ai', (req, res) => {
+  const period = req.query.period;
+  res.json(aiUsageService.getReport(period === '7d' || period === 'all' ? period : '30d'));
+});
+
 app.post('/api/usage/clear', (_req, res) => {
   usageMetricsService.clear();
+  aiUsageService.clear();
   res.json({ success: true });
 });
 
@@ -1392,7 +1408,93 @@ app.post('/api/infr/run-script', async (req, res) => {
 });
 
 // Nova versão do WinThor a partir de outro ambiente (Assistente INFR → Nova versão)
+wslService.setProjectsRootProvider(() => configService.getSettings().projectsPath);
 const infrVersionService = new InfrVersionService(wslService, routine801Service);
+const infrEnvCheckService = new InfrEnvCheckService(wslService);
+const infrOriginCheckService = new InfrOriginCheckService(wslService, routine801Service);
+const infrFirstStepsService = new InfrFirstStepsService(wslService, routine801Service);
+const infrFirstStepsActions = new InfrFirstStepsActions(wslService);
+const infrActiveEnvService = new InfrActiveEnvService(infrVersionService, configService);
+const infrStartEnvService = InfrStartEnvService.withDefaults(
+  (distro) => infrVersionService.listEnvironments(distro),
+  async (url) => {
+    const r = await routine801Service.testWtaLogin(url);
+    return { ok: r.ok, needsCredentials: r.needsCredentials, error: r.error };
+  }
+);
+
+// Sobe o ambiente esperando cada parte ficar pronta (banco saudável, API do WTA, login, WSH estável)
+app.post('/api/infr/start-environment', async (req, res) => {
+  try {
+    res.json(await infrStartEnvService.start(req.body || {}, (step) => broadcastWs('docker:sequence-progress', step)));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message, started: [], notes: [] });
+  }
+});
+
+// Ambiente ativo: qual ambiente (wta-<nome>) o Hub usa
+app.get('/api/infr/active-env', async (req, res) => {
+  try {
+    res.json(await infrActiveEnvService.list(req.query.distro as string | undefined));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message, environments: [] });
+  }
+});
+
+app.post('/api/infr/active-env', async (req, res) => {
+  try {
+    res.json(await infrActiveEnvService.apply(req.body || {}));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message, changes: [] });
+  }
+});
+
+app.delete('/api/infr/active-env', (_req, res) => {
+  res.json(infrActiveEnvService.clear());
+});
+
+// Primeiros passos: do computador sem nada ao ambiente WinThor no Docker
+app.post('/api/infr/first-steps', async (req, res) => {
+  try {
+    res.json(await infrFirstStepsService.check(req.body || {}));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message, steps: [] });
+  }
+});
+
+app.post('/api/infr/first-steps/action', async (req, res) => {
+  try {
+    res.json(await infrFirstStepsActions.run(req.body || {}));
+  } catch (err: any) {
+    res.status(500).json({ success: false, output: err.message });
+  }
+});
+
+app.post('/api/infr/origin-check', async (req, res) => {
+  try {
+    res.json(await infrOriginCheckService.check(req.body || {}));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message, items: [] });
+  }
+});
+
+app.post('/api/infr/env-check', async (req, res) => {
+  try {
+    const { distro, name } = req.body || {};
+    res.json(await infrEnvCheckService.check(distro, String(name || '')));
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message, containers: [] });
+  }
+});
+
+app.post('/api/infr/env-check/terminal', async (req, res) => {
+  try {
+    const { distro, name, id, wtaPort } = req.body || {};
+    res.json(await infrEnvCheckService.openCheckTerminal(distro, String(name || ''), id, typeof wtaPort === 'number' ? wtaPort : undefined));
+  } catch (err: any) {
+    res.status(500).json({ success: false, output: err.message });
+  }
+});
 
 app.get('/api/infr/version/environments', async (req, res) => {
   try {
@@ -1692,6 +1794,12 @@ app.post('/api/network/probe', async (req, res) => {
 app.get('/api/system/metrics', async (_req, res) => {
   const metrics = await networkService.getSystemMetrics();
   res.json(metrics);
+});
+
+// Clima da tela de início (Open-Meteo): só o nome da cidade sai da máquina
+const weatherService = new WeatherService();
+app.get('/api/system/weather', async (req, res) => {
+  res.json(await weatherService.getWeather(String(req.query.city ?? '')));
 });
 
 // 12. Bundles Karaf

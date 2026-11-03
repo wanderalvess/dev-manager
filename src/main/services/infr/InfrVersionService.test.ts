@@ -7,11 +7,13 @@ const execFileAsync = vi.fn();
 vi.mock('../../utils/security', async (orig) => ({ ...(await orig<object>()), execFileAsync }));
 
 const { InfrVersionService } = await import('./InfrVersionService');
+const { INFR_NEW_VERSION_SCRIPTS } = await import('../../../shared/infrNewVersionScripts');
 
 const ORIGIN = `repo mvn:g/winthor-core-features/1.39.0.1/xml/features
 feature winthor-core-data 1.39.0.1
 feature winthor-integracao-config 1.39.20.3
 `;
+const NL = String.fromCharCode(10);
 const DEPS = JSON.stringify([{ service: 'winthor-integracao-config', version: '1.40.2.1' }]);
 
 describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
@@ -28,31 +30,256 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
       ]
     }))
   };
+  let probeCode = '200';
+  let dryOut = '';
+  let originStatus = 'running';
+  let xmlOut = '';
+  let xmlFails = false;
+  let cloneInspect = 'linux-winthor:39-debian|running';
+  let cloneImageExists = 'yes';
   const service = () => new InfrVersionService(wsl as any, routine801 as any);
 
   beforeEach(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'infr-'));
+    vi.spyOn(InfrVersionService.prototype as any, 'portFreeOnWindows').mockResolvedValue(true);
+    dryOut = '';
+    execFileAsync.mockClear();
+    originStatus = 'running';
+    cloneInspect = 'linux-winthor:39-debian|running';
+    cloneImageExists = 'yes';
+    xmlOut = '';
+    xmlFails = false;
+    fs.mkdirSync(path.join(dir, 'linux-winthor', 'scripts'), { recursive: true });
+    for (const s of INFR_NEW_VERSION_SCRIPTS) fs.writeFileSync(path.join(dir, s), '#!/bin/bash\n');
     execFileAsync.mockImplementation(async (_cmd: string, args: string[]) => {
-      const script = args[args.length - 1];
+      const raw = args[args.length - 1];
+      // Os scripts vão em base64 (o wsl.exe expande o $): o fake enxerga o texto decodificado
+      const b64 = /^echo (\S+) \| base64 -d/.exec(raw)?.[1];
+      const script = b64 ? raw + String.fromCharCode(10) + Buffer.from(b64, 'base64').toString() : raw;
       if (script.startsWith('cat ')) return { stdout: ORIGIN };
       if (script.startsWith('docker port')) return { stdout: '0.0.0.0:8086\n' };
+      if (script.includes('.Config.Image')) return { stdout: cloneInspect + NL };
+      if (script.startsWith('docker image inspect')) return { stdout: cloneImageExists + NL };
+      if (script.startsWith('docker inspect')) return { stdout: originStatus + NL };
       if (script.startsWith('python3')) return { stdout: DEPS };
+      if (script.includes('pax.url.mvn.cfg')) return { stdout: 'org.ops4j.pax.url.mvn.repositories=https://nexus.exemplo.com/repository/releases@id=rel\n' };
+      if (script.includes('@@docker')) return { stdout: '@@docker' + NL + 'wta-39|0.0.0.0:8040->8080/tcp' + NL + '@@disk' + NL + '/dev/sdc 100 50 ' + 20 * 1024 * 1024 + ' 50% /' + NL + '@@mem' + NL + 'MemTotal: 16000000 kB' + NL + 'MemAvailable: 1000000 kB' + NL };
+      if (script.includes('feature:install -t')) return { stdout: dryOut };
+      if (script.includes('hub-xml')) {
+        if (xmlFails) throw new Error('docker caiu');
+        return { stdout: xmlOut };
+      }
+      if (script.includes('curl')) return { stdout: `${probeCode} g/winthor-core-features/1.40.0.3/winthor-core-features-1.40.0.3-features.xml\n` };
       return { stdout: '[OK] Manifesto gerado' };
     });
   });
   afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
 
+  describe('dependências pelos features.xml do Nexus', () => {
+    const PATH = 'g/winthor-core-features/1.39.0.1/winthor-core-features-1.39.0.1-features.xml';
+    // winthor-integracao-config 1.39.20.3 (da origem) exige core-data na linha 39; o catálogo sobe o core-data para 1.40.0.3
+    const XML = `<features><feature name="winthor-integracao-config" version="1.39.20.3"><feature version="[1.39,1.40)">winthor-core-data</feature></feature></features>`;
+
+    it('baixa os features.xml de dentro do container e bloqueia o conflito que o catálogo da 801 não declara', async () => {
+      xmlOut = `@@FILE ${PATH}\n${XML}\n@@END\n@@MISS g/outro/1.0/outro-1.0-features.xml\n`;
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+      expect(res.success).toBe(true);
+      expect(res.dependencies?.issues).toEqual([
+        { feature: 'winthor-integracao-config', version: '1.39.20.3', dependency: 'winthor-core-data', required: '[1.39,1.40)', found: '1.40.0.3', kind: 'conflict', source: 'xml' }
+      ]);
+      expect(res.dependencies?.xml).toMatchObject({ fetched: 1, missing: 1, withDependencies: 1 });
+      const call = execFileAsync.mock.calls.find((c) => /base64 -d \| docker exec -i wta-master/.test(String(c[1].at(-1))) && Buffer.from(/^echo (\S+)/.exec(String(c[1].at(-1)))![1], 'base64').toString().includes('hub-xml'));
+      expect(call).toBeTruthy();
+      expect(res.log?.some((l) => l.includes('Conflitos pelos features.xml: winthor-integracao-config 1.39.20.3 exige winthor-core-data [1.39,1.40)'))).toBe(true);
+    });
+
+    it('sem conflito, a conferência só soma o que o XML declara', async () => {
+      xmlOut = `@@FILE ${PATH}\n<features><feature name="winthor-integracao-config" version="1.39.20.3"><feature version="[1.39,2)">winthor-core-data</feature></feature></features>\n@@END\n`;
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+      expect(res.dependencies?.issues).toEqual([]);
+      expect(res.dependencies?.withDependencies).toBeGreaterThanOrEqual(1);
+    });
+
+    it('se o download falhar, a prévia segue e a conferência fica marcada como não feita', async () => {
+      xmlFails = true;
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+      expect(res.success).toBe(true);
+      expect(res.dependencies?.xml?.error).toContain('docker caiu');
+      expect(res.log?.some((l) => l.includes('Dependências pelos features.xml não conferidas'))).toBe(true);
+    });
+
+    it('o clone não baixa features.xml', async () => {
+      await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true });
+      expect(execFileAsync.mock.calls.some((c) => String(c[1].at(-1)).includes('base64') && Buffer.from(/^echo (\S+)/.exec(String(c[1].at(-1)))?.[1] ?? '', 'base64').toString().includes('hub-xml'))).toBe(false);
+    });
+  });
+
+  describe('clonar sem mudar nada (cloneOnly)', () => {
+    const versions = () => path.join(dir, 'linux-winthor', 'versions');
+    const calls = () => execFileAsync.mock.calls.map((c) => String(c[1].at(-1)));
+
+    it('descobre a versão pela imagem, não lê o catálogo da 801 e não troca feature', async () => {
+      fs.mkdirSync(versions(), { recursive: true });
+      fs.writeFileSync(path.join(versions(), '39.features'), ORIGIN);
+      routine801.fetchUpdates.mockClear();
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true });
+      expect(res.success).toBe(true);
+      expect(res.clone).toEqual({ version: '39', image: 'linux-winthor:39-debian', imageExists: true, originState: 'running', manifestExists: true });
+      expect(routine801.fetchUpdates).not.toHaveBeenCalled();
+      expect(res.upgrade).toBeUndefined();
+      expect(res.manifestText).toBeUndefined();
+      expect(calls().some((c) => c.includes('export_features.sh'))).toBe(false);
+    });
+
+    it('sem versions/<v>.features e com a origem no ar, lê a lista do próprio WTA para o Hub gravar', async () => {
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true });
+      expect(res.clone?.manifestExists).toBe(false);
+      expect(res.manifestText).toBe(ORIGIN);
+      expect(calls().some((c) => c.includes('export_features.sh --version 39 --container wta-master'))).toBe(true);
+    });
+
+    it('origem parada: clona do mesmo jeito, mas sem lista para gravar quando ela falta', async () => {
+      cloneInspect = 'linux-winthor:39-debian|exited';
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true });
+      expect(res.success).toBe(true);
+      expect(res.clone).toMatchObject({ originState: 'exited', manifestExists: false });
+      expect(res.manifestText).toBeUndefined();
+      expect(calls().some((c) => c.includes('export_features.sh'))).toBe(false);
+    });
+
+    it('imagem que não existe é informada (a revisão bloqueia)', async () => {
+      cloneImageExists = 'no';
+      expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).clone?.imageExists).toBe(false);
+    });
+
+    it('imagem fora do padrão ou container inexistente: erro com o que fazer', async () => {
+      cloneInspect = 'oracle-winthor:latest|running';
+      expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).error).toContain('não segue o padrão linux-winthor:<versão>-<distro>');
+      cloneInspect = 'missing';
+      expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).error).toContain('não existe nesta distro');
+    });
+
+    it('só exige o new_version_env.sh e leva a pré-checagem sem o item de portas quando ele só avisa', async () => {
+      fs.rmSync(path.join(dir, 'linux-winthor', 'scripts', 'export_features.sh'));
+      fs.rmSync(path.join(dir, 'linux-winthor', 'scripts', 'build_version.sh'));
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true });
+      expect(res.success).toBe(true);
+      expect(res.preflight?.some((i) => i.id === 'portas' && i.status !== 'block')).toBe(false);
+      expect(res.preflight?.find((i) => i.id === 'memoria')).toBeTruthy();
+      fs.rmSync(path.join(dir, INFR_NEW_VERSION_SCRIPTS[2]));
+      expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).error).toContain('new_version_env.sh');
+    });
+  });
+
+  it('WTA de origem parado ou inexistente: diz o que fazer em vez de rodar o export calado', async () => {
+    originStatus = 'exited';
+    const stopped = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+    expect(stopped.success).toBe(false);
+    expect(stopped.error).toContain('wta-master) está parado (exited)');
+    expect(stopped.error).toContain('docker start oracle-master wta-master');
+    expect(execFileAsync.mock.calls.some((c) => String(c[1].at(-1)).includes('export_features.sh'))).toBe(false);
+
+    originStatus = 'missing';
+    expect((await service().preview({ fromEnv: 'master', targetVersion: '40' })).error).toContain('não existe nesta distro');
+  });
+
+  it('testa no Nexus, de dentro do container de origem, o repositório novo da lista', async () => {
+    probeCode = '404';
+    const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+    expect(res.artifacts).toMatchObject({ checked: 1, missing: ['mvn:g/winthor-core-features/1.40.0.3/xml/features'], unverified: 0 });
+    const probe = execFileAsync.mock.calls.find((c) => /base64 -d \| docker exec -i wta-master/.test(String(c[1].at(-1))));
+    const m = /^echo (\S+) \| base64 -d/.exec(String(probe?.[1].at(-1)));
+    const script = Buffer.from(m![1], 'base64').toString();
+    expect(script).toContain('https://nexus.exemplo.com/repository/releases');
+    expect(script).toContain('curl');
+    probeCode = '200';
+    expect((await service().preview({ fromEnv: 'master', targetVersion: '40' })).artifacts).toMatchObject({ checked: 1, missing: [] });
+  });
+
+  it('pré-checagem: porta de container, pouca memória e o que foi lido entram na prévia e no registro', async () => {
+    const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+    const by = Object.fromEntries((res.preflight ?? []).map((i) => [i.id, i]));
+    expect(by.portas.status).toBe('warn'); // 8040 já é do wta-39 e a 8040 é a porta do WTA da 40
+    expect(by.disco.status).toBe('ok');
+    expect(by.memoria.status).toBe('warn');
+    expect(res.log?.some((l) => l.includes('Portas em uso no host: 8040(docker:wta-39)'))).toBe(true);
+    expect(res.log?.some((l) => l.includes('Pré-checagem: portas=warn'))).toBe(true);
+  });
+
+  it('porta do Windows ocupada bloqueia a pré-checagem', async () => {
+    vi.spyOn(InfrVersionService.prototype as any, 'portFreeOnWindows').mockImplementation(async (p: unknown) => p !== 1540);
+    const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+    expect(res.preflight?.find((i) => i.id === 'portas')).toMatchObject({ status: 'block', detail: expect.stringContaining('1540 (Oracle)') });
+  });
+
+  it('ensaio da resolução só roda quando pedido, simula cada feature e lê os erros do Karaf', async () => {
+    expect((await service().preview({ fromEnv: 'master', targetVersion: '40' })).dryRun).toBeUndefined();
+    dryOut = '> feature:install -t -v winthor-core-data/1.40.0.3' + NL + 'Error executing command: Unable to resolve root: missing requirement [root] osgi.identity=x' + NL;
+    const res = await service().preview({ fromEnv: 'master', targetVersion: '40', dryRun: true });
+    expect(res.dryRun).toMatchObject({ simulated: 1 });
+    expect(res.dryRun?.errors[0]).toContain('Unable to resolve root');
+    const decode = (raw: string) => {
+      const m = /^echo (\S+) \| base64 -d/.exec(raw);
+      return m ? Buffer.from(m[1], 'base64').toString() : '';
+    };
+    const call = execFileAsync.mock.calls.find((c) => decode(String(c[1].at(-1))).includes('feature:install -t'));
+    expect(String(call?.[1].at(-1))).toContain('docker exec -i wta-master sh -c');
+    const script = decode(String(call?.[1].at(-1)));
+    expect(script).toContain('/opt/pcsist/produtos/winthor/bin/client');
+    expect(script).toContain('feature:install -t -v winthor-core-data/1.40.0.3');
+    expect(res.log?.some((l) => l.includes('Ensaio: 1 erro(s) do Karaf'))).toBe(true);
+  });
+
+  it('se o teste no Nexus falhar, a prévia segue e marca como não conferido', async () => {
+    const base = execFileAsync.getMockImplementation()!;
+    execFileAsync.mockImplementation(async (cmd: string, args: string[]) => {
+      if (String(args.at(-1)).includes('pax.url.mvn.cfg')) throw new Error('docker caiu');
+      return base(cmd, args);
+    });
+    const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+    expect(res.success).toBe(true);
+    expect(res.artifacts).toMatchObject({ checked: 1, unverified: 1 });
+  });
+
   it('lê a origem, sobe pelo catálogo da 801 e aponta o que o WSH da versão ainda cobraria', async () => {
     const res = await service().preview({ fromEnv: 'master', targetVersion: '40', wshJar: '/opt/wsh/40/winthor-integracao-core.jar' });
     expect(res.success).toBe(true);
     expect(res.originWtaUrl).toBe('http://localhost:8086');
-    expect(routine801.fetchUpdates).toHaveBeenCalledWith('http://localhost:8086');
+    expect(routine801.fetchUpdates).toHaveBeenCalledWith('http://localhost:8086', expect.any(Function), 40);
+    expect(res.log?.some((l) => l.includes('export_features.sh --version 40'))).toBe(true);
+    expect(res.log?.at(-1)).toMatch(/Prévia concluída$/);
     expect(res.upgrade?.changes).toEqual([{ name: 'winthor-core-data', from: '1.39.0.1', to: '1.40.0.3' }]);
     expect(res.upgrade?.behind.map((f) => f.name)).toEqual(['winthor-integracao-config']);
     expect(res.wshCheck).toEqual([{ service: 'winthor-integracao-config', version: '1.40.2.1', found: '1.39.20.3', ok: false }]);
     expect(res.manifestText).toContain('feature winthor-core-data 1.40.0.3');
     const exportCall = execFileAsync.mock.calls.find((c) => String(c[1].at(-1)).includes('export_features.sh'));
     expect(exportCall?.[1].at(-1)).toContain('--container wta-master --out /tmp/hub-origem-master.features');
+  });
+
+  it('pasta do INFR-Docker sem os scripts da Nova versão diz qual branch usar, sem rodar nada', async () => {
+    fs.rmSync(path.join(dir, 'linux-winthor', 'scripts', 'export_features.sh'));
+    execFileAsync.mockClear();
+    const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+    expect(res.success).toBe(false);
+    expect(res.error).toContain('export_features.sh');
+    expect(res.error).toContain('git checkout feature/imagem-por-versao');
+    expect(execFileAsync).not.toHaveBeenCalled();
+  });
+
+  it('leitura da origem que falha mostra o que o script disse, não só o comando', async () => {
+    execFileAsync.mockImplementation(async (_cmd: string, args: string[]) => {
+      if (String(args.at(-1)).includes('export_features.sh')) {
+        throw Object.assign(new Error('Command failed: wsl.exe -d x -- bash -c ...'), {
+          stdout: '',
+          stderr: 'Error response from daemon: No such container: wta-master\n'
+        });
+      }
+      if (String(args.at(-1)).startsWith('docker inspect')) return { stdout: 'running\n' };
+      return { stdout: '' };
+    });
+    const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+    expect(res.error).toContain('No such container: wta-master');
+    expect(res.error).not.toContain('Command failed');
   });
 
   it('catálogo da 801 recusado por falta de login diz onde configurar o usuário do WTA', async () => {

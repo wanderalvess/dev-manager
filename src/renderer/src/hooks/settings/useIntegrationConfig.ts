@@ -53,7 +53,7 @@ export function useIntegrationConfig(settings: AppSettings, setSettings: SetSett
     const flow = flows[index];
     const confirmed = await requestConfirm({
       title: 'Remover fluxo?',
-      message: `Remover o fluxo "${flow?.name || 'sem nome'}"? Essa ação só é efetivada ao clicar em "Salvar Configurações".`,
+      message: `Remover o fluxo "${flow?.name || 'sem nome'}"? Só vale depois de clicar em "Salvar alterações".`,
       confirmLabel: 'Remover',
       tone: 'danger'
     });

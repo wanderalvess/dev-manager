@@ -1,12 +1,16 @@
-import type { SettingsTab } from '../components/settings/settingsSearchData';
+import { normalizeSettingsTab, type SettingsTab } from '../components/settings/settingsSections';
 
 const EVENT_NAME = 'hub:settings-tab';
 let pendingTab: SettingsTab | null = null;
 
-/** Pede à tela de Configurações para abrir numa aba (vale também se ela ainda não foi montada). */
-export function requestSettingsTab(tab: SettingsTab): void {
-  pendingTab = tab;
-  window.dispatchEvent(new CustomEvent<SettingsTab>(EVENT_NAME, { detail: tab }));
+/**
+ * Pede à tela de Configurações para abrir numa seção (vale também se ela ainda não foi montada).
+ * Aceita os ids antigos de aba e os das seções do onboarding; um id desconhecido cai na Visão geral.
+ */
+export function requestSettingsTab(tab: string): void {
+  const section = normalizeSettingsTab(tab) ?? 'overview';
+  pendingTab = section;
+  window.dispatchEvent(new CustomEvent<SettingsTab>(EVENT_NAME, { detail: section }));
 }
 
 /** Aba pedida antes de a tela montar (só lê: o initializer do useState roda duas vezes no StrictMode). */

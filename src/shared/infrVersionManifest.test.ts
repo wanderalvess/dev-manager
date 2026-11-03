@@ -4,6 +4,7 @@ import {
   checkManifestAgainstWsh,
   compareManifests,
   compareVersions,
+  manifestLineOf,
   parseVersionManifest,
   parseWshDependencies,
   serializeVersionManifest,
@@ -102,5 +103,38 @@ describe('manifesto de versão do INFR-Docker', () => {
     const existing = parseVersionManifest('feature a 1.39.0.5\nfeature b 1.39.2.0\nfeature c 1.39.0.1\nfeature so-existente 1.39.0.1\n');
     const preview = parseVersionManifest('feature a 1.39.1.0\nfeature b 1.38.9.9\nfeature c 1.39.0.1\nfeature so-previa 1.38.0.1\n');
     expect(compareManifests(existing, preview)).toEqual({ newer: 1, older: 1, onlyExisting: 1, onlyPreview: 1 });
+  });
+});
+
+describe('upgradeManifestFromCatalog com várias versões da mesma feature', () => {
+  const origin = parseVersionManifest('feature winthor-core-servico 1.40.3.1\n');
+  const item = (versao: string, status = 'HOMOLOGACAO') =>
+    ({ nome: 'winthor-core-servico', versao, status, comando: 'UPDATE', codigoRotina: 0, codigoModulo: 0, tipoProjeto: 'SERVICO', descricao: '', dependencias: [] }) as any;
+
+  it('escolhe a mais nova, em qualquer ordem do catálogo (a 801 do WTA 40 manda 1.40.4.2 antes de 1.40.4.1)', () => {
+    const up = upgradeManifestFromCatalog(origin, { repositorios: [], funcionalidades: [item('1.40.4.2'), item('1.40.4.1')] }, 40);
+    expect(up.changes).toEqual([{ name: 'winthor-core-servico', from: '1.40.3.1', to: '1.40.4.2' }]);
+    const reversed = upgradeManifestFromCatalog(origin, { repositorios: [], funcionalidades: [item('1.40.4.1'), item('1.40.4.2')] }, 40);
+    expect(reversed.changes[0].to).toBe('1.40.4.2');
+  });
+
+  it('com uma 41 e uma 40 no catálogo, sobe para a 40 em vez de pular', () => {
+    const up = upgradeManifestFromCatalog(origin, { repositorios: [], funcionalidades: [item('1.41.0.1'), item('1.40.4.1'), item('1.40.5.0', 'BLOQUEADO')] }, 40);
+    expect(up.changes).toEqual([{ name: 'winthor-core-servico', from: '1.40.3.1', to: '1.40.4.1' }]);
+    expect(up.skipped).toEqual([]);
+  });
+});
+
+describe('manifestLineOf', () => {
+  it('usa o núcleo (winthor-core-*) mesmo com a maioria das features em linha antiga', () => {
+    const m38 = parseVersionManifest('feature winthor-core-data 1.38.5.10\nfeature winthor-a 1.36.0.1\nfeature winthor-b 1.36.2.0\nfeature winthor-c 1.36.1.0\n');
+    expect(manifestLineOf(m38)).toBe(38);
+  });
+
+  it('sem núcleo, pega a linha mais comum; no empate, a maior', () => {
+    const m = parseVersionManifest('feature winthor-a 1.39.0.1\nfeature winthor-b 0.39.2.0\nfeature winthor-c 1.40.1.0\nfeature acesso 1.9.15\n');
+    expect(manifestLineOf(m)).toBe(39);
+    expect(manifestLineOf(parseVersionManifest('feature a 1.38.0.1\nfeature b 1.39.0.1\n'))).toBe(39);
+    expect(manifestLineOf(parseVersionManifest('feature a 1.9.15\n'))).toBeUndefined();
   });
 });

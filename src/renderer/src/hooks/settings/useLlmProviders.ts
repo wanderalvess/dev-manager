@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { LlmProviderConfig, LlmProviderType, LlmTestResult } from '../../../../shared/types';
+import { showToast } from '../../components/ToastHost';
+import { applyTemplateToDraft } from '../../utils/aiTabUtils';
 import { removeById, upsertById } from '../../utils/settingsListEditors';
 import type { SetSettings } from './settingsHookTypes';
 
@@ -11,7 +13,7 @@ export function useLlmProviders(setSettings: SetSettings) {
   const [showLlmFormKey, setShowLlmFormKey] = useState(false);
 
   const handleApplyLlmTemplate = (template: Omit<LlmProviderConfig, 'id'>) => {
-    setEditingLlmProvider({ ...template, id: editingLlmProvider?.id || `llm-${Date.now()}` });
+    setEditingLlmProvider(applyTemplateToDraft(editingLlmProvider, template, `llm-${Date.now()}`));
   };
 
   const handleSaveLlmProvider = () => {
@@ -25,11 +27,16 @@ export function useLlmProviders(setSettings: SetSettings) {
       apiKey: editingLlmProvider.apiKey?.trim() || '',
       baseUrl: editingLlmProvider.baseUrl?.trim() || undefined,
       model: editingLlmProvider.model?.trim() || 'gpt-4o-mini',
+      systemPrompt: editingLlmProvider.systemPrompt,
       temperature: editingLlmProvider.temperature ?? 0.7,
       maxTokens: editingLlmProvider.maxTokens ?? 2048,
       timeoutMs: editingLlmProvider.timeoutMs ?? 30000,
       enabled: editingLlmProvider.enabled ?? true,
-      isDefault: editingLlmProvider.isDefault ?? false
+      isDefault: editingLlmProvider.isDefault ?? false,
+      dailyTokenLimit: editingLlmProvider.dailyTokenLimit,
+      monthlyTokenLimit: editingLlmProvider.monthlyTokenLimit,
+      priceInPerMillion: editingLlmProvider.priceInPerMillion,
+      priceOutPerMillion: editingLlmProvider.priceOutPerMillion
     };
 
     setSettings((prev) => ({
@@ -38,6 +45,7 @@ export function useLlmProviders(setSettings: SetSettings) {
       activeLlmProviderId: prev.activeLlmProviderId || id
     }));
     setEditingLlmProvider(null);
+    showToast(`Motor "${provider.name}" incluído nas alterações. Clique em Salvar no topo para gravar.`, 'info');
   };
 
   const handleDeleteLlmProvider = (id: string) => {

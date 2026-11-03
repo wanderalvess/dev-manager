@@ -4,7 +4,7 @@ export type WtaUtilsTab = 'access' | 'karaf' | 'dev';
 export const WTA_DEFAULT_CREDENTIALS_CLIPBOARD = 'PCADMIN\t1';
 
 export const WTA_ENV_SAMPLE =
-  'DB_HOST=172.17.0.1\nDB_PORT=1521\nDB_SERVICE=XE\nDB_USER=LOCAL\nDB_PASSWORD=pcinfo\n';
+  'DB_HOST=oracle-39\nDB_PORT=1521\nDB_SERVICE=XE\nDB_USER=LOCAL\nDB_PASSWORD=pcinfo\n';
 
 /** Remove a barra inicial que o Docker adiciona ao nome do container. */
 export function wtaUtilsModalCleanName(names: string): string {

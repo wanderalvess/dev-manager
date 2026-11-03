@@ -4,33 +4,33 @@ export const SETTINGS_TOUR_STORAGE_KEY = 'devManager:tour:settings';
 
 export const SETTINGS_TOUR_STEPS: TourStep[] = [
   {
-    target: 'tabs-nav-dirs',
-    title: 'Abas de Configuração',
-    desc: 'Aqui você navega entre as categorias, agrupadas por tema: Ambiente (diretórios, Karaf, rotinas WinThor, Azure), Monitoramento (serviços, portas, logs) e Recursos (automação, backup, IA, qualidade, uso).'
+    target: 'settings-nav',
+    title: 'Seções das Configurações',
+    desc: 'Cada ajuste mora numa seção só, agrupada em Essencial, Conexões, Operação e Preferências. O check verde diz que a seção está pronta; "falta 1" mostra o que ainda impede uma tela de funcionar.'
   },
   {
-    target: 'dirs-projects-path',
-    title: 'Diretório de Repositórios',
-    desc: 'Informe a pasta onde ficam seus repositórios Git; o painel escaneia essa pasta para listar seus projetos.'
+    target: 'settings-search',
+    title: 'Buscar um ajuste',
+    desc: 'Digite "porta", "senha" ou "cookie" para ir direto ao campo, na seção certa.'
+  },
+  {
+    target: 'settings-essentials',
+    title: 'Essenciais para decolar',
+    desc: 'Os cinco itens sem os quais as telas principais não funcionam, com o atalho para resolver cada pendência.'
   },
   {
     target: 'auto-detect-button',
-    title: 'Auto-Detectar Caminhos',
-    desc: 'Escaneia seu computador automaticamente e tenta preencher os diretórios (Karaf, JDK, IDE) para você nas respectivas abas.'
+    title: 'Detectar caminhos',
+    desc: 'Procura Karaf, JDK, IDE e as pastas no seu computador e preenche só o que estiver vazio. Ao terminar, mostra o que encontrou.'
   },
   {
-    target: 'environment-profiles',
-    title: 'Presets de Ambiente',
-    desc: 'Salve o conjunto atual de caminhos e portas como um preset nomeado para alternar rapidamente entre clientes/ambientes.'
+    target: 'settings-transfer',
+    title: 'Levar para outro lugar',
+    desc: 'Exporte sem senhas para o time, guarde um backup completo deste PC ou traga as configurações de um arquivo.'
   },
   {
-    target: 'automation-defaults',
-    title: 'Automação Padrão',
-    desc: 'Defina o que já vem marcado (parar serviços, matar processos, abrir IDE, abrir navegador) ao preparar o ambiente.'
-  },
-  {
-    target: 'save-settings-button',
-    title: 'Salvar Configurações',
-    desc: 'Grava todas as alterações feitas nesta página; sem clicar aqui, nada é persistido.'
+    target: null,
+    title: 'Como salvar',
+    desc: 'O que você muda fica pendente até clicar em "Salvar alterações" na barra que aparece no rodapé. O que grava direto tem a etiqueta "aplica na hora".'
   }
 ];

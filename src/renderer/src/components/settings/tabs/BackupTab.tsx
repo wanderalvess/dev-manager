@@ -22,9 +22,9 @@ export const BackupTab: React.FC<BackupTabProps> = ({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1" id="field-backup">
       <div className="lg:col-span-12 space-y-4 flex flex-col">
-        <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
+        <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
-            <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <HardDriveDownload className="w-4 h-4 text-info" /> Executáveis de Backup
             </h3>
             <span className="text-2xs text-muted-foreground font-mono">Opcional se já estiverem no PATH</span>
@@ -109,9 +109,9 @@ export const BackupTab: React.FC<BackupTabProps> = ({
           </div>
         </div>
 
-        <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
+        <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
-            <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <RotateCcw className="w-4 h-4 text-success" /> Executáveis de Restauração
             </h3>
             <span className="text-2xs text-muted-foreground font-mono">Opcional se já estiverem no PATH</span>
@@ -193,9 +193,9 @@ export const BackupTab: React.FC<BackupTabProps> = ({
         </div>
 
         {/* Configuração de Rede Oracle & tnsnames.ora */}
-        <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border" id="field-oracleTnsnames">
+        <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border" id="field-oracleTnsnames">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
-            <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <Network className="w-4 h-4 text-warning" /> Rede Oracle & tnsnames.ora
             </h3>
             <span className="text-2xs text-muted-foreground font-mono">Busca de conexões & TNS_ADMIN</span>

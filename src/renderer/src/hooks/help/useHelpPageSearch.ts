@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import type { HelpCategory } from '../../components/help/helpData';
+import type { HelpCategory } from '../../components/help/helpSections';
 
-/** Aba ativa, busca e estado do FAQ (filtro de categoria e itens expandidos). */
+/** Seção ativa da Ajuda e o estado de "Resolver problemas" (filtro de texto, assunto e perguntas abertas). */
 export function useHelpPageSearch(initialSearch?: string) {
   const [activeCategory, setActiveCategory] = useState<HelpCategory>(initialSearch ? 'faq' : 'overview');
   const [searchQuery, setSearchQuery] = useState(initialSearch || '');
@@ -15,19 +15,19 @@ export function useHelpPageSearch(initialSearch?: string) {
     }
   }, [initialSearch]);
 
-  const toggleFaq = (id: string) => {
-    setExpandedFaqs((prev) => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
+  const toggleFaq = (id: string, currentlyOpen: boolean) => {
+    setExpandedFaqs((prev) => ({ ...prev, [id]: !currentlyOpen }));
   };
 
-  // Digitar na busca a partir da Visão Geral leva direto ao FAQ, onde estão os resultados.
-  const handleSearchChange = (val: string) => {
-    setSearchQuery(val);
-    if (val.trim() && activeCategory === 'overview') {
-      setActiveCategory('faq');
-    }
+  // Abre a pergunta escolhida na busca ou na Visão geral: limpa os filtros, expande e rola até ela
+  const openFaq = (id: string) => {
+    setActiveCategory('faq');
+    setSearchQuery('');
+    setFaqCategoryFilter('all');
+    setExpandedFaqs((prev) => ({ ...prev, [id]: true }));
+    window.setTimeout(() => {
+      document.getElementById(`help-faq-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   };
 
   return {
@@ -39,6 +39,6 @@ export function useHelpPageSearch(initialSearch?: string) {
     setFaqCategoryFilter,
     expandedFaqs,
     toggleFaq,
-    handleSearchChange
+    openFaq
   };
 }

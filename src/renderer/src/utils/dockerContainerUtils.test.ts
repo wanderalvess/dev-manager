@@ -56,10 +56,20 @@ describe('extractOraclePort', () => {
     expect(extractOraclePort('1533:1521')).toBe('1533');
   });
 
-  it('usa o fallback 1522 quando não há string ou não há match', () => {
-    expect(extractOraclePort(undefined)).toBe('1522');
-    expect(extractOraclePort('')).toBe('1522');
-    expect(extractOraclePort('0.0.0.0:8080->8080/tcp')).toBe('1522');
+  it('sem mapeamento usa 1521, a porta do Oracle', () => {
+    expect(extractOraclePort(undefined)).toBe('1521');
+    expect(extractOraclePort('')).toBe('1521');
+    expect(extractOraclePort('0.0.0.0:8080->8080/tcp')).toBe('1521');
+  });
+
+  it('com o container parado, o nome por versão dá a porta da versão', () => {
+    expect(extractOraclePort('', 'oracle-39')).toBe('1539');
+    expect(extractOraclePort(undefined, '/oracle-40')).toBe('1540');
+    expect(extractOraclePort('', 'oracle-develop')).toBe('1521');
+  });
+
+  it('o mapeamento real vence o nome', () => {
+    expect(extractOraclePort('0.0.0.0:1555->1521/tcp', 'oracle-39')).toBe('1555');
   });
 });
 
@@ -89,7 +99,7 @@ describe('getOracleTnsConfig', () => {
   it('usa os valores padrão quando nenhum argumento é informado', () => {
     const tns = getOracleTnsConfig();
     expect(tns).toContain('LOCAL_DOCKER =');
-    expect(tns).toContain('(PORT = 1522)');
+    expect(tns).toContain('(PORT = 1521)');
     expect(tns).toContain('(SERVICE_NAME = XE)');
   });
 });
@@ -156,6 +166,38 @@ describe('computeStackTopology', () => {
     expect(topology.oracle.exists).toBe(true);
     expect(topology.oracle.port).toBe('1521');
     expect(topology.wta.port).toBe('8080');
+  });
+
+  describe('com ambiente ativo', () => {
+    const lado = [
+      makeContainer({ names: '/oracle-39', state: 'running', ports: '0.0.0.0:1539->1521/tcp' }),
+      makeContainer({ names: '/wta-39', state: 'running', ports: '0.0.0.0:8039->8080/tcp' }),
+      makeContainer({ names: '/wsh-39', state: 'running', ports: '0.0.0.0:9039->9039/tcp' }),
+      makeContainer({ names: '/oracle-develop', state: 'exited' }),
+      makeContainer({ names: '/wta-develop', state: 'exited' }),
+      makeContainer({ names: '/wsh-develop', state: 'exited' })
+    ];
+
+    it('usa só os containers do ambiente, mesmo com outros lado a lado', () => {
+      const develop = computeStackTopology(lado, 'develop');
+      expect(develop.oracle.name).toBe('oracle-develop');
+      expect(develop.wta.name).toBe('wta-develop');
+      expect(develop.isStackComplete).toBe(false);
+
+      const v39 = computeStackTopology(lado, '39');
+      expect(v39.oracle.name).toBe('oracle-39');
+      expect(v39.wta.port).toBe('8039');
+      expect(v39.isStackComplete).toBe(true);
+    });
+
+    it('a porta do WSH vem do mapeamento, não de um 8080 fixo', () => {
+      expect(computeStackTopology(lado, '39').wsh.port).toBe('9039');
+    });
+
+    it('se o ambiente ativo não tem container, volta a procurar pelos nomes', () => {
+      const topology = computeStackTopology(lado, 'naoexiste');
+      expect(topology.oracle.exists).toBe(true);
+    });
   });
 
   it('sinaliza dependência faltando quando WTA está rodando sem Oracle', () => {

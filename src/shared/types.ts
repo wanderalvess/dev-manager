@@ -503,7 +503,9 @@ export interface AppSettings {
   appPath?: string;
   karafPath: string;
   /** Ambiente de execução do Apache Karaf ('local' | 'wsl'). Padrão: 'local' */
-  karafEnvironment?: 'local' | 'wsl';
+  karafEnvironment?: 'local' | 'wsl' | 'docker';
+  /** Container do Karaf quando karafEnvironment === 'docker' (ex.: wta-develop). Vazio usa o wta-<ambiente ativo> */
+  karafDockerContainer?: string;
   /** Nome da distribuição WSL onde o Karaf está instalado (ex: 'Ubuntu', 'Debian'). Usado quando karafEnvironment === 'wsl' */
   karafWslDistro?: string;
   jdkPath?: string;
@@ -540,6 +542,8 @@ export interface AppSettings {
   winthorStartPort?: number;
   /** URL do portal Winthor Anywhere (WTA) para obtenção de parâmetros de lançamento (padrão: http://localhost:8889) */
   wtaUrl?: string;
+  /** Ambiente (wta-<nome> na distro) que o Hub usa: a URL do WTA, a da 801 e o SSH do Karaf apontam para ele */
+  activeEnvironment?: string;
   /** URL da API da Rotina 801 (ferramenta-servidor) no Karaf (padrão: http://localhost:8889 ou a wtaUrl configurada) */
   routine801Url?: string;
   /** Porta do receptor OTLP/HTTP do APM (padrão 4318); o Karaf iniciado pelo app exporta traces para ela */
@@ -629,6 +633,10 @@ export interface AppSettings {
   activeLlmProviderId?: string;
   /** Contagem local de uso (só contadores e durações, nada de conteúdo). Ligada por padrão; `false` desliga. */
   usageMetricsEnabled?: boolean;
+  /** Tela de início: não fecha sozinha ao abrir o app (a pessoa entra quando quiser) */
+  startScreenStay?: boolean;
+  /** Cidade do clima da tela de início; vazia = clima desligado (nada é consultado) */
+  startCity?: string;
   /** Tempo que a pessoa levava para fazer à mão cada automação (minutos). Quem não está aqui usa o padrão. */
   usageBaselines?: UsageBaselineOverrides;
   /** Personal Access Token (PAT) do Azure DevOps para consulta de Work Items e automação de branches (criptografado em repouso) */
@@ -2394,6 +2402,13 @@ export interface LlmProviderConfig {
   systemPrompt?: string;
   enabled: boolean;
   isDefault?: boolean;
+  /** Teto de tokens por dia (local) para este provedor. Vazio = sem teto. */
+  dailyTokenLimit?: number;
+  /** Teto de tokens por mês (calendário local) para este provedor. Vazio = sem teto. */
+  monthlyTokenLimit?: number;
+  /** Preço informado pelo usuário (por milhão de tokens) para a estimativa de custo. O Hub não traz tabela de preços. */
+  priceInPerMillion?: number;
+  priceOutPerMillion?: number;
 }
 
 export interface LlmChatMessage {
@@ -2406,6 +2421,10 @@ export interface LlmChatRequest {
   messages: LlmChatMessage[];
   temperature?: number;
   maxTokens?: number;
+  /** Origem do uso, para o contador de tokens (ex.: 'ia-conduz'). Valor fora da lista conhecida vira 'outros'. */
+  source?: string;
+  /** Pede resposta direta, sem raciocínio longo (modelos locais com "thinking" gastam o limite de tokens pensando e devolvem vazio) */
+  noThinking?: boolean;
 }
 
 export interface LlmChatResponse {
@@ -2413,6 +2432,8 @@ export interface LlmChatResponse {
   provider: string;
   model: string;
   usage?: { promptTokens?: number; completionTokens?: number; totalTokens?: number };
+  /** Aviso de que o uso chegou a 80% do teto de tokens do provedor. */
+  usageWarning?: string;
 }
 
 export interface LlmTestResult {
@@ -2431,6 +2452,7 @@ export interface LlmRagQueryRequest {
 export interface LlmRagQueryResponse {
   answer: string;
   sources: Array<{ title: string; path: string; score: number }>;
+  usageWarning?: string;
 }
 
 export const DEFAULT_LLM_PROVIDER_TEMPLATES: Omit<LlmProviderConfig, 'id'>[] = [
@@ -2458,7 +2480,7 @@ export const DEFAULT_LLM_PROVIDER_TEMPLATES: Omit<LlmProviderConfig, 'id'>[] = [
     name: 'Anthropic Claude',
     provider: 'anthropic',
     baseUrl: 'https://api.anthropic.com',
-    model: 'claude-3-5-sonnet-20241022',
+    model: 'claude-sonnet-5-5',
     temperature: 0.7,
     maxTokens: 2048,
     timeoutMs: 30000,
@@ -2920,6 +2942,7 @@ export interface TautEnvSyncResult {
 
 export * from './httpClientTypes';
 export * from './usageMetricsTypes';
+export * from './aiUsageTypes';
 export * from './azurePipelineTypes';
 export * from './oracleTracerAnalysis';
 export * from './delphiTypes';

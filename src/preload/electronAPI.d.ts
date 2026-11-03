@@ -6,10 +6,18 @@ import type {
   InfrVersionPreview,
   InfrVersionPreviewRequest
 } from '../shared/infrVersionManifest';
+import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
+import type { WeatherReport } from '../shared/weather';
+import type { InfrOriginCheck } from '../shared/infrOriginCheck';
+import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../shared/infrFirstSteps';
+import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../shared/infrActiveEnv';
+import type { StartEnvResult } from '../shared/infrEnvStart';
 import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
 import type {
   AppSettings,
   UsageDays,
+  AiUsagePeriod,
+  AiUsageReport,
   UsageSummary,
   UsageSummaryQuery,
   KarafDeployRequest,
@@ -317,6 +325,7 @@ export interface ElectronAPI {
   exportSettings: (sanitizePasswords?: boolean) => Promise<string>;
   getUsageSummary: (query?: UsageSummaryQuery) => Promise<UsageSummary>;
   getUsageDays: () => Promise<UsageDays>;
+  getAiUsage: (period?: AiUsagePeriod) => Promise<AiUsageReport>;
   clearUsageMetrics: () => Promise<void>;
   importSettings: (jsonString: string) => Promise<{ success: boolean; error?: string; settings?: AppSettings; warnings?: string[] }>;
 
@@ -393,6 +402,15 @@ export interface ElectronAPI {
   saveInfrEnvFiles?: (req: InfrEnvSaveRequest) => Promise<InfrManifestSaveResult>;
   previewInfrVersion?: (req: InfrVersionPreviewRequest) => Promise<InfrVersionPreview>;
   saveInfrVersionManifest?: (req: InfrManifestSaveRequest) => Promise<InfrManifestSaveResult>;
+  checkInfrEnvironment?: (params: { distro?: string; name: string }) => Promise<InfrEnvCheck>;
+  checkInfrOrigin?: (req: { distro?: string; infrPath?: string; fromEnv: string }) => Promise<InfrOriginCheck>;
+  checkInfrFirstSteps?: (req: { distro?: string; infrPath?: string; version?: string }) => Promise<InfrFirstStepsResult>;
+  runInfrFirstStepsAction?: (req: InfrFirstStepsActionRequest) => Promise<{ success: boolean; output: string }>;
+  listInfrActiveEnvironments?: (distro?: string) => Promise<InfrActiveEnvList>;
+  applyInfrActiveEnvironment?: (req: { distro?: string; name: string }) => Promise<InfrActiveEnvApplyResult>;
+  clearInfrActiveEnvironment?: () => Promise<{ success: boolean }>;
+  startInfrEnvironment?: (req: { distro?: string; name: string }) => Promise<StartEnvResult>;
+  openInfrCheckTerminal?: (req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }) => Promise<{ success: boolean; output: string }>;
   setDockerTargetWslDistro?: (distro: string | null) => Promise<DockerDaemonStatus>;
   getContainerEnvironments?: () => Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }>;
   saveContainerEnvironment?: (env: ContainerEnvironment) => Promise<boolean>;
@@ -401,7 +419,7 @@ export interface ElectronAPI {
     containers: { name: string; delay?: number }[]
   ) => Promise<{ success: boolean; started: string[]; failed?: string; error?: string }>;
   onContainerSequenceProgress?: (
-    callback: (step: { currentName: string; index: number; total: number; waitingSeconds?: number }) => void
+    callback: (step: { currentName: string; index: number; total: number; waitingSeconds?: number; message?: string }) => void
   ) => () => void;
 
   // Ferramentas de Manutenção Oracle (INFR-Docker)
@@ -455,6 +473,8 @@ export interface ElectronAPI {
 
   // Métricas do Sistema
   getSystemMetrics: () => Promise<SystemMetrics>;
+  /** Clima da tela de início pelo Open-Meteo (só o nome da cidade sai da máquina) */
+  getWeather?: (city: string) => Promise<WeatherReport>;
 
   // Leitor e Monitor de Logs em Tempo Real (Tail -f)
   startLogWatch: (

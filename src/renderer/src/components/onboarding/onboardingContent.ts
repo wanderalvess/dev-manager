@@ -4,22 +4,29 @@ import type { ThemeVariant } from '../../context/ThemeContext';
 // Conteúdo da abertura e do onboarding em etapas (OnboardingWizard). Tudo aqui é dado puro para
 // poder ser testado sem montar os componentes.
 
-export const SPLASH_BOOT_LINES = [
-  'iniciando o cockpit…',
-  'carregando Infraestrutura & Ambiente',
-  'carregando Observabilidade & Diagnóstico',
-  'carregando Banco de Dados & Backups',
-  'carregando Desenvolvimento & DevOps',
-  'carregando Qualidade & Homologação',
-  'servidor MCP pronto'
+// Itens que a abertura marca como prontos, um por vez: as áreas do menu e, por fim, o servidor MCP.
+export const SPLASH_BOOT_ITEMS = [
+  'Infraestrutura & Ambiente',
+  'Observabilidade & Diagnóstico',
+  'Banco de Dados & Backups',
+  'Desenvolvimento & DevOps',
+  'Qualidade & Homologação',
+  'Servidor MCP'
 ];
+
+export type BootItemState = 'done' | 'loading' | 'queued';
+
+/** Estado do item `index` quando `completed` itens já terminaram (o seguinte está carregando). */
+export function bootItemState(index: number, completed: number): BootItemState {
+  if (index < completed) return 'done';
+  return index === completed ? 'loading' : 'queued';
+}
 
 export const ONBOARDING_STEPS = [
   { id: 'welcome', label: 'Boas-vindas', hint: 'Prazer, Hub Manager' },
   { id: 'modules', label: 'Módulos', hint: 'Ligue o que você usa' },
   { id: 'theme', label: 'Tema', hint: 'Escolha o visual' },
-  { id: 'env', label: 'Ambiente', hint: 'Caminhos detectados' },
-  { id: 'checklist', label: 'Checklist', hint: 'Configuração inicial' },
+  { id: 'env', label: 'Ambiente', hint: 'Caminhos e checklist' },
   { id: 'mcp', label: 'IA & MCP', hint: 'Agentes no comando' },
   { id: 'done', label: 'Pronto', hint: 'Atalhos e tour' }
 ] as const;
@@ -76,6 +83,8 @@ export const MCP_EXAMPLES: { ask: string; tools: string[]; result: string }[] = 
 ];
 
 export interface EnvRow {
+  /** Campo de AppSettings que a detecção automática pode preencher (para marcar "detectado agora"). */
+  key?: string;
   label: string;
   hint: string;
   value: string;
@@ -89,7 +98,7 @@ export interface EnvSection {
 }
 
 const text = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
-const row = (label: string, hint: string, value: string): EnvRow => ({ label, hint, value, done: value !== '' });
+const row = (label: string, hint: string, value: string, key?: string): EnvRow => ({ key, label, hint, value, done: value !== '' });
 
 /** Resumo do que está configurado, nas mesmas seções de Configurações. Valor vazio = ainda não configurado. */
 export function buildEnvSections(settings: Partial<AppSettings> | null): EnvSection[] {
@@ -101,17 +110,17 @@ export function buildEnvSections(settings: Partial<AppSettings> | null): EnvSect
       id: 'dirs',
       title: 'Diretórios & IDE',
       rows: [
-        row('Diretório de Repositórios Git', 'obrigatório', text(s.projectsPath)),
-        row('IDE / Editor de Código', 'obrigatório', text(s.intellijPath)),
-        row('JDK', 'opcional', text(s.jdkPath))
+        row('Diretório de Repositórios Git', 'obrigatório', text(s.projectsPath), 'projectsPath'),
+        row('IDE / Editor de Código', 'obrigatório', text(s.intellijPath), 'intellijPath'),
+        row('JDK', 'opcional', text(s.jdkPath), 'jdkPath')
       ]
     },
     {
       id: 'karaf',
       title: 'Karaf',
       rows: [
-        row('Pasta do Karaf', 'servidor OSGi', text(s.karafPath)),
-        row('Script de inicialização', 'karaf / karaf.bat', text(s.karafScript)),
+        row('Pasta do Karaf', 'servidor OSGi', text(s.karafPath), 'karafPath'),
+        row('Script de inicialização', 'karaf / karaf.bat', text(s.karafScript), 'karafScript'),
         row('Credenciais', 'usuário e senha do console', text(s.karafUser) && (text(s.karafPass) || s.hasKarafPass) ? text(s.karafUser) : ''),
         row(
           'Portas SSH e Debug',
@@ -124,7 +133,7 @@ export function buildEnvSections(settings: Partial<AppSettings> | null): EnvSect
       id: 'winthor',
       title: 'Rotinas WinThor',
       rows: [
-        row('Pasta das rotinas', 'binários do catálogo', text(s.appPath)),
+        row('Pasta das rotinas', 'binários do catálogo', text(s.appPath), 'appPath'),
         row('Central de Controle WinThor', 'URL do CCW', text(s.ccwBaseUrl)),
         row('Versão do WinThor', 'usada no catálogo de rotinas', text(s.ccwWinthorVersion)),
         row('WTA', 'URL e login', text(s.wtaUrl) && text(s.wtaLogin) ? `${text(s.wtaLogin)} @ ${text(s.wtaUrl)}` : '')
@@ -160,4 +169,30 @@ export function toggleDisabledModule(disabled: string[], id: string, totalModule
   if (disabled.includes(id)) return disabled.filter((m) => m !== id);
   if (totalModules - disabled.length <= 1) return disabled;
   return [...disabled, id];
+}
+
+/** "3/4": quantas linhas da seção já estão configuradas. */
+export function sectionProgress(section: EnvSection): string {
+  return `${section.rows.filter((r) => r.done).length}/${section.rows.length}`;
+}
+
+/** Quantos dos módulos `ids` estão ligados. */
+export function countEnabled(ids: string[], disabled: string[]): number {
+  return ids.filter((id) => !disabled.includes(id)).length;
+}
+
+/** Liga ou desliga um grupo inteiro de módulos, sem deixar o app com todos desligados. */
+export function setModulesEnabled(disabled: string[], ids: string[], on: boolean, totalModules: number): string[] {
+  if (on) return disabled.filter((id) => !ids.includes(id));
+  const next = [...new Set([...disabled, ...ids])];
+  return totalModules - next.length < 1 ? disabled : next;
+}
+
+/** Resumo do checklist para a etapa final: quantos itens prontos e quais faltam. */
+export function summarizeChecklist(items: { label: string; done: boolean }[]): { done: number; total: number; missing: string[] } {
+  return {
+    done: items.filter((i) => i.done).length,
+    total: items.length,
+    missing: items.filter((i) => !i.done).map((i) => i.label)
+  };
 }

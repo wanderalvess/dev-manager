@@ -6,6 +6,8 @@ export interface SequenceProgress {
   index?: number;
   total?: number;
   waitingSeconds?: number;
+  /** O que está sendo esperado agora (ex.: o banco ficar saudável) */
+  message?: string;
   error?: string;
 }
 
@@ -21,7 +23,8 @@ export function useContainerSequenceProgress() {
         currentName: step.currentName,
         index: step.index,
         total: step.total,
-        waitingSeconds: step.waitingSeconds
+        waitingSeconds: step.waitingSeconds,
+        message: step.message
       }));
     });
     return () => unsub?.();

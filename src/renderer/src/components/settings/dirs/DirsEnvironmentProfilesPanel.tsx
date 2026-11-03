@@ -1,6 +1,7 @@
 import React from 'react';
 import { Layers, Trash2, Plus } from 'lucide-react';
 import { AppSettings, EnvironmentProfile } from '../../../../../shared/types';
+import { AppliesNowTag } from '../AppliesNowTag';
 
 interface DirsEnvironmentProfilesPanelProps {
   settings: AppSettings;
@@ -19,12 +20,12 @@ export const DirsEnvironmentProfilesPanel: React.FC<DirsEnvironmentProfilesPanel
   setNewEnvironmentProfileLabel,
   handleSaveCurrentAsEnvironmentProfile
 }) => (
-  <div className="cockpit-panel rounded-xl p-5 space-y-3 shadow-xl border border-border">
+  <div className="cockpit-panel rounded-xl p-5 space-y-3 border border-border">
     <div className="flex items-center justify-between pb-1 border-b border-border/60">
-      <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
         <Layers className="w-3.5 h-3.5 text-primary" /> Presets de Ambiente
       </h3>
-      <span className="text-2xs text-muted-foreground font-mono">Alterna caminhos e portas de uma vez</span>
+      <AppliesNowTag />
     </div>
     <p className="text-2xs text-muted-foreground -mt-1">
       Salve o estado atual dos diretórios (repositórios, Karaf, rotinas, JDK, IDE) e das portas como um preset nomeado, e alterne entre eles com um clique — útil pra quem trabalha com múltiplos clientes/ambientes na mesma máquina.

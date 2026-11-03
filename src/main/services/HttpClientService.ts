@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import { httpRequest } from '../utils/httpRequest';
+import { encodeWtaPassword } from './authLockout/wtaPassword';
 import {
   HttpExecutionRequest,
   HttpResponseData,
@@ -220,7 +221,8 @@ export class HttpClientService {
         },
         body: JSON.stringify({
           login: credentials.login,
-          senha: credentials.senha
+          // O WTA só aceita o MD5 da senha em hexadecimal maiúsculo; um hash colado vai como está
+          senha: encodeWtaPassword(credentials.senha)
         }),
         timeout: 20000
       });

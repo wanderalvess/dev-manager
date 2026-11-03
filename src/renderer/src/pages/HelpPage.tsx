@@ -1,20 +1,20 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { getWebPort, getKarafSshPort, getWebUrl } from '../../../shared/types';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { useHelpPageData } from '../hooks/help/useHelpPageData';
 import { useHelpPageDocs } from '../hooks/help/useHelpPageDocs';
 import { useHelpPageSearch } from '../hooks/help/useHelpPageSearch';
+import { useHelpSearch } from '../hooks/help/useHelpSearch';
 import { useHelpAboutDiagnostic } from '../hooks/help/useHelpAboutDiagnostic';
-import { helpPageFaqCategories, helpPageFilterFaqs } from '../utils/helpPageUtils';
+import { helpPageFaqCategories, helpPageFaqCategoryCounts, helpPageFilterFaqs } from '../utils/helpPageUtils';
+import type { HelpSearchEntry } from '../utils/helpSearch';
 import { MarkdownReader } from '../components/MarkdownReader';
 import { WhatsNewModal } from '../components/WhatsNewModal';
-import {
-  getFaqList,
-  getKeyboardShortcuts,
-  getHelpCategories
-} from '../components/help/helpData';
-import { HelpPageHeader } from '../components/help/page/HelpPageHeader';
-import { HelpPageCategoryNav } from '../components/help/page/HelpPageCategoryNav';
+import { getFaqList, getKeyboardShortcuts } from '../components/help/helpData';
+import type { HelpCategory } from '../components/help/helpSections';
+import { HelpSectionNav } from '../components/help/page/HelpSectionNav';
+import { HelpSectionHeader } from '../components/help/page/HelpSectionHeader';
+import { HelpSearchBar } from '../components/help/page/HelpSearchBar';
 import { HelpOverviewTab } from '../components/help/tabs/HelpOverviewTab';
 import { HelpModulesTab } from '../components/help/tabs/HelpModulesTab';
 import { HelpShortcutsTab } from '../components/help/tabs/HelpShortcutsTab';
@@ -38,6 +38,10 @@ interface HelpPageProps {
   settingsVersion?: number;
 }
 
+/**
+ * Orquestra a Central de Ajuda no mesmo desenho das Configurações: menu lateral com busca à esquerda e a seção ativa à
+ * direita. O conteúdo de cada seção mora em `components/help/tabs`; as perguntas, em `components/help/helpData`.
+ */
 export const HelpPage: React.FC<HelpPageProps> = ({
   onNavigate,
   initialSearch,
@@ -54,7 +58,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({
     setFaqCategoryFilter,
     expandedFaqs,
     toggleFaq,
-    handleSearchChange
+    openFaq
   } = useHelpPageSearch(initialSearch);
   const { appInfo, updateStatus, settings, needsSetup, handleCheckForUpdates } = useHelpPageData(settingsVersion);
   const {
@@ -100,105 +104,125 @@ export const HelpPage: React.FC<HelpPageProps> = ({
   }, [debugPort, webPort, sshPort, portalWebUrl, consoleUrl, onNavigate, copyToClipboard, copiedItem, handleOpenMcpDocs, appInfo]);
 
   const faqCategories = useMemo(() => helpPageFaqCategories(faqList), [faqList]);
-
+  const categoryCounts = useMemo(() => helpPageFaqCategoryCounts(faqList, searchQuery), [faqList, searchQuery]);
   const filteredFaqs = useMemo(
     () => helpPageFilterFaqs(faqList, searchQuery, faqCategoryFilter),
     [faqList, searchQuery, faqCategoryFilter]
   );
+  const keyboardShortcuts = useMemo(() => getKeyboardShortcuts(debugPort), [debugPort]);
 
-  const keyboardShortcuts = useMemo(() => {
-    return getKeyboardShortcuts(debugPort);
-  }, [debugPort]);
+  // Resultado da busca do menu: pergunta abre no lugar; módulo e atalho levam à sua seção
+  const handleSearchSelect = (entry: HelpSearchEntry) => {
+    if (entry.faqId) openFaq(entry.faqId);
+    else setActiveCategory(entry.category);
+  };
+  const search = useHelpSearch({ faqList, shortcuts: keyboardShortcuts, onSelect: handleSearchSelect });
 
-  const categories = useMemo(() => {
-    return getHelpCategories(faqList.length, appInfo?.appVersion || '1.49.0');
-  }, [faqList.length, appInfo?.appVersion]);
+  const badges: Partial<Record<HelpCategory, string>> = {
+    faq: String(faqList.length),
+    about: `v${appInfo?.appVersion || '1.60.0'}`
+  };
+
+  // Trocar de seção volta o conteúdo ao topo (abrir uma pergunta rola até ela depois disso)
+  const contentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 });
+  }, [activeCategory]);
 
   return (
-    <div className="h-full flex flex-col px-4 py-3 md:px-5 md:py-4 space-y-3 overflow-hidden">
-      {/* 1. TOPO / HEADER DA CENTRAL DE AJUDA & LAUNCHPAD */}
-      <HelpPageHeader
-        searchQuery={searchQuery}
-        onSearchChange={handleSearchChange}
-        onClearSearch={() => setSearchQuery('')}
-      />
-
-      {/* 2. SUB-NAVEGAÇÃO POR PÍLULAS TEMÁTICAS */}
-      <HelpPageCategoryNav
-        categories={categories}
+    <div className="h-full w-full flex flex-col md:flex-row gap-4 md:gap-6 px-4 py-3 md:px-5 md:py-4 overflow-hidden">
+      <HelpSectionNav
         activeCategory={activeCategory}
         onSelect={setActiveCategory}
+        badges={badges}
+        onRestartTour={onRestartTour}
+        onResetPageTours={onResetPageTours}
+        search={
+          <HelpSearchBar
+            query={search.query}
+            onQueryChange={search.setQuery}
+            isOpen={search.isOpen}
+            onOpenChange={search.setIsOpen}
+            results={search.results}
+            onSelectResult={search.selectResult}
+          />
+        }
       />
 
-      {/* 3. CONTEÚDO PRINCIPAL ROLÁVEL */}
-      <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
-        {activeCategory === 'overview' && (
-          <HelpOverviewTab
-            appInfo={appInfo}
-            webPort={webPort}
-            sshPort={sshPort}
-            debugPort={debugPort}
-            portalWebUrl={portalWebUrl}
-            consoleUrl={consoleUrl}
-            needsSetup={needsSetup}
-            onNavigate={onNavigate}
-            onRestartTour={onRestartTour}
-            onResetPageTours={onResetPageTours}
-            setActiveCategory={setActiveCategory}
-            handleOpenLink={handleOpenLink}
-            copyToClipboard={copyToClipboard}
-            copiedItem={copiedItem}
-          />
-        )}
+      <div ref={contentRef} className="flex-1 min-w-0 min-h-0 overflow-y-auto pr-1 -mr-1">
+        <div className="max-w-5xl flex flex-col gap-4 min-h-full">
+          <HelpSectionHeader category={activeCategory} />
 
-        {activeCategory === 'modules' && (
-          <HelpModulesTab
-            debugPort={debugPort}
-            onNavigate={onNavigate}
-            handleOpenMcpDocs={handleOpenMcpDocs}
-            copyToClipboard={copyToClipboard}
-            copiedItem={copiedItem}
-          />
-        )}
+          {activeCategory === 'overview' && (
+            <HelpOverviewTab
+              appInfo={appInfo}
+              webPort={webPort}
+              sshPort={sshPort}
+              debugPort={debugPort}
+              portalWebUrl={portalWebUrl}
+              consoleUrl={consoleUrl}
+              needsSetup={needsSetup}
+              faqList={faqList}
+              onNavigate={onNavigate}
+              onOpenFaq={openFaq}
+              setActiveCategory={setActiveCategory}
+              handleOpenLink={handleOpenLink}
+              copyToClipboard={copyToClipboard}
+              copiedItem={copiedItem}
+            />
+          )}
 
-        {activeCategory === 'guides' && <HelpGuidesTab openLink={handleOpenLink} />}
+          {activeCategory === 'modules' && (
+            <HelpModulesTab
+              debugPort={debugPort}
+              onNavigate={onNavigate}
+              handleOpenMcpDocs={handleOpenMcpDocs}
+              copyToClipboard={copyToClipboard}
+              copiedItem={copiedItem}
+            />
+          )}
 
-        {activeCategory === 'shortcuts' && (
-          <HelpShortcutsTab
-            keyboardShortcuts={keyboardShortcuts}
-            debugPort={debugPort}
-            sshPort={sshPort}
-            copyToClipboard={copyToClipboard}
-            copiedItem={copiedItem}
-          />
-        )}
+          {activeCategory === 'guides' && <HelpGuidesTab openLink={handleOpenLink} />}
 
-        {activeCategory === 'faq' && (
-          <HelpFaqTab
-            faqCategories={faqCategories}
-            faqCategoryFilter={faqCategoryFilter}
-            setFaqCategoryFilter={setFaqCategoryFilter}
-            filteredFaqs={filteredFaqs}
-            expandedFaqs={expandedFaqs}
-            toggleFaq={toggleFaq}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-          />
-        )}
+          {activeCategory === 'shortcuts' && (
+            <HelpShortcutsTab
+              keyboardShortcuts={keyboardShortcuts}
+              debugPort={debugPort}
+              sshPort={sshPort}
+              copyToClipboard={copyToClipboard}
+              copiedItem={copiedItem}
+            />
+          )}
 
-        {activeCategory === 'about' && (
-          <HelpAboutTab
-            appInfo={appInfo}
-            updateStatus={updateStatus}
-            memoryUsagePercent={memoryUsagePercent}
-            copiedDiag={copiedDiag}
-            copiedItem={copiedItem}
-            handleCopyDiagnostic={handleCopyDiagnostic}
-            handleCheckForUpdates={handleCheckForUpdates}
-            handleOpenChangelog={handleOpenChangelog}
-            copyToClipboard={copyToClipboard}
-          />
-        )}
+          {activeCategory === 'faq' && (
+            <HelpFaqTab
+              faqCategories={faqCategories}
+              categoryCounts={categoryCounts}
+              faqCategoryFilter={faqCategoryFilter}
+              setFaqCategoryFilter={setFaqCategoryFilter}
+              filteredFaqs={filteredFaqs}
+              expandedFaqs={expandedFaqs}
+              toggleFaq={toggleFaq}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              onNavigate={onNavigate}
+            />
+          )}
+
+          {activeCategory === 'about' && (
+            <HelpAboutTab
+              appInfo={appInfo}
+              updateStatus={updateStatus}
+              memoryUsagePercent={memoryUsagePercent}
+              copiedDiag={copiedDiag}
+              copiedItem={copiedItem}
+              handleCopyDiagnostic={handleCopyDiagnostic}
+              handleCheckForUpdates={handleCheckForUpdates}
+              handleOpenChangelog={handleOpenChangelog}
+              copyToClipboard={copyToClipboard}
+            />
+          )}
+        </div>
       </div>
 
       {isChangelogOpen && (

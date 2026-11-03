@@ -1,26 +1,14 @@
 import React from 'react';
-import { BookOpen, Server, X } from 'lucide-react';
-import type { InfrFolderStatus } from '../../../utils/infrBootstrapModalUtils';
+import { BookOpen, ChevronLeft, Server, X } from 'lucide-react';
+import { INFR_VIEW_TITLE, type InfrBootstrapTab, type InfrFolderStatus } from '../../../utils/infrBootstrapModalUtils';
 
-const Chip: React.FC<{ ok: boolean | null; title: string; children: React.ReactNode; onClick?: () => void }> = ({ ok, title, children, onClick }) => {
-  const cls = 'inline-flex items-center gap-1.5 max-w-full px-2.5 py-1 border border-border/80 rounded-full text-2xs text-foreground/80';
-  const dot = <span className={`w-2 h-2 shrink-0 rounded-full ${ok === null ? 'bg-muted-foreground/40' : ok ? 'bg-success' : 'bg-danger'}`} />;
-  const text = <span className="truncate">{children}</span>;
-  return onClick ? (
-    <button type="button" onClick={onClick} title={title} className={`${cls} hover:bg-muted cursor-pointer`}>
-      {dot}
-      {text}
-    </button>
-  ) : (
-    <span title={title} className={cls}>
-      {dot}
-      {text}
-    </span>
-  );
-};
-
-/** Cabeçalho do assistente: o que ele faz e onde vai rodar (distro e pasta do INFR-Docker). */
+/**
+ * Cabeçalho do assistente. Na tela de ambientes mostra onde tudo roda (distro e pasta do INFR-Docker, numa linha);
+ * nas outras telas, o caminho de volta para Ambientes e o nome da tela, sem navegação lateral.
+ */
 export const InfrBootstrapHeader: React.FC<{
+  view: InfrBootstrapTab;
+  onHome: () => void;
   onClose: () => void;
   /** Distro escolhida na tela */
   distro?: string;
@@ -30,51 +18,64 @@ export const InfrBootstrapHeader: React.FC<{
   onOpenScripts: () => void;
   /** Abre o guia "Ambientes WinThor no Docker" (o mesmo da Central de Ajuda → Guias) */
   onOpenGuide: () => void;
-}> = ({ onClose, distro, detectedDistro, folder, onOpenScripts, onOpenGuide }) => (
-  <div className="px-5 py-4 border-b border-border/80 flex items-start gap-3">
-    <div className="flex-1 min-w-0 flex flex-wrap items-start gap-x-4 gap-y-3">
-      <div className="flex items-start gap-3 min-w-0 flex-1 basis-72">
-        <div className="w-10 h-10 shrink-0 rounded-xl bg-warning/10 flex items-center justify-center text-warning">
-          <Server className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <h3 className="font-bold text-foreground text-base">Assistente INFR-Docker</h3>
-          <p className="text-xs text-muted-foreground">Cria e atualiza ambientes WinThor (Oracle, WTA e WSH) em containers dentro do WSL.</p>
-        </div>
-      </div>
+}> = ({ view, onHome, onClose, distro, detectedDistro, folder, onOpenScripts, onOpenGuide }) => {
+  const distroName = distro || detectedDistro;
+  const ok = folder.ok && !!distroName;
 
-      <div className="flex flex-wrap items-center gap-2 min-w-0 max-w-full">
-        <Chip
-          ok={distro || detectedDistro ? true : null}
-          title={distro ? 'Distro WSL onde os containers rodam' : 'Nenhuma distro escolhida na tela: o Hub usa a que tem Docker e "winthor" no nome'}
-        >
-          {distro ? `Distro ${distro}` : detectedDistro ? `Distro ${detectedDistro} (detectada)` : 'Distro detectada ao rodar'}
-        </Chip>
-        <Chip
-          ok={folder.ok}
-          onClick={onOpenScripts}
-          title={folder.ok ? 'Pasta do INFR-Docker (clique para conferir os scripts)' : 'Faltam scripts nesta pasta: clique para conferir'}
-        >
-          {folder.folder ? `Pasta ${folder.folder}` : 'Pasta do INFR-Docker não encontrada'}
-          {folder.missing > 0 && ` · faltam ${folder.missing} scripts`}
-        </Chip>
+  return (
+    <div className="shrink-0 px-4 md:px-5 py-2.5 border-b border-border/80 bg-card flex flex-wrap items-center gap-x-3 gap-y-2">
+      {view === 'home' ? (
+        <>
+          <span className="w-8 h-8 shrink-0 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
+            <Server className="w-4 h-4" />
+          </span>
+          <h3 className="font-bold text-foreground text-base">{INFR_VIEW_TITLE.home}</h3>
+        </>
+      ) : (
+        <>
+          <button
+            type="button"
+            onClick={onHome}
+            className="inline-flex items-center gap-1 h-8 pl-1 pr-2 rounded-lg text-xs font-semibold text-warning hover:bg-warning/10 cursor-pointer"
+          >
+            <ChevronLeft className="w-4 h-4" /> Ambientes
+          </button>
+          <span className="text-muted-foreground/60" aria-hidden="true">
+            /
+          </span>
+          <h3 className="font-bold text-foreground text-base">{INFR_VIEW_TITLE[view]}</h3>
+        </>
+      )}
+      <div className="flex-1 min-w-0 flex">
         <button
           type="button"
-          onClick={onOpenGuide}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-primary/40 text-2xs font-semibold text-primary hover:bg-primary/10 cursor-pointer"
+          onClick={onOpenScripts}
+          title={ok ? 'Pasta do INFR-Docker com todos os scripts (clique para conferir)' : 'Faltam scripts ou a pasta não foi achada: clique para conferir'}
+          className="inline-flex items-center gap-1.5 min-w-0 max-w-full px-2 h-7 rounded-md text-2xs text-foreground/80 hover:text-foreground hover:bg-muted cursor-pointer"
         >
-          <BookOpen className="w-3.5 h-3.5" /> Como funciona
+          <span className={`w-2 h-2 shrink-0 rounded-full ${ok ? 'bg-success' : 'bg-danger'}`} />
+          <span className="truncate">
+            {distroName ? `${distroName}${distro ? '' : ' (detectada)'}` : 'distro detectada ao rodar'}
+            {' · '}
+            {folder.folder ? (folder.ok ? folder.folder : `${folder.folder}: faltam ${folder.missing} scripts`) : 'pasta do INFR-Docker não encontrada'}
+          </span>
         </button>
       </div>
+      <button
+        type="button"
+        onClick={onOpenGuide}
+        className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-2xs font-semibold text-primary hover:bg-primary/10 cursor-pointer"
+      >
+        <BookOpen className="w-3.5 h-3.5" /> Como funciona
+      </button>
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Fechar o assistente"
+        className="w-9 h-9 -mr-1.5 shrink-0 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition cursor-pointer"
+      >
+        <X className="w-4 h-4" />
+      </button>
     </div>
-
-    <button
-      type="button"
-      onClick={onClose}
-      aria-label="Fechar o assistente"
-      className="w-10 h-10 -mr-2 shrink-0 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition cursor-pointer"
-    >
-      <X className="w-4 h-4" />
-    </button>
-  </div>
-);
+  );
+};

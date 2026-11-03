@@ -51,7 +51,8 @@ Por favor, forneça de forma concisa e estruturada em Markdown:
 
     try {
       const res = await api.llmChat({
-        messages: [{ role: 'user', content: prompt }]
+        messages: [{ role: 'user', content: prompt }],
+        source: 'diagnostico-http'
       });
 
       if (res && res.text) {

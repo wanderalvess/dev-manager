@@ -4,7 +4,8 @@ import {
   launchWslServerDebug,
   isWslKaraf,
   normalizeWslPath,
-  buildWslClientArgs
+  buildWslClientArgs,
+  buildKillKarafScript
 } from './karafWslUtils';
 
 vi.mock('child_process', async (importOriginal) => ({
@@ -13,6 +14,21 @@ vi.mock('child_process', async (importOriginal) => ({
 }));
 
 describe('karafWslUtils', () => {
+  describe('buildKillKarafScript', () => {
+    it('não derruba o Karaf dos containers: pula quem está num cgroup de docker/containerd', () => {
+      const script = buildKillKarafScript();
+      expect(script).toContain('/proc/$pid/cgroup');
+      expect(script).toContain('docker|containerd|kubepods');
+      expect(script).not.toContain('pkill');
+    });
+
+    it('o padrão não casa com o próprio bash (kara[f])', () => {
+      const script = buildKillKarafScript();
+      expect(script).toContain('pgrep -f "kara[f]"');
+      expect(script).not.toMatch(/pgrep -f "?karaf/);
+    });
+  });
+
   describe('launchWslServerDebug', () => {
     const wslSettings = (karafScript: string, karafPath = '/home/dev/karaf') =>
       ({ karafEnvironment: 'wsl', karafWslDistro: 'Ubuntu', karafPath, karafScript }) as never;

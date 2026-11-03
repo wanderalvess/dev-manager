@@ -1253,6 +1253,45 @@ winthor-repo | mvn:br.com.totvs.winthor/features/1.0.0/xml/features
       expect(summary.npeCount).toBe(1);
     });
   });
+  describe('Karaf em container (docker exec)', () => {
+    const dockerSettings = { karafEnvironment: 'docker' as const, activeEnvironment: 'develop', karafWslDistro: 'ubuntu2604-winthor', karafSshPort: 8187 };
+
+    beforeEach(() => {
+      configService.saveSettings(dockerSettings);
+      vi.spyOn(karafService, 'isKarafRunning').mockResolvedValue(true);
+    });
+
+    it('o "cliente" é o próprio container: não precisa de Karaf instalado no Windows', () => {
+      expect(karafService.getKarafClientExecutable()).toBe('docker:wta-develop');
+    });
+
+    it('roda o cliente dentro do container, sem a porta publicada no host', async () => {
+      const runProcSpy = vi.spyOn(processUtils, 'runCapturedProcess').mockResolvedValue({ code: 0, stdout: 'ID State Name', stderr: '' });
+      const chunks: string[] = [];
+      const res = await karafService.executeKarafCommand('bundle:list', (c) => chunks.push(c));
+      expect(res.code).toBe(0);
+      const [command, args] = runProcSpy.mock.calls[0];
+      expect(command).toBe('wsl.exe');
+      expect(args).toEqual(['-d', 'ubuntu2604-winthor', '--', 'docker', 'exec', 'wta-develop', '/opt/pcsist/produtos/winthor/bin/client', '-u', 'karaf', '-p', 'karaf', 'bundle:list']);
+      // A linha mostrada também não promete uma porta que não é usada
+      expect(chunks.join('')).not.toContain('-a 8187');
+    });
+
+    it('o container informado nas Configurações vence o do ambiente ativo', async () => {
+      configService.saveSettings({ karafDockerContainer: 'wta-master' });
+      const runProcSpy = vi.spyOn(processUtils, 'runCapturedProcess').mockResolvedValue({ code: 0, stdout: 'ok', stderr: '' });
+      await karafService.executeKarafCommand('bundle:list', () => {});
+      expect((runProcSpy.mock.calls[0][1] as string[]).slice(3, 6)).toEqual(['docker', 'exec', 'wta-master']);
+    });
+
+    it('o deploy por Maven para antes de compilar e explica por que não vale para container', async () => {
+      const buildSpy = vi.spyOn(karafService, 'runMavenBuild').mockResolvedValue({ code: 0, stdout: '', stderr: '' });
+      const chunks: string[] = [];
+      const res = await karafService.buildAndDeployMaven({ repoUrl: 'mvn:com.pcsist/app/1.0/xml/features', featureName: 'app' } as never, tmpDir, true, (c) => chunks.push(c));
+      expect(res.success).toBe(false);
+      expect(res.error).toContain('wta-develop');
+      expect(res.error).toContain('Nexus');
+      expect(buildSpy).not.toHaveBeenCalled();
+    });
+  });
 });
-
-

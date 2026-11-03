@@ -34,6 +34,7 @@ import { execFileAsync, isSafeUrl, isValidIdentifier } from '../utils/security';
 import { checkPortOpen } from '../utils/network';
 import { launchProcessSafely } from '../utils/routineLaunchUtils';
 import { isWslKaraf, launchWslServerDebug, killWslKarafProcesses } from '../utils/karafWslUtils';
+import { wtArg } from '../utils/windowsTerminal';
 
 export class WindowsService {
   private configService: ConfigService;
@@ -849,7 +850,7 @@ export class WindowsService {
           if (mode === 'wt' && hasWt) {
             spawn(
               'wt.exe',
-              ['-w', windowId, 'new-tab', '--title', step.name, '-d', resolvedCwd, 'cmd.exe', '/k', step.command],
+              ['-w', windowId, 'new-tab', '--title', step.name, '-d', resolvedCwd, 'cmd.exe', '/k', wtArg(step.command)],
               {
                 cwd: resolvedCwd,
                 detached: true,

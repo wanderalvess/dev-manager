@@ -3,7 +3,8 @@ import {
   extractLatestChangelogSection,
   extractChangelogVersion,
   parseChangelogVersions,
-  extractChangelogByVersion
+  extractChangelogByVersion,
+  extractVersionHighlights
 } from './changelogUtils';
 
 const SAMPLE = `# Changelog
@@ -98,3 +99,37 @@ describe('extractChangelogByVersion', () => {
   });
 });
 
+describe('extractVersionHighlights', () => {
+  const CHANGELOG = `## [2.0.0] - 2026-10-30
+### Corrigido
+- **Catálogo vazio**: o WTA responde vazio. Agora entra antes.
+  - subitem ignorado
+### Adicionado
+- **Nova tela**: mostra \`x\` e *y*.
+- **Outra**: terceira.
+- **Quarta**: pelo núcleo (\`winthor-core-*\`), *sem* perder o asterisco.
+
+## [1.9.0] - 2026-10-01
+### Adicionado
+- **Antiga**: de antes.`;
+
+  it('pega os primeiros itens com seção e a primeira frase', () => {
+    expect(extractVersionHighlights(CHANGELOG, '2.0.0')).toEqual({
+      version: '2.0.0',
+      items: [
+        { section: 'Corrigido', title: 'Catálogo vazio', summary: 'O WTA responde vazio.' },
+        { section: 'Adicionado', title: 'Nova tela', summary: 'Mostra x e y.' }
+      ]
+    });
+  });
+
+  it('usa a versão pedida e cai na mais recente quando não acha', () => {
+    expect(extractVersionHighlights(CHANGELOG, 'v1.9.0')?.items[0].title).toBe('Antiga');
+    expect(extractVersionHighlights(CHANGELOG, '0.0.1')?.version).toBe('2.0.0');
+    expect(extractVersionHighlights('')).toBeNull();
+  });
+
+  it('mantém o conteúdo de código intacto', () => {
+    expect(extractVersionHighlights(CHANGELOG, '2.0.0', 4)?.items[3].summary).toBe('Pelo núcleo (winthor-core-*), sem perder o asterisco.');
+  });
+});

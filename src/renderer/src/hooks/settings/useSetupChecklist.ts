@@ -13,16 +13,18 @@ export function useSetupChecklist(
   const { karafUser, karafPass, hasKarafPass, databaseConnections } = settings;
 
   const checklist = useMemo(() => {
-    const actionsById: Record<string, () => void> = {
-      dirs: () => setActiveTab('dirs'),
-      'karaf-path': () => setActiveTab('karaf'),
-      ide: () => setActiveTab('dirs'),
-      'karaf-creds': () => setActiveTab('karaf'),
-      database: () => onNavigate?.('database')
+    const toDirs = { action: () => setActiveTab('dirs'), actionLabel: 'Resolver em Caminhos & IDE' };
+    const toKaraf = { action: () => setActiveTab('karaf'), actionLabel: 'Resolver em Karaf' };
+    const actionsById: Record<string, { action: () => void; actionLabel: string }> = {
+      dirs: toDirs,
+      'karaf-path': toKaraf,
+      ide: toDirs,
+      'karaf-creds': toKaraf,
+      database: { action: () => onNavigate?.('database'), actionLabel: 'Abrir Banco de Dados' }
     };
     return computeSetupChecklistStatus({ karafUser, karafPass, hasKarafPass, databaseConnections }, pathStatuses).map((item) => ({
       ...item,
-      action: actionsById[item.id]
+      ...actionsById[item.id]
     }));
   }, [pathStatuses, karafUser, karafPass, hasKarafPass, databaseConnections, setActiveTab, onNavigate]);
 

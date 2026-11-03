@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import type { AppSettings, PathStatusInfo } from '../../../../shared/types';
-import { mergeDetectedPaths } from '../../utils/environmentPageUtils';
+import { pickDetectedPaths } from '../../utils/environmentPageUtils';
 import type { SetSettings } from './settingsHookTypes';
 
 const PATH_FIELDS: (keyof AppSettings)[] = ['projectsPath', 'karafPath', 'jdkPath', 'appPath', 'intellijPath', 'tautProjectPath'];
@@ -18,6 +18,8 @@ function fileFiltersFor(field: keyof AppSettings) {
 export function usePathValidation(settings: AppSettings, setSettings: SetSettings) {
   const [pathStatuses, setPathStatuses] = useState<Record<string, PathStatusInfo>>({});
   const [isDetecting, setIsDetecting] = useState(false);
+  /** Resultado da última auto-detecção: quais campos ela preencheu (só os que estavam vazios). */
+  const [lastDetection, setLastDetection] = useState<{ filled: string[]; error?: string } | null>(null);
 
   const validateAllPaths = useCallback(async (st: AppSettings) => {
     const checkPath = window.electronAPI?.checkPath;
@@ -74,13 +76,27 @@ export function usePathValidation(settings: AppSettings, setSettings: SetSetting
     if (!detect) return;
     setIsDetecting(true);
     try {
-      const updated = mergeDetectedPaths(settings, await detect());
+      const picked = pickDetectedPaths(settings, await detect());
+      const updated = { ...settings, ...picked };
       setSettings(updated);
+      setLastDetection({ filled: Object.keys(picked) });
       await validateAllPaths(updated);
+    } catch (err) {
+      setLastDetection({ filled: [], error: err instanceof Error ? err.message : String(err) });
     } finally {
       setIsDetecting(false);
     }
   };
 
-  return { pathStatuses, isDetecting, validateAllPaths, validateSinglePath, handleBrowseDirectory, handleBrowseFile, handleAutoDetect };
+  return {
+    pathStatuses,
+    isDetecting,
+    lastDetection,
+    dismissDetection: () => setLastDetection(null),
+    validateAllPaths,
+    validateSinglePath,
+    handleBrowseDirectory,
+    handleBrowseFile,
+    handleAutoDetect
+  };
 }

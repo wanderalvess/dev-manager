@@ -40,9 +40,9 @@ export const DirsTab: React.FC<DirsTabProps> = ({
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
       <div className="lg:col-span-12 space-y-4 flex flex-col">
         {/* Repositórios, JDK e IDE */}
-        <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
+        <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border">
           <div className="flex items-center justify-between pb-1 border-b border-border/60">
-            <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <Folder className="w-3.5 h-3.5 text-primary" /> Diretórios e Executáveis Locais
             </h3>
             <span className="text-2xs text-muted-foreground font-mono">Windows Explorer</span>

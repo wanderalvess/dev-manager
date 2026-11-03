@@ -1,11 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import type { AppSettings } from '../../../../shared/types';
 import { APP_MODULE_IDS } from '../../../../shared/appModules';
-import { MCP_EXAMPLES, ONBOARDING_STEPS, ONBOARDING_THEMES, buildEnvSections, toggleDisabledModule } from './onboardingContent';
+import {
+  MCP_EXAMPLES,
+  ONBOARDING_STEPS,
+  ONBOARDING_THEMES,
+  bootItemState,
+  buildEnvSections,
+  countEnabled,
+  sectionProgress,
+  setModulesEnabled,
+  summarizeChecklist,
+  toggleDisabledModule
+} from './onboardingContent';
 
 describe('onboardingContent', () => {
   it('tem as etapas na ordem do onboarding, terminando em Pronto', () => {
-    expect(ONBOARDING_STEPS.map((s) => s.id)).toEqual(['welcome', 'modules', 'theme', 'env', 'checklist', 'mcp', 'done']);
+    expect(ONBOARDING_STEPS.map((s) => s.id)).toEqual(['welcome', 'modules', 'theme', 'env', 'mcp', 'done']);
   });
 
   it('oferece um card por variante de tema', () => {
@@ -43,6 +54,8 @@ describe('onboardingContent', () => {
       expect(find('Credenciais').value).toBe('karaf');
       expect(find('Portas SSH e Debug').value).toBe(':8101 · :5005');
       expect(find('Banco de Dados').value).toBe('2 conexão(ões)');
+      expect(find('Diretório de Repositórios Git').key).toBe('projectsPath');
+      expect(sectionProgress(sections[0])).toBe('1/3');
     });
 
     it('credencial sem senha não conta como configurada', () => {
@@ -61,5 +74,36 @@ describe('onboardingContent', () => {
       const allButOne = APP_MODULE_IDS.slice(1);
       expect(toggleDisabledModule([...allButOne], APP_MODULE_IDS[0], APP_MODULE_IDS.length)).toEqual(allButOne);
     });
+  });
+
+  describe('bootItemState', () => {
+    it('marca os concluídos, o que está carregando e os da fila', () => {
+      expect([0, 1, 2, 3].map((i) => bootItemState(i, 2))).toEqual(['done', 'done', 'loading', 'queued']);
+    });
+  });
+
+  describe('módulos em grupo', () => {
+    it('conta os ligados de um grupo', () => {
+      expect(countEnabled(['env', 'git', 'docs'], ['git'])).toBe(2);
+    });
+
+    it('liga e desliga um grupo inteiro', () => {
+      expect(setModulesEnabled(['git', 'env'], ['git', 'docs'], true, 19)).toEqual(['env']);
+      expect(setModulesEnabled(['env'], ['git', 'docs'], false, 19)).toEqual(['env', 'git', 'docs']);
+    });
+
+    it('não desliga um grupo se nada mais ficaria ligado', () => {
+      const ids = [...APP_MODULE_IDS];
+      expect(setModulesEnabled([], ids, false, ids.length)).toEqual([]);
+    });
+  });
+
+  it('resume o checklist com os itens que faltam', () => {
+    expect(
+      summarizeChecklist([
+        { label: 'A', done: true },
+        { label: 'B', done: false }
+      ])
+    ).toEqual({ done: 1, total: 2, missing: ['B'] });
   });
 });

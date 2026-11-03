@@ -23,7 +23,11 @@ export function useSettingsSearch(activeTab: SettingsTab, setActiveTab: (tab: Se
     setIsOpen(false);
     setHighlightedFieldId(entry.id);
     window.setTimeout(() => {
-      document.getElementById(entry.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const el = document.getElementById(entry.id);
+      // Campo dentro de um "Avançado" recolhido: abre a seção antes de rolar até ele
+      const details = el?.closest('details');
+      if (details) details.open = true;
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 50);
     window.setTimeout(() => setHighlightedFieldId(null), 2200);
   };

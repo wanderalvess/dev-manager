@@ -1,6 +1,8 @@
 import React from 'react';
 import { ShieldCheck, Trash2 } from 'lucide-react';
 import { shortInstallId } from '../../../utils/usageViewUtils';
+import { AppliesNowTag } from '../AppliesNowTag';
+import { Switch } from '../../ui/Switch';
 
 interface UsageControlsPanelProps {
   enabled: boolean;
@@ -27,10 +29,10 @@ const NEVER_COUNTED = [
 export const UsageControlsPanel: React.FC<UsageControlsPanelProps> = ({ enabled, onToggle, installId, hasHistory, onClear }) => {
   const hint = enabled ? 'Desligar a contagem de uso' : 'Ligar a contagem de uso';
   return (
-    <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border" id="field-usageMetricsEnabled">
+    <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border" id="field-usageMetricsEnabled">
       <div className="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-border/60">
         <div className="max-w-2xl">
-          <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-success" /> Contagem de uso (local)
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -38,23 +40,7 @@ export const UsageControlsPanel: React.FC<UsageControlsPanelProps> = ({ enabled,
             melhorar. Nada sai daqui.
           </p>
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={enabled}
-          aria-label={hint}
-          title={`${hint} (vale ao salvar)`}
-          onClick={() => onToggle(!enabled)}
-          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40 ${
-            enabled ? 'bg-primary' : 'bg-muted-foreground/30'
-          }`}
-        >
-          <span
-            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-              enabled ? 'translate-x-5' : 'translate-x-0'
-            }`}
-          />
-        </button>
+        <Switch checked={enabled} onChange={onToggle} label={hint} title={`${hint} (vale ao salvar)`} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
@@ -84,6 +70,7 @@ export const UsageControlsPanel: React.FC<UsageControlsPanelProps> = ({ enabled,
             {shortInstallId(installId)}
           </span>
         </p>
+        <AppliesNowTag />
         <button
           type="button"
           onClick={onClear}

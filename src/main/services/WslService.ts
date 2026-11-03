@@ -3,6 +3,7 @@ import path from 'path';
 import os from 'os';
 import crypto from 'crypto';
 import { exec, spawn } from 'child_process';
+import { wtArg } from '../utils/windowsTerminal';
 import {
   WslDistroInfo,
   ContainerEnvironment,
@@ -27,6 +28,12 @@ export class WslService {
   private cachedDistros: WslDistroInfo[] = [];
   private lastFetchTime = 0;
   private readonly CACHE_TTL_MS = 4000;
+  /** Diretório de Repositórios Git das Configurações: o INFR-Docker costuma estar clonado ali */
+  private projectsRoot: () => string | undefined = () => undefined;
+
+  public setProjectsRootProvider(provider: () => string | undefined): void {
+    this.projectsRoot = provider;
+  }
 
   /**
    * Executa comando retornando Buffer bruto para tratamento correto de UTF-16LE emitido pelo WSL no Windows.
@@ -580,7 +587,7 @@ export class WslService {
 
   /**
    * Gera hash MD5 para senhas do WinThor/WSH (em formatos minúsculo e maiúsculo).
-   * O WSH exige DB_PASSWORD em formato MD5 maiúsculo no .env.
+   * O login do WTA exige a senha em MD5 maiúsculo.
    */
   public generateMd5(text: string): { lower: string; upper: string } {
     const hash = crypto.createHash('md5').update(text || '', 'utf8').digest('hex');
@@ -731,6 +738,12 @@ export class WslService {
   private genericProjectRoots(): string[] {
     const home = os.homedir();
     return [path.join(home, 'Projetos'), path.join(home, 'projetos'), path.join(home, 'projects')];
+  }
+
+  /** Onde procurar o INFR-Docker: o Diretório de Repositórios Git configurado primeiro, depois as pastas comuns. */
+  private infrProjectRoots(): string[] {
+    const configured = this.projectsRoot()?.trim();
+    return [...(configured ? [configured] : []), ...this.genericProjectRoots()];
   }
 
   /**
@@ -953,7 +966,7 @@ export class WslService {
   public async checkInfrDockerScripts(customBasePath?: string): Promise<InfrDockerScriptStatus[]> {
     const candidates = [
       customBasePath,
-      ...this.genericProjectRoots().map((root) => path.join(root, 'INFR-Docker')),
+      ...this.infrProjectRoots().map((root) => path.join(root, 'INFR-Docker')),
       'C:\\projetos\\INFR-Docker',
       'D:\\projetos\\INFR-Docker'
     ].filter(Boolean) as string[];
@@ -1000,14 +1013,14 @@ export class WslService {
         name: 'Setup Winthor Smart Hub',
         relPath: 'wsh-winthor/wsh_setup.sh',
         type: 'wsh',
-        description: 'Configura o container WSH apontando para o Winthor.ini e porta 8080'
+        description: 'Configura o container WSH apontando para o Winthor.ini, o banco e o WTA'
       },
       {
         script: '.env.example',
         name: 'Modelo .env WSH',
         relPath: 'wsh-winthor/.env.example',
         type: 'wsh',
-        description: 'Modelo de credenciais do banco com senha em hash MD5 maiúsculo'
+        description: 'Modelo de credenciais do banco (host do Oracle, usuário e senha do schema)'
       }
     ];
 
@@ -1031,7 +1044,7 @@ export class WslService {
   /** Pasta do INFR-Docker no Windows e o caminho /mnt/... dela no WSL; null se o caminho não for seguro. */
   public resolveInfrPaths(infrPath?: string): { windows: string; wsl: string } | null {
     // C:\projetos é a pasta que o manual do INFR-Docker manda usar
-    const infrCandidates = [...this.genericProjectRoots(), 'C:\\projetos'].map((root) => path.join(root, 'INFR-Docker'));
+    const infrCandidates = [...this.infrProjectRoots(), 'C:\\projetos'].map((root) => path.join(root, 'INFR-Docker'));
     const basePath = infrPath || infrCandidates.find((c) => fs.existsSync(c)) || infrCandidates[0];
     if (!isSafeLocalPath(basePath) || !/^[a-zA-Z0-9_\-.:\\/ ]+$/.test(basePath)) return null;
     const wsl = basePath.replace(/^([A-Za-z]):/, (_, drive) => `/mnt/${drive.toLowerCase()}`).replace(/\\/g, '/');
@@ -1083,7 +1096,10 @@ export class WslService {
       const command = buildNewVersionEnvCommand({ ...options.newEnv, version: options.winthorVersion });
       if (!command) return { success: false, output: 'Versão, nomes de ambiente/container, portas ou jar do WSH inválidos.' };
       title = `Nova versão ${options.winthorVersion}: ${options.newEnv?.name}`;
-      cmdToRun = `cd "${wslPath}" && chmod +x linux-winthor/scripts/*.sh oracle-winthor/*.sh oracle-winthor/11.2.0.2-xe/tools/*.sh wsh-winthor/*.sh && cd linux-winthor/scripts && ${command}`;
+      // A saída também vai para /tmp da distro: o Verificar ambiente lê o fim dela e explica a falha do build
+      cmdToRun =
+        `cd "${wslPath}" && chmod +x linux-winthor/scripts/*.sh oracle-winthor/*.sh oracle-winthor/11.2.0.2-xe/tools/*.sh wsh-winthor/*.sh && cd linux-winthor/scripts && ` +
+        `{ set -o pipefail; echo hub: build iniciado em $(date +%F-%T); ${command}; } 2>&1 | tee /tmp/hub-nova-versao-${options.newEnv?.name?.trim()}.log`;
     } else {
       return { success: false, output: `Tipo de script desconhecido: ${scriptType}` };
     }
@@ -1093,7 +1109,7 @@ export class WslService {
         '-w', '0', 'nt',
         '--title', title,
         'wsl.exe', '-d', targetDistro, '--',
-        'bash', '-c', `${cmdToRun}; echo ''; echo 'Pressione Enter para fechar...'; read -r`
+        'bash', '-c', wtArg(`${cmdToRun}; echo ''; echo 'Pressione Enter para fechar...'; read -r`)
       ];
 
       const wtChild = spawn('wt.exe', wtArgs, { detached: true, stdio: 'ignore' });

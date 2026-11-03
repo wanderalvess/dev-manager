@@ -4,6 +4,7 @@ import { AppSettings } from '../../../../../shared/types';
 import { getEnabledModuleIds, isModuleEnabled } from '../../../../../shared/appModules';
 import { NAV_THEME_GROUPS } from '../../header/headerNavConfig';
 import { toggleModule } from '../../../utils/moduleVisibility';
+import { Switch } from '../../ui/Switch';
 
 interface ModulesTabProps {
   settings: AppSettings;
@@ -19,14 +20,14 @@ export const ModulesTab: React.FC<ModulesTabProps> = ({ settings, setSettings })
     setSettings((prev) => ({ ...prev, disabledModules: toggleModule(prev.disabledModules ?? [], id, enabled) }));
 
   return (
-    <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border flex-1" id="field-modules">
+    <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border flex-1" id="field-modules">
       <div className="flex items-center justify-between gap-3 pb-1 border-b border-border/60">
         <div>
-          <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
-            <LayoutGrid className="w-4 h-4 text-primary" /> Módulos da Navegação
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <LayoutGrid className="w-4 h-4 text-primary" /> Módulos na barra lateral
           </h3>
           <p className="text-2xs text-muted-foreground mt-0.5">
-            Escolha quais páginas aparecem no cabeçalho, na busca rápida (Ctrl+K) e nos atalhos Alt+N. Módulo desligado
+            Escolha quais páginas aparecem na barra lateral, na busca rápida (Ctrl+K) e nos atalhos Alt+N. Módulo desligado
             não perde configurações nem dados — só sai da navegação. Ajuda e Configurações ficam sempre disponíveis.
           </p>
         </div>
@@ -56,7 +57,7 @@ export const ModulesTab: React.FC<ModulesTabProps> = ({ settings, setSettings })
                   <GroupIcon className="w-3.5 h-3.5 text-primary" /> {group.title}
                 </h4>
                 <span className="text-2xs font-mono text-muted-foreground">
-                  {groupEnabled === 0 ? 'oculto no cabeçalho' : `${groupEnabled}/${group.items.length}`}
+                  {groupEnabled === 0 ? 'fora da barra lateral' : `${groupEnabled}/${group.items.length}`}
                 </span>
               </div>
               {group.items.map((item) => {
@@ -80,24 +81,7 @@ export const ModulesTab: React.FC<ModulesTabProps> = ({ settings, setSettings })
                         <div className="text-2xs text-muted-foreground truncate">{item.description}</div>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={checked}
-                      aria-label={hint}
-                      title={hint}
-                      disabled={isLast}
-                      onClick={() => setModule(item.id, !checked)}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-60 ${
-                        checked ? 'bg-primary' : 'bg-muted-foreground/30'
-                      }`}
-                    >
-                      <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                          checked ? 'translate-x-5' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
+                    <Switch checked={checked} onChange={(v) => setModule(item.id, v)} label={hint} disabled={isLast} />
                   </div>
                 );
               })}

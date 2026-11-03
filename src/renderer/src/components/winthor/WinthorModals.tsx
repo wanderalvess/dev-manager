@@ -53,6 +53,7 @@ export const WinthorModals: React.FC<WinthorModalsProps> = ({ data, errors, wsl,
       onRunInfrScript={infr.handleRunInfrScript}
       isExecutingInfr={infr.isExecutingInfr}
       infrOutput={infr.infrOutput}
+      initialTab={infr.initialTab}
       distro={data.selectedDistro || data.daemonStatus?.wslDistro || undefined}
     />
 

@@ -6,6 +6,7 @@ import { isSafeKarafShellCommand } from '../../utils/security';
 import { CapturedProcessResult, runCapturedProcess } from '../../utils/process';
 import { diagnoseKarafResolutionError } from '../../utils/karafResolutionParser';
 import { isWslKaraf, resolveKarafWslClient, resolveKarafWslLogPath, buildWslClientArgs } from '../../utils/karafWslUtils';
+import { buildDockerClientArgs, isDockerKaraf, karafDockerContainer, resolveDockerKarafDistro } from '../../utils/karafDockerUtils';
 import {
   filterBenignStderr,
   findKarafErrorMatch,
@@ -27,6 +28,10 @@ export async function runClientProcess(
   onSpawn?: (child: ChildProcess) => void
 ): Promise<CapturedProcessResult> {
   const isWin = process.platform === 'win32';
+  if (isDockerKaraf(settings)) {
+    const dockerCmd = buildDockerClientArgs(await resolveDockerKarafDistro(settings), karafDockerContainer(settings), clientArgs);
+    return await runCapturedProcess(dockerCmd.command, dockerCmd.args, { env: childEnv }, onChunk, effectiveTimeoutMs, onSpawn);
+  }
   const isWsl = isWslKaraf(settings);
   return isWsl
     ? await (() => {
@@ -174,10 +179,12 @@ export async function executeKarafCommand(
   }
 
   const scriptName = path.basename(karafClient);
-  const portDesc = sshPort && sshPort !== 8101 ? ` -a ${sshPort}` : '';
+  // No container o cliente fala com o SSH de dentro dele (8101): a porta do host não entra na linha de comando
+  const viaHostPort = !isDockerKaraf(settings) && sshPort && sshPort !== 8101;
+  const portDesc = viaHostPort ? ` -a ${sshPort}` : '';
   onChunk(`> ${scriptName} -u ${user} -p ****${portDesc} "${command}"\r\n`);
 
-  const clientArgs = sshPort && sshPort !== 8101
+  const clientArgs = viaHostPort
     ? ['-u', user, '-p', pass, '-a', String(sshPort), command]
     : ['-u', user, '-p', pass, command];
 

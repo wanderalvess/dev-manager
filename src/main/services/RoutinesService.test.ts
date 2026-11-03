@@ -285,6 +285,57 @@ describe('RoutinesService', () => {
     });
   });
 
+  describe('checkKarafWtaStatus: só conta o que o WTA já atende', () => {
+    const statusFor = async (status: number) => {
+      const originalFetch = global.fetch;
+      global.fetch = vi.fn().mockResolvedValue({ status, ok: status < 400 } as Response);
+      try {
+        return await service.checkKarafWtaStatus();
+      } finally {
+        global.fetch = originalFetch;
+      }
+    };
+
+    it('404 (a API do WinThor ainda não subiu) não é online e explica o instalador', async () => {
+      const s = await statusFor(404);
+      expect(s.online).toBe(false);
+      expect(s.message).toContain('/instalador');
+    });
+
+    it('5xx (iniciando) não é online', async () => {
+      const s = await statusFor(503);
+      expect(s.online).toBe(false);
+      expect(s.message).toContain('503');
+    });
+
+    it('401 e 405 já mostram que a API responde', async () => {
+      expect((await statusFor(401)).online).toBe(true);
+      expect((await statusFor(405)).online).toBe(true);
+    });
+  });
+
+  describe('loginWta', () => {
+    it('envia a senha em MD5 maiúsculo, como o WTA exige', async () => {
+      configService.saveSettings({ wtaUrl: 'http://localhost:8039', wtaLogin: 'PCADMIN', wtaPassword: 'abc' });
+      const originalFetch = global.fetch;
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: { get: () => null },
+        json: async () => ({ accessToken: 'TOK' })
+      } as unknown as Response);
+      global.fetch = fetchMock;
+      try {
+        const token = await service.loginWta();
+        expect(token).toBe('TOK');
+        const body = JSON.parse(String((fetchMock.mock.calls[0][1] as { body: string }).body));
+        expect(body).toEqual({ login: 'PCADMIN', senha: '900150983CD24FB0D6963F7D28E17F72' });
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
+  });
+
   describe('launchMappedProgram', () => {
     it('lança apenas um id previamente salvo em mappedPrograms', () => {
       const exePath = path.join(appDir, 'notepad.exe');

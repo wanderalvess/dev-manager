@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, X } from 'lucide-react';
 import type { SettingsSearchEntry } from './settingsSearchData';
+import { SETTINGS_SECTIONS } from './settingsSections';
 
 interface SettingsSearchBarProps {
   query: string;
@@ -22,7 +23,7 @@ export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({
   return (
     <div className="relative shrink-0">
       <div className="relative">
-        <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <Search className="w-4 h-4 text-primary absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         <input
           aria-label="Buscar em Configurações"
           type="text"
@@ -40,8 +41,8 @@ export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({
               onSelectResult(results[0]);
             }
           }}
-          placeholder="Buscar em Configurações (ex: senha, porta, cookie, backup, api key)..."
-          className="w-full h-10 bg-card border border-input rounded-[10px] pl-9 pr-9 text-sm text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
+          placeholder="Buscar: porta, senha, cookie…"
+          className="w-full h-9 bg-muted/40 border border-border/70 rounded-lg pl-9 pr-8 text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
         />
         {query && (
           <button
@@ -61,7 +62,7 @@ export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({
       {isOpen && query.trim() && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => onOpenChange(false)} />
-          <div className="absolute left-0 right-0 mt-1.5 rounded-xl bg-card border border-border shadow-lg z-50 overflow-hidden">
+          <div className="absolute left-0 w-[26rem] max-w-[calc(100vw-2rem)] mt-1.5 rounded-xl bg-card border border-border shadow-lg z-50 overflow-hidden">
             {results.length === 0 ? (
               <div className="px-3.5 py-3 text-xs text-muted-foreground">Nenhum campo encontrado para "{query}".</div>
             ) : (
@@ -74,7 +75,7 @@ export const SettingsSearchBar: React.FC<SettingsSearchBarProps> = ({
                 >
                   <span className="text-xs font-semibold text-foreground">{entry.label}</span>
                   <span className="text-2xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full font-mono shrink-0">
-                    {entry.tabLabel}
+                    {SETTINGS_SECTIONS[entry.tab].label}
                   </span>
                 </button>
               ))

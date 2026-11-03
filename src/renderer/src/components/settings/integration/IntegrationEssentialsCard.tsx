@@ -56,9 +56,9 @@ export const IntegrationEssentialsCard: React.FC<IntegrationEssentialsCardProps>
   pdvConnectionId,
   onPdvChange
 }) => (
-  <div className="cockpit-panel rounded-xl p-5 space-y-3 shadow-xl border border-border" id="field-integrationEssentials">
+  <div className="cockpit-panel rounded-xl p-5 space-y-3 border border-border" id="field-integrationEssentials">
     <div>
-      <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
         <Database className="w-4 h-4 text-primary" /> Monitor do WSH: o essencial
       </h3>
       <p className="text-xs text-muted-foreground mt-0.5">

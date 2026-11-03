@@ -2,12 +2,64 @@ import { ipcMain } from 'electron';
 import { wslService } from '../../services/WslService';
 import { InfrVersionService } from '../../services/infr/InfrVersionService';
 import type { InfrEnvSaveRequest, InfrManifestSaveRequest, InfrVersionPreviewRequest } from '../../../shared/infrVersionManifest';
+import { InfrEnvCheckService } from '../../services/infr/InfrEnvCheckService';
+import { InfrOriginCheckService } from '../../services/infr/InfrOriginCheckService';
+import { InfrFirstStepsService } from '../../services/infr/InfrFirstStepsService';
+import { InfrFirstStepsActions } from '../../services/infr/InfrFirstStepsActions';
+import { InfrActiveEnvService } from '../../services/infr/InfrActiveEnvService';
+import { InfrStartEnvService } from '../../services/infr/InfrStartEnvService';
+import { safeSend } from '../../utils/ipcSend';
+import type { InfrFirstStepsActionRequest } from '../../../shared/infrFirstSteps';
+import type { InfrCheckCommandId } from '../../../shared/infrEnvCheck';
 import type { IpcContext } from '../ipcContext';
 
 /** WSL, snapshots e INFR-Docker. Canais: infr:*, wsl:* */
 export function registerWslHandlers(ctx: IpcContext): void {
   const { dockerService } = ctx;
+  // O INFR-Docker é procurado primeiro no Diretório de Repositórios Git das Configurações
+  wslService.setProjectsRootProvider(() => ctx.configService.getSettings().projectsPath);
   const infrVersionService = new InfrVersionService(wslService, ctx.routine801Service);
+  const infrEnvCheckService = new InfrEnvCheckService(wslService);
+  const infrOriginCheckService = new InfrOriginCheckService(wslService, ctx.routine801Service);
+  const infrFirstStepsService = new InfrFirstStepsService(wslService, ctx.routine801Service);
+  const infrFirstStepsActions = new InfrFirstStepsActions(wslService);
+  const infrActiveEnvService = new InfrActiveEnvService(infrVersionService, ctx.configService);
+  const infrStartEnvService = InfrStartEnvService.withDefaults(
+    (distro) => infrVersionService.listEnvironments(distro),
+    async (url) => {
+      const r = await ctx.routine801Service.testWtaLogin(url);
+      return { ok: r.ok, needsCredentials: r.needsCredentials, error: r.error };
+    }
+  );
+
+  // Sobe o ambiente esperando cada parte ficar pronta; o progresso vai pelo mesmo canal da sequência de containers
+  ipcMain.handle('infr:start-environment', async (_, req: { distro?: string; name: string }) => {
+    return await infrStartEnvService.start(req, (step) => safeSend(ctx.mainWindow, 'docker:sequence-progress', step));
+  });
+
+  ipcMain.handle('infr:active-env-list', async (_, distro?: string) => {
+    return await infrActiveEnvService.list(distro);
+  });
+
+  ipcMain.handle('infr:active-env-apply', async (_, req: { distro?: string; name: string }) => {
+    return await infrActiveEnvService.apply(req);
+  });
+
+  ipcMain.handle('infr:active-env-clear', () => {
+    return infrActiveEnvService.clear();
+  });
+
+  ipcMain.handle('infr:first-steps', async (_, req: { distro?: string; infrPath?: string; version?: string }) => {
+    return await infrFirstStepsService.check(req);
+  });
+
+  ipcMain.handle('infr:first-steps-action', async (_, req: InfrFirstStepsActionRequest) => {
+    return await infrFirstStepsActions.run(req);
+  });
+
+  ipcMain.handle('infr:origin-check', async (_, req: { distro?: string; infrPath?: string; fromEnv: string }) => {
+    return await infrOriginCheckService.check(req);
+  });
 
   ipcMain.handle('infr:version-environments', async (_, distro?: string) => {
     return await infrVersionService.listEnvironments(distro);
@@ -27,6 +79,14 @@ export function registerWslHandlers(ctx: IpcContext): void {
 
   ipcMain.handle('infr:version-save', async (_, req: InfrManifestSaveRequest) => {
     return infrVersionService.saveManifest(req);
+  });
+
+  ipcMain.handle('infr:env-check', async (_, { distro, name }: { distro?: string; name: string }) => {
+    return await infrEnvCheckService.check(distro, name);
+  });
+
+  ipcMain.handle('infr:env-check-terminal', async (_, req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }) => {
+    return await infrEnvCheckService.openCheckTerminal(req.distro, req.name, req.id, req.wtaPort);
   });
 
   ipcMain.handle('wsl:list-distros', async () => {

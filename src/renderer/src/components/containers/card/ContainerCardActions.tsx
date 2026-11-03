@@ -73,7 +73,7 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
       {isOracle && (
         <button
           onClick={() => {
-            const port = extractOraclePort(container.ports);
+            const port = extractOraclePort(container.ports, container.names);
             onCopyText(getOracleTnsConfig(port), `tns-${container.id}`);
           }}
           title="Copiar bloco de conexão do tnsnames.ora para este container"

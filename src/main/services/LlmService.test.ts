@@ -227,6 +227,53 @@ describe('LlmService', () => {
       fetchSpy.mockRestore();
     });
 
+    it('Anthropic: se o modelo recusa temperature (deprecated), refaz sem ele e não manda mais', async () => {
+      const config: any = {
+        getSettings: vi.fn().mockReturnValue({
+          llmProviders: [{ id: 'cl', name: 'Claude', provider: 'anthropic', model: 'claude-sonnet-5-5', apiKey: 'k', enabled: true }],
+          activeLlmProviderId: 'cl'
+        })
+      };
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValueOnce({ ok: false, status: 400, text: async () => '{"error":{"message":"`temperature` is deprecated for this model."}}', json: async () => ({ error: { message: '`temperature` is deprecated for this model.' } }) } as any)
+        .mockResolvedValue({ ok: true, json: async () => ({ content: [{ text: 'ok' }], model: 'claude-sonnet-5-5' }) } as any);
+      const bodyOf = (call: number) => JSON.parse((fetchSpy.mock.calls[call][1] as any).body);
+
+      const service = new LlmService(config);
+      expect((await service.chat({ messages: [{ role: 'user', content: 'oi' }] })).text).toBe('ok');
+      await service.chat({ messages: [{ role: 'user', content: 'oi' }] });
+
+      expect(fetchSpy).toHaveBeenCalledTimes(3);
+      expect(bodyOf(0).temperature).toBeDefined();
+      expect(bodyOf(1).temperature).toBeUndefined();
+      expect(bodyOf(2).temperature).toBeUndefined();
+      fetchSpy.mockRestore();
+    });
+
+    it('noThinking manda reasoning_effort "none" só ao Ollama', async () => {
+      const settings = {
+        llmProviders: [
+          { id: 'oll', name: 'Ollama', provider: 'ollama', model: 'qwen3.5:4b', baseUrl: 'http://127.0.0.1:11434/v1', enabled: true },
+          { id: 'oai', name: 'OpenAI', provider: 'openai', model: 'gpt-4o-mini', apiKey: 'sk-x', enabled: true }
+        ],
+        activeLlmProviderId: 'oll'
+      };
+      const config: any = { getSettings: vi.fn().mockReturnValue(settings) };
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: '{}' } }] }) } as any);
+      const bodyOf = (call: number) => JSON.parse((fetchSpy.mock.calls[call][1] as any).body);
+
+      const service = new LlmService(config);
+      await service.chat({ providerId: 'oll', noThinking: true, messages: [{ role: 'user', content: 'oi' }] });
+      await service.chat({ providerId: 'oll', messages: [{ role: 'user', content: 'oi' }] });
+      await service.chat({ providerId: 'oai', noThinking: true, messages: [{ role: 'user', content: 'oi' }] });
+
+      expect(bodyOf(0).reasoning_effort).toBe('none');
+      expect(bodyOf(1).reasoning_effort).toBeUndefined();
+      expect(bodyOf(2).reasoning_effort).toBeUndefined();
+      fetchSpy.mockRestore();
+    });
+
     it('chama Google Gemini REST e extrai resposta', async () => {
       const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
         ok: true,

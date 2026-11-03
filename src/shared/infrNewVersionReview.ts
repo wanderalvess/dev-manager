@@ -3,7 +3,7 @@
  * diz se está ok, se merece atenção ou se impede o ambiente de subir, numa frase.
  */
 import type { InfrDbMode } from './infrWinthorVersion';
-import type { InfrManifestSource, InfrVersionPreview } from './infrVersionManifest';
+import { winthorLineOf, type InfrManifestSource, type InfrVersionPreview } from './infrVersionManifest';
 
 export type InfrReviewStatus = 'ok' | 'warn' | 'block';
 
@@ -11,7 +11,7 @@ export type InfrReviewStatus = 'ok' | 'warn' | 'block';
 export type InfrReviewFix = 'useSourceOracle' | 'emptyOracle';
 
 export interface InfrReviewItem {
-  id: 'origem' | 'features' | 'wsh' | 'banco';
+  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'artefatos' | 'ensaio' | 'portas' | 'disco' | 'memoria' | 'rede' | 'wsh' | 'banco' | 'imagem' | 'manifesto' | 'portasfixas' | 'arquivosenv';
   status: InfrReviewStatus;
   title: string;
   detail: string;
@@ -49,7 +49,25 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
 
   const existing = p.existing;
   const useExisting = !!existing && i.manifestSource === 'existing';
-  if (useExisting) {
+  const from = downgradeFrom(i);
+  if (from !== undefined) {
+    items.push({
+      id: 'versao',
+      status: 'warn',
+      title: `Downgrade: a origem está na ${from}`,
+      detail: `O ${i.from} está na linha ${from} e a versão nova é a ${i.version}. A Nova versão só sobe features; para descer, o ambiente precisa da lista e do banco da ${i.version}. Se não tiver os dois, use Montar do zero com um dump da ${i.version}.`
+    });
+  }
+  if (from !== undefined && !useExisting) {
+    items.push({
+      id: 'features',
+      status: 'block',
+      title: `Features da ${i.version}`,
+      detail: existing
+        ? `Use a lista que já existe (versions/${i.version}.features): a lista nova manteria as features da ${from} num ambiente ${i.version}.`
+        : `Não há versions/${i.version}.features no INFR-Docker, e a lista nova manteria as features da ${from} num ambiente ${i.version}. Gere a lista de um WTA ${i.version} (export_features.sh) ou use Montar do zero.`
+    });
+  } else if (useExisting) {
     items.push({ id: 'features', status: 'ok', title: `Features da ${i.version}`, detail: `Usa a lista que já existe (${existing.count} features); nada é regravado.` });
   } else if (existing && existing.comparison.older > 0) {
     items.push({
@@ -63,11 +81,19 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
       id: 'features',
       status: 'warn',
       title: `Features da ${i.version}`,
-      detail: `${up.behind.length} features sem versão da linha ${i.version} no catálogo ficam como na origem.`
+      detail: `${up.behind.length} features sem versão da linha ${i.version} no catálogo ficam como na origem.${behindAdvice(i, p)}`
     });
   } else {
     items.push({ id: 'features', status: 'ok', title: `Features da ${i.version}`, detail: `${up.changes.length} sobem pelo catálogo da 801.` });
   }
+
+  if (!useExisting) {
+    items.push(reviewDependencies(p.dependencies));
+    const artifacts = reviewArtifacts(p.artifacts);
+    if (artifacts) items.push(artifacts);
+    if (p.dryRun) items.push(reviewDryRun(p.dryRun));
+  }
+  items.push(...(p.preflight ?? []));
 
   const checks = useExisting && existing.wshCheck ? existing.wshCheck : p.wshCheck;
   const fails = checks?.filter((c) => !c.ok) ?? [];
@@ -95,8 +121,132 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
   return items;
 }
 
-function reviewDatabase(i: InfrReviewInput): InfrReviewItem {
+/** O Karaf de origem simulou a instalação das features trocadas? Só avisa: ele ainda tem o estado da versão antiga. */
+function reviewDryRun(d: NonNullable<InfrVersionPreview['dryRun']>): InfrReviewItem {
+  const title = 'Ensaio da resolução no Karaf';
+  if (d.skipped) return { id: 'ensaio', status: 'warn', title: 'Ensaio da resolução não rodou', detail: `${d.skipped}.` };
+  if (d.errors.length) {
+    return {
+      id: 'ensaio',
+      status: 'warn',
+      title: 'O Karaf não resolveu as features',
+      detail: `${d.errors.slice(0, 3).join(' · ')}${d.errors.length > 3 ? ` · e mais ${d.errors.length - 3}` : ''}. O build tende a falhar do mesmo jeito.`
+    };
+  }
+  return { id: 'ensaio', status: 'ok', title, detail: `${d.simulated} features simuladas (feature:install -t) sem erro de resolução.` };
+}
+
+/** Os repositórios novos existem no Nexus do WTA? Só avisa: o teste pode não enxergar um espelho ou um login. */
+function reviewArtifacts(a: InfrVersionPreview['artifacts']): InfrReviewItem | null {
+  if (!a || (a.checked === 0 && a.withoutRepo.length === 0)) return null;
+  const title = 'Artefatos no Nexus';
+  const extra = a.withoutRepo.length ? ` ${a.withoutRepo.length} features trocadas não trouxeram repositório próprio (${a.withoutRepo.slice(0, 3).join(', ')}${a.withoutRepo.length > 3 ? '…' : ''}); confira que o Karaf as acha.` : '';
+  if (a.missing.length > 0) {
+    const list = a.missing.length > 3 ? `${a.missing.slice(0, 3).join(', ')} e mais ${a.missing.length - 3}` : a.missing.join(', ');
+    return {
+      id: 'artefatos',
+      status: 'warn',
+      title: 'Repositório que o Nexus não tem',
+      detail: `${a.missing.length} de ${a.checked} repositórios da lista não existem em nenhum repositório do Karaf (${list}). O build provavelmente termina em "Unable to resolve".${extra}`
+    };
+  }
+  if (a.unverified > 0) {
+    return { id: 'artefatos', status: 'warn', title: 'Artefatos não conferidos', detail: `Não deu para testar ${a.unverified} de ${a.checked} repositórios no Nexus${a.error ? ` (${a.error})` : ' (sem resposta ou pedindo login)'}.${extra}` };
+  }
+  return { id: 'artefatos', status: a.withoutRepo.length ? 'warn' : 'ok', title, detail: `${a.checked} repositórios novos encontrados no Nexus.${extra}` };
+}
+
+/**
+ * Dependências das features contra o que o catálogo da 801 declara e contra os features.xml dos repositórios do Nexus.
+ * As duas fontes só veem dependência entre FEATURES; conflito de pacote entre bundles só aparece no ensaio no Karaf.
+ */
+function reviewDependencies(d: InfrVersionPreview['dependencies']): InfrReviewItem {
+  const title = 'Dependências das features';
+  const xml = d?.xml;
+  const BUNDLES = ' Conflito de pacote entre bundles (osgi.wiring.package) não aparece aqui: só o ensaio no Karaf de origem o mostra antes do build.';
+  if (!d || d.withDependencies === 0) {
+    const xmlNote = xml
+      ? xml.error
+        ? ` Os features.xml do Nexus também não foram conferidos (${xml.error}).`
+        : ` Os features.xml do Nexus (${xml.fetched} de ${xml.repos} baixados, ${xml.checked} features achadas) também não declaram dependências entre elas.`
+      : '';
+    return {
+      id: 'dependencias',
+      status: 'warn',
+      title,
+      detail: d
+        ? `O catálogo da 801 não trouxe dependências em nenhuma das ${d.checked} features conferidas.${xmlNote} Não deu para conferir antes do build; se ele falhar em "Unable to resolve", é isso.${BUNDLES}`
+        : 'Não deu para conferir as dependências antes do build.'
+    };
+  }
+  const conflicts = d.issues.filter((x) => x.kind === 'conflict');
+  const describe = (x: (typeof d.issues)[number]) =>
+    x.kind === 'conflict'
+      ? `${x.feature} ${x.version} exige ${x.dependency} ${x.required} e a lista tem ${x.found}${x.fix || x.source === 'xml' ? '' : ' (o catálogo não oferece a versão exigida)'}`
+      : `${x.feature} ${x.version} exige ${x.dependency} ${x.required}, que o catálogo não oferece`;
+  const list = (xs: string[]) => (xs.length > 5 ? `${xs.slice(0, 5).join('; ')}; e mais ${xs.length - 5}` : xs.join('; '));
+  if (conflicts.length > 0) {
+    const fromXml = conflicts.some((x) => x.source === 'xml');
+    return {
+      id: 'dependencias',
+      status: 'block',
+      title: 'Dependências que não fecham',
+      detail: `${list(conflicts.map(describe))}. O build falharia ao resolver as features.${fromXml ? ' Saída provável: pôr na lista a versão que atende à faixa, ou voltar a feature que exige para a versão da origem.' : ''}`
+    };
+  }
+  if (d.issues.length > 0) {
+    return { id: 'dependencias', status: 'warn', title, detail: `${list(d.issues.map(describe))}.` };
+  }
+  const xmlOk = xml && !xml.error && xml.withDependencies > 0 ? ` ${xml.withDependencies} conferidas pelos features.xml do Nexus (${xml.fetched} repositórios).` : '';
+  return {
+    id: 'dependencias',
+    status: 'ok',
+    title,
+    detail: `${d.fixed > 0 ? `${d.fixed} ajustadas pelo catálogo para atender às dependências; as demais já fecham.` : `${d.withDependencies} features com dependências, todas atendidas pela lista.`}${xmlOk}${xmlOk ? BUNDLES : ''}`
+  };
+}
+
+/**
+ * As features que ficam na versão anterior convivem com as que sobem; quando uma exige de outra uma faixa que a lista nova
+ * não atende, o build só descobre isso depois de ~30 minutos. Ficar para trás é comum (muitas features passam anos na mesma
+ * linha), então isto não bloqueia: cita as mais atrasadas e, se nenhuma conferência olhou o conflito, sugere o ensaio no Karaf.
+ */
+function behindAdvice(i: InfrReviewInput, p: InfrVersionPreview): string {
+  const target = parseInt(i.version, 10);
+  const far = (p.upgrade?.behind ?? [])
+    .map((f) => ({ f, line: winthorLineOf(f.version) }))
+    .filter((x): x is { f: (typeof x)['f']; line: number } => x.line !== undefined && target - x.line >= 2)
+    .sort((a, b) => a.line - b.line);
+  const worst = far.slice(0, 3).map((x) => `${x.f.name} ${x.f.version}`);
+  const farText = far.length > 0 ? ` ${far.length} delas estão 2 ou mais linhas atrás (${worst.join(', ')}${far.length > 3 ? ' e mais' : ''}).` : '';
+  const conferred = !!p.dryRun || (!!p.dependencies && p.dependencies.withDependencies > 0);
+  const advice = conferred ? '' : ' O conflito entre elas e as que sobem só aparece no build; ligue o ensaio no Karaf de origem (Ajustes → Avançado) para ver antes.';
+  return `${farText}${advice}`;
+}
+
+/** Linha da origem quando ela é maior que a versão nova (downgrade); senão, undefined. */
+function downgradeFrom(i: InfrReviewInput): number | undefined {
+  const line = i.preview.originLine;
+  const target = parseInt(i.version, 10);
+  return line !== undefined && Number.isFinite(target) && target < line ? line : undefined;
+}
+
+export function reviewDatabase(i: InfrReviewInput): InfrReviewItem {
   const title = 'Banco do ambiente novo';
+  const from = downgradeFrom(i);
+  // Banco de uma versão mais nova tem colunas e tabelas que o WTA mais antigo não conhece
+  if (from !== undefined && (i.dbMode === 'clone' || i.dbContainer === `oracle-${i.from}`)) {
+    return {
+      id: 'banco',
+      status: 'block',
+      title: `O banco da ${from} não serve para a ${i.version}`,
+      detail: `${i.dbMode === 'clone' ? `O clone do ${i.dbSource}` : `O ${i.dbContainer}`} traz as tabelas da ${from}, e um WTA ${i.version} não roda em cima delas. Suba um Oracle vazio e importe um dump da ${i.version}.`,
+      fixes: ['emptyOracle']
+    };
+  }
+  if (from !== undefined && i.dbMode === 'existing') {
+    return { id: 'banco', status: 'warn', title, detail: `Usa o ${i.dbContainer}: confira que ele tem um banco da ${i.version}, não da ${from}.` };
+  }
   if (i.dbMode === 'clone') {
     if (i.dbSourceImage && !isInfrXeImage(i.dbSourceImage)) {
       return {

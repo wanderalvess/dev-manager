@@ -15,9 +15,9 @@ const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   if (typeof __DEV_MANAGER_VERSION__ === 'string') return __DEV_MANAGER_VERSION__;
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.49.0';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.60.0';
   } catch {
-    return '1.49.0';
+    return '1.60.0';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -36,6 +36,7 @@ import { DeployService } from '../main/services/DeployService';
 import { KarafLogPersistenceService } from '../main/services/KarafLogPersistenceService';
 import { LogWatcherService } from '../main/services/LogWatcherService';
 import { LlmService } from '../main/services/LlmService';
+import { AiUsageService } from '../main/services/AiUsageService';
 import { Routine801Service } from '../main/services/Routine801Service';
 import { DelphiBuildService } from '../main/services/DelphiBuildService';
 import { registerDelphiTools } from './tools/delphiTools';
@@ -86,7 +87,7 @@ const dockerService = new DockerService();
 const deployService = new DeployService(configService, karafService, dockerService, windowsService, networkService);
 const karafLogPersistenceService = new KarafLogPersistenceService();
 const logWatcherService = new LogWatcherService();
-const llmService = new LlmService(configService, docsIndexService);
+const llmService = new LlmService(configService, docsIndexService, new AiUsageService(configService));
 const routine801Service = new Routine801Service(configService, karafService);
 const delphiBuildService = new DelphiBuildService(configService, windowsService);
 const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
@@ -1754,7 +1755,7 @@ server.registerTool(
   },
   async (request) => {
     try {
-      const response = await llmService.chat(request);
+      const response = await llmService.chat({ ...request, source: 'mcp' });
       return ok(response);
     } catch (err: any) {
       return fail(err.message || 'Erro ao comunicar com o LLM');

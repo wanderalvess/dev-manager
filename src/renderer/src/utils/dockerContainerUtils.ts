@@ -9,6 +9,8 @@ import type {
   DockerContainerInfo,
   DockerContainerPortBinding
 } from '../../../shared/types';
+import { winthorVersionPorts } from '../../../shared/infrWinthorVersion';
+import { firstHostPort } from '../../../shared/infrActiveEnv';
 
 export interface PortLink {
   hostPort: number;
@@ -35,14 +37,21 @@ export function parsePortLinks(portsStr: string): PortLink[] {
   return matches;
 }
 
-/** Extrai a porta do host mapeada para o listener Oracle (padrão XE: 1522 ou 1521). */
-export function extractOraclePort(portsStr?: string): string {
-  if (!portsStr) return '1522';
+/**
+ * Extrai a porta do host mapeada para o listener Oracle. Com o container parado não há mapeamento:
+ * o nome por versão (oracle-39) dá a porta da versão (1539); sem isso fica 1521, a do Oracle.
+ */
+export function extractOraclePort(portsStr?: string, containerName?: string): string {
+  const fallback = () => {
+    const version = /^\/?oracle-(\d{2,3})$/.exec(containerName?.trim() ?? '')?.[1];
+    return version ? String(winthorVersionPorts(version).oracle) : '1521';
+  };
+  if (!portsStr) return fallback();
   const match = portsStr.match(/(?:[\d.]+::?|\[::\]:)?(\d+)->1521/);
   if (match && match[1]) return match[1];
   const directMatch = portsStr.match(/(\d+):1521/);
   if (directMatch && directMatch[1]) return directMatch[1];
-  return '1522';
+  return fallback();
 }
 
 /** Extrai a porta do host mapeada para o WTA (padrão: 8080). */
@@ -56,7 +65,7 @@ export function extractWtaPort(ports?: string): number {
 }
 
 /** Bloco oficial tnsnames.ora para conexão local ao Oracle. */
-export function getOracleTnsConfig(port = '1522', alias = 'LOCAL_DOCKER', sid = 'XE'): string {
+export function getOracleTnsConfig(port = '1521', alias = 'LOCAL_DOCKER', sid = 'XE'): string {
   return `${alias} =
   (DESCRIPTION =
     (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = ${port}))
@@ -121,11 +130,17 @@ export interface StackTopology {
   hasMissingDependency: boolean;
 }
 
-/** Deriva o estado da stack WinThor (Oracle -> WTA -> WSH) a partir da lista de containers. */
-export function computeStackTopology(containers: DockerContainerInfo[]): StackTopology {
-  const oracle = containers.find((c) => c.names.toLowerCase().includes('oracle'));
-  const wta = containers.find((c) => c.names.toLowerCase().includes('wta') || c.names.toLowerCase().includes('linux'));
-  const wsh = containers.find((c) => c.names.toLowerCase().includes('wsh'));
+/**
+ * Deriva o estado da stack WinThor (Oracle -> WTA -> WSH) a partir da lista de containers. Com um ambiente ativo,
+ * usa os containers oracle-, wta- e wsh-<ambiente>; sem ele (ou se nenhum existe), procura pelos nomes.
+ */
+export function computeStackTopology(containers: DockerContainerInfo[], activeEnv?: string): StackTopology {
+  const exact = (role: string) => (activeEnv ? containers.find((c) => c.names.replace(/^\//, '') === `${role}-${activeEnv}`) : undefined);
+  const pinned = { oracle: exact('oracle'), wta: exact('wta'), wsh: exact('wsh') };
+  const usePinned = !!(pinned.oracle || pinned.wta || pinned.wsh);
+  const oracle = usePinned ? pinned.oracle : containers.find((c) => c.names.toLowerCase().includes('oracle'));
+  const wta = usePinned ? pinned.wta : containers.find((c) => c.names.toLowerCase().includes('wta') || c.names.toLowerCase().includes('linux'));
+  const wsh = usePinned ? pinned.wsh : containers.find((c) => c.names.toLowerCase().includes('wsh'));
 
   const oracleRunning = oracle?.state === 'running';
   const wtaRunning = wta?.state === 'running';
@@ -153,7 +168,7 @@ export function computeStackTopology(containers: DockerContainerInfo[]): StackTo
       container: wsh || null,
       name: wsh ? wsh.names.replace(/^\//, '') : 'wsh-winthor',
       running: wshRunning,
-      port: '8080',
+      port: String(firstHostPort(wsh?.ports) ?? 8080),
       exists: Boolean(wsh)
     },
     isStackComplete,

@@ -146,8 +146,9 @@ export function buildIntegrations(
       title: 'OpenTelemetry',
       description: `Recebe traces OTLP na porta ${otlpPort} para o APM. Funciona ao lado de SigNoz ou Jaeger.`,
       ...otlpStatus(apm, otlpPort),
-      actionLabel: 'Trocar porta',
-      target: { kind: 'settings', tab: 'ports' }
+      // A porta do receptor é do APM: trocar reinicia o receptor, por isso não fica em Configurações
+      actionLabel: 'Trocar porta no APM',
+      target: { kind: 'page', tab: 'apm' }
     },
     {
       id: 'webhooks',

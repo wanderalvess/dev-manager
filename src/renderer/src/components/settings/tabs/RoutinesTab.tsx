@@ -6,6 +6,7 @@ import { DirsPathField } from '../dirs/DirsPathField';
 import { DirsRoutineExtensionsFields } from '../dirs/DirsRoutineExtensionsFields';
 import { DirsWinthorStartPanel } from '../dirs/DirsWinthorStartPanel';
 import { DirsCcwPanel } from '../dirs/DirsCcwPanel';
+import { SettingsCard } from '../SettingsCard';
 
 interface RoutinesTabProps {
   settings: AppSettings;
@@ -40,17 +41,9 @@ export const RoutinesTab: React.FC<RoutinesTabProps> = ({
   const { setField, setPathField } = useDirsTabFields({ settings, setSettings, validateSinglePath });
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
-      <div className="lg:col-span-12 space-y-4 flex flex-col">
-        <div className="cockpit-panel rounded-xl p-5 space-y-4 shadow-xl border border-border">
-          <div className="flex items-center justify-between pb-1 border-b border-border/60">
-            <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-              <Folder className="w-3.5 h-3.5 text-success" /> Rotinas, WinThor Start &amp; CCW
-            </h3>
-            <span className="text-2xs text-muted-foreground font-mono">Catálogo de Rotinas</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs items-start">
+    <div className="space-y-4">
+      <SettingsCard title="Rotinas" description="O Catálogo de Rotinas lista os arquivos desta pasta com as extensões abaixo.">
+        <div className="space-y-4 text-xs">
             <DirsPathField
               fieldId="field-appPath"
               labelIcon={<Folder className="w-3.5 h-3.5 text-success" />}
@@ -73,18 +66,17 @@ export const RoutinesTab: React.FC<RoutinesTabProps> = ({
               handleRemoveLauncherRow={handleRemoveLauncherRow}
               handleBrowseLauncherPath={handleBrowseLauncherPath}
             />
-
-            <DirsWinthorStartPanel
-              settings={settings}
-              setField={setField}
-              showWtaPassword={showWtaPassword}
-              setShowWtaPassword={setShowWtaPassword}
-            />
-
-            <DirsCcwPanel settings={settings} setField={setField} />
-          </div>
         </div>
-      </div>
+      </SettingsCard>
+
+      <DirsWinthorStartPanel
+        settings={settings}
+        setField={setField}
+        showWtaPassword={showWtaPassword}
+        setShowWtaPassword={setShowWtaPassword}
+      />
+
+      <DirsCcwPanel settings={settings} setField={setField} />
     </div>
   );
 };

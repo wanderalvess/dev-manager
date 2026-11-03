@@ -152,7 +152,37 @@ async function renderIcons(logo) {
 
 /**
  * Imagens do instalador NSIS: sidebar da boas-vindas/conclusão (164x314) e cabeçalho das telas internas (150x57).
+ * Mesmo visual da abertura do app (tema Cockpit Âmbar): fundo escuro, linhas isométricas, logo e o nome com "Manager" no laranja.
  */
+const INSTALLER_BG = '#020817';
+const INSTALLER_LINE = '#1E293B';
+const INSTALLER_ACCENT = '#FF6A00';
+const INSTALLER_FONT = 'Inter, "Segoe UI", Arial, sans-serif';
+
+/** Linhas em "telhado" (^) atrás do conteúdo, como o padrão isométrico do cubo do logo. */
+function drawIsoLines(ctx, w, peakX, peakY, gap, count) {
+  ctx.strokeStyle = INSTALLER_LINE;
+  ctx.lineWidth = 1;
+  for (let i = 0; i < count; i++) {
+    const y = peakY + i * gap;
+    ctx.beginPath();
+    ctx.moveTo(peakX - w, y + w * 0.58);
+    ctx.lineTo(peakX, y);
+    ctx.lineTo(peakX + w, y + w * 0.58);
+    ctx.stroke();
+  }
+}
+
+function drawWordmark(ctx, x, y, size, stacked) {
+  ctx.font = `800 ${size}px ${INSTALLER_FONT}`;
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#F8FAFC';
+  ctx.fillText('Hub', x, y);
+  ctx.fillStyle = INSTALLER_ACCENT;
+  if (stacked) ctx.fillText('Manager', x, y + size * 1.02);
+  else ctx.fillText('Manager', x + ctx.measureText('Hub ').width, y);
+}
+
 async function renderInstallerImages(logo) {
   const { createCanvas } = require('@napi-rs/canvas');
 
@@ -160,27 +190,28 @@ async function renderInstallerImages(logo) {
   const sideH = 314;
   const side = createCanvas(sideW, sideH);
   const sctx = side.getContext('2d');
-  const grad = sctx.createLinearGradient(0, 0, 0, sideH);
-  grad.addColorStop(0, '#1C1511');
-  grad.addColorStop(1, '#3A1906');
-  sctx.fillStyle = grad;
+  sctx.fillStyle = INSTALLER_BG;
   sctx.fillRect(0, 0, sideW, sideH);
-  sctx.strokeStyle = 'rgba(234, 88, 12, 0.35)';
-  sctx.lineWidth = 1;
-  for (const r of [70, 110, 150]) {
-    sctx.beginPath();
-    sctx.arc(sideW / 2, 112, r, 0, Math.PI * 2);
-    sctx.stroke();
-  }
-  sctx.drawImage(logo, (sideW - 88) / 2, 68, 88, 88);
+  drawIsoLines(sctx, 140, sideW / 2, 190, 26, 6);
+  sctx.fillStyle = INSTALLER_ACCENT;
+  sctx.beginPath();
+  sctx.arc(sideW / 2, 190, 2.5, 0, Math.PI * 2);
+  sctx.fill();
+  sctx.drawImage(logo, 18, 24, 44, 44);
+  drawWordmark(sctx, 18, 104, 24, true);
+  sctx.font = `600 8px ${INSTALLER_FONT}`;
+  sctx.fillStyle = '#94A3B8';
+  sctx.fillText('ECOSSISTEMA WINTHOR', 18, sideH - 18);
 
   const headW = 150;
   const headH = 57;
   const head = createCanvas(headW, headH);
   const hctx = head.getContext('2d');
-  hctx.fillStyle = '#FFFFFF';
+  hctx.fillStyle = INSTALLER_BG;
   hctx.fillRect(0, 0, headW, headH);
-  hctx.drawImage(logo, headW - 49, 5, 47, 47);
+  drawIsoLines(hctx, 70, 100, 12, 14, 4);
+  hctx.drawImage(logo, 12, 14, 29, 29);
+  drawWordmark(hctx, 48, 34, 14, false);
 
   const rgba = (canvas, w, h) => Buffer.from(canvas.getContext('2d').getImageData(0, 0, w, h).data);
   return {
