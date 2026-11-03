@@ -120,7 +120,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({
 
   const badges: Partial<Record<HelpCategory, string>> = {
     faq: String(faqList.length),
-    about: `v${appInfo?.appVersion || '1.65.0'}`
+    about: `v${appInfo?.appVersion || '1.66.0'}`
   };
 
   // Trocar de seção volta o conteúdo ao topo (abrir uma pergunta rola até ela depois disso)

@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.66.0] - 2026-11-03
+### Corrigido
+- **Scripts do INFR-Docker desatualizados avisam antes de abrir o terminal**: com a pasta do INFR-Docker numa branch antiga, subir o WTA de uma versão abria um terminal que só dizia "[ERRO] Flag desconhecida: --version". Agora, antes de abrir qualquer terminal (Oracle, WTA, WSH ou Nova versão), o Hub confere se cada script da pasta conhece as opções que vai receber, incluindo os que o `new_version_env.sh` chama por dentro, e diz qual arquivo está atrás e como atualizar a pasta.
+
 ## [1.65.0] - 2026-11-03
 ### Alterado
 - **A tela de início fica até você entrar**: sem contagem, sem *Ficar nesta tela* e sem a opção *Abrir sempre nesta tela de início*. Ao abrir o Hub, ela mostra o resumo e entra só quando você clica em *Entrar no cockpit* (ou aperta Enter).
