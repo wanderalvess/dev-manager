@@ -32,7 +32,7 @@ export const InfrFirstStepsTab: React.FC<{ f: InfrFirstStepsState; onGoTo: (tab:
 
   return (
     <div className="flex-1 min-w-0 overflow-auto scrollbar-thin">
-      <div className="max-w-4xl mx-auto px-5 md:px-6 py-7 space-y-6">
+      <div className="max-w-6xl mx-auto px-5 md:px-6 py-7 space-y-6">
         <div className="flex flex-wrap items-end gap-3">
           <p className="flex-1 min-w-[16rem] text-sm text-foreground/80">
             O Hub confere cada etapa sozinho, a cada 20 s, e traz o comando pronto.

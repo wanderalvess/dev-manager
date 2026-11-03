@@ -4,6 +4,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.64.0] - 2026-11-03
+### Alterado
+- **Telas do INFR-Docker mais largas**: Nova versão, Primeiros passos, Início e as telas de Oracle, WTA e WSH usavam uma coluna estreita no meio do modal; agora usam a mesma largura do Verificar.
+
+### Corrigido
+- **Cartão de versão cortava a versão nova**: com atualização disponível, "v1.61.0 → …" escondia o número da versão nova atrás dos botões. Agora a versão aparece inteira e os botões descem de linha quando falta espaço.
+
 ## [1.63.0] - 2026-11-03
 ### Corrigido
 - **Só clonar travava com imagem fora do padrão**: se a imagem do WTA de origem não diz a versão (ex.: `linux-winthor:1.93-debian`), o clone parava em "Não deu para saber a versão". Agora você informa a versão na frase e, ao gerar, o Hub marca a imagem da origem com o nome que o script procura (`docker tag`, sem copiar nada), e o ambiente sobe com ela, sem build.

@@ -47,8 +47,9 @@ export const HelpAboutUpdateCard: React.FC<HelpAboutUpdateCardProps> = ({
         </button>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-foreground text-2xs truncate">
+      {/* Com versão nova, os botões descem para a linha de baixo em vez de cortar a versão em "…" */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="font-mono text-foreground text-2xs whitespace-nowrap">
           v{appInfo?.appVersion || '...'}
           {isAvailable && (
             <span className="ml-1.5 text-success font-bold">→ v{updateStatus.version}</span>
