@@ -8,6 +8,7 @@ import {
   secondsToTimeoutMs,
   switchProviderType
 } from '../../../utils/aiTabUtils';
+import { AiProviderLimitsFields } from './AiProviderLimitsFields';
 
 interface AiProviderFormProps {
   provider: Partial<LlmProviderConfig>;
@@ -194,6 +195,8 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
           onCommit={(timeoutMs) => onChange({ ...provider, timeoutMs })}
         />
       </div>
+
+      <AiProviderLimitsFields key={provider.id ?? 'novo'} provider={provider} onChange={onChange} />
     </div>
 
     <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">

@@ -15,6 +15,8 @@ import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
 import type {
   AppSettings,
   UsageDays,
+  AiUsagePeriod,
+  AiUsageReport,
   UsageSummary,
   UsageSummaryQuery,
   KarafDeployRequest,
@@ -322,6 +324,7 @@ export interface ElectronAPI {
   exportSettings: (sanitizePasswords?: boolean) => Promise<string>;
   getUsageSummary: (query?: UsageSummaryQuery) => Promise<UsageSummary>;
   getUsageDays: () => Promise<UsageDays>;
+  getAiUsage: (period?: AiUsagePeriod) => Promise<AiUsageReport>;
   clearUsageMetrics: () => Promise<void>;
   importSettings: (jsonString: string) => Promise<{ success: boolean; error?: string; settings?: AppSettings; warnings?: string[] }>;
 

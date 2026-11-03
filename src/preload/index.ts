@@ -25,6 +25,8 @@ import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
 import type {
   AppSettings,
   UsageDays,
+  AiUsagePeriod,
+  AiUsageReport,
   UsageSummary,
   UsageSummaryQuery,
   KarafDeployRequest,
@@ -547,6 +549,7 @@ const electronAPI = {
   // Métricas locais de uso (só contadores e durações)
   getUsageSummary: (query?: UsageSummaryQuery): Promise<UsageSummary> => ipcRenderer.invoke('usage:get-summary', query),
   getUsageDays: (): Promise<UsageDays> => ipcRenderer.invoke('usage:get-days'),
+  getAiUsage: (period?: AiUsagePeriod): Promise<AiUsageReport> => ipcRenderer.invoke('usage:get-ai', period),
   clearUsageMetrics: (): Promise<void> => ipcRenderer.invoke('usage:clear'),
 
   importSettings: (jsonString: string): Promise<{ success: boolean; error?: string; settings?: AppSettings; warnings?: string[] }> =>

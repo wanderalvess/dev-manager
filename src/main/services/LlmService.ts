@@ -9,6 +9,7 @@ import {
 import { ConfigService } from './ConfigService';
 import { DocsIndexService } from './DocsIndexService';
 import { isSafeUrl } from '../utils/security';
+import type { AiUsageService } from './AiUsageService';
 
 export class LlmService {
   /** Modelos Anthropic que responderam 400 por causa do `temperature` */
@@ -16,7 +17,8 @@ export class LlmService {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly docsIndexService?: DocsIndexService
+    private readonly docsIndexService?: DocsIndexService,
+    private readonly aiUsageService?: AiUsageService
   ) {}
 
   /**
@@ -173,18 +175,23 @@ export class LlmService {
       throw new Error(`A chave de API para o provedor "${provider.name}" não foi informada.`);
     }
 
+    // Teto de tokens: vale aqui, no service, para os três transportes (tela, REST e MCP).
+    this.aiUsageService?.assertWithinLimit(provider);
+
     const timeoutMs = request.maxTokens ? Math.max(provider.timeoutMs || 30000, 45000) : (provider.timeoutMs || 30000);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
+      let response: LlmChatResponse;
       if (provider.provider === 'gemini') {
-        return await this.callGemini(provider, request, controller.signal);
+        response = await this.callGemini(provider, request, controller.signal);
+      } else if (provider.provider === 'anthropic') {
+        response = await this.callAnthropic(provider, request, controller.signal);
+      } else {
+        response = await this.callOpenAiCompatible(provider, request, controller.signal);
       }
-      if (provider.provider === 'anthropic') {
-        return await this.callAnthropic(provider, request, controller.signal);
-      }
-      return await this.callOpenAiCompatible(provider, request, controller.signal);
+      return this.trackUsage(provider, response, request.source);
     } catch (err: any) {
       if (err.name === 'AbortError') {
         throw new Error(`Tempo esgotado (${timeoutMs / 1000}s) aguardando resposta do modelo ${provider.model}.`);
@@ -260,13 +267,23 @@ export class LlmService {
         { role: 'system', content: systemInstruction },
         { role: 'user', content: userPrompt }
       ],
-      temperature: 0.3 // Temperatura menor para respostas mais ancoradas no RAG
+      temperature: 0.3, // Temperatura menor para respostas mais ancoradas no RAG
+      source: 'perguntar-ia'
     });
 
     return {
       answer: chatResponse.text,
-      sources
+      sources,
+      ...(chatResponse.usageWarning ? { usageWarning: chatResponse.usageWarning } : {})
     };
+  }
+
+  /** Registra os tokens da chamada e anexa o aviso de 80% do teto, se for o caso. Nunca lança. */
+  private trackUsage(provider: LlmProviderConfig, response: LlmChatResponse, source?: string): LlmChatResponse {
+    if (!this.aiUsageService) return response;
+    this.aiUsageService.record(provider, response, source);
+    const status = this.aiUsageService.getLimitStatus(provider);
+    return status.level === 'ok' ? response : { ...response, usageWarning: status.message };
   }
 
   // ==========================================

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Activity } from 'lucide-react';
 import { AppSettings, LlmProviderConfig, LlmTestResult } from '../../../../../shared/types';
+import { useAiUsage } from '../../../hooks/settings/useAiUsage';
+import { AI_USAGE_LOCAL_NOTE } from '../../../utils/aiUsageViewUtils';
 import { AiProviderCard } from './AiProviderCard';
 
 interface AiProviderListProps {
@@ -25,6 +27,7 @@ export const AiProviderList: React.FC<AiProviderListProps> = ({
   onDelete
 }) => {
   const providers = settings.llmProviders || [];
+  const { report } = useAiUsage('30d');
 
   return (
     <div className="space-y-3">
@@ -52,6 +55,8 @@ export const AiProviderList: React.FC<AiProviderListProps> = ({
               isActive={settings.activeLlmProviderId === provider.id}
               isTesting={isTestingLlmId === provider.id}
               testResult={llmTestResults[provider.id]}
+              usage={report?.byProvider.find((g) => g.key === provider.id)}
+              limit={report?.limits.find((l) => l.providerId === provider.id)}
               onSetActive={onSetActive}
               onTest={onTest}
               onToggle={onToggle}
@@ -61,6 +66,7 @@ export const AiProviderList: React.FC<AiProviderListProps> = ({
           ))}
         </div>
       )}
+      <p className="text-2xs text-muted-foreground">{AI_USAGE_LOCAL_NOTE}</p>
     </div>
   );
 };

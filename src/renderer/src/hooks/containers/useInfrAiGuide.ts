@@ -154,7 +154,8 @@ export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
           ],
           temperature: 0.1,
           maxTokens: 700,
-          noThinking: true
+          noThinking: true,
+          source: 'ia-conduz'
         });
         text = res.text;
       } catch (err) {

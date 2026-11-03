@@ -31,7 +31,11 @@ export function useLlmProviders(setSettings: SetSettings) {
       maxTokens: editingLlmProvider.maxTokens ?? 2048,
       timeoutMs: editingLlmProvider.timeoutMs ?? 30000,
       enabled: editingLlmProvider.enabled ?? true,
-      isDefault: editingLlmProvider.isDefault ?? false
+      isDefault: editingLlmProvider.isDefault ?? false,
+      dailyTokenLimit: editingLlmProvider.dailyTokenLimit,
+      monthlyTokenLimit: editingLlmProvider.monthlyTokenLimit,
+      priceInPerMillion: editingLlmProvider.priceInPerMillion,
+      priceOutPerMillion: editingLlmProvider.priceOutPerMillion
     };
 
     setSettings((prev) => ({
