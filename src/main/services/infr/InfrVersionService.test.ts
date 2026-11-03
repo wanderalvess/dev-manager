@@ -152,9 +152,18 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
       expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).clone?.imageExists).toBe(false);
     });
 
-    it('imagem fora do padrão ou container inexistente: erro com o que fazer', async () => {
+    it('imagem fora do padrão (linux-winthor:1.93-debian, do Nathan): usa a versão informada e marca a imagem da origem', async () => {
+      cloneInspect = 'linux-winthor:1.93-debian|running';
+      cloneImageExists = 'no';
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '40', cloneOnly: true });
+      expect(res.success).toBe(true);
+      expect(res.clone).toMatchObject({ version: '40', image: 'linux-winthor:40-debian', imageExists: false, tagFrom: 'linux-winthor:1.93-debian' });
+      expect(calls().some((c) => c.includes('export_features.sh --version 40 --container wta-master'))).toBe(true);
+    });
+
+    it('imagem fora do padrão sem versão informada, ou container inexistente: erro com o que fazer', async () => {
       cloneInspect = 'oracle-winthor:latest|running';
-      expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).error).toContain('não segue o padrão linux-winthor:<versão>-<distro>');
+      expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).error).toContain('informe a versão do master');
       cloneInspect = 'missing';
       expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).error).toContain('não existe nesta distro');
     });

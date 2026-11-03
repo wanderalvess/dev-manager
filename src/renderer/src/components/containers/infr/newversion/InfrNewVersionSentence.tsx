@@ -50,7 +50,8 @@ export const InfrNewVersionSentence: React.FC<{
       <label htmlFor="nv-versao" className="sr-only">
         Versão nova do WinThor
       </label>
-      {s.clone ? (
+      {/* Clone com a imagem da origem fora do padrão: a versão não vem dela, então o usuário informa */}
+      {s.clone && s.originVersion ? (
         <span id="nv-versao" className="inline-block align-middle h-10 leading-10 mx-1 my-1 px-3 rounded-[10px] bg-muted/50 font-mono font-semibold text-foreground">
           {form.version || '…'}
         </span>

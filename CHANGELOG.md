@@ -4,6 +4,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.63.0] - 2026-11-03
+### Corrigido
+- **Só clonar travava com imagem fora do padrão**: se a imagem do WTA de origem não diz a versão (ex.: `linux-winthor:1.93-debian`), o clone parava em "Não deu para saber a versão". Agora você informa a versão na frase e, ao gerar, o Hub marca a imagem da origem com o nome que o script procura (`docker tag`, sem copiar nada), e o ambiente sobe com ela, sem build.
+- **Banco copiado de uma linha acima não impede mais**: criar uma versão menor que a da origem com o banco copiado dela (ex.: 39 a partir do master na 40) só avisa "O banco vem da 40", com a opção de um Oracle vazio. Antes impedia o Gerar sem ter conferido nada no banco.
+
 ## [1.62.0] - 2026-11-03
 ### Corrigido
 - **Nova versão: feature sem repositório quebrava o build** ("Feature ... não existe em nenhum repositório da lista"). Ao subir uma feature pelo catálogo da 801, o Hub trocava a versão mesmo sem achar o repositório Maven dela, ou aproveitava o repositório de outra feature, ou de outra versão, só porque a versão batia. Agora só vale o repositório da própria feature (ou do artefato com o nome dela) na mesma versão; sem ele, a feature fica na versão de origem e aparece nas *puladas* com o motivo, em vez de o build falhar no Docker.

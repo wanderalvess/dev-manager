@@ -55,7 +55,7 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
       id: 'versao',
       status: 'warn',
       title: `Downgrade: a origem está na ${from}`,
-      detail: `O ${i.from} está na linha ${from} e a versão nova é a ${i.version}. A Nova versão só sobe features; para descer, o ambiente precisa da lista e do banco da ${i.version}. Se não tiver os dois, use Montar do zero com um dump da ${i.version}.`
+      detail: `O ${i.from} está na linha ${from} e a versão nova é a ${i.version}. A Nova versão só sobe features; para descer, o ambiente precisa da lista da ${i.version}. Sem ela, use Montar do zero com um dump da ${i.version}.`
     });
   }
   if (from !== undefined && !useExisting) {
@@ -234,13 +234,14 @@ function downgradeFrom(i: InfrReviewInput): number | undefined {
 export function reviewDatabase(i: InfrReviewInput): InfrReviewItem {
   const title = 'Banco do ambiente novo';
   const from = downgradeFrom(i);
-  // Banco de uma versão mais nova tem colunas e tabelas que o WTA mais antigo não conhece
+  // Banco de uma versão mais nova: os scripts da Central só sobem, e coluna a mais não atrapalha o WTA mais antigo.
+  // Só avisa; o risco é a linha nova ter tirado algo que uma rotina antiga usa, e isso só aparece usando.
   if (from !== undefined && (i.dbMode === 'clone' || i.dbContainer === `oracle-${i.from}`)) {
     return {
       id: 'banco',
-      status: 'block',
-      title: `O banco da ${from} não serve para a ${i.version}`,
-      detail: `${i.dbMode === 'clone' ? `O clone do ${i.dbSource}` : `O ${i.dbContainer}`} traz as tabelas da ${from}, e um WTA ${i.version} não roda em cima delas. Suba um Oracle vazio e importe um dump da ${i.version}.`,
+      status: 'warn',
+      title: `O banco vem da ${from}`,
+      detail: `${i.dbMode === 'clone' ? `O clone do ${i.dbSource}` : `O ${i.dbContainer}`} traz as tabelas da ${from}; o WTA ${i.version} roda em cima delas. Se alguma rotina der erro de coluna ou tabela, use um Oracle vazio com um dump da ${i.version}.`,
       fixes: ['emptyOracle']
     };
   }
