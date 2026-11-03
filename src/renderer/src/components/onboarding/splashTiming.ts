@@ -3,15 +3,8 @@ const NEW_USER_TIMING = { bootStartMs: 1500, lineMs: 380 };
 // Quem já usa o app abre o Hub todo dia: a mesma abertura, só que enxuta (~2 s em vez de ~5,4 s).
 const RETURNING_TIMING = { bootStartMs: 400, lineMs: 140 };
 
-/** Quanto a abertura espera antes do boot e entre as linhas do boot. */
-export const getSplashTiming = (isNewUser: boolean) => (isNewUser ? NEW_USER_TIMING : RETURNING_TIMING);
-
 /**
- * Quem já usa o app não precisa clicar para entrar: depois do boot a abertura vira a tela de início (PC, semana,
- * ambientes, clima e novidades) e conta este tempo (visível no botão "Entrar agora") antes de sumir sozinha.
- * Enter entra na hora; "Ficar nesta tela", mexer num cartão ou "Abrir sempre aqui" seguram a tela.
+ * Quanto a abertura espera antes do boot e entre as linhas do boot. Depois do boot, quem já usa o app fica na tela de
+ * início (PC, semana, ambientes, clima e novidades) até clicar em Entrar ou apertar Enter: nada fecha sozinho.
  */
-export const RETURNING_AUTO_CLOSE_MS = 8000;
-
-/** Segundos que ainda aparecem na contagem do "Entrar agora". */
-export const countdownSeconds = (remainingMs: number): number => Math.max(0, Math.ceil(remainingMs / 1000));
+export const getSplashTiming = (isNewUser: boolean) => (isNewUser ? NEW_USER_TIMING : RETURNING_TIMING);
