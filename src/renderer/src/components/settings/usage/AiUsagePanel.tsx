@@ -94,7 +94,7 @@ export const AiUsagePanel: React.FC = () => {
               preços por milhão de tokens que você informou em cada motor.
             </p>
           )}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 2xl:grid-cols-3 gap-4">
             <GroupTable title="Por provedor" groups={report.byProvider} />
             <GroupTable title="Por modelo" groups={report.byModel} />
             <GroupTable title="Por origem" groups={report.bySource} />

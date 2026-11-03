@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AiUsageRow, LlmProviderConfig } from '../../shared/types';
-import { evaluateLimit, sanitizeLimit } from './aiUsageLimits';
+import { evaluateLimit, sanitizeLimit } from '../../shared/aiUsageLimits';
 import {
   buildAiUsageReport,
   estimateCost,
@@ -99,10 +99,11 @@ describe('buildAiUsageReport', () => {
     expect(report.costEstimate).toBeCloseTo((2 * 700 + 10 * 450) / 1_000_000, 8);
   });
 
-  it('lista só os provedores que têm teto', () => {
-    const report = buildAiUsageReport(days, '7d', NOW, [makeProvider({ dailyTokenLimit: 1000 })], true);
-    expect(report.limits).toHaveLength(1);
+  it('traz o uso do dia e do mês de todos os provedores, com ou sem teto', () => {
+    const report = buildAiUsageReport(days, '7d', NOW, [makeProvider({ dailyTokenLimit: 1000 }), makeProvider({ id: 'p2' })], true);
+    expect(report.limits).toHaveLength(2);
     expect(report.limits[0]).toMatchObject({ dayUsed: 1150, level: 'blocked' });
+    expect(report.limits[1]).toMatchObject({ dayUsed: 0, level: 'ok' });
   });
 });
 
