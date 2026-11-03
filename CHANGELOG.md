@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.55.0] - 2026-11-02
 ### Adicionado
 - **Pré-checagem da Nova versão**: a revisão do passo 4 agora olha o que costuma derrubar o build ou o primeiro boot, lido em segundos pela distro:
   - *Portas do host*: as da versão (Oracle 15NN, WTA 80NN, SSH 81NN, JMX 10NN, JMS 616NN, WSH 90NN) em uso por um programa do Windows ou da distro bloqueiam; em uso por um container só avisam, porque pode ser o próprio ambiente que será recriado;
