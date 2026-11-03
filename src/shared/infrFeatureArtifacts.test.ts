@@ -73,4 +73,9 @@ describe('featuresWithoutRepo', () => {
     const catalog = { repositorios: [], funcionalidades: [feat('a', '1.40.1.0', A), feat('b', '1.40.2.0')] };
     expect(featuresWithoutRepo(manifest(A), catalog, [{ name: 'a', from: '1', to: '1.40.1.0' }, { name: 'b', from: '1', to: '1.40.2.0' }])).toEqual(['b 1.40.2.0']);
   });
+
+  it('repositório de outra versão na lista não conta como o da feature', () => {
+    const catalog = { repositorios: [], funcionalidades: [feat('c', '1.40.3.0', A)] };
+    expect(featuresWithoutRepo(manifest(A), catalog, [{ name: 'c', from: '1', to: '1.40.3.0' }])).toEqual(['c 1.40.3.0']);
+  });
 });

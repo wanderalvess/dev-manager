@@ -5,7 +5,7 @@
  * script que testa cada artefato de dentro do container (mesma rede e mesmo acesso do WTA) e classificar o resultado.
  */
 import type { Routine801CatalogResponse } from './types';
-import type { ManifestChange, VersionManifest } from './infrVersionManifest';
+import { catalogRepoFor, type ManifestChange, type VersionManifest } from './infrVersionManifest';
 
 /** `mvn:grupo/artefato/versão/xml/features` → caminho do features.xml num repositório Maven. */
 export function mvnFeaturePath(mvn: string): string | null {
@@ -126,10 +126,7 @@ export function parseArtifactProbeOutput(output: string, probes: ArtifactProbe[]
 export function featuresWithoutRepo(manifest: VersionManifest, catalog: Routine801CatalogResponse, changes: ManifestChange[]): string[] {
   const out: string[] = [];
   for (const c of changes) {
-    const entry = catalog.funcionalidades.find((f) => f.nome === c.name && f.versao === c.to);
-    const repo =
-      entry?.featureMavenUrl ||
-      catalog.repositorios.find((r) => r.repositorio.version === c.to && r.repositorio.featureMavenUrl)?.repositorio.featureMavenUrl;
+    const repo = catalogRepoFor(c.name, c.to, catalog);
     if (!repo || !manifest.repos.includes(repo)) out.push(`${c.name} ${c.to}`);
   }
   return out;
