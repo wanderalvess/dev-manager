@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.59.0] - 2026-11-03
 ### Adicionado
 - **Só clonar, sem mudar nada (Assistente INFR → Nova versão)**: ao lado de *Atualizar para uma versão*, a opção *Só clonar, sem mudar nada* cria o ambiente novo na **mesma versão** da origem (lida da imagem do WTA dela, ex.: `linux-winthor:39-debian` → 39), com a imagem que já existe: **sem o build de ~30 minutos e sem mexer nas features**. Não lê o catálogo da 801, não troca feature e não passa pela conferência de dependências, que foi o que derrubou o build de uma versão nova. O Hub confere a imagem, `versions/<versão>.features` (se faltar e o WTA de origem estiver no ar, grava a lista dele como está), as portas (propõe as próximas livres, já que as da versão estão com a origem), disco, memória e o banco.
   - O script fixa SSH, JMX e JMS do WTA pela versão: se o WTA de origem estiver no ar, o clone bloqueia e diz qual container parar.
