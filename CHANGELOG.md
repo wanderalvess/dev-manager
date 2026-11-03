@@ -12,6 +12,11 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
   - se o catálogo não trouxer dependências, o ponto avisa que não deu para conferir, e o "Registro da leitura" guarda um exemplo do formato recebido.
   - Faixas OSGi (`[1.40.1.0,1.40.1.0]`, `[1.0,2.0)`) e versão solta (mínimo) são entendidas; nunca usa versão bloqueada nem de linha acima da alvo.
 
+- **Repositórios novos conferidos no Nexus antes do build (Assistente INFR → Nova versão)**: os `repo mvn:...` que a lista nova acrescenta à origem são testados de dentro do `wta-<origem>` (mesma rede e mesmo acesso do build), nos repositórios que o próprio Karaf usa (`org.ops4j.pax.url.mvn.cfg`):
+  - um repositório que nenhum deles tem vira o aviso *Repositório que o Nexus não tem* na revisão, em vez de um "Unable to resolve" depois de 30 minutos de build;
+  - sem curl no container, sem rede ou com o Nexus pedindo login, o ponto diz que não deu para conferir (a prévia segue);
+  - features trocadas que o catálogo não trouxe com repositório próprio também são apontadas.
+
 ### Corrigido
 - **Erros do WSL ilegíveis no assistente INFR**: quando o próprio `wsl.exe` falhava (distro que não existe, serviço do WSL com problema...), a tela de *Verificar ambiente*, a Nova versão, os Primeiros passos, o Subir WinThor e a conferência da origem mostravam texto embaralhado, tipo "N□ã□o□ □h□á□", porque o `wsl.exe` escreve as mensagens dele em UTF-16 e o Hub lia como UTF-8. Agora a saída é decodificada, e o motivo aparece com os acentos (ex.: "Não há distribuição com o nome fornecido. Código de erro: Wsl/Service/WSL_E_DISTRO_NOT_FOUND"). O que o comando imprime dentro da distro continua como estava.
 

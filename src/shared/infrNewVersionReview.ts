@@ -11,7 +11,7 @@ export type InfrReviewStatus = 'ok' | 'warn' | 'block';
 export type InfrReviewFix = 'useSourceOracle' | 'emptyOracle';
 
 export interface InfrReviewItem {
-  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'wsh' | 'banco';
+  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'artefatos' | 'wsh' | 'banco';
   status: InfrReviewStatus;
   title: string;
   detail: string;
@@ -87,7 +87,11 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
     items.push({ id: 'features', status: 'ok', title: `Features da ${i.version}`, detail: `${up.changes.length} sobem pelo catálogo da 801.` });
   }
 
-  if (!useExisting) items.push(reviewDependencies(p.dependencies));
+  if (!useExisting) {
+    items.push(reviewDependencies(p.dependencies));
+    const artifacts = reviewArtifacts(p.artifacts);
+    if (artifacts) items.push(artifacts);
+  }
 
   const checks = useExisting && existing.wshCheck ? existing.wshCheck : p.wshCheck;
   const fails = checks?.filter((c) => !c.ok) ?? [];
@@ -113,6 +117,26 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
 
   items.push(reviewDatabase(i));
   return items;
+}
+
+/** Os repositórios novos existem no Nexus do WTA? Só avisa: o teste pode não enxergar um espelho ou um login. */
+function reviewArtifacts(a: InfrVersionPreview['artifacts']): InfrReviewItem | null {
+  if (!a || (a.checked === 0 && a.withoutRepo.length === 0)) return null;
+  const title = 'Artefatos no Nexus';
+  const extra = a.withoutRepo.length ? ` ${a.withoutRepo.length} features trocadas não trouxeram repositório próprio (${a.withoutRepo.slice(0, 3).join(', ')}${a.withoutRepo.length > 3 ? '…' : ''}); confira que o Karaf as acha.` : '';
+  if (a.missing.length > 0) {
+    const list = a.missing.length > 3 ? `${a.missing.slice(0, 3).join(', ')} e mais ${a.missing.length - 3}` : a.missing.join(', ');
+    return {
+      id: 'artefatos',
+      status: 'warn',
+      title: 'Repositório que o Nexus não tem',
+      detail: `${a.missing.length} de ${a.checked} repositórios da lista não existem em nenhum repositório do Karaf (${list}). O build provavelmente termina em "Unable to resolve".${extra}`
+    };
+  }
+  if (a.unverified > 0) {
+    return { id: 'artefatos', status: 'warn', title: 'Artefatos não conferidos', detail: `Não deu para testar ${a.unverified} de ${a.checked} repositórios no Nexus${a.error ? ` (${a.error})` : ' (sem resposta ou pedindo login)'}.${extra}` };
+  }
+  return { id: 'artefatos', status: a.withoutRepo.length ? 'warn' : 'ok', title, detail: `${a.checked} repositórios novos encontrados no Nexus.${extra}` };
 }
 
 /** Dependências das features contra o que o catálogo da 801 declara (a lista da própria feature, vinda do Nexus). */

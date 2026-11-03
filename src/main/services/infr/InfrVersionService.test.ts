@@ -29,6 +29,7 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
       ]
     }))
   };
+  let probeCode = '200';
   const service = () => new InfrVersionService(wsl as any, routine801 as any);
 
   beforeEach(() => {
@@ -40,10 +41,34 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
       if (script.startsWith('cat ')) return { stdout: ORIGIN };
       if (script.startsWith('docker port')) return { stdout: '0.0.0.0:8086\n' };
       if (script.startsWith('python3')) return { stdout: DEPS };
+      if (script.includes('pax.url.mvn.cfg')) return { stdout: 'org.ops4j.pax.url.mvn.repositories=https://nexus.exemplo.com/repository/releases@id=rel\n' };
+      if (script.includes('curl')) return { stdout: `${probeCode} g/winthor-core-features/1.40.0.3/winthor-core-features-1.40.0.3-features.xml\n` };
       return { stdout: '[OK] Manifesto gerado' };
     });
   });
   afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('testa no Nexus, de dentro do container de origem, o repositório novo da lista', async () => {
+    probeCode = '404';
+    const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+    expect(res.artifacts).toMatchObject({ checked: 1, missing: ['mvn:g/winthor-core-features/1.40.0.3/xml/features'], unverified: 0 });
+    const probe = execFileAsync.mock.calls.find((c) => String(c[1].at(-1)).includes('curl'));
+    expect(probe?.[1].at(-1)).toContain('docker exec wta-master sh -c');
+    expect(probe?.[1].at(-1)).toContain('https://nexus.exemplo.com/repository/releases');
+    probeCode = '200';
+    expect((await service().preview({ fromEnv: 'master', targetVersion: '40' })).artifacts).toMatchObject({ checked: 1, missing: [] });
+  });
+
+  it('se o teste no Nexus falhar, a prévia segue e marca como não conferido', async () => {
+    const base = execFileAsync.getMockImplementation()!;
+    execFileAsync.mockImplementation(async (cmd: string, args: string[]) => {
+      if (String(args.at(-1)).includes('pax.url.mvn.cfg')) throw new Error('docker caiu');
+      return base(cmd, args);
+    });
+    const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+    expect(res.success).toBe(true);
+    expect(res.artifacts).toMatchObject({ checked: 1, unverified: 1 });
+  });
 
   it('lê a origem, sobe pelo catálogo da 801 e aponta o que o WSH da versão ainda cobraria', async () => {
     const res = await service().preview({ fromEnv: 'master', targetVersion: '40', wshJar: '/opt/wsh/40/winthor-integracao-core.jar' });

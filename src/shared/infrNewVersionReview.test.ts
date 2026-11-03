@@ -58,6 +58,16 @@ describe('conferência da versão nova', () => {
     expect(byId(reviewNewVersion(novo), 'dependencias').status).toBe('warn');
   });
 
+  it('artefatos: ausente e não conferido avisam; encontrado aprova; sem repositório novo não aparece', () => {
+    const novo = { ...base, manifestSource: 'preview' as const };
+    const item = (artifacts: NonNullable<InfrReviewInput['preview']['artifacts']>) => reviewNewVersion({ ...novo, preview: { ...base.preview, artifacts } }).find((i) => i.id === 'artefatos');
+    const vazio = { checked: 2, missing: [], unverified: 0, repositories: [], withoutRepo: [] };
+    expect(item({ ...vazio, missing: ['mvn:g/a/1/xml/features'] })).toMatchObject({ status: 'warn', detail: expect.stringContaining('Unable to resolve') });
+    expect(item({ ...vazio, unverified: 2, error: 'o container não tem curl' })?.detail).toContain('o container não tem curl');
+    expect(item(vazio)?.status).toBe('ok');
+    expect(item({ ...vazio, checked: 0 })).toBeUndefined();
+  });
+
   it('usando a lista que já existe, as dependências não entram na conferência', () => {
     expect(reviewNewVersion(base).some((i) => i.id === 'dependencias')).toBe(false);
   });

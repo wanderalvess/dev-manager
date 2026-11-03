@@ -19,6 +19,14 @@ import {
   type InfrVersionPreview,
   type InfrVersionPreviewRequest
 } from '../../../shared/infrVersionManifest';
+import {
+  buildArtifactProbeScript,
+  featuresWithoutRepo,
+  newRepoProbes,
+  parseArtifactProbeOutput,
+  parsePaxRepositories,
+  type ArtifactReport
+} from '../../../shared/infrFeatureArtifacts';
 import { mergeDependencyFixes, resolveDependencies } from '../../../shared/infrFeatureDependencies';
 import { buildEnvFile, envFieldsFor, parseEnvLines, pickEnv, type InfrEnvTarget } from '../../../shared/infrEnvConfig';
 import type { InfrEnvSaveRequest, InfrEnvTemplate, InfrManifestSaveRequest, InfrManifestSaveResult } from '../../../shared/infrVersionManifest';
@@ -180,6 +188,7 @@ export class InfrVersionService {
       originLine: manifestLineOf(origin),
       upgrade: { changes: upgrade.changes, behind: upgrade.behind, skipped: upgrade.skipped },
       dependencies: dep,
+      artifacts: await this.checkArtifacts(distro, container, origin, upgrade.manifest, catalog, upgrade.changes, trace),
       manifestText: serializeVersionManifest(upgrade.manifest, header)
     };
     const existingFile = this.manifestPath(infr.windows, target);
@@ -199,6 +208,42 @@ export class InfrVersionService {
       }
     }
     return result;
+  }
+
+  /**
+   * Os repositórios novos da lista existem no Nexus? Testado de dentro do wta-<origem> (mesma rede e mesmo acesso que o
+   * build terá), nos repositórios que o próprio Karaf usa. Nunca derruba a prévia: o que não der para conferir vira aviso.
+   */
+  private async checkArtifacts(
+    distro: string,
+    container: string,
+    origin: Parameters<typeof newRepoProbes>[1],
+    manifest: Parameters<typeof newRepoProbes>[0],
+    catalog: Parameters<typeof featuresWithoutRepo>[1],
+    changes: Parameters<typeof featuresWithoutRepo>[2],
+    trace: Trace
+  ): Promise<ArtifactReport> {
+    const probes = newRepoProbes(manifest, origin);
+    const withoutRepo = featuresWithoutRepo(manifest, catalog, changes);
+    let report: ArtifactReport = { checked: 0, missing: [], unverified: 0, repositories: [], withoutRepo };
+    if (probes.length === 0) {
+      trace('Artefatos: a lista não acrescentou repositórios novos');
+      return report;
+    }
+    try {
+      const cfg = await this.run(distro, `docker exec ${container} sh -c 'cat /opt/pcsist/produtos/winthor/etc/org.ops4j.pax.url.mvn.cfg'`, 30000);
+      const repositories = parsePaxRepositories(cfg);
+      trace(`Repositórios do Karaf: ${repositories.join(', ') || '(nenhum http no org.ops4j.pax.url.mvn.cfg)'}`);
+      if (repositories.length === 0) return { ...report, checked: probes.length, unverified: probes.length, error: 'o Karaf não lista repositórios http' };
+      const script = buildArtifactProbeScript(repositories, probes).replace(/'/g, `'${String.fromCharCode(92)}''`);
+      const out = await this.run(distro, `docker exec ${container} sh -c '${script}'`, 180000);
+      report = { ...parseArtifactProbeOutput(out, probes, repositories), withoutRepo };
+      trace(`Artefatos: ${report.checked} testados, ${report.missing.length} ausentes, ${report.unverified} sem resposta`);
+    } catch (err: any) {
+      trace(`Artefatos não conferidos: ${commandFailureDetail(err)}`);
+      report = { ...report, checked: probes.length, unverified: probes.length, error: commandFailureDetail(err) };
+    }
+    return report;
   }
 
   private manifestPath(infrWindows: string, version: string): string {

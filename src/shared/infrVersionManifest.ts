@@ -6,6 +6,7 @@
  */
 import type { Routine801CatalogResponse } from './types';
 import type { InfrEnvField } from './infrEnvConfig';
+import type { ArtifactReport } from './infrFeatureArtifacts';
 import type { DependencyReport } from './infrFeatureDependencies';
 
 export interface ManifestFeature {
@@ -97,6 +98,8 @@ export interface InfrVersionPreview {
   upgrade?: Omit<ManifestUpgrade, 'manifest'>;
   /** Dependências das features conferidas contra o catálogo da 801 antes do build */
   dependencies?: DependencyReport;
+  /** Repositórios novos da lista testados no Nexus que o WTA de origem usa */
+  artifacts?: ArtifactReport;
   wshCheck?: WshDependencyCheck[];
   /** Erro ao ler o jar do WSH (não impede a prévia) */
   wshError?: string;
