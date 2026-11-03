@@ -4,14 +4,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.54.0] - 2026-11-02
 ### Adicionado
 - **Dependências conferidas antes do build (Assistente INFR → Nova versão)**: o passo *Revisar e gerar* agora lê as `dependencias` que o catálogo da rotina 801 declara em cada feature (o mesmo que o WTA enxerga no Nexus) e confere a lista final:
   - quando uma feature exige outra numa versão que a lista não tem (a causa de um build de 30 minutos que terminava em "Unable to resolve"), o Hub ajusta a lista para a versão que o catálogo oferece e mostra o motivo ("exigida por …") na tabela de mudanças;
   - o que o catálogo não consegue resolver aparece como um ponto *Dependências das features*: bloqueia quando há conflito sem saída e avisa quando a feature exigida nem existe no catálogo;
   - se o catálogo não trouxer dependências, o ponto avisa que não deu para conferir, e o "Registro da leitura" guarda um exemplo do formato recebido.
   - Faixas OSGi (`[1.40.1.0,1.40.1.0]`, `[1.0,2.0)`) e versão solta (mínimo) são entendidas; nunca usa versão bloqueada nem de linha acima da alvo.
-
 - **Repositórios novos conferidos no Nexus antes do build (Assistente INFR → Nova versão)**: os `repo mvn:...` que a lista nova acrescenta à origem são testados de dentro do `wta-<origem>` (mesma rede e mesmo acesso do build), nos repositórios que o próprio Karaf usa (`org.ops4j.pax.url.mvn.cfg`):
   - um repositório que nenhum deles tem vira o aviso *Repositório que o Nexus não tem* na revisão, em vez de um "Unable to resolve" depois de 30 minutos de build;
   - sem curl no container, sem rede ou com o Nexus pedindo login, o ponto diz que não deu para conferir (a prévia segue);
