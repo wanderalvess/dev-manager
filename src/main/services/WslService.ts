@@ -23,6 +23,7 @@ import {
   isValidWinthorVersion,
   type NewVersionEnvInput
 } from '../../shared/infrWinthorVersion';
+import { scriptGaps, scriptGapsMessage } from '../../shared/infrScriptSupport';
 
 export class WslService {
   private cachedDistros: WslDistroInfo[] = [];
@@ -1103,6 +1104,13 @@ export class WslService {
     } else {
       return { success: false, output: `Tipo de script desconhecido: ${scriptType}` };
     }
+
+    // Pasta do INFR-Docker numa branch antiga só recusaria as opções dentro do terminal ("Flag desconhecida: --version")
+    const gaps = scriptGaps(cmdToRun, (rel) => {
+      const file = path.join(infr.windows, rel);
+      return fs.existsSync(file) ? fs.readFileSync(file, 'utf-8') : null;
+    });
+    if (gaps.length > 0) return { success: false, output: scriptGapsMessage(gaps, infr.windows) };
 
     try {
       const wtArgs = [
