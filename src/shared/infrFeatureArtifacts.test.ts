@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildArtifactProbeScript, featuresWithoutRepo, mvnFeaturePath, newRepoProbes, parseArtifactProbeOutput, parsePaxRepositories } from './infrFeatureArtifacts';
+import { buildArtifactProbeScript, featuresWithoutRepo, maskUrlCredentials, mvnFeaturePath, newRepoProbes, parseArtifactProbeOutput, parsePaxRepositories } from './infrFeatureArtifacts';
 import type { VersionManifest } from './infrVersionManifest';
 
 const manifest = (...repos: string[]): VersionManifest => ({ repos, features: [], disabled: [] });
@@ -28,6 +28,14 @@ describe('parsePaxRepositories', () => {
     ].join('\n');
     expect(parsePaxRepositories(cfg)).toEqual(['https://nexus.exemplo.com/repository/releases', 'https://nexus.exemplo.com/repository/snap']);
   });
+  it('a URL com usuário:senha@ (o Nexus da PC) fica inteira, e a máscara esconde as credenciais', () => {
+    const cfg = 'org.ops4j.pax.url.mvn.repositories=http://u:p@repo.exemplo.com:8081/nexus/content/groups/x/@id=x, http://repo1.maven.org/maven2@id=central';
+    const repos = parsePaxRepositories(cfg);
+    expect(repos).toEqual(['http://u:p@repo.exemplo.com:8081/nexus/content/groups/x', 'http://repo1.maven.org/maven2']);
+    expect(maskUrlCredentials(repos[0])).toBe('http://***@repo.exemplo.com:8081/nexus/content/groups/x');
+    expect(maskUrlCredentials(repos[1])).toBe(repos[1]);
+  });
+
   it('sem a chave, não há repositórios', () => {
     expect(parsePaxRepositories('foo=bar')).toEqual([]);
   });

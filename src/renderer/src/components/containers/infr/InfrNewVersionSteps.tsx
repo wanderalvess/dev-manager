@@ -170,6 +170,13 @@ export const StepRuntime: React.FC<{ s: InfrNewVersionState }> = ({ s }) => {
           Vazio usa a porta publicada do wta-{form.from || '<origem>'}. É dele que vem o catálogo da 801.
         </label>
         <input id="nv-url" value={form.originWtaUrl} onChange={(e) => update('originWtaUrl', e.target.value)} placeholder="http://localhost:8038" className={NV_INPUT} />
+        <label htmlFor="nv-dry" className="flex items-start gap-2 mt-3 text-2xs text-muted-foreground cursor-pointer">
+          <input id="nv-dry" type="checkbox" checked={form.dryRun === '1'} onChange={(e) => update('dryRun', e.target.checked ? '1' : '')} className="mt-0.5" />
+          <span>
+            <strong className="text-foreground">Ensaiar a resolução no Karaf de origem</strong> (feature:install -t). O próprio Karaf simula as features trocadas antes do build; leva alguns
+            minutos e acrescenta os repositórios novos ao Karaf do wta-{form.from || '<origem>'} só durante o teste.
+          </span>
+        </label>
       </details>
       <p className="text-2xs text-muted-foreground flex items-center gap-1.5">
         <CheckCircle2 className="w-3.5 h-3.5 text-success" /> No próximo passo o Hub lê a origem e o catálogo e mostra o que vai acontecer, antes de gerar.

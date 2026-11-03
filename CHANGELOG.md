@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Adicionado
+- **Pré-checagem da Nova versão**: a revisão do passo 4 agora olha o que costuma derrubar o build ou o primeiro boot, lido em segundos pela distro:
+  - *Portas do host*: as da versão (Oracle 15NN, WTA 80NN, SSH 81NN, JMX 10NN, JMS 616NN, WSH 90NN) em uso por um programa do Windows ou da distro bloqueiam; em uso por um container só avisam, porque pode ser o próprio ambiente que será recriado;
+  - *Disco e memória*: avisa com menos de 15 GB livres para o Docker ou menos de 6 GB de memória disponível na distro (com a dica do `.wslconfig`);
+  - *Rede*: avisa se a distro não alcança o Nexus do Karaf ou se ele pede login.
+- **Ensaio da resolução (opcional)**: em *Avançado*, a opção *Ensaiar a resolução no Karaf de origem* faz o próprio Karaf do `wta-<origem>` simular (`feature:install -t`) cada feature trocada, com os repositórios novos acrescentados e retirados no fim. Erros de resolução aparecem na revisão antes de 30 minutos de build.
+- **Log do build no Verificar ambiente**: o terminal do Gerar passa a gravar a saída também em `/tmp/hub-nova-versao-<nome>.log` na distro. O *Verificar ambiente* mostra o fim desse log e, se o build falhou antes de criar os containers, o resumo traz a causa (ex.: "Unable to resolve") e a etapa em que parou.
+- **Registro da leitura mais detalhado**: a prévia registra os repositórios do Karaf, a resposta do Nexus por artefato, as portas em uso (e de quem), disco, memória e a saída do ensaio.
+
 ## [1.54.0] - 2026-11-02
 ### Adicionado
 - **Dependências conferidas antes do build (Assistente INFR → Nova versão)**: o passo *Revisar e gerar* agora lê as `dependencias` que o catálogo da rotina 801 declara em cada feature (o mesmo que o WTA enxerga no Nexus) e confere a lista final:

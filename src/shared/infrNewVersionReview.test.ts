@@ -68,6 +68,18 @@ describe('conferência da versão nova', () => {
     expect(item({ ...vazio, checked: 0 })).toBeUndefined();
   });
 
+  it('ensaio: erro do Karaf e ensaio que não rodou avisam; simulado sem erro aprova; pré-checagem entra na lista', () => {
+    const novo = { ...base, manifestSource: 'preview' as const };
+    const item = (dryRun: NonNullable<InfrReviewInput['preview']['dryRun']>) => reviewNewVersion({ ...novo, preview: { ...base.preview, dryRun } }).find((i) => i.id === 'ensaio')!;
+    expect(item({ simulated: 3, errors: ['Unable to resolve root'], tail: [] })).toMatchObject({ status: 'warn', detail: expect.stringContaining('Unable to resolve root') });
+    expect(item({ simulated: 3, errors: [], tail: [], skipped: 'tempo esgotado' }).title).toBe('Ensaio da resolução não rodou');
+    expect(item({ simulated: 3, errors: [], tail: [] }).status).toBe('ok');
+    const porta = { id: 'portas' as const, status: 'block' as const, title: 'Portas do host já em uso', detail: '1540 (Oracle)' };
+    const items = reviewNewVersion({ ...novo, preview: { ...base.preview, preflight: [porta] } });
+    expect(items.find((i) => i.id === 'portas')?.status).toBe('block');
+    expect(reviewBlocks(items)).toBe(true);
+  });
+
   it('usando a lista que já existe, as dependências não entram na conferência', () => {
     expect(reviewNewVersion(base).some((i) => i.id === 'dependencias')).toBe(false);
   });

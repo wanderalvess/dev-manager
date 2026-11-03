@@ -3,6 +3,7 @@
  * container (oracle/wta/wsh-<nome>), as últimas linhas do log, se o WTA responde e os mesmos testes
  * como comandos para copiar ou abrir no terminal.
  */
+import type { BuildLogReport } from './infrBuildLog';
 import { isValidEnvName } from './infrWinthorVersion';
 
 export type InfrRole = 'oracle' | 'wta' | 'wsh';
@@ -35,6 +36,8 @@ export interface InfrEnvCheck {
   checkedAt?: string;
   containers: InfrContainerCheck[];
   wtaHttp?: { url: string; status?: number; error?: string };
+  /** Fim do log do build (new_version_env.sh), quando o Gerar foi aberto por este Hub nesta distro */
+  buildLog?: BuildLogReport;
   summary?: { status: InfrEnvStatus; title: string; detail: string };
 }
 
@@ -126,8 +129,15 @@ function knownFailure(c: InfrContainerCheck): string | undefined {
 }
 
 /** Resumo: no ar (os três rodando e o WTA respondendo), subindo, falhou ou não existe. */
-export function summarizeEnvCheck(containers: InfrContainerCheck[], wtaHttp?: InfrEnvCheck['wtaHttp']): NonNullable<InfrEnvCheck['summary']> {
+export function summarizeEnvCheck(containers: InfrContainerCheck[], wtaHttp?: InfrEnvCheck['wtaHttp'], buildLog?: BuildLogReport): NonNullable<InfrEnvCheck['summary']> {
   const present = containers.filter((c) => c.exists);
+  if (present.length === 0 && buildLog?.failure) {
+    return {
+      status: 'fail',
+      title: 'O build falhou antes de criar os containers',
+      detail: `${buildLog.failure}${buildLog.stage ? ` (etapa: ${buildLog.stage})` : ''}. O fim do log está abaixo.`
+    };
+  }
   if (present.length === 0) {
     return { status: 'missing', title: 'Nenhum container deste ambiente', detail: 'O Gerar ainda não criou os containers, ou o nome está diferente.' };
   }

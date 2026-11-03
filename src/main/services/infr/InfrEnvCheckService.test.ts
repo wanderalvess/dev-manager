@@ -23,9 +23,26 @@ describe('InfrEnvCheckService', () => {
     });
     httpRequest.mockResolvedValue({ status: 200 });
     const res = await service.check(undefined, 'a');
-    expect(execFileAsync).toHaveBeenCalledTimes(1);
+    expect(execFileAsync).toHaveBeenCalledTimes(2); // containers e o log do build
     expect(httpRequest).toHaveBeenCalledWith('http://localhost:8087/', expect.objectContaining({ method: 'GET' }));
     expect(res.summary?.status).toBe('ok');
+  });
+
+  it('sem container e com o log do build falhando, o resumo é a causa do build', async () => {
+    execFileAsync.mockImplementation(async (_c: string, args: string[]) => {
+      const script = args.at(-1) as string;
+      if (script.includes('hub-nova-versao-a.log')) return { stdout: '==> Montando a imagem\nError executing command: Unable to resolve root: missing requirement [root] x\n' };
+      return { stdout: '@@c oracle-a\nMISSING\n@@ports\n@@logs\n@@c wta-a\nMISSING\n@@c wsh-a\nMISSING\n' };
+    });
+    const res = await service.check(undefined, 'a');
+    expect(res.summary).toMatchObject({ status: 'fail', title: 'O build falhou antes de criar os containers' });
+    expect(res.summary?.detail).toContain('Unable to resolve root');
+    expect(res.buildLog?.path).toBe('/tmp/hub-nova-versao-a.log');
+  });
+
+  it('sem arquivo de log do build, não inventa relatório', async () => {
+    execFileAsync.mockImplementation(async (_c: string, args: string[]) => ((args.at(-1) as string).includes('hub-nova-versao') ? { stdout: '@@semlog\n' } : { stdout: '' }));
+    expect((await service.check(undefined, 'a')).buildLog).toBeUndefined();
   });
 
   it('nome inválido não roda nada', async () => {

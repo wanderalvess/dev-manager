@@ -15,7 +15,28 @@ export function mvnFeaturePath(mvn: string): string | null {
   return `${group.replace(/\./g, '/')}/${artifact}/${version}/${artifact}-${version}-features.xml`;
 }
 
-/** Repositórios http(s) do `org.ops4j.pax.url.mvn.cfg` (sem as opções `@id=...` e sem a barra final). */
+const PAX_OPTION = /^(?:id=|snapshots$|noreleases$|releases$|multi$|update=|checksum=|releasesUpdate=|snapshotsUpdate=|releasesChecksum=|snapshotsChecksum=|connectionTimeout=|readTimeout=)/;
+/** URL que pode ir entre aspas simples num roteiro: http(s), sem espaço, aspas, crase ou barra invertida. */
+export const SAFE_REPO_URL = /^https?:\/\/[^\s'"`\\]+$/;
+
+/** Esconde `usuário:senha@` de uma URL, para o que vai para o registro e para a tela. */
+export const maskUrlCredentials = (url: string): string => url.replace(/(https?:\/\/)[^/@\s]+@/i, '$1***@');
+
+/** Tira as opções do pax-url (`@id=x@snapshots`) sem cortar o `usuário:senha@` que a URL pode ter. */
+function stripPaxOptions(entry: string): string {
+  const parts = entry.trim().split('@');
+  let url = parts[0];
+  for (let i = 1; i < parts.length; i++) {
+    if (PAX_OPTION.test(parts[i])) break;
+    url += `@${parts[i]}`;
+  }
+  return url.replace(/\/+$/, '');
+}
+
+/**
+ * Repositórios http(s) do `org.ops4j.pax.url.mvn.cfg`, sem as opções e sem a barra final. A URL pode trazer
+ * `usuário:senha@` (o Nexus da PC tem): ela segue inteira para o curl, e quem registra ou mostra usa o maskUrlCredentials.
+ */
 export function parsePaxRepositories(cfg: string): string[] {
   const joined = cfg.replace(/\\\r?\n/g, ' ');
   const urls: string[] = [];
@@ -23,8 +44,8 @@ export function parsePaxRepositories(cfg: string): string[] {
     const line = joined.split(/\r?\n/).find((l) => l.trim().startsWith(`${key}`) && l.includes('='));
     if (!line) continue;
     for (const part of line.slice(line.indexOf('=') + 1).split(',')) {
-      const url = part.trim().split('@')[0].replace(/\/+$/, '');
-      if (/^https?:\/\/[A-Za-z0-9._:/%+~-]+$/.test(url) && !urls.includes(url)) urls.push(url);
+      const url = stripPaxOptions(part);
+      if (SAFE_REPO_URL.test(url) && !urls.includes(url)) urls.push(url);
     }
   }
   return urls;
@@ -49,7 +70,7 @@ export function newRepoProbes(manifest: VersionManifest, origin: VersionManifest
 
 /** Script (sh) que imprime `<código HTTP> <caminho>` por artefato, tentando cada repositório; 000 = sem rede. */
 export function buildArtifactProbeScript(repositories: string[], probes: ArtifactProbe[]): string {
-  const repos = repositories.filter((r) => /^https?:\/\/[A-Za-z0-9._:/%+~-]+$/.test(r));
+  const repos = repositories.filter((r) => SAFE_REPO_URL.test(r));
   const paths = probes.map((p) => p.path).filter((p) => /^[A-Za-z0-9_./-]+$/.test(p));
   return [
     'command -v curl >/dev/null 2>&1 || { echo NOCURL; exit 0; }',

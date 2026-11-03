@@ -47,6 +47,13 @@ describe('verificação do ambiente', () => {
     expect(s.detail).toContain('Versão exigida 1.40.2.1');
   });
 
+  it('sem container, o build que falhou explica o motivo; sem falha conhecida, segue o resumo de sempre', () => {
+    const missing = parseEnvCheckOutput('', 'a');
+    const failed = { path: '/tmp/x', exists: true, failure: 'Unable to resolve root', stage: 'Step 3/9', tail: ['x'] };
+    expect(summarizeEnvCheck(missing, undefined, failed)).toMatchObject({ status: 'fail', title: 'O build falhou antes de criar os containers' });
+    expect(summarizeEnvCheck(missing, undefined, { ...failed, failure: undefined }).status).toBe('missing');
+  });
+
   it('no ar só com os três rodando e o WTA respondendo; senão, subindo', () => {
     const ok: InfrContainerCheck[] = ['oracle', 'wta', 'wsh'].map((role) => ({ role: role as any, container: `${role}-a`, exists: true, state: 'running', restarts: 0, ports: [], logTail: [] }));
     expect(summarizeEnvCheck(ok, { url: 'u', status: 302 }).status).toBe('ok');
