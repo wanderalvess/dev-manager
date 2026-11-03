@@ -4,6 +4,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Adicionado
+- **Deixar a IA conduzir (Assistente INFR → Nova versão)**: com um motor cadastrado em Configurações → IA & LLM, a pessoa descreve o que quer ("criar a versão 40 a partir do ambiente local, com o nome v40") e a IA preenche o formulário, lê a origem e confere, mostrando cada passo e o motivo. Ela só pode usar ações fixas (preencher campo, ler a origem, pedir o Gerar, conferir os containers, explicar); qualquer outra resposta é recusada. O que está bloqueado em vermelho ela não contorna: propõe a saída que a própria conferência oferece (por exemplo, banco vazio no lugar do clone) ou explica. **Quem confirma o Gerar é você** (o build leva uns 30 minutos); depois do build, *Conferir o ambiente* leva a verificação dos containers e o fim do log para a IA diagnosticar. Credenciais (senha do Nexus, tokens) são mascaradas antes de ir ao modelo, e os comandos que a IA sugere vêm só com *Copiar*, sem os que apagam ou param containers.
+- **Prévia da Nova versão com o WTA de origem parado**: em vez de "Command failed", a mensagem diz que o `wta-<origem>` está parado (ou não existe) e como subir o banco e o WTA. Antes o script de leitura saía calado.
+
+### Corrigido
+- **Claude (Anthropic) recusando `temperature`**: modelos novos respondem 400 dizendo que o parâmetro está obsoleto. O Hub refaz a chamada sem ele e não o envia mais para aquele modelo.
+- **Modelos locais com "thinking" (Ollama, ex.: qwen3)** gastavam o limite de tokens pensando e devolviam texto vazio no modo guiado; o Hub agora pede resposta direta ao Ollama nesse caso.
+- **Configurações → IA & LLM**: revisão da tela usando-a de ponta a ponta.
+  - *Timeout*: dava para digitar só valores como 55 (o "4" de 45 já virava 5 a cada tecla); agora o piso de 5 s vale ao sair do campo.
+  - *Presets*: escolher um preset depois de colar a chave não apaga mais a chave nem o prompt de sistema; a grade deixou de cortar os nomes com o menu lateral aberto; o formulário rola até a vista ao abrir (ficava abaixo da lista, parecendo que nada acontecera) e o exemplo da chave mostra o formato do provedor (`sk-ant-...`, `AIzaSy...`).
+  - *Salvar Motor* avisa que a alteração só é gravada em *Salvar Configurações* (o selo *Não salvo* já aparecia, mas nada dizia o motivo).
+  - O selo do cabeçalho não diz mais "ONLINE" sem testar nada: mostra *ATIVO* ou, em amarelo, *SEM CHAVE* (o Ollama local dispensa chave).
+  - O modelo padrão do preset Anthropic e do `LlmService` passou de `claude-3-5-sonnet-20241022` para `claude-sonnet-5-5`. Motores já salvos não mudam.
+
 ## [1.55.0] - 2026-11-02
 ### Adicionado
 - **Pré-checagem da Nova versão**: a revisão do passo 4 agora olha o que costuma derrubar o build ou o primeiro boot, lido em segundos pela distro:

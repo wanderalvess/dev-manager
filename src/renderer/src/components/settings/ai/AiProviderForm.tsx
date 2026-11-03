@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Sliders, Eye, EyeOff, Save } from 'lucide-react';
 import { LlmProviderConfig, LlmProviderType } from '../../../../../shared/types';
 import {
+  apiKeyPlaceholder,
   describeTemperature,
   formatTimeoutSeconds,
   secondsToTimeoutMs,
@@ -16,14 +17,56 @@ interface AiProviderFormProps {
   onSave: () => void;
 }
 
+/**
+ * Guarda o texto digitado e só aplica o piso de 5s ao sair do campo: com o valor preso a
+ * `max(5, n)` a cada tecla, digitar "45" virava "55" (o "4" já era corrigido para 5).
+ */
+const TimeoutInput: React.FC<{ timeoutMs: number | undefined; onCommit: (timeoutMs: number) => void }> = ({
+  timeoutMs,
+  onCommit
+}) => {
+  const [text, setText] = useState(formatTimeoutSeconds(timeoutMs));
+
+  useEffect(() => {
+    setText(formatTimeoutSeconds(timeoutMs));
+  }, [timeoutMs]);
+
+  const handleChange = (value: string) => {
+    setText(value);
+    const seconds = Number(value);
+    if (value.trim() && Number.isFinite(seconds)) onCommit(secondsToTimeoutMs(seconds));
+  };
+
+  return (
+    <input id="ai-provider-form-7"
+      type="number"
+      min="5"
+      max="180"
+      value={text}
+      onChange={(e) => handleChange(e.target.value)}
+      onBlur={() => setText(formatTimeoutSeconds(timeoutMs))}
+      className="w-full bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden"
+    />
+  );
+};
+
 export const AiProviderForm: React.FC<AiProviderFormProps> = ({
   provider,
   onChange,
   showKey,
   onToggleShowKey,
   onSave
-}) => (
-  <div className="p-5 rounded-xl border border-primary/40 bg-card shadow-lg space-y-4 animate-in fade-in-0">
+}) => {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  // O formulário abre abaixo da lista de motores, fora da tela de quem clicou num preset ou em
+  // "Novo Motor": traz ele para a vista ao abrir (ou ao trocar de motor).
+  useEffect(() => {
+    rootRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+  }, [provider.id]);
+
+  return (
+  <div ref={rootRef} className="p-5 rounded-xl border border-primary/40 bg-card shadow-lg space-y-4 animate-in fade-in-0">
     <div className="flex items-center justify-between pb-2 border-b border-border">
       <h4 className="font-bold text-sm text-foreground flex items-center gap-2">
         <Sliders className="w-4 h-4 text-primary" />
@@ -87,7 +130,7 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
           type="text"
           value={provider.model || ''}
           onChange={(e) => onChange({ ...provider, model: e.target.value })}
-          placeholder="Ex: gpt-4o-mini, gemini-2.0-flash, claude-3-5-sonnet, llama3.2"
+          placeholder="Ex: gpt-4o-mini, gemini-2.0-flash, claude-sonnet-5-5, llama3.2"
           className="w-full bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden"
         />
       </div>
@@ -107,7 +150,7 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
             type={showKey ? 'text' : 'password'}
             value={provider.apiKey || ''}
             onChange={(e) => onChange({ ...provider, apiKey: e.target.value })}
-            placeholder="sk-..., AIzaSy..., ou deixe em branco para Ollama"
+            placeholder={apiKeyPlaceholder(provider.provider)}
             className="flex-1 bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden"
           />
           <button
@@ -146,13 +189,9 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
           <label htmlFor="ai-provider-form-7" className="font-semibold text-foreground">Timeout da Requisição (segundos)</label>
           <span className="font-mono text-muted-foreground">{formatTimeoutSeconds(provider.timeoutMs)}s</span>
         </div>
-        <input id="ai-provider-form-7"
-          type="number"
-          min="5"
-          max="180"
-          value={(provider.timeoutMs ?? 30000) / 1000}
-          onChange={(e) => onChange({ ...provider, timeoutMs: secondsToTimeoutMs(Number(e.target.value)) })}
-          className="w-full bg-card border border-input hover:border-primary/50 rounded-[10px] px-3 py-2.5 text-foreground font-mono text-sm focus:outline-hidden"
+        <TimeoutInput
+          timeoutMs={provider.timeoutMs}
+          onCommit={(timeoutMs) => onChange({ ...provider, timeoutMs })}
         />
       </div>
     </div>
@@ -175,4 +214,5 @@ export const AiProviderForm: React.FC<AiProviderFormProps> = ({
       </button>
     </div>
   </div>
-);
+  );
+};

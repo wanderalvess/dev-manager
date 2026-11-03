@@ -17,7 +17,7 @@ export const AiPresetGrid: React.FC<AiPresetGridProps> = ({ onApplyTemplate }) =
         Clique em um preset para carregar o template no formulário
       </span>
     </div>
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-2">
       {DEFAULT_LLM_PROVIDER_TEMPLATES.map((tmpl) => {
         const isLocal = tmpl.provider === 'ollama';
         return (
