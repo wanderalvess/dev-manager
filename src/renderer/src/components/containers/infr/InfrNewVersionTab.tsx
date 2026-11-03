@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import type { InfrNewVersionState } from '../../../hooks/containers/useInfrNewVersion';
 import type { InfrAiGuideState } from '../../../hooks/containers/useInfrAiGuide';
+import { InfrNewVersionMode } from './newversion/InfrNewVersionMode';
 import { InfrNewVersionSentence } from './newversion/InfrNewVersionSentence';
 import { InfrAiGuideLine } from './newversion/InfrAiGuideLine';
 import { InfrNewVersionAdjust } from './newversion/InfrNewVersionAdjust';
@@ -38,6 +39,7 @@ export const InfrNewVersionTab: React.FC<{ s: InfrNewVersionState; ai: InfrAiGui
       <div className="flex-1 min-h-0 overflow-auto scrollbar-thin">
         <div className="max-w-4xl mx-auto px-5 md:px-6 py-8 space-y-6">
           <section aria-label="O ambiente novo" className="space-y-3">
+            <InfrNewVersionMode s={s} />
             <InfrNewVersionSentence s={s} filled={ai.filled} onEdited={ai.unmark} />
             <p className="text-xs text-muted-foreground">
               O Hub monta o ambiente novo ao lado, com banco, WTA e WSH próprios, a partir de um que já funciona. A origem não é alterada.

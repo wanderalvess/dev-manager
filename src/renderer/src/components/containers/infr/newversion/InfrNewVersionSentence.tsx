@@ -50,16 +50,22 @@ export const InfrNewVersionSentence: React.FC<{
       <label htmlFor="nv-versao" className="sr-only">
         Versão nova do WinThor
       </label>
-      <input
-        id="nv-versao"
-        value={form.version}
-        onChange={(e) => set('version', e.target.value)}
-        placeholder="40"
-        inputMode="numeric"
-        size={3}
-        className={`${TOKEN} font-mono text-center ${tone(ai('version'))}`}
-      />
-      do WinThor, a partir do
+      {s.clone ? (
+        <span id="nv-versao" className="inline-block align-middle h-10 leading-10 mx-1 my-1 px-3 rounded-[10px] bg-muted/50 font-mono font-semibold text-foreground">
+          {form.version || '…'}
+        </span>
+      ) : (
+        <input
+          id="nv-versao"
+          value={form.version}
+          onChange={(e) => set('version', e.target.value)}
+          placeholder="40"
+          inputMode="numeric"
+          size={3}
+          className={`${TOKEN} font-mono text-center ${tone(ai('version'))}`}
+        />
+      )}
+      do WinThor, {s.clone ? 'como cópia do' : 'a partir do'}
       <label htmlFor="nv-origem" className="sr-only">
         Ambiente de origem
       </label>

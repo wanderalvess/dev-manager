@@ -48,7 +48,8 @@ export const InfrNewVersionChecks: React.FC<{ s: InfrNewVersionState; distro?: s
     if (!r) items.push({ key: 'origem', tone: origin.loading ? 'busy' : 'pending', title: `Conferindo o ${form.from}`, detail: 'Pasta do INFR-Docker, WTA de origem e login.' });
     else if (!r.success) items.push({ key: 'origem', tone: 'block', title: 'Não foi possível conferir a origem', detail: r.error });
     else
-      for (const it of r.items) {
+      // Clonar não lê o catálogo: o WTA parado e o login dele não entram; só a pasta do INFR-Docker
+      for (const it of s.clone ? r.items.filter((x) => x.id === 'pasta') : r.items) {
         const stopped = it.id === 'wta' && it.status === 'block' && s.envs?.environments.some((e) => e.name === form.from && e.wta && e.wta.state !== 'running');
         items.push({
           key: `origem-${it.id}`,
@@ -67,18 +68,24 @@ export const InfrNewVersionChecks: React.FC<{ s: InfrNewVersionState; distro?: s
       }
   }
 
-  const catalog = `Features da ${form.version || '<versão>'} pelo catálogo da 801`;
-  if (s.busy === 'preview') items.push({ key: 'leitura', tone: 'busy', title: catalog, detail: `Lendo o wta-${form.from} e o catálogo da rotina 801...` });
+  const catalog = s.clone ? `Imagem e portas do clone da ${form.version || '<versão>'}` : `Features da ${form.version || '<versão>'} pelo catálogo da 801`;
+  if (s.busy === 'preview') items.push({ key: 'leitura', tone: 'busy', title: catalog, detail: s.clone ? `Conferindo a imagem do wta-${form.from} e as portas...` : `Lendo o wta-${form.from} e o catálogo da rotina 801...` });
   else if (!preview)
     items.push({
       key: 'leitura',
       tone: 'pending',
       title: catalog,
-      detail: s.formIssue || (origin.blocked ? 'Lido depois que a origem passar.' : 'Lê as features da origem e sobe cada uma pelo catálogo até a versão nova.'),
+      detail:
+        s.formIssue ||
+        (origin.blocked
+          ? 'Conferido depois que a origem passar.'
+          : s.clone
+            ? 'Confere se a imagem da versão existe, a lista de features e as portas livres. Não lê o catálogo nem troca feature.'
+            : 'Lê as features da origem e sobe cada uma pelo catálogo até a versão nova.'),
       extra:
         !s.formIssue && !origin.blocked ? (
           <button type="button" onClick={s.runPreview} disabled={!s.canPreview} className={`${SMALL} border-warning/60 bg-card text-warning hover:bg-warning/10`}>
-            Ler a origem e o catálogo
+            {s.clone ? 'Conferir o clone' : 'Ler a origem e o catálogo'}
           </button>
         ) : undefined
     });
@@ -155,11 +162,11 @@ export const InfrNewVersionChecks: React.FC<{ s: InfrNewVersionState; distro?: s
         </button>
       )}
 
-      {preview?.success && <InfrManifestChoice s={s} />}
+      {preview?.success && !s.clone && <InfrManifestChoice s={s} />}
 
       {preview && (
         <div className="space-y-2">
-          {preview.success && (
+          {preview.success && !s.clone && (
             <details className="rounded-xl border border-border/80 bg-card px-4 py-3">
               <summary className="text-xs font-semibold text-foreground cursor-pointer">Detalhes do catálogo da 801</summary>
               <div className="mt-3">

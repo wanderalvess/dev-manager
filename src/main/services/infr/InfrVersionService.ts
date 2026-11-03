@@ -44,6 +44,7 @@ import { mergeDependencyFixes, resolveDependencies } from '../../../shared/infrF
 import { buildEnvFile, envFieldsFor, parseEnvLines, pickEnv, type InfrEnvTarget } from '../../../shared/infrEnvConfig';
 import type { InfrEnvSaveRequest, InfrEnvTemplate, InfrManifestSaveRequest, InfrManifestSaveResult } from '../../../shared/infrVersionManifest';
 import { INFR_NEW_VERSION_SCRIPTS, commandFailureDetail, missingNewVersionScriptsMessage, originContainerMessage } from '../../../shared/infrNewVersionScripts';
+import { previewClone } from './infrClonePreview';
 import type { Routine801Service } from '../Routine801Service';
 import type { WslService } from '../WslService';
 
@@ -134,6 +135,13 @@ export class InfrVersionService {
   }
 
   private async previewSteps(req: InfrVersionPreviewRequest, trace: Trace): Promise<InfrVersionPreview> {
+    if (req.cloneOnly) {
+      return previewClone(
+        { wsl: this.wsl, run: (d, s, t, tr) => this.run(d, s, t, tr), preflight: (d, v, r, tr, p) => this.preflight(d, v, r, tr, p) },
+        req,
+        trace
+      );
+    }
     const target = req.targetVersion?.trim();
     if (!isValidWinthorVersion(target)) return { success: false, error: 'Versão alvo inválida (ex.: 40).' };
     if (!isValidEnvName(req.fromEnv)) return { success: false, error: 'Ambiente de origem inválido (ex.: master).' };
@@ -315,7 +323,7 @@ export class InfrVersionService {
   }
 
   /** Portas, disco, memória e Nexus: o que costuma derrubar o build ou o primeiro boot, lido em segundos. */
-  private async preflight(distro: string, target: string, repositories: string[] | null, trace: Trace): Promise<PreflightItem[]> {
+  private async preflight(distro: string, target: string, repositories: string[] | null, trace: Trace, ports?: InfrVersionPreviewRequest['ports']): Promise<PreflightItem[]> {
     let snap: PreflightSnapshot = { usedPorts: [] };
     try {
       snap = parsePreflightOutput(await this.runScript(distro, buildPreflightScript(repositories ?? []), 60000));
@@ -323,9 +331,9 @@ export class InfrVersionService {
       trace(`Pré-checagem na distro falhou: ${commandFailureDetail(err)}`);
     }
     const windowsUsed: number[] = [];
-    for (const e of expectedPorts(target)) if (!(await this.portFreeOnWindows(e.port))) windowsUsed.push(e.port);
+    for (const e of expectedPorts(target, ports)) if (!(await this.portFreeOnWindows(e.port))) windowsUsed.push(e.port);
     describePreflight(snap, windowsUsed).forEach((l) => trace(l));
-    const items = evaluatePreflight(target, snap, windowsUsed);
+    const items = evaluatePreflight(target, snap, windowsUsed, ports);
     trace(`Pré-checagem: ${items.map((i) => `${i.id}=${i.status}`).join(', ')}`);
     return items;
   }

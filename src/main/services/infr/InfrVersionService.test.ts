@@ -33,13 +33,18 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
   let probeCode = '200';
   let dryOut = '';
   let originStatus = 'running';
+  let cloneInspect = 'linux-winthor:39-debian|running';
+  let cloneImageExists = 'yes';
   const service = () => new InfrVersionService(wsl as any, routine801 as any);
 
   beforeEach(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'infr-'));
     vi.spyOn(InfrVersionService.prototype as any, 'portFreeOnWindows').mockResolvedValue(true);
     dryOut = '';
+    execFileAsync.mockClear();
     originStatus = 'running';
+    cloneInspect = 'linux-winthor:39-debian|running';
+    cloneImageExists = 'yes';
     fs.mkdirSync(path.join(dir, 'linux-winthor', 'scripts'), { recursive: true });
     for (const s of INFR_NEW_VERSION_SCRIPTS) fs.writeFileSync(path.join(dir, s), '#!/bin/bash\n');
     execFileAsync.mockImplementation(async (_cmd: string, args: string[]) => {
@@ -49,6 +54,8 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
       const script = b64 ? raw + String.fromCharCode(10) + Buffer.from(b64, 'base64').toString() : raw;
       if (script.startsWith('cat ')) return { stdout: ORIGIN };
       if (script.startsWith('docker port')) return { stdout: '0.0.0.0:8086\n' };
+      if (script.includes('.Config.Image')) return { stdout: cloneInspect + NL };
+      if (script.startsWith('docker image inspect')) return { stdout: cloneImageExists + NL };
       if (script.startsWith('docker inspect')) return { stdout: originStatus + NL };
       if (script.startsWith('python3')) return { stdout: DEPS };
       if (script.includes('pax.url.mvn.cfg')) return { stdout: 'org.ops4j.pax.url.mvn.repositories=https://nexus.exemplo.com/repository/releases@id=rel\n' };
@@ -59,6 +66,63 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
     });
   });
   afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  describe('clonar sem mudar nada (cloneOnly)', () => {
+    const versions = () => path.join(dir, 'linux-winthor', 'versions');
+    const calls = () => execFileAsync.mock.calls.map((c) => String(c[1].at(-1)));
+
+    it('descobre a versão pela imagem, não lê o catálogo da 801 e não troca feature', async () => {
+      fs.mkdirSync(versions(), { recursive: true });
+      fs.writeFileSync(path.join(versions(), '39.features'), ORIGIN);
+      routine801.fetchUpdates.mockClear();
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true });
+      expect(res.success).toBe(true);
+      expect(res.clone).toEqual({ version: '39', image: 'linux-winthor:39-debian', imageExists: true, originState: 'running', manifestExists: true });
+      expect(routine801.fetchUpdates).not.toHaveBeenCalled();
+      expect(res.upgrade).toBeUndefined();
+      expect(res.manifestText).toBeUndefined();
+      expect(calls().some((c) => c.includes('export_features.sh'))).toBe(false);
+    });
+
+    it('sem versions/<v>.features e com a origem no ar, lê a lista do próprio WTA para o Hub gravar', async () => {
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true });
+      expect(res.clone?.manifestExists).toBe(false);
+      expect(res.manifestText).toBe(ORIGIN);
+      expect(calls().some((c) => c.includes('export_features.sh --version 39 --container wta-master'))).toBe(true);
+    });
+
+    it('origem parada: clona do mesmo jeito, mas sem lista para gravar quando ela falta', async () => {
+      cloneInspect = 'linux-winthor:39-debian|exited';
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true });
+      expect(res.success).toBe(true);
+      expect(res.clone).toMatchObject({ originState: 'exited', manifestExists: false });
+      expect(res.manifestText).toBeUndefined();
+      expect(calls().some((c) => c.includes('export_features.sh'))).toBe(false);
+    });
+
+    it('imagem que não existe é informada (a revisão bloqueia)', async () => {
+      cloneImageExists = 'no';
+      expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).clone?.imageExists).toBe(false);
+    });
+
+    it('imagem fora do padrão ou container inexistente: erro com o que fazer', async () => {
+      cloneInspect = 'oracle-winthor:latest|running';
+      expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).error).toContain('não segue o padrão linux-winthor:<versão>-<distro>');
+      cloneInspect = 'missing';
+      expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).error).toContain('não existe nesta distro');
+    });
+
+    it('só exige o new_version_env.sh e leva a pré-checagem sem o item de portas quando ele só avisa', async () => {
+      fs.rmSync(path.join(dir, 'linux-winthor', 'scripts', 'export_features.sh'));
+      fs.rmSync(path.join(dir, 'linux-winthor', 'scripts', 'build_version.sh'));
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true });
+      expect(res.success).toBe(true);
+      expect(res.preflight?.some((i) => i.id === 'portas' && i.status !== 'block')).toBe(false);
+      expect(res.preflight?.find((i) => i.id === 'memoria')).toBeTruthy();
+      fs.rmSync(path.join(dir, INFR_NEW_VERSION_SCRIPTS[2]));
+      expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).error).toContain('new_version_env.sh');
+    });
+  });
 
   it('WTA de origem parado ou inexistente: diz o que fazer em vez de rodar o export calado', async () => {
     originStatus = 'exited';

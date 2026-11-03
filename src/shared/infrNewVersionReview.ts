@@ -11,7 +11,7 @@ export type InfrReviewStatus = 'ok' | 'warn' | 'block';
 export type InfrReviewFix = 'useSourceOracle' | 'emptyOracle';
 
 export interface InfrReviewItem {
-  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'artefatos' | 'ensaio' | 'portas' | 'disco' | 'memoria' | 'rede' | 'wsh' | 'banco';
+  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'artefatos' | 'ensaio' | 'portas' | 'disco' | 'memoria' | 'rede' | 'wsh' | 'banco' | 'imagem' | 'manifesto' | 'portasfixas' | 'arquivosenv';
   status: InfrReviewStatus;
   title: string;
   detail: string;
@@ -196,7 +196,7 @@ function downgradeFrom(i: InfrReviewInput): number | undefined {
   return line !== undefined && Number.isFinite(target) && target < line ? line : undefined;
 }
 
-function reviewDatabase(i: InfrReviewInput): InfrReviewItem {
+export function reviewDatabase(i: InfrReviewInput): InfrReviewItem {
   const title = 'Banco do ambiente novo';
   const from = downgradeFrom(i);
   // Banco de uma versão mais nova tem colunas e tabelas que o WTA mais antigo não conhece

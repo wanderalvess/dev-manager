@@ -19,7 +19,9 @@ export const InfrNewVersionFooter: React.FC<{
     ? { text: s.issue, cls: 'text-danger' }
     : aiReady
       ? { text: 'A IA chegou até aqui. Nada foi criado ainda: Gerar grava a configuração e abre o terminal com o build (uns 30 minutos).', cls: 'text-foreground' }
-      : { text: `Gerar grava a configuração e abre o terminal com o build (uns 30 minutos). O ${form.from || 'ambiente de origem'} não muda.`, cls: 'text-muted-foreground' };
+      : s.clone
+        ? { text: `Gerar grava a configuração e abre o terminal; a imagem já existe, então não há build. O ${form.from || 'ambiente de origem'} não muda.`, cls: 'text-muted-foreground' }
+        : { text: `Gerar grava a configuração e abre o terminal com o build (uns 30 minutos). O ${form.from || 'ambiente de origem'} não muda.`, cls: 'text-muted-foreground' };
 
   return (
     <footer className={`shrink-0 border-t border-border/80 px-5 md:px-6 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 ${aiReady && !s.issue ? 'bg-warning/5' : 'bg-card'}`}>
