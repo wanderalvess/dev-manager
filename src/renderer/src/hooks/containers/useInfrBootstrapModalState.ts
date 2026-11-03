@@ -41,7 +41,7 @@ export function useInfrBootstrapModalState({
   onLoadInfrScripts,
   onRunInfrScript
 }: UseInfrBootstrapModalStateArgs) {
-  const [activeTab, setActiveTab] = useState<InfrBootstrapTab>('oracle');
+  const [activeTab, setActiveTab] = useState<InfrBootstrapTab>('home');
   const [customPath, setCustomPath] = useState<string>(INFR_DEFAULT_CUSTOM_PATH);
   const [oracleContainer, setOracleContainer] = useState<string>(INFR_DEFAULT_ORACLE_CONTAINER);
   const [oraclePort, setOraclePort] = useState<number>(INFR_DEFAULT_ORACLE_PORT);
