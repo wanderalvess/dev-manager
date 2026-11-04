@@ -92,3 +92,45 @@ export function parseForecast(json: unknown, place: string, now: Date = new Date
   });
   return { success: true, place, current, days, fetchedAt: now.toISOString() };
 }
+
+/** Código técnico de uma falha de rede: `cause.code` do fetch do Node (undici) ou o `net::ERR_*` do Electron. */
+function networkErrorCode(err: unknown): string {
+  const parts: string[] = [];
+  let cur: unknown = err;
+  for (let i = 0; i < 4 && cur; i++) {
+    if (typeof cur === 'object' && cur !== null) {
+      const e = cur as { code?: unknown; message?: unknown; cause?: unknown };
+      if (typeof e.code === 'string') parts.push(e.code);
+      if (typeof e.message === 'string') parts.push(e.message);
+      cur = e.cause;
+    } else {
+      parts.push(String(cur));
+      break;
+    }
+  }
+  return parts.join(' ');
+}
+
+/**
+ * Traduz a falha da chamada ao serviço de clima. O fetch do Node só diz "fetch failed" e esconde a causa em `cause`;
+ * aqui ela vira uma frase que aponta o que conferir (internet, DNS, proxy ou certificado da rede da empresa).
+ */
+export function describeWeatherFetchError(err: unknown): string {
+  const raw = networkErrorCode(err);
+  const code = raw.match(/net::ERR_[A-Z_]+|\b(?:E[A-Z_]{3,}|UND_ERR_[A-Z_]+|[A-Z_]*CERT[A-Z_]*|UNABLE_TO_[A-Z_]+)\b/)?.[0];
+  const suffix = code ? ` (${code})` : '';
+  if (/abort/i.test(raw) || /TIMED_OUT|ETIMEDOUT|CONNECT_TIMEOUT/.test(raw)) return `O serviço de clima não respondeu a tempo${suffix}.`;
+  if (/CERT|UNABLE_TO_VERIFY|SELF_SIGNED|SSL/.test(raw)) {
+    return `A conexão com o serviço de clima foi recusada por certificado${suffix}. Na rede da empresa, o proxy pode estar inspecionando o HTTPS.`;
+  }
+  if (/PROXY|TUNNEL/.test(raw)) return `O proxy da rede não deixou consultar o clima${suffix}. Confira o proxy configurado no Windows.`;
+  if (/INTERNET_DISCONNECTED|NETWORK_CHANGED|ENETUNREACH|EHOSTUNREACH/.test(raw)) return `Sem conexão com a internet agora${suffix}.`;
+  if (/ENOTFOUND|EAI_AGAIN|NAME_NOT_RESOLVED|NAME_RESOLUTION/.test(raw)) {
+    return `Não achei o servidor do clima (api.open-meteo.com)${suffix}. Confira a internet, o DNS ou o proxy da rede.`;
+  }
+  if (/ECONNREFUSED|ECONNRESET|CONNECTION_(?:REFUSED|RESET|CLOSED)|BLOCKED/.test(raw)) {
+    return `A conexão com o serviço de clima foi cortada${suffix}. Um firewall ou o proxy da rede pode estar bloqueando api.open-meteo.com.`;
+  }
+  const msg = err instanceof Error ? err.message : String(err);
+  return `Não foi possível ler o clima agora (${code ?? msg}). Confira a internet.`;
+}

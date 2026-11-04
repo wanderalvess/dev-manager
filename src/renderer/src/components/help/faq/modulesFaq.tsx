@@ -28,7 +28,8 @@ export function getModulesFaq(onNavigate?: (tab: string) => void): FaqItem[] {
           </p>
           <p>
             Para ganhar espaço sem desligar nada, use <strong className="text-foreground">Recolher menu</strong> no pé do menu lateral:
-            ele vira uma faixa de ícones, com o nome e o atalho no tooltip. A escolha fica salva nesta máquina.
+            ele vira uma faixa de ícones, com o nome e o atalho no tooltip. O botão fica sempre à vista, mesmo em monitor baixo (só a
+            lista de módulos rola). A escolha fica salva nesta máquina.
           </p>
           {onNavigate && (
             <button
