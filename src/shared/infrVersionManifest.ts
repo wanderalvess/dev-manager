@@ -89,12 +89,18 @@ export interface ManifestComparison {
   onlyPreview: number;
 }
 
-/** `versions/<versão>.features` que já existe no INFR-Docker. */
-/** Features da lista que nenhum repositório dela tem: as que voltam para uma versão que ele tem e as que não têm saída. */
+/**
+ * Features da lista que nenhum repositório dela tem e o que o Hub fez com cada uma, sem pedir nada à pessoa: o repositório
+ * que a 801 informa entra na lista (`added`); sem ele, a feature volta para a versão que os repositórios da lista têm
+ * (`repairs`); sem nenhuma das duas, fica na versão atual (`kept`) e a criação segue.
+ */
 export interface ManifestRepoRepair {
   repairs: ManifestChange[];
-  unresolved: { name: string; version: string }[];
+  added: { name: string; version: string; repo: string }[];
+  kept: { name: string; version: string }[];
 }
+
+/** `versions/<versão>.features` que já existe no INFR-Docker. */
 
 export interface ExistingVersionManifest {
   path: string;
@@ -206,6 +212,26 @@ export function serializeVersionManifest(manifest: VersionManifest, header: stri
     ...(manifest.disabled.length ? ['', ...manifest.disabled] : []),
     ''
   ].join('\n');
+}
+
+/**
+ * Acrescenta linhas `repo <url>` que a lista ainda não tem, logo depois do último `repo` (ou antes da primeira `feature`);
+ * comentários e o resto ficam como estão.
+ */
+export function addManifestRepos(text: string, repos: string[]): string {
+  const have = new Set(parseVersionManifest(text).repos);
+  const add = [...new Set(repos)].filter((r) => !have.has(r));
+  if (add.length === 0) return text;
+  const eol = text.includes('\r\n') ? '\r\n' : '\n';
+  const lines = text.split(/\r?\n/);
+  let at = -1;
+  lines.forEach((l, i) => {
+    if (/^\s*repo\s/.test(l)) at = i;
+  });
+  if (at < 0) at = lines.findIndex((l) => /^\s*feature\s/.test(l)) - 1;
+  if (at < -1) at = lines.length - 1;
+  lines.splice(at + 1, 0, ...add.map((r) => `repo ${r}`));
+  return lines.join(eol);
 }
 
 /** Troca só a versão das linhas `feature <nome> <versão>` indicadas; comentários, repositórios e o resto ficam como estão. */

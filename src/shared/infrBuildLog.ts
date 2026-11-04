@@ -134,7 +134,7 @@ export function extractBuildCause(lines: string[], symptoms: number, failures?: 
   const headline = noMatch.length > 0 && !/Unable to resolve/i.test(full) ? requirements[0] ?? first : `não resolveu ${first}`;
   const hint =
     noMatch.length > 0
-      ? `A feature ${noMatch[0]} não está em nenhum repositório da lista: falta a linha "repo mvn:..." dela no manifesto, ou o artefato não foi publicado no Nexus. Confira o manifesto e o Nexus.`
+      ? `A feature ${noMatch[0]} não está em nenhum repositório da lista: falta o repositório dela na lista, ou o artefato não foi publicado no Nexus. Crie de novo pela Nova versão: o Hub busca o repositório na 801 e, se ela não tiver, mantém a versão atual da feature.`
       : requirements.some((r) => r.startsWith('pacote'))
         ? 'Uma feature da lista exige um pacote numa versão que as outras não fornecem (em geral, uma feature que ficou na versão anterior convive com outras que subiram). Veja as features que ficaram atrás na revisão e rode o ensaio no Karaf de origem antes de criar.'
         : /Unable to resolve root/i.test(full)

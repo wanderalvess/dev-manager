@@ -66,8 +66,29 @@ describe('feature que nenhum repositório da lista tem', () => {
     ]);
     const r = repairAbsentFeatures(lista, absent);
     expect(r.repairs.map((c) => [c.name, c.from, c.to])).toEqual([['winthor-integracao-2650', '1.40.1.2', '1.40.0.2']]);
-    expect(r.unresolved.map((a) => a.name)).toEqual(['winthor-sumida']);
+    expect(r.kept).toEqual([{ name: 'winthor-sumida', version: '1.0.0' }]);
+    expect(r.added).toEqual([]);
     expect(r.manifest.features[0]).toEqual({ name: 'winthor-integracao-2650', version: '1.40.0.2' });
+    expect(r.manifest.features[2]).toEqual({ name: 'winthor-sumida', version: '1.0.0' });
+  });
+
+  it('a 801 vem primeiro: o repositório dela entra na lista e a versão pedida fica; sem ela, nada some da lista', () => {
+    const absent = [
+      { name: 'winthor-integracao-2650', version: '1.40.1.2', available: ['1.40.0.2'] },
+      { name: 'winthor-sumida', version: '1.0.0', available: [] }
+    ];
+    const catalog = {
+      repositorios: [],
+      funcionalidades: [
+        { nome: 'winthor-integracao-2650', versao: '1.40.1.2', codigoRotina: 0, codigoModulo: 0, tipoProjeto: 'SERVICO', descricao: '', status: 'LIBERADO', featureMavenUrl: 'mvn:g/winthor-integracao-2650-features/1.40.1.2/xml/features' }
+      ]
+    } as any;
+    const r = repairAbsentFeatures(lista, absent, catalog);
+    expect(r.added).toEqual([{ name: 'winthor-integracao-2650', version: '1.40.1.2', repo: 'mvn:g/winthor-integracao-2650-features/1.40.1.2/xml/features' }]);
+    expect(r.repairs).toEqual([]);
+    expect(r.kept.map((k) => k.name)).toEqual(['winthor-sumida']);
+    expect(r.manifest.repos.at(-1)).toBe('mvn:g/winthor-integracao-2650-features/1.40.1.2/xml/features');
+    expect(r.manifest.features).toEqual(lista.features);
   });
 
   it('só confere com todos os XML da lista; os de outra lista não contam', () => {

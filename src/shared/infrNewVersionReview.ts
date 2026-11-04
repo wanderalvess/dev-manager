@@ -68,7 +68,7 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
         : `Não há versions/${i.version}.features no INFR-Docker, e a lista nova manteria as features da ${from} num ambiente ${i.version}. Gere a lista de um WTA ${i.version} (export_features.sh) ou use Montar do zero.`
     });
   } else if (useExisting) {
-    items.push({ id: 'features', status: 'ok', title: `Features da ${i.version}`, detail: `Usa a lista que já existe (${existing.count} features); ${existing.repairText ? 'só as versões sem repositório são trocadas.' : 'nada é regravado.'}` });
+    items.push({ id: 'features', status: 'ok', title: `Features da ${i.version}`, detail: `Usa a lista que já existe (${existing.count} features); ${existing.repairText ? 'a criação só acrescenta os repositórios da 801 e troca as versões sem repositório.' : 'nada é regravado.'}` });
   } else if (existing && existing.comparison.older > 0) {
     items.push({
       id: 'features',
@@ -132,29 +132,22 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
 function reviewRepoCoverage(r: ManifestRepoRepair | undefined, version: string, existing: boolean): InfrReviewItem | null {
   if (!r) return null;
   const file = `versions/${version}.features`;
-  const names = (xs: { name: string; version: string }[]) => (xs.length > 3 ? `${xs.slice(0, 3).map((x) => `${x.name} ${x.version}`).join(', ')} e mais ${xs.length - 3}` : xs.map((x) => `${x.name} ${x.version}`).join(', '));
-  if (r.unresolved.length > 0) {
-    return {
-      id: 'repositorios',
-      status: 'block',
-      title: 'Feature sem repositório na lista',
-      detail:
-        `${names(r.unresolved)}: nenhum "repo mvn:" da lista tem essa feature, em nenhuma versão (nem os repositórios que eles puxam, nem os que o Karaf já traz), e o build pararia em "não existe em nenhum repositório da lista". ` +
-        `Como resolver: acrescente em ${file} a linha "repo mvn:<grupo>/<artefato>/<versão>/xml/features" do Nexus que tem a feature, ou tire a feature da lista, e confira de novo.`
-    };
+  const list = (xs: string[]) => (xs.length > 3 ? `${xs.slice(0, 3).join(', ')} e mais ${xs.length - 3}` : xs.join(', '));
+  if (r.added.length === 0 && r.repairs.length === 0 && r.kept.length === 0) {
+    return { id: 'repositorios', status: 'ok', title: 'Repositório de cada feature', detail: 'Toda feature da lista está num repositório dela, nos que eles puxam ou nos que o Karaf já traz (conferido nos features.xml).' };
   }
-  if (r.repairs.length > 0) {
-    const list = r.repairs.map((c) => `${c.name} ${c.from} → ${c.to}`);
-    return {
-      id: 'repositorios',
-      status: 'warn',
-      title: existing ? `A lista da ${version} é corrigida ao criar` : 'Lista corrigida pelos repositórios',
-      detail:
-        `${list.length > 3 ? `${list.slice(0, 3).join(', ')} e mais ${list.length - 3}` : list.join(', ')}: a versão pedida não está em nenhum repositório da lista, e o build pararia nela. ` +
-        `${existing ? `A criação regrava ${file} com a versão que os repositórios têm.` : 'A lista nova já sai com a versão que os repositórios têm.'} Para manter a mais nova, acrescente o "repo mvn:" dela na lista.`
-    };
-  }
-  return { id: 'repositorios', status: 'ok', title: 'Repositório de cada feature', detail: 'Toda feature da lista está num repositório dela, nos que eles puxam ou nos que o Karaf já traz (conferido nos features.xml).' };
+  // Nada aqui impede de criar nem pede para editar a lista: o Hub resolve sozinho e só conta o que fez
+  const parts: string[] = [];
+  if (r.added.length) parts.push(`${list(r.added.map((a) => `${a.name} ${a.version}`))}: o repositório veio da 801 e entra na lista.`);
+  if (r.repairs.length) parts.push(`${list(r.repairs.map((c) => `${c.name} ${c.from} → ${c.to}`))}: nem a lista nem a 801 têm a versão pedida; fica a que os repositórios da lista têm.`);
+  if (r.kept.length) parts.push(`${list(r.kept.map((k) => `${k.name} ${k.version}`))}: nem a lista nem a 801 têm repositório delas; ficam na versão atual.`);
+  const where = existing ? `A criação regrava ${file} com isso (a anterior fica como .bak).` : 'A lista nova já sai assim.';
+  return {
+    id: 'repositorios',
+    status: r.repairs.length || r.kept.length ? 'warn' : 'ok',
+    title: r.added.length && !r.repairs.length && !r.kept.length ? 'Repositórios trazidos da 801' : existing ? `A lista da ${version} é ajustada ao criar` : 'Lista ajustada pelos repositórios',
+    detail: `${parts.join(' ')} ${where}`
+  };
 }
 
 /** O Karaf de origem simulou a instalação das features trocadas? Só avisa: ele ainda tem o estado da versão antiga. */

@@ -63,7 +63,7 @@ describe('extractBuildCause', () => {
   it('"No matching features" aponta a feature sem repositório e o que conferir', () => {
     const c = extractBuildCause(['#8 444.2 [09:04:02] [ERRO] winthor-integracao-2650/1.40.1.2: Error executing command: No matching features for winthor-integracao-2650/1.40.1.2'], 3)!;
     expect(c.headline).toBe('feature winthor-integracao-2650/1.40.1.2 não existe em nenhum repositório da lista');
-    expect(c.hint).toContain('falta a linha "repo mvn:..."');
+    expect(c.hint).toContain('o Hub busca o repositório na 801');
   });
 
   it('não corta o texto no meio de uma palavra e não repete a cadeia', () => {

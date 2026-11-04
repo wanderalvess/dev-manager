@@ -30,6 +30,9 @@ Verificar mostrava o erro da tentativa anterior e a IA não tinha o que ler. Cad
    conferência conta, além dos `repo mvn:` da lista, os `<repository>` que cada XML puxa e os `featuresRepositories`
    do Karaf (`etc/org.apache.karaf.features.cfg`, lidos do `system/`): é deles que vêm `spring*` e as outras features
    do Karaf, e sem isso a lista da 40 do Nathan era bloqueada à toa (1.67.1).
+   **A pessoa não edita a lista.** Feature sem repositório não bloqueia: o Hub busca o repositório na 801 (todo
+   serviço é liberado lá) e acrescenta o `repo mvn:`; sem ele, volta para a versão que os repositórios da lista têm;
+   sem nenhum dos dois, fica na versão atual e a criação segue com aviso (`repairAbsentFeatures`).
 2. **Clonar não bloqueia por versão do banco.** Imagem fora do padrão é aceita (`isValidImageRef`), e um banco de
    linha mais alta só gera aviso: a pessoa quer copiar o que já funciona.
 3. **Aviso de scripts desatualizados.** Antes de abrir o terminal, o Hub confere se cada script conhece as opções

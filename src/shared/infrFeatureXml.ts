@@ -11,7 +11,8 @@
  */
 import { SAFE_REPO_URL, mvnFeaturePath } from './infrFeatureArtifacts';
 import { satisfiesSpec, type DependencyIssue, type DependencyReport } from './infrFeatureDependencies';
-import { compareVersions, type ManifestChange, type VersionManifest } from './infrVersionManifest';
+import { catalogRepoFor, compareVersions, type ManifestChange, type ManifestRepoRepair, type VersionManifest } from './infrVersionManifest';
+import type { Routine801CatalogResponse } from './types';
 
 export interface XmlFeatureDependency {
   name: string;
@@ -285,22 +286,32 @@ export function featuresAbsentFromXml(manifest: VersionManifest, features: XmlFe
 }
 
 /**
- * Volta cada feature ausente para a versão mais nova que os repositórios da lista têm dela; a que não tem nenhuma fica em
- * `unresolved` (precisa de um `repo mvn:` novo, que só a pessoa sabe qual é).
+ * Resolve cada feature ausente sem pedir nada à pessoa (os serviços são liberados na 801, então o repositório deve estar
+ * lá): 1) a 801 informa o repositório dessa versão → ele entra na lista; 2) senão, a feature volta para a versão mais nova
+ * que os repositórios da lista têm; 3) senão, fica na versão atual e a criação segue.
  */
-export function repairAbsentFeatures(manifest: VersionManifest, absent: AbsentFeature[]): { manifest: VersionManifest; repairs: ManifestChange[]; unresolved: AbsentFeature[] } {
+export function repairAbsentFeatures(
+  manifest: VersionManifest,
+  absent: AbsentFeature[],
+  catalog?: Routine801CatalogResponse
+): { manifest: VersionManifest } & ManifestRepoRepair {
   const repairs: ManifestChange[] = [];
-  const unresolved: AbsentFeature[] = [];
+  const added: ManifestRepoRepair['added'] = [];
+  const kept: ManifestRepoRepair['kept'] = [];
   const target = new Map<string, string>();
+  const repos = [...manifest.repos];
   for (const a of absent) {
-    if (a.available.length === 0) unresolved.push(a);
-    else {
+    const repo = catalog ? catalogRepoFor(a.name, a.version, catalog) : undefined;
+    if (repo) {
+      added.push({ name: a.name, version: a.version, repo });
+      if (!repos.includes(repo)) repos.push(repo);
+    } else if (a.available.length > 0) {
       target.set(a.name, a.available[0]);
-      repairs.push({ name: a.name, from: a.version, to: a.available[0], reason: `a ${a.version} não está em nenhum repositório da lista` });
-    }
+      repairs.push({ name: a.name, from: a.version, to: a.available[0], reason: `a ${a.version} não está em nenhum repositório da lista nem na 801` });
+    } else kept.push({ name: a.name, version: a.version });
   }
   const features = manifest.features.map((f) => (target.has(f.name) ? { name: f.name, version: target.get(f.name) as string } : f));
-  return { manifest: { ...manifest, features }, repairs, unresolved };
+  return { manifest: { ...manifest, repos, features }, repairs, added, kept };
 }
 
 /** Junta o que os features.xml acharam ao relatório de dependências do catálogo, sem repetir o mesmo conflito. */
