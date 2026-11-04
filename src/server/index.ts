@@ -1517,6 +1517,15 @@ app.post('/api/infr/env-check/terminal', async (req, res) => {
   }
 });
 
+app.post('/api/infr/env-check/fix', async (req, res) => {
+  try {
+    const { distro, name, role, action } = req.body || {};
+    res.json(await infrEnvCheckService.fixContainer(distro, String(name || ''), role, action));
+  } catch (err: any) {
+    res.status(500).json({ success: false, output: err.message });
+  }
+});
+
 app.get('/api/infr/version/environments', async (req, res) => {
   try {
     res.json(await infrVersionService.listEnvironments(req.query.distro as string | undefined));

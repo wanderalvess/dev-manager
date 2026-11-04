@@ -6,7 +6,7 @@ import type {
   InfrVersionPreview,
   InfrVersionPreviewRequest
 } from '../shared/infrVersionManifest';
-import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
+import type { InfrCheckCommandId, InfrEnvCheck, InfrRole } from '../shared/infrEnvCheck';
 import type { InfrDiagnosticRequest, InfrDiagnosticResult } from '../shared/infrDiagnosticTypes';
 import type { WeatherReport } from '../shared/weather';
 import type { JiraTodayReport } from '../shared/jiraToday';
@@ -413,6 +413,7 @@ export interface ElectronAPI {
   applyInfrActiveEnvironment?: (req: { distro?: string; name: string }) => Promise<InfrActiveEnvApplyResult>;
   clearInfrActiveEnvironment?: () => Promise<{ success: boolean }>;
   startInfrEnvironment?: (req: { distro?: string; name: string }) => Promise<StartEnvResult>;
+  fixInfrContainer?: (req: { distro?: string; name: string; role: InfrRole; action: 'start' | 'restart' }) => Promise<{ success: boolean; output: string }>;
   openInfrCheckTerminal?: (req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }) => Promise<{ success: boolean; output: string }>;
   setDockerTargetWslDistro?: (distro: string | null) => Promise<DockerDaemonStatus>;
   getContainerEnvironments?: () => Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }>;

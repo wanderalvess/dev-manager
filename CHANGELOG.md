@@ -4,15 +4,26 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.68.0] - 2026-11-04
 ### Adicionado
 - **Jira na tela de início**: com um projeto Jira cadastrado em Documentação › Confluence & Jira, a tela de início usa a mesma credencial para mostrar **Continuar de onde parou** (a issue em que você lançou horas por último e quanto lançou naquele dia), **Jira · hoje** (a sprint ativa com o progresso e os dias que faltam, suas issues em andamento e as com prazo até hoje, cada uma abrindo no Jira) e as **horas lançadas desde segunda** em Sua semana. A saudação ganhou uma linha com o resumo do dia ("2 issues em andamento, 1 com prazo até hoje, a sprint termina em 4 dias, 1 ambiente no ar."). Só leitura, com a consulta guardada por 5 minutos; descrição e comentários das issues não são lidos.
 - **Sem Jira, a tela de início não insiste**: no lugar dos cartões do Jira entram os **módulos mais usados na semana** (sem uso contado, Ambiente Dev, Database Studio, Deploy e Git), e cada um entra no cockpit direto na sua aba.
 - **Tela ao entrar** (Configurações › Aparência): escolha a aba que o **Entrar no cockpit** abre. Sem escolha, o Hub abre na **última aba que você usou** (antes abria sempre no Ambiente Dev).
 - **Etapa Tela de início no onboarding** (agora em 7 etapas): liga o Jira com URL, token pessoal e a chave do projeto (opcional), com **Testar conexão**, e escolhe a tela ao entrar. Sem chave de projeto, a busca de documentação lê só as suas issues, não o Jira inteiro.
+- **Validação depois da criação ("Pronto para usar")**: o *Verificar ambiente*, que abre sozinho depois do Criar, deixou de dar "no ar" só porque a raiz do WTA responde. Agora confere, ponto a ponto:
+  - banco aberto (healthy);
+  - WTA ligado depois do banco;
+  - Karaf sem bundle travado;
+  - rota de login do WinThor registrada (`/winthor/autenticacao/v1/login`);
+  - WSH achando as rotas do WTA (os serviços que dão 404 aparecem pelo nome).
+
+  O ambiente só fica *Ambiente pronto para usar* com todos os pontos ok. O que o Hub resolve sozinho tem botão: **Ligar o banco**, **Reiniciar o WTA**, **Ligar o WSH**. Depois do botão, a conferência volta a rodar enquanto o container sobe.
 
 ### Alterado
 - **Tela de início redesenhada**: cartões em grade com o mesmo visual no tema claro e no escuro (seguem a cor do tema), medidores de processador e memória, barras da semana de segunda a domingo (horas do Jira, ou automações do Hub sem Jira) e as novidades da versão numa faixa embaixo. Saíram os textos "ecossistema WinThor", "tudo carregado" e as dicas de teclado ("Enter para entrar"); Enter e Esc continuam funcionando.
+
+### Corrigido
+- **Nova versão com o banco de destino parado**: no `homolog` do Nathan o `oracle-homolog` já existia, parado. O script só disse "já existe; não é recriado" e ligou o WTA com o banco fechado, e o WTA travou com 5 bundles estourando o tempo. Agora o Criar liga esse banco e espera o healthcheck (até 10 minutos) antes do script. O *Verificar ambiente* também diz quando o WTA subiu antes do banco e oferece reiniciar o WTA.
 
 ## [1.67.2] - 2026-11-04
 ### Corrigido

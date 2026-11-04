@@ -9,6 +9,7 @@ import { InfrCommandLine } from './InfrCommandLine';
 import { InfrAiGuideLine } from './newversion/InfrAiGuideLine';
 import { InfrVerifyNode } from './verify/InfrVerifyNode';
 import { InfrBuildCause } from './verify/InfrBuildCause';
+import { InfrPostChecklist } from './verify/InfrPostChecklist';
 import { infrCheckBadge } from '../../../utils/infrBootstrapModalUtils';
 
 const SUMMARY: Record<InfrEnvStatus, React.ReactNode> = {
@@ -138,6 +139,8 @@ export const InfrVerifyTab: React.FC<{
         )}
 
         {showAi && <InfrAiGuideLine ai={ai} blocked={false} />}
+
+        {r?.post && <InfrPostChecklist items={r.post} fixing={v.fixing} onFix={v.fix} message={v.fixing === null ? v.message : undefined} />}
 
         {containers.length > 0 && (
           <div className="flex flex-wrap items-stretch gap-y-3">

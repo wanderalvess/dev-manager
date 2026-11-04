@@ -18,6 +18,7 @@ import {
 import { execFileAsync, isValidIdentifier, isSafeLocalPath } from '../utils/security';
 import {
   buildNewVersionEnvCommand,
+  wakeDbCommand,
   buildWshSetupCommand,
   buildWtaSetupCommand,
   isValidWinthorVersion,
@@ -1097,10 +1098,12 @@ export class WslService {
       const command = buildNewVersionEnvCommand({ ...options.newEnv, version: options.winthorVersion });
       if (!command) return { success: false, output: 'Versão, nomes de ambiente/container, portas ou jar do WSH inválidos.' };
       title = `Nova versão ${options.winthorVersion}: ${options.newEnv?.name}`;
+      // O banco de destino que já existe parado sobe antes: senão o WTA liga com o banco fechado e trava
+      const wake = wakeDbCommand({ name: options.newEnv?.name, dbContainer: options.newEnv?.dbContainer });
       // A saída também vai para /tmp da distro: o Verificar ambiente lê o fim dela e explica a falha do build
       cmdToRun =
         `cd "${wslPath}" && chmod +x linux-winthor/scripts/*.sh oracle-winthor/*.sh oracle-winthor/11.2.0.2-xe/tools/*.sh wsh-winthor/*.sh && cd linux-winthor/scripts && ` +
-        `{ set -o pipefail; echo hub: build iniciado em $(date +%F-%T); ${command}; } 2>&1 | tee /tmp/hub-nova-versao-${options.newEnv?.name?.trim()}.log`;
+        `{ set -o pipefail; echo hub: build iniciado em $(date +%F-%T); ${wake ? `${wake}; ` : ''}${command}; } 2>&1 | tee /tmp/hub-nova-versao-${options.newEnv?.name?.trim()}.log`;
     } else {
       return { success: false, output: `Tipo de script desconhecido: ${scriptType}` };
     }

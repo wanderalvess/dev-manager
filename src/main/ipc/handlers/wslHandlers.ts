@@ -13,7 +13,7 @@ import { InfrActiveEnvService } from '../../services/infr/InfrActiveEnvService';
 import { InfrStartEnvService } from '../../services/infr/InfrStartEnvService';
 import { safeSend } from '../../utils/ipcSend';
 import type { InfrFirstStepsActionRequest } from '../../../shared/infrFirstSteps';
-import type { InfrCheckCommandId } from '../../../shared/infrEnvCheck';
+import type { InfrCheckCommandId, InfrRole } from '../../../shared/infrEnvCheck';
 import type { IpcContext } from '../ipcContext';
 
 /** WSL, snapshots e INFR-Docker. Canais: infr:*, wsl:* */
@@ -87,6 +87,10 @@ export function registerWslHandlers(ctx: IpcContext): void {
 
   ipcMain.handle('infr:env-check', async (_, { distro, name }: { distro?: string; name: string }) => {
     return await infrEnvCheckService.check(distro, name);
+  });
+
+  ipcMain.handle('infr:env-fix', async (_, req: { distro?: string; name: string; role: InfrRole; action: 'start' | 'restart' }) => {
+    return await infrEnvCheckService.fixContainer(req.distro, req.name, req.role, req.action);
   });
 
   ipcMain.handle('infr:diagnostic', async (_, req: InfrDiagnosticRequest) => {
