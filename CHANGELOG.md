@@ -4,6 +4,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Corrigido
+- **Recolher menu em monitor baixo**: com muitos módulos ligados, o menu lateral inteiro rolava e o botão *Recolher menu* ficava escondido lá embaixo. Agora só a lista de módulos rola; o logo e o botão de recolher/expandir ficam sempre à vista.
+- **Clima da tela de início atrás do proxy da empresa**: a consulta ia pelo `fetch` do Node, que ignora o proxy e os certificados do Windows e só dizia "fetch failed". Agora vai pela rede do Chromium (a mesma do navegador), e quando ainda falha o cartão diz o motivo (DNS, proxy, certificado, firewall, sem internet ou tempo esgotado) com o código técnico.
+
 ## [1.67.0] - 2026-11-03
 ### Adicionado
 - **Copiar relatório para suporte** (Assistente INFR → Verificar, e na mensagem do Gerar em Nova versão): um clique junta num texto só o que ajuda a achar o problema de um ambiente, em vez de prints do terminal, e copia para colar na conversa. O relatório traz a versão do Hub, a branch, o commit e as alterações locais da pasta do INFR-Docker, **se cada script conhece as opções que o Hub passa** (aponta o `wta_setup.sh` antigo), os arquivos `wta.env`/`.env` da versão, o Docker, as imagens, o disco e a memória, o estado e o fim do log de cada container e o log do Gerar (os primeiros erros com contexto, o fim e o do Gerar anterior). Senhas, tokens, `usuário:senha@` em URL, cabeçalhos Authorization e conexões do Oracle saem escondidos (`***`). O arquivo também fica guardado na pasta de dados do Hub (`diagnosticos`, os 20 mais recentes), para o caso de o navegador não deixar copiar.

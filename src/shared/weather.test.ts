@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describeWeatherCode, forecastUrl, geocodeUrl, isValidCity, parseForecast, parseGeocode } from './weather';
+import { describeWeatherCode, describeWeatherFetchError, forecastUrl, geocodeUrl, isValidCity, parseForecast, parseGeocode } from './weather';
 
 const FORECAST = {
   current: { temperature_2m: 27.6, apparent_temperature: 29.2, relative_humidity_2m: 58, wind_speed_10m: 11.4, weather_code: 2 },
@@ -53,5 +53,35 @@ describe('clima da tela de início', () => {
     expect(describeWeatherCode(45).icon).toBe('fog');
     expect(describeWeatherCode(99).icon).toBe('storm');
     expect(describeWeatherCode(-1).description).toBe('Tempo indefinido');
+  });
+});
+
+describe('describeWeatherFetchError', () => {
+  const undici = (code: string) => Object.assign(new TypeError('fetch failed'), { cause: Object.assign(new Error(code), { code }) });
+
+  it('tira a causa de dentro do "fetch failed" do Node', () => {
+    expect(describeWeatherFetchError(undici('ENOTFOUND'))).toBe(
+      'Não achei o servidor do clima (api.open-meteo.com) (ENOTFOUND). Confira a internet, o DNS ou o proxy da rede.'
+    );
+    expect(describeWeatherFetchError(undici('ECONNREFUSED'))).toContain('firewall ou o proxy');
+    expect(describeWeatherFetchError(undici('UNABLE_TO_GET_ISSUER_CERT_LOCALLY'))).toContain('certificado (UNABLE_TO_GET_ISSUER_CERT_LOCALLY)');
+    expect(describeWeatherFetchError(undici('UND_ERR_CONNECT_TIMEOUT'))).toBe('O serviço de clima não respondeu a tempo (UND_ERR_CONNECT_TIMEOUT).');
+  });
+
+  it('entende os erros do net.fetch do Electron', () => {
+    expect(describeWeatherFetchError(new Error('net::ERR_PROXY_CONNECTION_FAILED'))).toContain('proxy da rede não deixou');
+    expect(describeWeatherFetchError(new Error('net::ERR_CERT_AUTHORITY_INVALID'))).toContain('certificado');
+    expect(describeWeatherFetchError(new Error('net::ERR_INTERNET_DISCONNECTED'))).toBe(
+      'Sem conexão com a internet agora (net::ERR_INTERNET_DISCONNECTED).'
+    );
+    expect(describeWeatherFetchError(new Error('net::ERR_NAME_NOT_RESOLVED'))).toContain('DNS');
+  });
+
+  it('tempo esgotado e erro desconhecido', () => {
+    expect(describeWeatherFetchError(Object.assign(new Error('This operation was aborted'), { name: 'AbortError' }))).toBe(
+      'O serviço de clima não respondeu a tempo.'
+    );
+    expect(describeWeatherFetchError(new Error('HTTP 503'))).toBe('Não foi possível ler o clima agora (HTTP 503). Confira a internet.');
+    expect(describeWeatherFetchError(new TypeError('fetch failed'))).toContain('(fetch failed)');
   });
 });
