@@ -8,11 +8,11 @@ import { StartEnvCard, StartPcCard, StartWeekCard } from './StartStatusCards';
 import { StartShortcutsCard } from './StartShortcutsCard';
 
 const NewsStrip: React.FC<{ news: { version: string; items: ChangelogHighlight[] }; onWhatsNew: () => void }> = ({ news, onWhatsNew }) => (
-  <section aria-label="Novidades desta versão" className="min-h-12 px-5 rounded-2xl border border-border bg-card flex flex-wrap items-center gap-x-4 gap-y-1 py-2 text-sm min-w-0">
+  <section aria-label="Novidades desta versão" className="min-h-9 px-4 rounded-xl border border-border bg-card flex flex-wrap items-center gap-x-3 gap-y-1 py-1.5 text-xs sm:text-sm min-w-0 shadow-sm">
     <span className="font-mono text-2xs font-bold tracking-[0.14em] uppercase text-primary shrink-0">Novo · v{news.version}</span>
     <span className="flex-1 min-w-0 truncate text-muted-foreground">{news.items.slice(0, 3).map((i) => i.title).join(' · ')}</span>
-    <button type="button" onClick={onWhatsNew} className="min-h-9 shrink-0 flex items-center gap-1.5 text-sm font-bold text-primary cursor-pointer hover:underline">
-      Ver todas <ArrowRight className="w-4 h-4" />
+    <button type="button" onClick={onWhatsNew} className="min-h-7 shrink-0 flex items-center gap-1 text-xs font-bold text-primary cursor-pointer hover:underline">
+      Ver todas <ArrowRight className="w-3.5 h-3.5" />
     </button>
   </section>
 );
@@ -32,8 +32,8 @@ export const SplashStartPanel: React.FC<{
   // Lendo, ou cadastrado e com erro: o cartão do Jira; sem fonte Jira, os outros indicadores
   const jiraLayout = jira === null || jira.configured;
   return (
-    <div className="w-full flex flex-col gap-4">
-      <section aria-label="Tela de início" className="grid grid-cols-1 md:grid-cols-6 xl:grid-cols-12 gap-4 xl:auto-rows-[15.5rem]">
+    <div className="w-full flex flex-col gap-3 sm:gap-3.5">
+      <section aria-label="Tela de início" className="grid grid-cols-1 md:grid-cols-6 xl:grid-cols-12 gap-3 sm:gap-3.5 xl:auto-rows-[13rem]">
         {jiraLayout ? (
           <>
             {jira?.success ? (

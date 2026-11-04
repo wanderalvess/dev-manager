@@ -25,21 +25,21 @@ export const StartHome: React.FC<StartHomeProps> = ({ data, news, onEnter, onOpe
   const now = new Date();
   const summary = heroSummary(data.jira, data.envs, now);
   return (
-    <div className="max-w-7xl mx-auto flex flex-col gap-7 animate-splash-rise">
-      <section aria-label="Boas-vindas" className="flex flex-wrap items-end justify-between gap-6">
-        <div className="flex flex-col gap-2.5 min-w-0">
-          <p className="m-0 font-mono text-sm text-muted-foreground">{todayLabel(now)}</p>
-          <h1 className="m-0 text-5xl sm:text-6xl font-extrabold tracking-tighter leading-none">
+    <div className="max-w-7xl mx-auto flex flex-col gap-3.5 sm:gap-4 animate-splash-rise">
+      <section aria-label="Boas-vindas" className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1.5 min-w-0">
+          <p className="m-0 font-mono text-xs text-muted-foreground uppercase tracking-wider">{todayLabel(now)}</p>
+          <h1 className="m-0 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-none">
             {greeting(now)}
             <span className="text-primary">.</span>
           </h1>
-          {summary && <p className="m-0 text-base sm:text-lg text-muted-foreground">{summary}</p>}
+          {summary && <p className="m-0 text-xs sm:text-sm text-muted-foreground">{summary}</p>}
         </div>
         <button
           type="button"
           autoFocus
           onClick={onEnter}
-          className="h-14 px-8 rounded-2xl bg-primary text-primary-foreground text-base font-extrabold flex items-center gap-3 cursor-pointer transition-all shadow-lg shadow-primary/30 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/40"
+          className="h-11 sm:h-12 px-6 sm:px-7 rounded-xl bg-primary text-primary-foreground text-sm sm:text-base font-extrabold flex items-center gap-2.5 cursor-pointer transition-all shadow-md shadow-primary/25 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/35"
         >
           Entrar no cockpit <ArrowRight className="w-4 h-4" />
         </button>

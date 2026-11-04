@@ -20,17 +20,17 @@ export const StartShortcutsCard: React.FC<{ data: StartScreenData; onOpenTab: (t
             <button
               type="button"
               onClick={() => onOpenTab(item.tab)}
-              className="group w-full min-h-16 px-4 py-3 rounded-xl border border-border bg-muted/40 flex items-center gap-3 text-left cursor-pointer transition-colors hover:border-primary hover:bg-primary/5"
+              className="group w-full min-h-12 px-3 py-2 rounded-xl border border-border bg-muted/40 flex items-center gap-2.5 text-left cursor-pointer transition-colors hover:border-primary hover:bg-primary/5"
             >
               <span className="flex-1 min-w-0">
-                <span className="block font-bold truncate">{item.label}</span>
+                <span className="block font-bold text-xs sm:text-sm truncate">{item.label}</span>
                 {item.runs > 0 && (
-                  <span className="block text-xs text-muted-foreground">
+                  <span className="block text-2xs text-muted-foreground">
                     {item.runs} {item.runs === 1 ? 'uso' : 'usos'}
                   </span>
                 )}
               </span>
-              <ArrowRight className="w-4 h-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+              <ArrowRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
             </button>
           </li>
         ))}

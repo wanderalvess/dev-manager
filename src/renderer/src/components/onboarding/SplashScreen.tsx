@@ -40,7 +40,7 @@ const PRIMARY_BUTTON =
   'h-14 rounded-2xl bg-primary text-primary-foreground text-base font-extrabold flex items-center gap-3 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg';
 const SECONDARY_BUTTON =
   'h-14 px-6 rounded-2xl border border-border text-muted-foreground hover:text-foreground font-semibold cursor-pointer transition-colors';
-const PAGE_X = 'px-6 sm:px-16 lg:px-24';
+const PAGE_X = 'px-5 sm:px-10 lg:px-16 xl:px-20';
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({
   isOpen,
@@ -123,15 +123,15 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         />
       )}
 
-      <header className={`relative h-16 shrink-0 ${PAGE_X} flex items-center font-mono text-xs text-muted-foreground`}>
-        <span className="flex items-center gap-3">
+      <header className={`relative ${home ? 'h-11 sm:h-12' : 'h-16'} shrink-0 ${PAGE_X} flex items-center font-mono text-xs text-muted-foreground`}>
+        <span className="flex items-center gap-2.5">
           {home && <AppLogo size="xs" />}
           HUB MANAGER{appVersion ? ` · v${appVersion}` : ''}
         </span>
       </header>
 
       {home ? (
-        <main className={`relative flex-1 min-h-0 overflow-y-auto ${PAGE_X} pt-2 pb-8`}>
+        <main className={`relative flex-1 min-h-0 overflow-y-auto ${PAGE_X} pt-1 pb-4 sm:pb-6`}>
           <StartHome data={start} news={showNews ? news : null} onEnter={onEnter} onOpenTab={onOpenTab} onWhatsNew={onWhatsNew} />
         </main>
       ) : (
