@@ -4,6 +4,7 @@
  * como comandos para copiar ou abrir no terminal.
  */
 import type { BuildLogReport } from './infrBuildLog';
+import type { InfrHttpProbe, InfrPostItem } from './infrPostCheck';
 import { isValidEnvName } from './infrWinthorVersion';
 
 export type InfrRole = 'oracle' | 'wta' | 'wsh';
@@ -24,6 +25,8 @@ export interface InfrContainerCheck {
   /** Portas publicadas, como o docker port mostra (8080/tcp -> 0.0.0.0:8087) */
   ports: string[];
   logTail: string[];
+  /** Linhas (com a hora, docker logs --timestamps) do log inteiro que mostram o Karaf travado: bundles que estouraram o tempo, pacotes em transição */
+  stuck?: string[];
 }
 
 export type InfrEnvStatus = 'ok' | 'starting' | 'fail' | 'missing';
@@ -36,9 +39,13 @@ export interface InfrEnvCheck {
   checkedAt?: string;
   containers: InfrContainerCheck[];
   wtaHttp?: { url: string; status?: number; error?: string };
-  /** Fim do log do build (new_version_env.sh), quando o Gerar foi aberto por este Hub nesta distro */
+  /** Fim do log do build (new_version_env.sh), quando a criação foi aberto por este Hub nesta distro */
   buildLog?: BuildLogReport;
   summary?: { status: InfrEnvStatus; title: string; detail: string };
+  /** Rota de login do WTA (sem credencial): 404 é a autenticação que ainda não subiu */
+  wtaLogin?: InfrHttpProbe;
+  /** Validação depois da criação: banco, ordem de subida, Karaf, login e WSH */
+  post?: InfrPostItem[];
 }
 
 export type InfrCheckCommandId = 'ps' | 'logs-oracle' | 'logs-wta' | 'logs-wsh' | 'wta-http';
@@ -79,14 +86,15 @@ export function wtaHostPort(ports: string[]): number | undefined {
  * docker inspect (`estado|health|reinícios|início|imagem` ou MISSING), `@@ports` e `@@logs`.
  */
 export function parseEnvCheckOutput(output: string, name: string): InfrContainerCheck[] {
-  const blocks = new Map<string, { inspect: string; ports: string[]; logs: string[] }>();
-  let current: { inspect: string; ports: string[]; logs: string[] } | null = null;
-  let section: 'inspect' | 'ports' | 'logs' = 'inspect';
+  type Block = { inspect: string; ports: string[]; logs: string[]; stuck: string[] };
+  const blocks = new Map<string, Block>();
+  let current: Block | null = null;
+  let section: 'inspect' | 'ports' | 'logs' | 'stuck' = 'inspect';
   for (const raw of output.split(/\r?\n/)) {
     const line = raw.replace(/\x1b\[[0-9;]*m/g, ''); // eslint-disable-line no-control-regex
     const head = /^@@c (\S+)$/.exec(line.trim());
     if (head) {
-      current = { inspect: '', ports: [], logs: [] };
+      current = { inspect: '', ports: [], logs: [], stuck: [] };
       blocks.set(head[1], current);
       section = 'inspect';
       continue;
@@ -94,9 +102,11 @@ export function parseEnvCheckOutput(output: string, name: string): InfrContainer
     if (!current) continue;
     if (line.trim() === '@@ports') section = 'ports';
     else if (line.trim() === '@@logs') section = 'logs';
+    else if (line.trim() === '@@stuck') section = 'stuck';
     else if (section === 'inspect' && !current.inspect && line.trim()) current.inspect = line.trim();
     else if (section === 'ports' && line.trim()) current.ports.push(line.trim());
     else if (section === 'logs' && line.trim()) current.logs.push(line.trimEnd());
+    else if (section === 'stuck' && line.trim()) current.stuck.push(line.trimEnd());
   }
   return INFR_ROLES.map((role) => {
     const container = `${role}-${name}`;
@@ -113,7 +123,8 @@ export function parseEnvCheckOutput(output: string, name: string): InfrContainer
       startedAt: startedAt || undefined,
       image: image || undefined,
       ports: b.ports,
-      logTail: b.logs.slice(-30)
+      logTail: b.logs.slice(-30),
+      ...(b.stuck.length ? { stuck: b.stuck.slice(-40) } : {})
     };
   });
 }
@@ -126,6 +137,23 @@ function knownFailure(c: InfrContainerCheck): string | undefined {
   const ora = /ORA-\d{5}[^\n]*/.exec(text);
   if (ora) return ora[0].trim();
   return undefined;
+}
+
+/** Nomes dos bundles que estouraram o tempo de inicialização (Spring DM/blueprint) na subida atual do WTA. */
+export function stuckBundles(c: InfrContainerCheck): string[] {
+  const names = new Set<string>();
+  // O docker logs devolve o log desde a criação do container, com todas as subidas. Só vale a subida atual: linhas com a
+  // hora (docker logs --timestamps) de antes do StartedAt são de um start anterior. Sem StartedAt, vale tudo.
+  const since = c.startedAt ? Date.parse(c.startedAt) : NaN;
+  for (const line of c.stuck ?? []) {
+    if (Number.isFinite(since)) {
+      const at = Date.parse(/^(\S+)\s/.exec(line)?.[1] ?? '');
+      if (!Number.isFinite(at) || at < since) continue;
+    }
+    const m = /Application context initialization for '([^']+)' has timed out/.exec(line);
+    if (m) names.add(m[1]);
+  }
+  return [...names];
 }
 
 /** Resumo: no ar (os três rodando e o WTA respondendo), subindo, falhou ou não existe. */
@@ -151,18 +179,51 @@ export function summarizeEnvCheck(containers: InfrContainerCheck[], wtaHttp?: In
     };
   }
   if (present.length === 0) {
-    return { status: 'missing', title: 'Nenhum container deste ambiente', detail: 'O Gerar ainda não criou os containers, ou o nome está diferente.' };
+    return { status: 'missing', title: 'Nenhum container deste ambiente', detail: 'Ainda não foram criados os containers, ou o nome está diferente.' };
   }
   const broken = present.filter((c) => c.state === 'exited' || c.state === 'dead' || c.health === 'unhealthy' || (c.restarts ?? 0) >= 3);
   if (broken.length) {
     const why = broken.map((c) => `${INFR_ROLE_LABEL[c.role]}: ${knownFailure(c) || (c.state === 'running' ? `${c.health ?? ''} ${c.restarts ? `(${c.restarts} reinícios)` : ''}`.trim() : c.state)}`);
     return { status: 'fail', title: `Falhou: ${broken.map((c) => INFR_ROLE_LABEL[c.role]).join(', ')}`, detail: `${why.join('; ')}. Veja o log de cada um abaixo.` };
   }
-  const missing = containers.filter((c) => !c.exists);
+  // Sem WSH e sem criação em andamento (nenhum log da criação deste ambiente): o WSH é opcional, não é "ainda não criado"
+  // (ou a criação deste ambiente foi sem --wsh-jar, ou já chegou ao "Pronto")
+  const wshOptional = !containers.find((c) => c.role === 'wsh')?.exists && (!buildLog?.exists || !!buildLog.noWsh || !!buildLog.done);
+  const need = wshOptional ? containers.filter((c) => c.role !== 'wsh') : containers;
+  const missing = need.filter((c) => !c.exists);
+  // O script da criação parou no meio (ex.: "[ERRO] Flag desconhecida: --version") depois de criar só parte do ambiente:
+  // sem isto a tela diria "Subindo" para sempre. Só vale o marcador do próprio script; o log da criação anterior é apagado
+  // antes de cada criação, então a falha é da execução atual.
+  if (missing.length > 0 && buildLog?.failure && /^\[ERRO\]/i.test(buildLog.failure)) {
+    return {
+      status: 'fail',
+      title: 'A criação parou antes de terminar',
+      detail:
+        `Criado: ${present.map((c) => INFR_ROLE_LABEL[c.role]).join(', ')}. Falta: ${missing.map((c) => INFR_ROLE_LABEL[c.role]).join(', ')}. ` +
+        `O script parou com "${buildLog.failure}"${buildLog.stage ? ` (etapa: ${buildLog.stage})` : ''}. O fim do log está abaixo.`
+    };
+  }
   const running = present.filter((c) => c.state === 'running' && c.health !== 'starting');
+  // Karaf travado: o log tem bundles que estouraram o tempo esperando serviços que não aparecem. Não é "subindo": o WTA
+  // pode até responder na raiz, mas o login não sobe
+  const wtaC = containers.find((c) => c.role === 'wta');
+  const stuck = wtaC?.exists && wtaC.state === 'running' ? stuckBundles(wtaC) : [];
+  if (stuck.length > 0) {
+    return {
+      status: 'fail',
+      title: 'O WTA não termina de subir',
+      detail:
+        `${stuck.length > 1 ? `${stuck.length} bundles estouraram` : '1 bundle estourou'} o tempo de inicialização esperando outros serviços: ${stuck.slice(0, 4).join(', ')}${stuck.length > 4 ? ` e mais ${stuck.length - 4}` : ''}. ` +
+        'O Karaf fica travado e o login do WinThor não sobe, mesmo com o WTA respondendo na raiz. Veja o log do WTA abaixo; reiniciar o WTA (docker restart) às vezes destrava, e se repetir falta uma feature ou serviço de que esses bundles dependem.'
+    };
+  }
   const wtaOk = !!wtaHttp?.status && wtaHttp.status < 500;
-  if (missing.length === 0 && running.length === containers.length && wtaOk) {
-    return { status: 'ok', title: 'Ambiente no ar', detail: `Banco, WTA e WSH rodando; o WTA respondeu HTTP ${wtaHttp!.status} em ${wtaHttp!.url}.` };
+  if (missing.length === 0 && running.length === need.length && wtaOk) {
+    return {
+      status: 'ok',
+      title: 'Ambiente no ar',
+      detail: `${wshOptional ? 'Banco e WTA rodando; este ambiente não tem WSH' : 'Banco, WTA e WSH rodando'}; o WTA respondeu HTTP ${wtaHttp!.status} em ${wtaHttp!.url}.`
+    };
   }
   const waiting = [
     ...missing.map((c) => `${INFR_ROLE_LABEL[c.role]} ainda não criado`),
@@ -171,7 +232,7 @@ export function summarizeEnvCheck(containers: InfrContainerCheck[], wtaHttp?: In
   ];
   return {
     status: 'starting',
-    title: `Subindo: ${running.length} de ${containers.length} no ar`,
+    title: `Subindo: ${running.length} de ${need.length} no ar`,
     detail: `${waiting.join('; ')}. O WTA leva alguns minutos para subir o Karaf; o WSH espera o WTA.`
   };
 }

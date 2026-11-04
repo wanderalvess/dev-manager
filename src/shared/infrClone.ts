@@ -20,6 +20,8 @@ export interface InfrCloneInfo {
   originState: string;
   /** versions/<versão>.features já existe no INFR-Docker (o script exige o arquivo, mesmo sem usar) */
   manifestExists: boolean;
+  /** Imagem da origem fora do padrão (linux-winthor:1.93-debian): a criação a marca como `image` antes do script */
+  tagFrom?: string;
 }
 
 const WTA_IMAGE = /^(?:[^/\s]+\/)*linux-winthor:(\d{2,3})-([A-Za-z0-9_.]+)$/;
@@ -107,7 +109,14 @@ export function reviewClone(i: InfrCloneReviewInput): InfrReviewItem[] {
   items.push(
     c.imageExists
       ? { id: 'imagem', status: 'ok', title: 'Imagem do WTA pronta', detail: `${c.image} já existe: o ambiente sobe em minutos, sem o build de ~30 minutos e sem mexer nas features.` }
-      : {
+      : c.tagFrom
+        ? {
+            id: 'imagem',
+            status: 'ok',
+            title: 'Imagem do WTA da origem',
+            detail: `A imagem do wta-${i.from} (${c.tagFrom}) não diz a versão: a criação a marca também como ${c.image} (docker tag, sem copiar nada) e o ambiente sobe com ela, sem build.`
+          }
+        : {
           id: 'imagem',
           status: 'block',
           title: 'A imagem do WTA não existe',
@@ -141,7 +150,7 @@ export function reviewClone(i: InfrCloneReviewInput): InfrReviewItem[] {
       title: 'Portas fixas do WTA já em uso',
       detail:
         `${list(fixed.map((f) => `${f.label} ${f.port} (${f.by})`))}. O script fixa SSH, JMX e JMS pela versão, então dois WTA da ${c.version} não ficam no ar juntos. ` +
-        `Como resolver: pare o ${owner} (docker stop ${owner}) antes de gerar, ou clone para outra versão.`
+        `Como resolver: pare o ${owner} (docker stop ${owner}) antes de criar, ou clone para outra versão.`
     });
   }
 

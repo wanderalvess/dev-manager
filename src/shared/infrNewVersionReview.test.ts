@@ -26,6 +26,43 @@ const base: InfrReviewInput = {
 
 const byId = (items: ReturnType<typeof reviewNewVersion>, id: string) => items.find((i) => i.id === id)!;
 
+describe('repositório de cada feature (build do Nathan)', () => {
+  const withRepair = (repair: NonNullable<NonNullable<InfrReviewInput['preview']['existing']>['repair']>, repairText?: string): InfrReviewInput => ({
+    ...base,
+    preview: { ...base.preview, existing: { ...base.preview.existing!, repair, ...(repairText ? { repairText } : {}) } }
+  });
+
+  const none = { repairs: [], added: [], kept: [] };
+
+  it('lista existente com versão sem repositório: avisa que a criação a corrige', () => {
+    const items = reviewNewVersion(withRepair({ ...none, repairs: [{ name: 'winthor-integracao-2650', from: '1.40.1.2', to: '1.40.0.2' }] }, 'x'));
+    expect(byId(items, 'repositorios')).toMatchObject({ status: 'warn', title: 'A lista da 39 é ajustada ao criar' });
+    expect(byId(items, 'repositorios').detail).toContain('winthor-integracao-2650 1.40.1.2 → 1.40.0.2');
+    expect(byId(items, 'features').detail).toContain('acrescenta os repositórios da 801');
+  });
+
+  it('repositório trazido da 801: ok, sem pedir nada', () => {
+    const items = reviewNewVersion(withRepair({ ...none, added: [{ name: 'winthor-integracao-2650', version: '1.40.1.2', repo: 'mvn:g/a/1.40.1.2/xml/features' }] }, 'x'));
+    expect(byId(items, 'repositorios')).toMatchObject({ status: 'ok', title: 'Repositórios trazidos da 801' });
+    expect(byId(items, 'repositorios').detail).toContain('o repositório veio da 801');
+  });
+
+  it('feature que nem a lista nem a 801 têm (spring do ambiente do Nathan): fica na versão atual e não impede', () => {
+    const kept = Array.from({ length: 15 }, (_, i) => ({ name: `spring-${i}`, version: '4.2.9.RELEASE_1' }));
+    const items = reviewNewVersion(withRepair({ ...none, kept }));
+    expect(byId(items, 'repositorios').status).toBe('warn');
+    expect(byId(items, 'repositorios').detail).toContain('ficam na versão atual');
+    expect(byId(items, 'repositorios').detail).toContain('e mais 12');
+    expect(byId(items, 'repositorios').detail).not.toMatch(/acrescente|Como resolver/);
+    expect(reviewBlocks(items.filter((i) => i.id === 'repositorios'))).toBe(false);
+  });
+
+  it('sem conferência (algum XML não veio), não mostra nada; conferida e limpa, ok', () => {
+    expect(reviewNewVersion(base).some((i) => i.id === 'repositorios')).toBe(false);
+    expect(byId(reviewNewVersion(withRepair(none)), 'repositorios').status).toBe('ok');
+  });
+});
+
 describe('conferência da versão nova', () => {
   it('reconhece a imagem do Oracle do INFR-Docker', () => {
     expect(isInfrXeImage('oracle-winthor:11.2.0.2-xe')).toBe(true);
@@ -183,11 +220,11 @@ describe('downgrade (versão nova menor que a da origem)', () => {
     dbContainer: 'oracle-suport_38'
   };
 
-  it('avisa o downgrade e bloqueia o clone do banco, oferecendo um Oracle vazio', () => {
+  it('avisa o downgrade e o banco copiado da linha de cima, sem impedir; o Oracle vazio fica como opção', () => {
     const items = reviewNewVersion(down);
     expect(byId(items, 'versao')).toMatchObject({ status: 'warn', title: 'Downgrade: a origem está na 39' });
-    expect(byId(items, 'banco')).toMatchObject({ status: 'block', title: 'O banco da 39 não serve para a 38', fixes: ['emptyOracle'] });
-    expect(reviewBlocks(items)).toBe(true);
+    expect(byId(items, 'banco')).toMatchObject({ status: 'warn', title: 'O banco vem da 39', fixes: ['emptyOracle'] });
+    expect(reviewBlocks(items)).toBe(false);
     expect(new Set(items.map((i) => i.id)).size).toBe(items.length);
   });
 
@@ -205,8 +242,8 @@ describe('downgrade (versão nova menor que a da origem)', () => {
     expect(byId(listaNova, 'features').status).toBe('block');
   });
 
-  it('usar o banco da própria origem também bloqueia; outro Oracle só pede para conferir', () => {
-    expect(byId(reviewNewVersion({ ...down, dbMode: 'existing', dbContainer: 'oracle-master' }), 'banco').status).toBe('block');
+  it('usar o banco da própria origem também só avisa; outro Oracle pede para conferir', () => {
+    expect(byId(reviewNewVersion({ ...down, dbMode: 'existing', dbContainer: 'oracle-master' }), 'banco')).toMatchObject({ status: 'warn', title: 'O banco vem da 39' });
     expect(byId(reviewNewVersion({ ...down, dbMode: 'existing', dbContainer: 'oracle-38' }), 'banco')).toMatchObject({ status: 'warn' });
   });
 

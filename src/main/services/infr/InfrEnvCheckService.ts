@@ -11,14 +11,16 @@ import {
   summarizeEnvCheck,
   wtaHostPort,
   type InfrCheckCommandId,
-  type InfrEnvCheck
+  type InfrEnvCheck,
+  type InfrRole
 } from '../../../shared/infrEnvCheck';
+import { WTA_LOGIN_PATH, postChecks, refineSummary, type InfrHttpProbe } from '../../../shared/infrPostCheck';
 import { buildLogPath, buildLogProbeScript, parseBuildLogProbe } from '../../../shared/infrBuildLog';
 import { commandFailureDetail } from '../../../shared/infrNewVersionScripts';
 import type { WslService } from '../WslService';
 
 /**
- * Verificar um ambiente do INFR-Docker depois do Gerar: estado, health, reinícios, portas e fim do
+ * Verificar um ambiente do INFR-Docker depois da criação: estado, health, reinícios, portas e fim do
  * log de oracle/wta/wsh-<nome> numa só chamada ao WSL, e se o WTA responde pela porta publicada.
  */
 export class InfrEnvCheckService {
@@ -38,7 +40,9 @@ export class InfrEnvCheckService {
     const script = INFR_ROLES.map(
       (role) =>
         `echo '@@c ${role}-${n}'; docker inspect -f '${format}' ${role}-${n} 2>/dev/null || echo MISSING; ` +
-        `echo '@@ports'; docker port ${role}-${n} 2>/dev/null; echo '@@logs'; docker logs --tail 30 ${role}-${n} 2>&1 | tail -n 30`
+        `echo '@@ports'; docker port ${role}-${n} 2>/dev/null; echo '@@logs'; docker logs --tail 30 ${role}-${n} 2>&1 | tail -n 30` +
+        // Karaf travado: só o WTA, e no log inteiro (o fim do log pode já ter passado das linhas de timeout)
+        (role === 'wta' ? `; echo '@@stuck'; docker logs --timestamps ${role}-${n} 2>&1 | grep -E 'has timed out waiting|pacotes em transi' | tail -n 40 | cut -c1-300` : '')
     ).join('; ');
     let output: string;
     try {
@@ -50,17 +54,20 @@ export class InfrEnvCheckService {
     const containers = parseEnvCheckOutput(output, n);
     const wta = containers.find((c) => c.role === 'wta');
     const port = wta?.exists ? wtaHostPort(wta.ports) : undefined;
-    let wtaHttp: InfrEnvCheck['wtaHttp'];
-    if (port && wta?.state === 'running') {
-      const url = `http://localhost:${port}/`;
+    const probe = async (url: string): Promise<InfrHttpProbe> => {
       try {
         const res = await httpRequest(url, { method: 'GET', headers: {}, timeout: 5000 });
-        wtaHttp = { url, status: res.status };
+        return { url, status: res.status };
       } catch (err: any) {
-        wtaHttp = { url, error: String(err?.message || err) };
+        return { url, error: String(err?.message || err) };
       }
-    }
+    };
+    const up = !!port && wta?.state === 'running';
+    const wtaHttp: InfrEnvCheck['wtaHttp'] = up ? await probe(`http://localhost:${port}/`) : undefined;
+    // A raiz responde mesmo com o Karaf travado; a rota de login só existe com a autenticação no ar
+    const wtaLogin = up && wtaHttp?.status ? await probe(`http://localhost:${port}${WTA_LOGIN_PATH}`) : undefined;
     const buildLog = await this.readBuildLog(distro, n);
+    const post = postChecks(containers, wtaHttp, wtaLogin);
     return {
       success: true,
       name: n,
@@ -68,12 +75,31 @@ export class InfrEnvCheckService {
       checkedAt: new Date().toISOString(),
       containers,
       wtaHttp,
+      wtaLogin,
       buildLog,
-      summary: summarizeEnvCheck(containers, wtaHttp, buildLog)
+      post,
+      summary: refineSummary(summarizeEnvCheck(containers, wtaHttp, buildLog), post)
     };
   }
 
-  /** Fim do log que o terminal do Gerar grava em /tmp da distro; sem o arquivo, não há relatório. */
+  /**
+   * Correção da validação: liga ou reinicia um container do ambiente. O nome sai do papel e do nome do ambiente
+   * validados; a tela nunca manda o comando.
+   */
+  public async fixContainer(distroName: string | undefined, name: string, role: InfrRole, action: 'start' | 'restart'): Promise<{ success: boolean; output: string }> {
+    if (!isValidEnvName(name) || !INFR_ROLES.includes(role) || !['start', 'restart'].includes(action)) return { success: false, output: 'Pedido inválido.' };
+    const distro = await this.distroOf(distroName);
+    if (!distro) return { success: false, output: 'Distro WSL inválida.' };
+    const container = `${role}-${name.trim()}`;
+    try {
+      await execWsl(['-d', distro, '--', 'docker', action, container], { timeout: 120000 });
+      return { success: true, output: `${container}: ${action === 'start' ? 'ligado' : 'reiniciado'}. O Hub confere de novo enquanto ele sobe.` };
+    } catch (err: any) {
+      return { success: false, output: `Não foi possível ${action === 'start' ? 'ligar' : 'reiniciar'} ${container}: ${commandFailureDetail(err)}` };
+    }
+  }
+
+  /** Fim do log que o terminal do Criar grava em /tmp da distro; sem o arquivo, não há relatório. */
   private async readBuildLog(distro: string, name: string): Promise<InfrEnvCheck['buildLog']> {
     const path = buildLogPath(name);
     if (!path) return undefined;

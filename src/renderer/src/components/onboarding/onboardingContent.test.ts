@@ -16,7 +16,7 @@ import {
 
 describe('onboardingContent', () => {
   it('tem as etapas na ordem do onboarding, terminando em Pronto', () => {
-    expect(ONBOARDING_STEPS.map((s) => s.id)).toEqual(['welcome', 'modules', 'theme', 'env', 'mcp', 'done']);
+    expect(ONBOARDING_STEPS.map((s) => s.id)).toEqual(['welcome', 'modules', 'theme', 'env', 'start', 'mcp', 'done']);
   });
 
   it('oferece um card por variante de tema', () => {

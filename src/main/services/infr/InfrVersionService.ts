@@ -15,10 +15,13 @@ import {
   manifestLineOf,
   parseVersionManifest,
   parseWshDependencies,
+  rewriteFeatureVersions,
+  addManifestRepos,
   serializeVersionManifest,
   upgradeManifestFromCatalog,
   type InfrVersionPreview,
-  type InfrVersionPreviewRequest
+  type InfrVersionPreviewRequest,
+  type ManifestRepoRepair
 } from '../../../shared/infrVersionManifest';
 import {
   buildArtifactProbeScript,
@@ -44,9 +47,10 @@ import { mergeDependencyFixes, resolveDependencies } from '../../../shared/infrF
 import { buildEnvFile, envFieldsFor, parseEnvLines, pickEnv, type InfrEnvTarget } from '../../../shared/infrEnvConfig';
 import type { InfrEnvSaveRequest, InfrEnvTemplate, InfrManifestSaveRequest, InfrManifestSaveResult } from '../../../shared/infrVersionManifest';
 import { INFR_NEW_VERSION_SCRIPTS, commandFailureDetail, missingNewVersionScriptsMessage, originContainerMessage } from '../../../shared/infrNewVersionScripts';
-import { previewClone } from './infrClonePreview';
+import { newVersionScriptGaps, scriptGapsMessage } from '../../../shared/infrScriptSupport';
+import { previewClone, readBuildState } from './infrClonePreview';
 import { checkXmlDependencies } from './infrXmlDependencies';
-import { withXmlDependencies } from '../../../shared/infrFeatureXml';
+import { repairAbsentFeatures, withXmlDependencies } from '../../../shared/infrFeatureXml';
 import type { Routine801Service } from '../Routine801Service';
 import type { WslService } from '../WslService';
 
@@ -132,6 +136,16 @@ export class InfrVersionService {
     } catch (err: any) {
       result = { success: false, error: `Erro inesperado na prévia: ${err?.message || err}` };
     }
+    // A mesma conferência que o Criar faz antes de abrir o terminal, já aqui: vira um ponto vermelho em Antes de criar
+    const infr = result.success ? this.wsl.resolveInfrPaths(req.infrPath) : null;
+    if (infr) {
+      const gaps = newVersionScriptGaps((rel) => {
+        const file = path.join(infr.windows, rel);
+        return fs.existsSync(file) ? fs.readFileSync(file, 'utf-8') : null;
+      });
+      trace(gaps.length ? `Scripts desatualizados: ${gaps.map((g) => (g.absent ? `${g.path} não existe` : `${g.path} sem ${g.missing.join(' ')}`)).join('; ')}` : 'Scripts conhecem as opções da criação');
+      if (gaps.length) result = { ...result, scriptGaps: scriptGapsMessage(gaps, infr.windows) };
+    }
     trace(result.success ? 'Prévia concluída' : `Prévia parou: ${result.error}`);
     return { ...result, log };
   }
@@ -214,36 +228,58 @@ export class InfrVersionService {
       `Gerado pelo Hub Manager em ${new Date().toISOString().slice(0, 10)} a partir do ambiente ${from}`,
       `e do catálogo de atualizações da rotina 801 (${upgrade.changes.length} atualizadas, ${upgrade.behind.length} sem versão da linha ${target}).`
     ];
+    const existingFile = this.manifestPath(infr.windows, target);
+    const existingText = fs.existsSync(existingFile) ? fs.readFileSync(existingFile, 'utf-8') : null;
+    const existing = existingText !== null ? parseVersionManifest(existingText) : null;
     const repositories = await this.karafRepositories(distro, container, trace);
-    const xmlDeps = await checkXmlDependencies((script, ms) => this.runScriptInContainer(distro, container, script, ms), repositories, upgrade.manifest, trace);
+    // Os features.xml das duas listas: a feature que nenhum repositório da lista tem quebra o build em "não existe em nenhum repositório"
+    const xmlDeps = await checkXmlDependencies((script, ms) => this.runScriptInContainer(distro, container, script, ms), repositories, upgrade.manifest, trace, existing);
+    const fixed = xmlDeps.absent ? repairAbsentFeatures(upgrade.manifest, xmlDeps.absent, catalog) : null;
+    const manifest = fixed?.manifest ?? upgrade.manifest;
+    const changes = fixed ? upgrade.changes.map((c) => ({ ...c, to: manifest.features.find((f) => f.name === c.name)?.version ?? c.to })).filter((c) => c.to !== c.from) : upgrade.changes;
     const result: InfrVersionPreview = {
       success: true,
       originWtaUrl: url,
       originCount: origin.features.length,
       originLine: manifestLineOf(origin),
-      upgrade: { changes: upgrade.changes, behind: upgrade.behind, skipped: upgrade.skipped },
+      upgrade: { changes, behind: upgrade.behind, skipped: upgrade.skipped },
       dependencies: withXmlDependencies(dep, xmlDeps),
-      artifacts: await this.checkArtifacts(distro, container, repositories, origin, upgrade.manifest, catalog, upgrade.changes, trace),
+      artifacts: await this.checkArtifacts(distro, container, repositories, origin, manifest, catalog, changes, trace),
       preflight: await this.preflight(distro, target, repositories, trace),
-      manifestText: serializeVersionManifest(upgrade.manifest, header)
+      buildState: await readBuildState((d, s, t, tr) => this.run(d, s, t, tr), distro, req, trace),
+      manifestText: serializeVersionManifest(manifest, header),
+      ...(fixed ? { repair: { repairs: fixed.repairs, added: fixed.added, kept: fixed.kept } } : {})
     };
-    const existingFile = this.manifestPath(infr.windows, target);
-    const existing = fs.existsSync(existingFile) ? parseVersionManifest(fs.readFileSync(existingFile, 'utf-8')) : null;
-    trace(`Manifesto: ${upgrade.changes.length} sobem, ${upgrade.behind.length} sem versão da linha ${target}; ${existingFile} ${existing ? `já existe (${existing.features.length} features)` : 'não existe'}`);
+    const repairTrace = (label: string, r: ManifestRepoRepair) =>
+      trace(
+        `Features sem repositório (${label}): ${r.added.length} com repositório da 801 (${r.added.map((a) => a.name).join(', ') || '-'}), ` +
+          `${r.repairs.length} voltam para a versão dos repositórios, ${r.kept.length} ficam na versão atual (${r.kept.map((k) => `${k.name} ${k.version}`).join(', ') || '-'})`
+      );
+    if (result.repair) repairTrace('lista nova', result.repair);
+    trace(`Manifesto: ${changes.length} sobem, ${upgrade.behind.length} sem versão da linha ${target}; ${existingFile} ${existing ? `já existe (${existing.features.length} features)` : 'não existe'}`);
+    // A lista existente como a criação vai gravá-la: com as features sem repositório de volta à versão que os repositórios dela têm
+    let existingFinal = existing;
     if (existing?.features.length) {
-      result.existing = { path: existingFile, count: existing.features.length, comparison: compareManifests(existing, upgrade.manifest) };
+      result.existing = { path: existingFile, count: existing.features.length, comparison: compareManifests(existing, manifest) };
+      if (xmlDeps.existingAbsent && existingText !== null) {
+        const r = repairAbsentFeatures(existing, xmlDeps.existingAbsent, catalog);
+        existingFinal = r.manifest;
+        result.existing.repair = { repairs: r.repairs, added: r.added, kept: r.kept };
+        repairTrace('lista existente', result.existing.repair);
+        if (r.repairs.length || r.added.length) result.existing.repairText = addManifestRepos(rewriteFeatureVersions(existingText, r.repairs), r.added.map((a) => a.repo));
+      }
     }
     if (req.wshJar) {
       try {
         const deps = parseWshDependencies(await this.readWshDependencies(distro, req.wshJar.trim(), trace));
         trace(`WSH exige ${deps.length} serviços`);
-        result.wshCheck = checkManifestAgainstWsh(upgrade.manifest, deps);
-        if (result.existing && existing) result.existing.wshCheck = checkManifestAgainstWsh(existing, deps);
+        result.wshCheck = checkManifestAgainstWsh(manifest, deps);
+        if (result.existing && existingFinal) result.existing.wshCheck = checkManifestAgainstWsh(existingFinal, deps);
       } catch (err: any) {
         result.wshError = `Não foi possível ler o dependencies.json de ${req.wshJar}: ${commandFailureDetail(err)}`;
       }
     }
-    if (req.dryRun) result.dryRun = await this.dryRun(distro, container, newRepoProbes(upgrade.manifest, origin).map((p) => p.mvn), upgrade.changes, trace);
+    if (req.dryRun) result.dryRun = await this.dryRun(distro, container, newRepoProbes(manifest, origin).map((p) => p.mvn), changes, trace);
     return result;
   }
 
@@ -459,6 +495,8 @@ export class InfrVersionService {
     if (fs.existsSync(file) && !req.overwrite) {
       return { success: false, error: `${file} já existe. Escolha usar o manifesto existente ou substituí-lo pelo da prévia.` };
     }
+    // Substituir guarda a lista anterior ao lado (.bak não é lido pelo build), para dar para voltar
+    if (fs.existsSync(file)) fs.copyFileSync(file, `${file}.${new Date().toISOString().replace(/[:.]/g, '-')}.bak`);
     fs.writeFileSync(file, req.manifestText.replace(/\r\n/g, '\n'), 'utf-8');
     return { success: true, path: file };
   }

@@ -57,6 +57,13 @@ describe('versão do WinThor nos scripts do INFR-Docker', () => {
     expect(buildNewVersionEnvCommand({ version: 'quarenta', name: 'develop', from: 'master' })).toBeNull();
   });
 
+  it('clone de imagem fora do padrão: marca a imagem da origem antes do script, só se o nome for seguro', () => {
+    expect(buildNewVersionEnvCommand({ version: '40', name: 'test', from: 'master', tagImage: 'linux-winthor:1.93-debian' })).toBe(
+      '{ docker image inspect linux-winthor:40-debian >/dev/null 2>&1 || docker tag linux-winthor:1.93-debian linux-winthor:40-debian; } && ./new_version_env.sh --version 40 --name test --from master'
+    );
+    expect(buildNewVersionEnvCommand({ version: '40', name: 'test', from: 'master', tagImage: 'x; rm -rf /' })).toBeNull();
+  });
+
   it('leva as escolhas do usuário (banco, origem e portas) só quando diferem do padrão', () => {
     expect(
       buildNewVersionEnvCommand({ version: '40', name: 'develop', from: 'master', dbMode: 'existing', dbContainer: 'oracle-qa', wtaPort: 8086 })

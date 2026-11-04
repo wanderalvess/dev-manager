@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, CheckCircle2, CircleDashed, GitBranchPlus, RotateCw, XCircle } from 'lucide-react';
+import { ArrowRight, Bot, CheckCircle2, CircleDashed, GitBranchPlus, RotateCw, XCircle } from 'lucide-react';
 import { infrCheckCommands, type InfrCheckCommandId, type InfrContainerCheck, type InfrEnvStatus } from '../../../../../shared/infrEnvCheck';
 import type { InfrEnvCheckState } from '../../../hooks/containers/useInfrEnvCheck';
 import type { InfrAiGuideState } from '../../../hooks/containers/useInfrAiGuide';
+import type { InfrDiagnosticState } from '../../../hooks/containers/useInfrDiagnostic';
+import { InfrDiagnosticButton } from './InfrDiagnosticButton';
 import { InfrCommandLine } from './InfrCommandLine';
 import { InfrAiGuideLine } from './newversion/InfrAiGuideLine';
 import { InfrVerifyNode } from './verify/InfrVerifyNode';
 import { InfrBuildCause } from './verify/InfrBuildCause';
+import { InfrPostChecklist } from './verify/InfrPostChecklist';
 import { infrCheckBadge } from '../../../utils/infrBootstrapModalUtils';
 
 const SUMMARY: Record<InfrEnvStatus, React.ReactNode> = {
@@ -19,13 +22,14 @@ const SUMMARY: Record<InfrEnvStatus, React.ReactNode> = {
 const LOG_ID: Record<InfrContainerCheck['role'], InfrCheckCommandId> = { oracle: 'logs-oracle', wta: 'logs-wta', wsh: 'logs-wsh' };
 type Panel = InfrContainerCheck['role'] | 'build';
 
-/** Depois do Gerar (ou a qualquer hora): o ambiente como pipeline Oracle → WTA → WSH e o log da parte escolhida. */
-export const InfrVerifyTab: React.FC<{ v: InfrEnvCheckState; ai: InfrAiGuideState; envNames: string[]; onNewVersion: (name: string) => void }> = ({
-  v,
-  ai,
-  envNames,
-  onNewVersion
-}) => {
+/** Depois da criação (ou a qualquer hora): o ambiente como pipeline Oracle → WTA → WSH e o log da parte escolhida. */
+export const InfrVerifyTab: React.FC<{
+  v: InfrEnvCheckState;
+  ai: InfrAiGuideState;
+  diag: InfrDiagnosticState;
+  envNames: string[];
+  onNewVersion: (name: string) => void;
+}> = ({ v, ai, diag, envNames, onNewVersion }) => {
   const r = v.result;
   const summary = r?.summary;
   const commands = infrCheckCommands(v.name, v.wtaPort);
@@ -44,7 +48,7 @@ export const InfrVerifyTab: React.FC<{ v: InfrEnvCheckState; ai: InfrAiGuideStat
   const firstBad = containers.find((c) => c.exists && infrCheckBadge(c).tone !== 'up')?.role;
   const shown: Panel = panel ?? (build?.failure ? 'build' : firstBad ?? (build && wtaMissing ? 'build' : 'wta'));
   const sel = shown === 'build' ? undefined : containers.find((c) => c.role === shown);
-  const showAi = ai.status === 'building' || ai.status === 'thinking' || ai.status === 'done';
+  const showAi = ai.status === 'building' || ai.status === 'thinking' || ai.status === 'done' || ai.log.length > 0;
 
   return (
     <div className="flex-1 min-w-0 overflow-auto scrollbar-thin">
@@ -86,6 +90,15 @@ export const InfrVerifyTab: React.FC<{ v: InfrEnvCheckState; ai: InfrAiGuideStat
           </button>
         </div>
 
+        {/* Falhou ou está estranho: um clique junta tudo para colar na conversa, sem print do terminal */}
+        {v.name.trim() && (
+          <InfrDiagnosticButton
+            diag={diag}
+            name={v.name}
+            notes={r?.summary ? `Verificar ambiente (${r.checkedAt ?? ''}): ${r.summary.status}: ${r.summary.title}. ${r.summary.detail}` : undefined}
+          />
+        )}
+
         {r && !r.success && <p className="text-sm text-danger p-3 rounded-xl border border-danger/40 bg-danger/5 break-words">{r.error}</p>}
         {!r && v.loading && (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -103,6 +116,16 @@ export const InfrVerifyTab: React.FC<{ v: InfrEnvCheckState; ai: InfrAiGuideStat
                 {r?.checkedAt && <span className="text-muted-foreground"> Lido às {new Date(r.checkedAt).toLocaleTimeString()}.</span>}
               </p>
             </div>
+            {summary.status === 'fail' && ai.status !== 'thinking' && (
+              <button
+                type="button"
+                onClick={() => ai.askAboutFailure(v.name, r)}
+                title="A IA lê o relatório do ambiente (scripts, pasta, containers e log da criação) e explica o que fazer"
+                className="shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-warning bg-warning text-xs font-semibold text-white hover:opacity-90 cursor-pointer"
+              >
+                <Bot className="w-3.5 h-3.5" /> Perguntar à IA
+              </button>
+            )}
             {summary.status === 'ok' && (
               <button
                 type="button"
@@ -116,6 +139,8 @@ export const InfrVerifyTab: React.FC<{ v: InfrEnvCheckState; ai: InfrAiGuideStat
         )}
 
         {showAi && <InfrAiGuideLine ai={ai} blocked={false} />}
+
+        {r?.post && <InfrPostChecklist items={r.post} fixing={v.fixing} onFix={v.fix} message={v.fixing === null ? v.message : undefined} />}
 
         {containers.length > 0 && (
           <div className="flex flex-wrap items-stretch gap-y-3">

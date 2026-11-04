@@ -18,11 +18,13 @@ import {
 import { execFileAsync, isValidIdentifier, isSafeLocalPath } from '../utils/security';
 import {
   buildNewVersionEnvCommand,
+  wakeDbCommand,
   buildWshSetupCommand,
   buildWtaSetupCommand,
   isValidWinthorVersion,
   type NewVersionEnvInput
 } from '../../shared/infrWinthorVersion';
+import { scriptGaps, scriptGapsMessage } from '../../shared/infrScriptSupport';
 
 export class WslService {
   private cachedDistros: WslDistroInfo[] = [];
@@ -1096,12 +1098,33 @@ export class WslService {
       const command = buildNewVersionEnvCommand({ ...options.newEnv, version: options.winthorVersion });
       if (!command) return { success: false, output: 'Versão, nomes de ambiente/container, portas ou jar do WSH inválidos.' };
       title = `Nova versão ${options.winthorVersion}: ${options.newEnv?.name}`;
+      // O banco de destino que já existe parado sobe antes: senão o WTA liga com o banco fechado e trava
+      const wake = wakeDbCommand({ name: options.newEnv?.name, dbContainer: options.newEnv?.dbContainer });
       // A saída também vai para /tmp da distro: o Verificar ambiente lê o fim dela e explica a falha do build
       cmdToRun =
         `cd "${wslPath}" && chmod +x linux-winthor/scripts/*.sh oracle-winthor/*.sh oracle-winthor/11.2.0.2-xe/tools/*.sh wsh-winthor/*.sh && cd linux-winthor/scripts && ` +
-        `{ set -o pipefail; echo hub: build iniciado em $(date +%F-%T); ${command}; } 2>&1 | tee /tmp/hub-nova-versao-${options.newEnv?.name?.trim()}.log`;
+        `{ set -o pipefail; echo hub: build iniciado em $(date +%F-%T); ${wake ? `${wake}; ` : ''}${command}; } 2>&1 | tee /tmp/hub-nova-versao-${options.newEnv?.name?.trim()}.log`;
     } else {
       return { success: false, output: `Tipo de script desconhecido: ${scriptType}` };
+    }
+
+    // Pasta do INFR-Docker numa branch antiga só recusaria as opções dentro do terminal ("Flag desconhecida: --version")
+    const gaps = scriptGaps(cmdToRun, (rel) => {
+      const file = path.join(infr.windows, rel);
+      return fs.existsSync(file) ? fs.readFileSync(file, 'utf-8') : null;
+    });
+    if (gaps.length > 0) return { success: false, output: scriptGapsMessage(gaps, infr.windows) };
+
+    // O log do Gerar anterior sai do caminho antes do terminal novo abrir: o Verificar ambiente não pode ler o erro do build
+    // antigo como se fosse deste (o tee só trunca o arquivo quando o terminal começa a rodar). Ele fica ao lado como
+    // `.prev`, que o relatório para suporte inclui para comparar com a tentativa nova.
+    if (scriptType === 'version' && options.newEnv?.name && /^[a-zA-Z0-9_.-]{1,40}$/.test(options.newEnv.name.trim())) {
+      const log = `/tmp/hub-nova-versao-${options.newEnv.name.trim()}.log`;
+      try {
+        await execFileAsync('wsl.exe', ['-d', targetDistro, '--', 'sh', '-c', `[ -f ${log} ] && mv -f ${log} ${log}.prev; true`], { timeout: 15000 });
+      } catch {
+        // sem mover o log antigo o terminal ainda sobrescreve o arquivo ao começar
+      }
     }
 
     try {

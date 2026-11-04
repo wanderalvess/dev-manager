@@ -1,4 +1,4 @@
-import { app, ipcMain, shell, dialog } from 'electron';
+import { app, ipcMain, shell, dialog, net } from 'electron';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -6,6 +6,7 @@ import { SelectFileOptions, SystemAppInfo } from '../../../shared/types';
 import { isSafeUrl } from '../../utils/security';
 import type { IpcContext } from '../ipcContext';
 import { WeatherService } from '../../services/WeatherService';
+import { JiraTodayService } from '../../services/JiraTodayService';
 
 /** Sistema, diálogos nativos e informações do app. Canais: dialog:*, shell:*, system:* */
 export function registerSystemHandlers(ctx: IpcContext): void {
@@ -157,7 +158,12 @@ export function registerSystemHandlers(ctx: IpcContext): void {
     return await networkService.getSystemMetrics();
   });
 
-  // Clima da tela de início: só o nome da cidade sai da máquina (validado no WeatherService)
-  const weatherService = new WeatherService();
+  // Clima da tela de início: só o nome da cidade sai da máquina (validado no WeatherService). Vai pelo `net.fetch`
+  // (rede do Chromium: proxy e certificados do Windows), não pelo fetch do Node, que falha atrás do proxy da empresa.
+  const weatherService = new WeatherService(((input: string, init?: RequestInit) => net.fetch(input, init)) as typeof fetch);
   ipcMain.handle('system:get-weather', async (_, city: string) => weatherService.getWeather(String(city ?? '')));
+
+  // Jira da tela de início, com a credencial da fonte Jira da Documentação; também pelo `net.fetch`, que confia na CA da empresa
+  const jiraTodayService = new JiraTodayService(() => configService.getSettings(), ((input: string, init?: RequestInit) => net.fetch(input, init)) as typeof fetch);
+  ipcMain.handle('system:get-jira-today', async (_, force?: boolean) => jiraTodayService.getToday(force === true));
 }

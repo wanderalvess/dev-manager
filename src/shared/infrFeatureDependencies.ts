@@ -5,7 +5,7 @@
  * próprio catálogo oferece a versão exigida, ela é ajustada na lista.
  */
 import type { Routine801CatalogResponse } from './types';
-import { BLOCKED_STATUS, compareVersions, winthorLineOf, type ManifestChange, type ManifestUpgrade, type VersionManifest } from './infrVersionManifest';
+import { BLOCKED_STATUS, catalogRepoFor, compareVersions, winthorLineOf, type ManifestChange, type ManifestUpgrade, type VersionManifest } from './infrVersionManifest';
 
 type CatalogFeature = Routine801CatalogResponse['funcionalidades'][number];
 
@@ -140,7 +140,6 @@ export interface DependencyResolution {
  * na mesma feature, para duas exigências opostas não ficarem se desfazendo.
  */
 export function resolveDependencies(upgrade: Pick<ManifestUpgrade, 'manifest'>, catalog: Routine801CatalogResponse, target: number): DependencyResolution {
-  const { byName } = indexCatalog(catalog);
   const repos = [...upgrade.manifest.repos];
   let features = upgrade.manifest.features.map((f) => ({ ...f }));
   const fixes: ManifestChange[] = [];
@@ -155,7 +154,7 @@ export function resolveDependencies(upgrade: Pick<ManifestUpgrade, 'manifest'>, 
       touched.add(issue.dependency);
       features = features.map((f) => (f.name === issue.dependency ? { name: f.name, version: issue.fix as string } : f));
       fixes.push({ name: issue.dependency, from: issue.found as string, to: issue.fix as string, reason: `exigida por ${issue.feature} ${issue.version}` });
-      const repo = (byName.get(issue.dependency) ?? []).find((c) => c.versao === issue.fix)?.featureMavenUrl;
+      const repo = catalogRepoFor(issue.dependency, issue.fix as string, catalog);
       if (repo && !repos.includes(repo)) repos.push(repo);
     }
   }

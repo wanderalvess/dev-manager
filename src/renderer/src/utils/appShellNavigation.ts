@@ -1,3 +1,5 @@
+import { isAppModuleId, isModuleEnabled } from '../../../shared/appModules';
+
 // Mapa tecla -> aba dos atalhos Alt+N. Manter em sincronia com os `shortcut` do Header
 // (header/headerNavConfig.ts), os `badge` do QuickLauncherModal e a tabela da Central de Ajuda.
 export const ALT_SHORTCUT_TABS: Readonly<Record<string, string>> = {
@@ -32,8 +34,25 @@ export const resolveAltShortcutTab = (e: ShortcutKeyEvent): string | null => {
   return Object.prototype.hasOwnProperty.call(ALT_SHORTCUT_TABS, key) ? ALT_SHORTCUT_TABS[key] : null;
 };
 
-// Primeira tela no primeiro uso é 'help' (Central de Ajuda); depois do onboarding, 'env'.
-export const resolveInitialTab = (hasSeenOnboarding: boolean): string => (hasSeenOnboarding ? 'env' : 'help');
+/** Última aba usada, para o app abrir nela da próxima vez. */
+export const LAST_TAB_STORAGE_KEY = 'devManager:lastTab';
+
+/** Abas que existem: os módulos, a Ajuda e as Configurações (valor guardado de versão antiga pode não existir mais). */
+export const isKnownTab = (tab: string | null | undefined): tab is string =>
+  !!tab && (isAppModuleId(tab) || tab === 'help' || tab === 'settings');
+
+// Primeira tela no primeiro uso é 'help' (Central de Ajuda); depois do onboarding, a última aba usada ('env' sem ela).
+export const resolveInitialTab = (hasSeenOnboarding: boolean, lastTab?: string | null): string => {
+  if (!hasSeenOnboarding) return 'help';
+  return isKnownTab(lastTab) ? lastTab : 'env';
+};
+
+/**
+ * Aba ao clicar em Entrar no cockpit: a escolhida em Configurações (Aparência → Tela ao entrar), se ainda existir e estiver
+ * ligada; senão null, e o app fica na aba em que abriu (a última usada).
+ */
+export const resolveEnterTab = (startTab: string | undefined, disabledModules: readonly string[] | undefined): string | null =>
+  isKnownTab(startTab) && isModuleEnabled(startTab, disabledModules) ? startTab : null;
 
 // Prefixo das chaves de "tour já visto" por tela; limpas ao resetar os tours de página.
 export const PAGE_TOUR_KEY_PREFIX = 'devManager:tour:';

@@ -633,10 +633,10 @@ export interface AppSettings {
   activeLlmProviderId?: string;
   /** Contagem local de uso (só contadores e durações, nada de conteúdo). Ligada por padrão; `false` desliga. */
   usageMetricsEnabled?: boolean;
-  /** Tela de início: não fecha sozinha ao abrir o app (a pessoa entra quando quiser) */
-  startScreenStay?: boolean;
   /** Cidade do clima da tela de início; vazia = clima desligado (nada é consultado) */
   startCity?: string;
+  /** Aba aberta ao clicar em Entrar no cockpit; vazia = a última aba usada */
+  startTab?: string;
   /** Tempo que a pessoa levava para fazer à mão cada automação (minutos). Quem não está aqui usa o padrão. */
   usageBaselines?: UsageBaselineOverrides;
   /** Personal Access Token (PAT) do Azure DevOps para consulta de Work Items e automação de branches (criptografado em repouso) */

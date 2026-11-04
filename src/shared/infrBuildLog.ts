@@ -1,6 +1,6 @@
 /**
  * O new_version_env.sh roda no terminal do Windows; a saída dele também vai para um arquivo da distro
- * (`/tmp/hub-nova-versao-<nome>.log`). Depois do Gerar, o Verificar ambiente lê o fim desse arquivo e, se o build
+ * (`/tmp/hub-nova-versao-<nome>.log`). Depois da criação, o Verificar ambiente lê o fim desse arquivo e, se o build
  * falhou, mostra o motivo no lugar de 300 linhas no terminal.
  *
  * Num build que falha ao instalar as features, o fim do log é só consequência (uma linha `[ERRO] ... não ficou instalada`
@@ -33,7 +33,7 @@ export interface BuildLogCause {
 
 export interface BuildLogReport {
   path: string;
-  /** Existe o arquivo (o Gerar já foi feito por este Hub nesta distro) */
+  /** Existe o arquivo (a criação já foi feito por este Hub nesta distro) */
   exists: boolean;
   /** Uma causa conhecida de falha achada no log */
   failure?: string;
@@ -41,6 +41,10 @@ export interface BuildLogReport {
   cause?: BuildLogCause;
   /** Última linha com cara de etapa do script (`[1/5]`, `==>`, `Step`) */
   stage?: string;
+  /** A criação foi sem WSH (`Sem --wsh-jar` no log, ou o comando gravado sem `--wsh-jar`) */
+  noWsh?: boolean;
+  /** O script chegou ao banner `Pronto: ambiente <nome>` */
+  done?: boolean;
   tail: string[];
 }
 
@@ -130,11 +134,11 @@ export function extractBuildCause(lines: string[], symptoms: number, failures?: 
   const headline = noMatch.length > 0 && !/Unable to resolve/i.test(full) ? requirements[0] ?? first : `não resolveu ${first}`;
   const hint =
     noMatch.length > 0
-      ? `A feature ${noMatch[0]} não está em nenhum repositório da lista: falta a linha "repo mvn:..." dela no manifesto, ou o artefato não foi publicado no Nexus. Confira o manifesto e o Nexus.`
+      ? `A feature ${noMatch[0]} não está em nenhum repositório da lista: falta o repositório dela na lista, ou o artefato não foi publicado no Nexus. Crie de novo pela Nova versão: o Hub busca o repositório na 801 e, se ela não tiver, mantém a versão atual da feature.`
       : requirements.some((r) => r.startsWith('pacote'))
-        ? 'Uma feature da lista exige um pacote numa versão que as outras não fornecem (em geral, uma feature que ficou na versão anterior convive com outras que subiram). Veja as features que ficaram atrás na revisão e rode o ensaio no Karaf de origem antes de gerar.'
+        ? 'Uma feature da lista exige um pacote numa versão que as outras não fornecem (em geral, uma feature que ficou na versão anterior convive com outras que subiram). Veja as features que ficaram atrás na revisão e rode o ensaio no Karaf de origem antes de criar.'
         : /Unable to resolve root/i.test(full)
-          ? 'Uma feature da lista não se resolve com as demais (versão que falta ou conflito de versões). Veja as features que ficaram atrás na revisão e rode o ensaio no Karaf de origem antes de gerar.'
+          ? 'Uma feature da lista não se resolve com as demais (versão que falta ou conflito de versões). Veja as features que ficaram atrás na revisão e rode o ensaio no Karaf de origem antes de criar.'
           : undefined;
 
   return {
@@ -160,7 +164,11 @@ export function buildLogProbeScript(path: string): string {
     "echo '@@tail'; tail -n 200 \"$f\"",
     "echo '@@causa'; grep -m4 -E 'Unable to resolve root|No matching features|Could not resolve' \"$f\" | cut -c1-6000",
     "echo '@@erros'; grep -c '\\[ERRO\\]' \"$f\"",
-    "echo '@@falhas'; grep -m1 -E '[0-9]+ falha\\(s\\)' \"$f\" | cut -c1-300"
+    "echo '@@falhas'; grep -m1 -E '[0-9]+ falha\\(s\\)' \"$f\" | cut -c1-300",
+    // A criação sem WSH diz "Sem --wsh-jar" na etapa 5/5 e termina em "Pronto: ambiente"; o comando gravado também serve
+    "echo '@@semwsh'; grep -c -F -e 'Sem --wsh-jar' \"$f\"",
+    "echo '@@pronto'; grep -c -E 'Pronto: ambiente' \"$f\"",
+    "echo '@@comando'; grep -m1 -F -e 'new_version_env.sh' \"$f\" | cut -c1-1500"
   ].join('\n');
 }
 
@@ -171,7 +179,7 @@ export function parseBuildLogProbe(path: string, output: string): BuildLogReport
   const sections = new Map<string, string[]>();
   let current = '';
   for (const line of text.split('\n')) {
-    const m = /^@@(tail|causa|erros|falhas)$/.exec(line.trim());
+    const m = /^@@(tail|causa|erros|falhas|semwsh|pronto|comando)$/.exec(line.trim());
     if (m) {
       current = m[1];
       sections.set(current, []);
@@ -183,5 +191,12 @@ export function parseBuildLogProbe(path: string, output: string): BuildLogReport
   const symptoms = parseInt((sections.get('erros') ?? ['0'])[0].trim(), 10) || 0;
   const failures = /(\d+)\s+falha\(s\)/.exec((sections.get('falhas') ?? []).join(' '))?.[1];
   const cause = extractBuildCause((sections.get('causa') ?? []).filter((l) => l.trim()), symptoms, failures ? parseInt(failures, 10) : undefined);
-  return cause ? { ...report, cause, failure: `${cause.headline}${cause.causedBy[0] ? ` (causa: ${cause.causedBy[0]})` : ''}` } : report;
+  const count = (key: string) => parseInt((sections.get(key) ?? ['0'])[0].trim(), 10) || 0;
+  const cmd = (sections.get('comando') ?? []).find((l) => l.trim());
+  const flags = {
+    ...(count('semwsh') > 0 || (cmd !== undefined && !cmd.includes('--wsh-jar')) ? { noWsh: true } : {}),
+    ...(count('pronto') > 0 ? { done: true } : {})
+  };
+  const withFlags = { ...report, ...flags };
+  return cause ? { ...withFlags, cause, failure: `${cause.headline}${cause.causedBy[0] ? ` (causa: ${cause.causedBy[0]})` : ''}` } : withFlags;
 }

@@ -11,6 +11,7 @@ import type { ArtifactReport } from './infrFeatureArtifacts';
 import type { PreflightItem } from './infrPreflight';
 import type { DependencyReport } from './infrFeatureDependencies';
 import type { InfrCloneInfo } from './infrClone';
+import type { InfrBuildState } from './infrBuildState';
 
 export interface ManifestFeature {
   name: string;
@@ -64,6 +65,8 @@ export interface InfrVersionPreviewRequest {
   /** Ambiente de origem (master): lê o container wta-master */
   fromEnv: string;
   targetVersion: string;
+  /** Nome do ambiente novo: o Hub confere se já existe container ou volume dele */
+  name?: string;
   /** URL do WTA de origem para o catálogo da 801; vazio = porta publicada do wta-<origem> */
   originWtaUrl?: string;
   /** Jar do WSH da versão alvo, caminho no WSL (/opt/wsh/40/winthor-integracao-core.jar) */
@@ -86,12 +89,28 @@ export interface ManifestComparison {
   onlyPreview: number;
 }
 
+/**
+ * Features da lista que nenhum repositório dela tem e o que o Hub fez com cada uma, sem pedir nada à pessoa: o repositório
+ * que a 801 informa entra na lista (`added`); sem ele, a feature volta para a versão que os repositórios da lista têm
+ * (`repairs`); sem nenhuma das duas, fica na versão atual (`kept`) e a criação segue.
+ */
+export interface ManifestRepoRepair {
+  repairs: ManifestChange[];
+  added: { name: string; version: string; repo: string }[];
+  kept: { name: string; version: string }[];
+}
+
 /** `versions/<versão>.features` que já existe no INFR-Docker. */
+
 export interface ExistingVersionManifest {
   path: string;
   count: number;
   comparison: ManifestComparison;
   wshCheck?: WshDependencyCheck[];
+  /** Conferida pelos features.xml dos repositórios dela (ausente = não deu para conferir) */
+  repair?: ManifestRepoRepair;
+  /** O arquivo com as versões corrigidas, que o Criar grava no lugar do existente */
+  repairText?: string;
 }
 
 /** Qual manifesto a geração usa: o que já existe da versão ou o montado pela prévia. */
@@ -111,6 +130,8 @@ export interface InfrVersionPreview {
   artifacts?: ArtifactReport;
   /** Portas, disco, memória e rede da distro para o ambiente novo */
   preflight?: PreflightItem[];
+  /** O que já existe na distro e muda o resultado da criação (imagem repetida, volume, jar do WSH) */
+  buildState?: InfrBuildState;
   /** Resultado do ensaio da resolução, quando pedido */
   dryRun?: DryRunReport;
   /** Leitura de um clone (cloneOnly): versão e imagem da origem, e o que já existe na distro */
@@ -119,10 +140,14 @@ export interface InfrVersionPreview {
   /** Erro ao ler o jar do WSH (não impede a prévia) */
   wshError?: string;
   manifestText?: string;
+  /** Lista nova conferida pelos features.xml; `manifestText` já sai com as correções */
+  repair?: ManifestRepoRepair;
   /** Manifesto da versão que já existe: a geração só o substitui se o usuário escolher */
   existing?: ExistingVersionManifest;
   /** Registro de cada passo (comandos, respostas HTTP, login sem senha), para mostrar e copiar */
   log?: string[];
+  /** Scripts do INFR-Docker que não conhecem as opções da criação: a mensagem de como atualizar (impede o Criar) */
+  scriptGaps?: string;
 }
 
 /** Gravação de `versions/<versão>.features`; sem `overwrite`, não substitui um manifesto existente. */
@@ -191,6 +216,39 @@ export function serializeVersionManifest(manifest: VersionManifest, header: stri
   ].join('\n');
 }
 
+/**
+ * Acrescenta linhas `repo <url>` que a lista ainda não tem, logo depois do último `repo` (ou antes da primeira `feature`);
+ * comentários e o resto ficam como estão.
+ */
+export function addManifestRepos(text: string, repos: string[]): string {
+  const have = new Set(parseVersionManifest(text).repos);
+  const add = [...new Set(repos)].filter((r) => !have.has(r));
+  if (add.length === 0) return text;
+  const eol = text.includes('\r\n') ? '\r\n' : '\n';
+  const lines = text.split(/\r?\n/);
+  let at = -1;
+  lines.forEach((l, i) => {
+    if (/^\s*repo\s/.test(l)) at = i;
+  });
+  if (at < 0) at = lines.findIndex((l) => /^\s*feature\s/.test(l)) - 1;
+  if (at < -1) at = lines.length - 1;
+  lines.splice(at + 1, 0, ...add.map((r) => `repo ${r}`));
+  return lines.join(eol);
+}
+
+/** Troca só a versão das linhas `feature <nome> <versão>` indicadas; comentários, repositórios e o resto ficam como estão. */
+export function rewriteFeatureVersions(text: string, changes: ManifestChange[]): string {
+  const to = new Map(changes.map((c) => [`${c.name} ${c.from}`, c.to]));
+  return text
+    .split(/(\r?\n)/)
+    .map((line) => {
+      const m = /^(\s*feature\s+)(\S+)(\s+)(\S+)(.*)$/.exec(line);
+      const next = m ? to.get(`${m[2]} ${m[4]}`) : undefined;
+      return m && next ? `${m[1]}${m[2]}${m[3]}${next}${m[5]}` : line;
+    })
+    .join('');
+}
+
 /** Compara versões por segmento numérico (1.39.20.3 > 1.39.5.0); sufixos não numéricos valem 0. */
 export function compareVersions(a: string, b: string): number {
   const pa = a.split(/[.-]/).map((p) => parseInt(p, 10) || 0);
@@ -233,10 +291,34 @@ export function manifestLineOf(manifest: VersionManifest): number | undefined {
   return best;
 }
 
+/** Versão de um `mvn:grupo/artefato/versão/xml/features`. */
+const mvnVersionOf = (url: string): string | undefined => /^mvn:[^/]+\/[^/]+\/([^/]+)\//.exec(url)?.[1];
+
+/**
+ * Repositório Maven que tem a feature nesta versão, pelo catálogo da 801. Só serve repositório da mesma versão: a
+ * 801 às vezes liga a feature a um repositório de outra versão, e o build não acha a feature nele. Sem o da própria
+ * feature, vale o artefato com o nome dela (winthor-core-features serve a winthor-core-data); artefato de outra
+ * feature, mesmo na mesma versão, não serve.
+ */
+export function catalogRepoFor(name: string, version: string, catalog: Routine801CatalogResponse): string | undefined {
+  const own = catalog.funcionalidades.find((f) => f.nome === name && f.versao === version && f.featureMavenUrl && mvnVersionOf(f.featureMavenUrl) === version);
+  if (own) return own.featureMavenUrl;
+  let best: { url: string; base: number } | undefined;
+  for (const { repositorio: r } of catalog.repositorios) {
+    if (r.version !== version || !r.featureMavenUrl) continue;
+    const base = r.artifactId.replace(/-(features?|service)$/, '');
+    if ((name === base || name.startsWith(`${base}-`)) && (!best || base.length > best.base)) best = { url: r.featureMavenUrl, base: base.length };
+  }
+  return best?.url;
+}
+
+export const NO_REPO_REASON = 'a 801 não informou o repositório Maven desta versão';
+
 /**
  * Sobe a lista de origem para a versão alvo pelo catálogo `/atualizacao` da rotina 801: cada
  * feature recebe a versão do catálogo quando ela é mais nova e não passa da linha alvo
- * (a 41 não entra numa 40). O repositório Maven da versão nova entra no manifesto.
+ * (a 41 não entra numa 40). O repositório Maven da versão nova entra no manifesto; versão sem
+ * repositório não sobe, porque o build não teria onde achar a feature.
  */
 export function upgradeManifestFromCatalog(
   origin: VersionManifest,
@@ -254,7 +336,8 @@ export function upgradeManifestFromCatalog(
   const whyNot = (f: Routine801CatalogResponse['funcionalidades'][number]): string | null => {
     if (BLOCKED_STATUS.has(String(f.status).toUpperCase())) return `status ${f.status} na rotina 801`;
     const line = winthorLineOf(f.versao);
-    return line !== undefined && line > target ? `linha ${line}, acima da ${target}` : null;
+    if (line !== undefined && line > target) return `linha ${line}, acima da ${target}`;
+    return catalogRepoFor(f.nome, f.versao, catalog) ? null : NO_REPO_REASON;
   };
 
   const features = origin.features.map((feature) => {
@@ -267,11 +350,8 @@ export function upgradeManifestFromCatalog(
       skipped.push({ name: feature.name, version: newer[0].versao, reason: whyNot(newer[0]) as string });
       return feature;
     }
-    const repo =
-      update.featureMavenUrl ||
-      catalog.repositorios.find((r) => r.repositorio.version === update.versao && r.repositorio.featureMavenUrl)?.repositorio
-        .featureMavenUrl;
-    if (repo && !repos.includes(repo)) repos.push(repo);
+    const repo = catalogRepoFor(update.nome, update.versao, catalog) as string;
+    if (!repos.includes(repo)) repos.push(repo);
     changes.push({ name: feature.name, from: feature.version, to: update.versao });
     return { name: feature.name, version: update.versao };
   });

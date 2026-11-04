@@ -25,6 +25,8 @@ export interface AppGlobalModalsProps {
   onSplashStartOnboarding: () => void;
   onSplashExplore: () => void;
   onSplashEnter: () => void;
+  /** Cartão da tela de início que leva direto a um módulo */
+  onSplashOpenTab: (tab: string) => void;
   onSplashWhatsNew: () => void;
   onFinishWelcome: (wantsTour: boolean) => void;
   onSettingsSaved: () => void;
@@ -49,6 +51,7 @@ export const AppGlobalModals: React.FC<AppGlobalModalsProps> = ({
   onSplashStartOnboarding,
   onSplashExplore,
   onSplashEnter,
+  onSplashOpenTab,
   onSplashWhatsNew,
   onFinishWelcome,
   onSettingsSaved,
@@ -70,6 +73,7 @@ export const AppGlobalModals: React.FC<AppGlobalModalsProps> = ({
       onStartOnboarding={onSplashStartOnboarding}
       onExplore={onSplashExplore}
       onEnter={onSplashEnter}
+      onOpenTab={onSplashOpenTab}
       onWhatsNew={onSplashWhatsNew}
     />
 

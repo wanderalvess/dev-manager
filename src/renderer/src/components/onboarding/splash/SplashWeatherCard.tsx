@@ -3,6 +3,7 @@ import { Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain, CloudSnow, Cl
 import type { WeatherIcon } from '../../../../../shared/weather';
 import type { StartScreenData } from './useStartScreenData';
 import { forecastDayLabel } from './startScreenUtils';
+import { START_CARD, START_EYEBROW as EYEBROW } from './startCardStyles';
 
 const ICONS: Record<WeatherIcon, LucideIcon> = {
   sun: Sun,
@@ -15,11 +16,9 @@ const ICONS: Record<WeatherIcon, LucideIcon> = {
   storm: CloudLightning
 };
 
-const CARD = 'rounded-2xl bg-muted/60 p-5 flex flex-col gap-3 min-w-0';
-const EYEBROW = 'font-mono text-xs font-bold tracking-[0.14em] text-muted-foreground';
-
 /** Clima da cidade escolhida. Sem cidade, um campo para informar; só o nome dela sai da máquina. */
-export const SplashWeatherCard: React.FC<{ data: StartScreenData }> = ({ data }) => {
+export const SplashWeatherCard: React.FC<{ data: StartScreenData; className?: string }> = ({ data, className = '' }) => {
+  const CARD = `${START_CARD} ${className}`;
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(data.city);
   const [error, setError] = useState<string | null>(null);
@@ -109,7 +108,7 @@ export const SplashWeatherCard: React.FC<{ data: StartScreenData }> = ({ data })
               {w.days.map((d) => {
                 const DayIcon = ICONS[d.icon];
                 return (
-                  <li key={d.date} className="rounded-xl bg-background/60 px-2 py-2 flex flex-col items-center gap-1 text-xs">
+                  <li key={d.date} className="rounded-xl bg-muted/50 px-2 py-2 flex flex-col items-center gap-1 text-xs">
                     <span className="font-semibold">{forecastDayLabel(d.date, new Date())}</span>
                     <DayIcon className="w-5 h-5 text-muted-foreground" aria-label={d.description} />
                     <span className="font-mono">

@@ -81,7 +81,7 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
     const XML = `<features><feature name="winthor-integracao-config" version="1.39.20.3"><feature version="[1.39,1.40)">winthor-core-data</feature></feature></features>`;
 
     it('baixa os features.xml de dentro do container e bloqueia o conflito que o catálogo da 801 não declara', async () => {
-      xmlOut = `@@FILE ${PATH}\n${XML}\n@@END\n@@MISS g/outro/1.0/outro-1.0-features.xml\n`;
+      xmlOut = `@@FILE ${PATH}\n${XML}\n@@END\n@@MISS g/winthor-core-features/1.40.0.3/winthor-core-features-1.40.0.3-features.xml\n`;
       const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
       expect(res.success).toBe(true);
       expect(res.dependencies?.issues).toEqual([
@@ -106,6 +106,54 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
       expect(res.success).toBe(true);
       expect(res.dependencies?.xml?.error).toContain('docker caiu');
       expect(res.log?.some((l) => l.includes('Dependências pelos features.xml não conferidas'))).toBe(true);
+    });
+
+    it('lista existente com feature sem repositório (build do Nathan): volta para a versão que o repositório tem e regrava só essa linha', async () => {
+      const versions = path.join(dir, 'linux-winthor', 'versions');
+      fs.mkdirSync(versions, { recursive: true });
+      fs.writeFileSync(
+        path.join(versions, '40.features'),
+        '# lista da 40\nrepo mvn:g/winthor-integracao-2650-features/1.40.0.2/xml/features\nrepo mvn:g/winthor-core-features/1.40.0.3/xml/features\n\nfeature winthor-integracao-2650 1.40.1.2\nfeature winthor-core-data 1.40.0.3\n'
+      );
+      const file = (art: string, v: string, body: string) => `@@FILE g/${art}/${v}/${art}-${v}-features.xml\n<features>${body}</features>\n@@END`;
+      xmlOut = [
+        file('winthor-integracao-2650-features', '1.40.0.2', '<feature name="winthor-integracao-2650" version="1.40.0.2"/>'),
+        file('winthor-core-features', '1.40.0.3', '<feature name="winthor-core-data" version="1.40.0.3"/>'),
+        file('winthor-core-features', '1.39.0.1', '<feature name="winthor-core-data" version="1.39.0.1"/><feature name="winthor-integracao-config" version="1.39.20.3"/>')
+      ].join('\n');
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+      expect(res.existing?.repair).toEqual({
+        repairs: [{ name: 'winthor-integracao-2650', from: '1.40.1.2', to: '1.40.0.2', reason: 'a 1.40.1.2 não está em nenhum repositório da lista nem na 801' }],
+        added: [],
+        kept: []
+      });
+      expect(res.existing?.repairText).toContain('# lista da 40\n');
+      expect(res.existing?.repairText).toContain('feature winthor-integracao-2650 1.40.0.2\nfeature winthor-core-data 1.40.0.3');
+      expect(res.repair).toEqual({ repairs: [], added: [], kept: [] });
+    });
+
+    it('lista existente com feature sem repositório que a 801 tem: o repositório da 801 entra na lista e a versão fica', async () => {
+      const versions = path.join(dir, 'linux-winthor', 'versions');
+      fs.mkdirSync(versions, { recursive: true });
+      fs.writeFileSync(
+        path.join(versions, '40.features'),
+        '# lista da 40\nrepo mvn:g/winthor-core-features/1.40.0.3/xml/features\n\nfeature winthor-core-data 1.40.0.3\nfeature spring 4.2.9.RELEASE_1\nfeature winthor-sumida 1.40.0.1\n'
+      );
+      routine801.fetchUpdates.mockResolvedValueOnce({
+        repositorios: [],
+        funcionalidades: [
+          { nome: 'winthor-sumida', versao: '1.40.0.1', codigoRotina: 0, codigoModulo: 0, tipoProjeto: 'SERVICO', descricao: '', status: 'LIBERADO', featureMavenUrl: 'mvn:g/winthor-sumida-features/1.40.0.1/xml/features' }
+        ]
+      });
+      xmlOut = '@@FILE g/winthor-core-features/1.40.0.3/winthor-core-features-1.40.0.3-features.xml\n<features><feature name="winthor-core-data" version="1.40.0.3"/></features>\n@@END';
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+      expect(res.existing?.repair).toEqual({
+        repairs: [],
+        added: [{ name: 'winthor-sumida', version: '1.40.0.1', repo: 'mvn:g/winthor-sumida-features/1.40.0.1/xml/features' }],
+        kept: [{ name: 'spring', version: '4.2.9.RELEASE_1' }]
+      });
+      expect(res.existing?.repairText).toContain('repo mvn:g/winthor-core-features/1.40.0.3/xml/features\nrepo mvn:g/winthor-sumida-features/1.40.0.1/xml/features\n\nfeature winthor-core-data');
+      expect(res.existing?.repairText).toContain('feature spring 4.2.9.RELEASE_1');
     });
 
     it('o clone não baixa features.xml', async () => {
@@ -152,9 +200,18 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
       expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).clone?.imageExists).toBe(false);
     });
 
-    it('imagem fora do padrão ou container inexistente: erro com o que fazer', async () => {
+    it('imagem fora do padrão (linux-winthor:1.93-debian, do Nathan): usa a versão informada e marca a imagem da origem', async () => {
+      cloneInspect = 'linux-winthor:1.93-debian|running';
+      cloneImageExists = 'no';
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '40', cloneOnly: true });
+      expect(res.success).toBe(true);
+      expect(res.clone).toMatchObject({ version: '40', image: 'linux-winthor:40-debian', imageExists: false, tagFrom: 'linux-winthor:1.93-debian' });
+      expect(calls().some((c) => c.includes('export_features.sh --version 40 --container wta-master'))).toBe(true);
+    });
+
+    it('imagem fora do padrão sem versão informada, ou container inexistente: erro com o que fazer', async () => {
       cloneInspect = 'oracle-winthor:latest|running';
-      expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).error).toContain('não segue o padrão linux-winthor:<versão>-<distro>');
+      expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).error).toContain('informe a versão do master');
       cloneInspect = 'missing';
       expect((await service().preview({ fromEnv: 'master', targetVersion: '', cloneOnly: true })).error).toContain('não existe nesta distro');
     });

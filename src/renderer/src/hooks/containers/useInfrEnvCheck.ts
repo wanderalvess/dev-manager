@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { InfrCheckCommandId, InfrEnvCheck } from '../../../../shared/infrEnvCheck';
 import { wtaHostPort } from '../../../../shared/infrEnvCheck';
+import type { InfrPostFix } from '../../../../shared/infrPostCheck';
 
-/** Verificação de um ambiente: lê o estado pelo Hub, repete a cada 15 s se pedido e abre os comandos no terminal. */
-export function useInfrEnvCheck(distro: string | undefined, initialName: string) {
+/**
+ * Verificação de um ambiente: lê o estado pelo Hub, repete a cada 15 s se pedido e abre os comandos no terminal.
+ * `refreshKey` muda a cada vez que a tela é aberta para um ambiente (inclusive o mesmo nome de um Criação anterior):
+ * a leitura anterior, que pode ser de um build que falhou, é descartada e o estado é lido de novo.
+ */
+export function useInfrEnvCheck(distro: string | undefined, initialName: string, refreshKey = 0) {
   const [name, setName] = useState(initialName);
   const [result, setResult] = useState<InfrEnvCheck | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,13 +31,14 @@ export function useInfrEnvCheck(distro: string | undefined, initialName: string)
     }
   }, [distro, name]);
 
-  // Lê quando o nome para de mudar (não a cada letra digitada)
+  // Lê quando o nome para de mudar (não a cada letra digitada) ou quando a tela é reaberta; o resultado antigo some
+  // na hora, para não mostrar o erro de um build anterior enquanto o novo roda
   useEffect(() => {
     setResult(null);
     if (!name.trim()) return;
     const timer = setTimeout(check, 600);
     return () => clearTimeout(timer);
-  }, [name, distro]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [name, distro, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Enquanto sobe, repete sozinho; para quando está no ar ou falhou
   const status = result?.summary?.status;
@@ -49,7 +55,27 @@ export function useInfrEnvCheck(distro: string | undefined, initialName: string)
     setMessage(res?.output ?? 'Executar não está disponível neste modo; use Copiar.');
   };
 
-  return { name, setName, result, loading, auto, setAuto, check, run, wtaPort, message };
+  // Correção da validação (ligar o banco, reiniciar o WTA): volta a conferir sozinho enquanto ele sobe
+  const [fixing, setFixing] = useState<string | null>(null);
+  const fix = async (f: InfrPostFix) => {
+    const api = window.electronAPI;
+    if (!api?.fixInfrContainer || !name.trim()) return;
+    setFixing(`${f.role}:${f.action}`);
+    try {
+      const res = await api.fixInfrContainer({ distro, name: name.trim(), role: f.role, action: f.action });
+      setMessage(res.output);
+      if (res.success) {
+        setAuto(true);
+        await check();
+      }
+    } catch (err: any) {
+      setMessage(`Não foi possível: ${err?.message || err}`);
+    } finally {
+      setFixing(null);
+    }
+  };
+
+  return { name, setName, result, loading, auto, setAuto, check, run, wtaPort, message, fix, fixing };
 }
 
 export type InfrEnvCheckState = ReturnType<typeof useInfrEnvCheck>;

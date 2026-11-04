@@ -1,8 +1,12 @@
 import { useRef, useState } from 'react';
+import type { InfrEnvCheck } from '../../../../shared/infrEnvCheck';
 import {
   GUIDE_SYSTEM_PROMPT,
   buildGuideUserMessage,
   describeEnvCheckForAi,
+  continueConversation,
+  envFailureSignature,
+  failureToExplain,
   parseGuideReply,
   type GuideAction,
   type GuideContext,
@@ -13,7 +17,7 @@ import type { InfrNewVersionState } from './useInfrNewVersion';
 export type InfrAiGuideStatus = 'idle' | 'thinking' | 'confirm' | 'building' | 'done';
 
 export interface InfrAiGuideEntry {
-  kind: 'ai' | 'hub' | 'error';
+  kind: 'ai' | 'hub' | 'error' | 'user';
   text: string;
   commands?: string[];
 }
@@ -38,12 +42,16 @@ const DB_MODE_LABEL: Record<string, string> = { clone: 'copiado', existing: 'um 
  * IA conduzindo a Nova versão. O modelo responde com uma ação por turno; o Hub valida e executa, e só o clique do
  * usuário gera o ambiente. A tela de sempre (formulário, conferência) continua sendo a fonte da verdade.
  */
-export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
+export function useInfrAiGuide(s: InfrNewVersionState, distro?: string, infrPath?: string) {
   const latest = useRef(s);
   latest.current = s;
   const distroRef = useRef(distro);
   distroRef.current = distro;
+  const infrPathRef = useRef(infrPath);
+  infrPathRef.current = infrPath;
   const [status, setStatus] = useState<InfrAiGuideStatus>('idle');
+  const statusRef = useRef(status);
+  statusRef.current = status;
   const [log, setLog] = useState<InfrAiGuideEntry[]>([]);
   // Campos que a IA preencheu e a pessoa ainda não mexeu (a tela marca com "IA")
   const [filled, setFilled] = useState<GuideField[]>([]);
@@ -51,6 +59,12 @@ export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
   const history = useRef<string[]>([]);
   const verify = useRef<GuideContext['verify']>(undefined);
   const stopped = useRef(false);
+  // Relatório compacto do ambiente (scripts, pasta, containers, erros da criação) e o que o usuário colou do terminal
+  const diagnostic = useRef<string | undefined>(undefined);
+  const pasted = useRef<string | undefined>(undefined);
+  // Ambiente em foco depois da criação e a última falha já explicada (uma chamada à IA por falha)
+  const envName = useRef('');
+  const lastFailure = useRef<string | null>(null);
 
   const push = (e: InfrAiGuideEntry) => setLog((l) => [...l, e]);
   const note = (text: string) => {
@@ -75,8 +89,31 @@ export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
       review: cur.review.map((r) => ({ id: r.id, status: r.status, title: r.title, detail: r.detail })),
       previewError: cur.preview && !cur.preview.success ? cur.preview.error || 'erro desconhecido' : undefined,
       verify: verify.current,
+      diagnostic: diagnostic.current,
+      pasted: pasted.current,
       history: history.current
     };
+  };
+
+  /** Relê o ambiente em foco e guarda o relatório compacto (mascarado) para o próximo turno. */
+  const refreshDiagnostic = async () => {
+    const api = window.electronAPI;
+    const name = envName.current;
+    if (!name || !api?.buildInfrDiagnostic) return;
+    try {
+      const res = await api.buildInfrDiagnostic({
+        distro: distroRef.current,
+        infrPath: infrPathRef.current,
+        name,
+        version: latest.current.form.version || undefined,
+        forAi: true
+      });
+      diagnostic.current = res.success ? res.compact : undefined;
+      if (!res.success) note(`relatório do ambiente indisponível: ${res.error ?? 'erro'}`);
+    } catch (err) {
+      diagnostic.current = undefined;
+      note(`relatório do ambiente indisponível: ${err instanceof Error ? err.message : String(err)}`);
+    }
   };
 
   /** Executa a ação; devolve true quando o laço deve seguir para outro turno do modelo. */
@@ -102,12 +139,12 @@ export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
       }
       case 'generate':
         if (!latest.current.preview?.success) {
-          push({ kind: 'error', text: 'Gerar recusado: a prévia ainda não foi lida.' });
+          push({ kind: 'error', text: 'Criar recusado: a prévia ainda não foi lida.' });
           note('generate recusado: sem prévia');
           return true;
         }
         if (latest.current.blocked) {
-          push({ kind: 'error', text: 'Gerar recusado: a conferência tem itens bloqueados (em vermelho).' });
+          push({ kind: 'error', text: 'Criar recusado: a conferência tem itens bloqueados (em vermelho).' });
           note('generate recusado: conferência bloqueada');
           return true;
         }
@@ -124,6 +161,8 @@ export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
         push({ kind: 'hub', text: `Conferiu os containers de ${name}. ${a.why}` });
         const check = await api.checkInfrEnvironment({ distro: distroRef.current, name });
         verify.current = describeEnvCheckForAi(check);
+        envName.current = name;
+        await refreshDiagnostic();
         push({ kind: 'hub', text: verify.current.status });
         note(`verify: ${verify.current.status}`);
         return true;
@@ -138,9 +177,13 @@ export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
     }
   };
 
-  const run = async () => {
+  const run = async (prepare?: () => Promise<void>) => {
     stopped.current = false;
     setStatus('thinking');
+    if (prepare) {
+      await prepare();
+      if (stopped.current) return;
+    }
     let invalid = 0;
     let failed = false;
     for (let turn = 0; turn < MAX_TURNS && !stopped.current; turn++) {
@@ -192,6 +235,10 @@ export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
     goal.current = t;
     history.current = [];
     verify.current = undefined;
+    diagnostic.current = undefined;
+    pasted.current = undefined;
+    envName.current = '';
+    lastFailure.current = null;
     latest.current.resetPreview();
     setLog([]);
     setFilled([]);
@@ -208,21 +255,24 @@ export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
   /** A pessoa mexeu no campo: a marca "IA" sai dele. */
   const unmark = (field: string) => setFilled((f) => f.filter((x) => x !== field));
 
-  /** O usuário confirmou o Gerar: roda o fluxo de sempre e espera o build terminar para conferir. */
+  /** O usuário confirmou a criação: roda o fluxo de sempre e espera o build terminar para conferir. */
   const confirmGenerate = async () => {
     setStatus('building');
-    push({ kind: 'hub', text: 'Você clicou em Gerar: o terminal abriu com o build, que leva uns 30 minutos.' });
+    lastFailure.current = null;
+    envName.current = latest.current.form.name.trim();
+    diagnostic.current = undefined;
+    push({ kind: 'hub', text: 'Você clicou em Criar: o terminal abriu com o build, que leva uns 30 minutos.' });
     const ok = await latest.current.generate();
     note(ok ? 'generate: terminal aberto, build em andamento' : 'generate: falhou ao iniciar');
     if (!ok) {
-      push({ kind: 'error', text: latest.current.message || 'Não foi possível iniciar o Gerar.' });
+      push({ kind: 'error', text: latest.current.message || 'Não foi possível iniciar a criação.' });
       setStatus('idle');
     }
   };
 
   const declineGenerate = () => {
-    note('o usuário não confirmou o Gerar');
-    push({ kind: 'hub', text: 'Gerar não confirmado. Nada foi criado.' });
+    note('o usuário não confirmou a criação');
+    push({ kind: 'hub', text: 'Criar não confirmado. Nada foi criado.' });
     setStatus('idle');
   };
 
@@ -232,13 +282,66 @@ export function useInfrAiGuide(s: InfrNewVersionState, distro?: string) {
     void execute({ action: 'verify', why: 'depois do build' }).then(() => run());
   };
 
+  /** A criação falhou: a IA lê o quadro completo e explica o que aconteceu e o que fazer (uma vez por falha). */
+  const diagnoseFailure = (name: string, check: InfrEnvCheck | null | undefined) => {
+    envName.current = name;
+    if (check?.success) verify.current = describeEnvCheckForAi(check);
+    note(`a criação falhou: ${verify.current?.status ?? 'falha no ambiente'}`);
+    push({ kind: 'hub', text: `O ambiente ${name} não subiu. Lendo a pasta, os scripts e o log para explicar.` });
+    void run(refreshDiagnostic);
+  };
+
+  /** A tela releu o ambiente: se a criação acabou de falhar, acorda a IA uma vez por falha. */
+  const onEnvCheck = (check: InfrEnvCheck | null | undefined) => {
+    const sig = failureToExplain({ check, status: statusRef.current, formName: latest.current.form.name, lastSignature: lastFailure.current });
+    if (!sig || !check) return;
+    lastFailure.current = sig;
+    diagnoseFailure(check.name ?? latest.current.form.name.trim(), check);
+  };
+
+  /** "Perguntar à IA" na tela Verificar: explica a falha lida agora, sem apagar a conversa. */
+  const askAboutFailure = (name: string, check: InfrEnvCheck | null | undefined) => {
+    if (!name.trim() || statusRef.current === 'thinking') return;
+    if (!goal.current) goal.current = `Entender por que o ambiente ${name} não subiu`;
+    lastFailure.current = envFailureSignature(check) ?? lastFailure.current;
+    diagnoseFailure(name.trim(), check);
+  };
+
+  /** Responde à IA (e/ou cola a saída do terminal) continuando a mesma conversa: histórico e verificação ficam. */
+  const reply = (text: string, terminalOutput?: string) => {
+    const t = text.trim();
+    const out = terminalOutput?.trim();
+    if ((!t && !out) || statusRef.current === 'thinking') return;
+    const next = continueConversation({ goal: goal.current, history: history.current, pasted: pasted.current }, t, out);
+    goal.current = next.goal;
+    history.current = next.history;
+    pasted.current = next.pasted;
+    push({ kind: 'user', text: `${t || 'Colei a saída do terminal.'}${out ? ' (com a saída do terminal)' : ''}` });
+    void run(refreshDiagnostic);
+  };
+
   const stop = () => {
     stopped.current = true;
     setStatus('idle');
     push({ kind: 'hub', text: 'Interrompido.' });
   };
 
-  return { status, log, filled, goal: goal.current, start, resume, unmark, stop, confirmGenerate, declineGenerate, checkEnvironment };
+  return {
+    status,
+    log,
+    filled,
+    goal: goal.current,
+    start,
+    resume,
+    unmark,
+    stop,
+    confirmGenerate,
+    declineGenerate,
+    checkEnvironment,
+    onEnvCheck,
+    askAboutFailure,
+    reply
+  };
 }
 
 export type InfrAiGuideState = ReturnType<typeof useInfrAiGuide>;

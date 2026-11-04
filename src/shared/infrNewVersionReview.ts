@@ -1,9 +1,9 @@
 /**
- * Conferência antes de gerar uma versão nova (Assistente INFR → Nova versão, passo 4): cada ponto
+ * Conferência antes de criar uma versão nova (Assistente INFR → Nova versão, passo 4): cada ponto
  * diz se está ok, se merece atenção ou se impede o ambiente de subir, numa frase.
  */
 import type { InfrDbMode } from './infrWinthorVersion';
-import { winthorLineOf, type InfrManifestSource, type InfrVersionPreview } from './infrVersionManifest';
+import { winthorLineOf, type InfrManifestSource, type InfrVersionPreview, type ManifestRepoRepair } from './infrVersionManifest';
 
 export type InfrReviewStatus = 'ok' | 'warn' | 'block';
 
@@ -11,7 +11,7 @@ export type InfrReviewStatus = 'ok' | 'warn' | 'block';
 export type InfrReviewFix = 'useSourceOracle' | 'emptyOracle';
 
 export interface InfrReviewItem {
-  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'artefatos' | 'ensaio' | 'portas' | 'disco' | 'memoria' | 'rede' | 'wsh' | 'banco' | 'imagem' | 'manifesto' | 'portasfixas' | 'arquivosenv';
+  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'artefatos' | 'ensaio' | 'portas' | 'disco' | 'memoria' | 'rede' | 'wsh' | 'banco' | 'imagem' | 'manifesto' | 'portasfixas' | 'arquivosenv' | 'repositorios' | 'imagemmesma' | 'recriar' | 'jarwsh' | 'scripts';
   status: InfrReviewStatus;
   title: string;
   detail: string;
@@ -55,7 +55,7 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
       id: 'versao',
       status: 'warn',
       title: `Downgrade: a origem está na ${from}`,
-      detail: `O ${i.from} está na linha ${from} e a versão nova é a ${i.version}. A Nova versão só sobe features; para descer, o ambiente precisa da lista e do banco da ${i.version}. Se não tiver os dois, use Montar do zero com um dump da ${i.version}.`
+      detail: `O ${i.from} está na linha ${from} e a versão nova é a ${i.version}. A Nova versão só sobe features; para descer, o ambiente precisa da lista da ${i.version}. Sem ela, use Montar do zero com um dump da ${i.version}.`
     });
   }
   if (from !== undefined && !useExisting) {
@@ -68,7 +68,7 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
         : `Não há versions/${i.version}.features no INFR-Docker, e a lista nova manteria as features da ${from} num ambiente ${i.version}. Gere a lista de um WTA ${i.version} (export_features.sh) ou use Montar do zero.`
     });
   } else if (useExisting) {
-    items.push({ id: 'features', status: 'ok', title: `Features da ${i.version}`, detail: `Usa a lista que já existe (${existing.count} features); nada é regravado.` });
+    items.push({ id: 'features', status: 'ok', title: `Features da ${i.version}`, detail: `Usa a lista que já existe (${existing.count} features); ${existing.repairText ? 'a criação só acrescenta os repositórios da 801 e troca as versões sem repositório.' : 'nada é regravado.'}` });
   } else if (existing && existing.comparison.older > 0) {
     items.push({
       id: 'features',
@@ -86,6 +86,9 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
   } else {
     items.push({ id: 'features', status: 'ok', title: `Features da ${i.version}`, detail: `${up.changes.length} sobem pelo catálogo da 801.` });
   }
+
+  const coverage = reviewRepoCoverage(useExisting ? existing.repair : p.repair, i.version, useExisting);
+  if (coverage) items.push(coverage);
 
   if (!useExisting) {
     items.push(reviewDependencies(p.dependencies));
@@ -119,6 +122,32 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
 
   items.push(reviewDatabase(i));
   return items;
+}
+
+/**
+ * Cada feature da lista está num repositório dela? É o que o build confere primeiro ("Feature X/versão não existe em
+ * nenhum repositório da lista"); aqui sai dos features.xml baixados na leitura: os da lista, os `<repository>` que eles
+ * puxam e os `featuresRepositories` do Karaf (spring, jdbc...). Sem conferência (algum XML da lista não veio), nada.
+ */
+function reviewRepoCoverage(r: ManifestRepoRepair | undefined, version: string, existing: boolean): InfrReviewItem | null {
+  if (!r) return null;
+  const file = `versions/${version}.features`;
+  const list = (xs: string[]) => (xs.length > 3 ? `${xs.slice(0, 3).join(', ')} e mais ${xs.length - 3}` : xs.join(', '));
+  if (r.added.length === 0 && r.repairs.length === 0 && r.kept.length === 0) {
+    return { id: 'repositorios', status: 'ok', title: 'Repositório de cada feature', detail: 'Toda feature da lista está num repositório dela, nos que eles puxam ou nos que o Karaf já traz (conferido nos features.xml).' };
+  }
+  // Nada aqui impede de criar nem pede para editar a lista: o Hub resolve sozinho e só conta o que fez
+  const parts: string[] = [];
+  if (r.added.length) parts.push(`${list(r.added.map((a) => `${a.name} ${a.version}`))}: o repositório veio da 801 e entra na lista.`);
+  if (r.repairs.length) parts.push(`${list(r.repairs.map((c) => `${c.name} ${c.from} → ${c.to}`))}: nem a lista nem a 801 têm a versão pedida; fica a que os repositórios da lista têm.`);
+  if (r.kept.length) parts.push(`${list(r.kept.map((k) => `${k.name} ${k.version}`))}: nem a lista nem a 801 têm repositório delas; ficam na versão atual.`);
+  const where = existing ? `A criação regrava ${file} com isso (a anterior fica como .bak).` : 'A lista nova já sai assim.';
+  return {
+    id: 'repositorios',
+    status: r.repairs.length || r.kept.length ? 'warn' : 'ok',
+    title: r.added.length && !r.repairs.length && !r.kept.length ? 'Repositórios trazidos da 801' : existing ? `A lista da ${version} é ajustada ao criar` : 'Lista ajustada pelos repositórios',
+    detail: `${parts.join(' ')} ${where}`
+  };
 }
 
 /** O Karaf de origem simulou a instalação das features trocadas? Só avisa: ele ainda tem o estado da versão antiga. */
@@ -234,13 +263,14 @@ function downgradeFrom(i: InfrReviewInput): number | undefined {
 export function reviewDatabase(i: InfrReviewInput): InfrReviewItem {
   const title = 'Banco do ambiente novo';
   const from = downgradeFrom(i);
-  // Banco de uma versão mais nova tem colunas e tabelas que o WTA mais antigo não conhece
+  // Banco de uma versão mais nova: os scripts da Central só sobem, e coluna a mais não atrapalha o WTA mais antigo.
+  // Só avisa; o risco é a linha nova ter tirado algo que uma rotina antiga usa, e isso só aparece usando.
   if (from !== undefined && (i.dbMode === 'clone' || i.dbContainer === `oracle-${i.from}`)) {
     return {
       id: 'banco',
-      status: 'block',
-      title: `O banco da ${from} não serve para a ${i.version}`,
-      detail: `${i.dbMode === 'clone' ? `O clone do ${i.dbSource}` : `O ${i.dbContainer}`} traz as tabelas da ${from}, e um WTA ${i.version} não roda em cima delas. Suba um Oracle vazio e importe um dump da ${i.version}.`,
+      status: 'warn',
+      title: `O banco vem da ${from}`,
+      detail: `${i.dbMode === 'clone' ? `O clone do ${i.dbSource}` : `O ${i.dbContainer}`} traz as tabelas da ${from}; o WTA ${i.version} roda em cima delas. Se alguma rotina der erro de coluna ou tabela, use um Oracle vazio com um dump da ${i.version}.`,
       fixes: ['emptyOracle']
     };
   }
@@ -268,5 +298,5 @@ export function reviewDatabase(i: InfrReviewInput): InfrReviewItem {
   return { id: 'banco', status: 'warn', title, detail: `${i.dbContainer} sobe vazio: importe o dump da versão antes de usar o WTA.` };
 }
 
-/** Algum ponto impede de gerar. */
+/** Algum ponto impede de criar. */
 export const reviewBlocks = (items: InfrReviewItem[]) => items.some((it) => it.status === 'block');

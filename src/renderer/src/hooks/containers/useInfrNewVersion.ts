@@ -1,3 +1,4 @@
+import { reviewBuildState } from '../../../../shared/infrBuildState';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { cloneDefaultPorts, parseWtaImage, reviewClone, usedHostPorts } from '../../../../shared/infrClone';
 import {
@@ -9,7 +10,7 @@ import {
   type InfrEnvironmentsResult
 } from '../../../../shared/infrWinthorVersion';
 import type { InfrEnvTemplate, InfrManifestSource, InfrVersionPreview } from '../../../../shared/infrVersionManifest';
-import { reviewBlocks, reviewNewVersion, type InfrReviewFix } from '../../../../shared/infrNewVersionReview';
+import { reviewBlocks, reviewNewVersion, type InfrReviewFix, type InfrReviewItem } from '../../../../shared/infrNewVersionReview';
 import { useInfrOriginCheck } from './useInfrOriginCheck';
 
 /** Campos que a leitura da origem usa: mudar um deles descarta a leitura; portas e banco não, a conferência recalcula na hora. */
@@ -150,7 +151,8 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
     dbContainer: form.dbContainer || undefined,
     oraclePort: toPort(form.oraclePort),
     wtaPort: toPort(form.wtaPort),
-    wshPort: toPort(form.wshPort)
+    wshPort: toPort(form.wshPort),
+    tagImage: clone ? preview?.clone?.tagFrom : undefined
   };
   const command = buildNewVersionEnvCommand({ ...newEnv, version: form.version });
   const canPreview = isValidWinthorVersion(form.version) && isValidEnvName(form.from) && !busy;
@@ -164,8 +166,8 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
   // O primeiro dado que falta no formulário (vazio = completo); a conferência da origem e a leitura vêm depois
   const formIssue = !form.from
     ? 'Escolha o ambiente de origem.'
-    : clone && !originVersion
-      ? `Não deu para saber a versão do ${form.from} pela imagem do WTA (${originImage || 'sem imagem'}). Use Atualizar para outra versão.`
+    : clone && !originVersion && !isValidWinthorVersion(form.version)
+      ? `A imagem do WTA do ${form.from} (${originImage || 'sem imagem'}) não diz a versão: informe a versão do ${form.from} nos campos.`
       : !isValidWinthorVersion(form.version)
       ? 'Informe a versão nova (ex.: 40).'
       : !isValidEnvName(form.name) || form.name === form.from
@@ -183,7 +185,7 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
                   : '';
 
   const sourceImage = envs?.oracles.find((o) => o.name === form.dbSource)?.image;
-  const review = !preview
+  const baseReview = !preview
     ? []
     : clone && preview.success && preview.clone
       ? reviewClone({
@@ -211,14 +213,35 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
           dbContainer: form.dbContainer,
           wshJar: form.wshJar || undefined
         });
+  // O que já existe na distro (imagem repetida, container e volume de antes, portas fixas, jar do WSH)
+  // Scripts do INFR-Docker sem as opções da criação: o primeiro ponto, que nada adianta antes de atualizar a pasta
+  const scriptsItem: InfrReviewItem[] = preview?.scriptGaps ? [{ id: 'scripts', status: 'block', title: 'Scripts do INFR-Docker desatualizados', detail: preview.scriptGaps }] : [];
+  const review = preview?.success
+    ? (() => {
+        const extra = reviewBuildState({
+          mode: clone ? 'clone' : 'update',
+          version: clone && preview.clone ? preview.clone.version : form.version,
+          name: form.name,
+          from: form.from,
+          state: preview.buildState,
+          envs: envs?.environments ?? [],
+          withWsh: !!form.wshJar
+        });
+        // Antes do banco, que fecha a lista; um ponto de portas fixas do clone não se repete
+        const ids = new Set(baseReview.map((r) => r.id));
+        const add = extra.filter((x) => !(clone && ids.has(x.id)));
+        const dbAt = baseReview.findIndex((r) => r.id === 'banco');
+        return dbAt < 0 ? [...scriptsItem, ...baseReview, ...add] : [...scriptsItem, ...baseReview.slice(0, dbAt), ...add, ...baseReview.slice(dbAt)];
+      })()
+    : baseReview;
   const blocked = reviewBlocks(review);
-  // O que impede o Gerar agora, na ordem em que a pessoa resolve (vazio = pode gerar)
+  // O que impede a criação agora, na ordem em que a pessoa resolve (vazio = pode criar)
   const issue =
     formIssue ||
     (origin.loading && !origin.result
       ? 'Conferindo a origem (pasta, WTA e login)...'
       : origin.blocked
-        ? 'Resolva o que está em vermelho em Antes de gerar.'
+        ? 'Resolva o que está em vermelho em Antes de criar.'
         : busy === 'preview'
           ? clone
             ? 'Conferindo a imagem e as portas do clone...'
@@ -228,7 +251,7 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
               ? 'Falta conferir a imagem e as portas do clone.'
               : 'Falta ler a origem e o catálogo da 801.'
             : !preview.success || blocked
-              ? 'Resolva o que está em vermelho em Antes de gerar.'
+              ? 'Resolva o que está em vermelho em Antes de criar.'
               : '');
   const canGenerate = !issue && !!command && busy === null;
 
@@ -253,6 +276,7 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
         infrPath,
         fromEnv: form.from,
         targetVersion: form.version,
+        name: form.name,
         wshJar: form.wshJar || undefined,
         originWtaUrl: form.originWtaUrl || undefined,
         dryRun: form.dryRun === '1' && !clone,
@@ -268,8 +292,14 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
 
   const generate = async (): Promise<boolean> => {
     const api = window.electronAPI;
-    if (!api?.saveInfrVersionManifest || !api.runInfrSetupScript || !preview || !command) return false;
-    if (!clone && !preview.manifestText) return false;
+    if (!api?.saveInfrVersionManifest || !api.runInfrSetupScript || !preview || !command) {
+      setMessage('A criação não está disponível nesta versão do Hub (falta a ponte com o Windows). Reinicie o Hub.');
+      return false;
+    }
+    if (!clone && !preview.manifestText) {
+      setMessage('A leitura não trouxe a lista de features. Clique em Conferir de novo e tente criar outra vez.');
+      return false;
+    }
     setBusy('generate');
     try {
       const keepExisting = !!preview.existing && manifestSource === 'existing';
@@ -279,7 +309,10 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
           ? await api.saveInfrVersionManifest({ infrPath, targetVersion: form.version, manifestText: preview.manifestText, overwrite: false })
           : { success: true, path: `versions/${form.version}.features (mantido)` }
         : keepExisting
-          ? { success: true, path: `${preview.existing!.path} (mantido)` }
+          ? preview.existing!.repairText
+            ? // A lista existente com as features sem repositório de volta à versão que os repositórios dela têm
+              await api.saveInfrVersionManifest({ infrPath, targetVersion: form.version, manifestText: preview.existing!.repairText, overwrite: true })
+            : { success: true, path: `${preview.existing!.path} (mantido)` }
           : await api.saveInfrVersionManifest({ infrPath, targetVersion: form.version, manifestText: preview.manifestText!, overwrite: !!preview.existing });
       if (!saved.success) {
         setMessage(saved.error || 'Não foi possível gravar o manifesto.');
@@ -305,6 +338,10 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
       setMessage(`Manifesto: ${saved.path}. Configuração: ${env?.path ?? '—'}. ${res.output}`);
       if (res.success) onGenerated?.(form.name.trim());
       return !!res.success;
+    } catch (err: any) {
+      // Sem isto um erro do IPC só liberava o botão, e o clique parecia não fazer nada
+      setMessage(`Não foi possível iniciar a criação: ${err?.message || err}`);
+      return false;
     } finally {
       setBusy(null);
     }

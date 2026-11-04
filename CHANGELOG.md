@@ -4,7 +4,86 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.68.0] - 2026-11-04
+### Adicionado
+- **Jira na tela de início**: com um projeto Jira cadastrado em Documentação › Confluence & Jira, a tela de início usa a mesma credencial para mostrar **Continuar de onde parou** (a issue em que você lançou horas por último e quanto lançou naquele dia), **Jira · hoje** (a sprint ativa com o progresso e os dias que faltam, suas issues em andamento e as com prazo até hoje, cada uma abrindo no Jira) e as **horas lançadas desde segunda** em Sua semana. A saudação ganhou uma linha com o resumo do dia ("2 issues em andamento, 1 com prazo até hoje, a sprint termina em 4 dias, 1 ambiente no ar."). Só leitura, com a consulta guardada por 5 minutos; descrição e comentários das issues não são lidos.
+- **Sem Jira, a tela de início não insiste**: no lugar dos cartões do Jira entram os **módulos mais usados na semana** (sem uso contado, Ambiente Dev, Database Studio, Deploy e Git), e cada um entra no cockpit direto na sua aba.
+- **Tela ao entrar** (Configurações › Aparência): escolha a aba que o **Entrar no cockpit** abre. Sem escolha, o Hub abre na **última aba que você usou** (antes abria sempre no Ambiente Dev).
+- **Etapa Tela de início no onboarding** (agora em 7 etapas): liga o Jira com URL, token pessoal e a chave do projeto (opcional), com **Testar conexão**, e escolhe a tela ao entrar. Sem chave de projeto, a busca de documentação lê só as suas issues, não o Jira inteiro.
+- **Validação depois da criação ("Pronto para usar")**: o *Verificar ambiente*, que abre sozinho depois do Criar, deixou de dar "no ar" só porque a raiz do WTA responde. Agora confere, ponto a ponto:
+  - banco aberto (healthy);
+  - WTA ligado depois do banco;
+  - Karaf sem bundle travado;
+  - rota de login do WinThor registrada (`/winthor/autenticacao/v1/login`);
+  - WSH achando as rotas do WTA (os serviços que dão 404 aparecem pelo nome).
+
+  O ambiente só fica *Ambiente pronto para usar* com todos os pontos ok. O que o Hub resolve sozinho tem botão: **Ligar o banco**, **Reiniciar o WTA**, **Ligar o WSH**. Depois do botão, a conferência volta a rodar enquanto o container sobe.
+
+### Alterado
+- **Tela de início redesenhada**: cartões em grade com o mesmo visual no tema claro e no escuro (seguem a cor do tema), medidores de processador e memória, barras da semana de segunda a domingo (horas do Jira, ou automações do Hub sem Jira) e as novidades da versão numa faixa embaixo. Saíram os textos "ecossistema WinThor", "tudo carregado" e as dicas de teclado ("Enter para entrar"); Enter e Esc continuam funcionando.
+
+### Corrigido
+- **Nova versão com o banco de destino parado**: no `homolog` do Nathan o `oracle-homolog` já existia, parado. O script só disse "já existe; não é recriado" e ligou o WTA com o banco fechado, e o WTA travou com 5 bundles estourando o tempo. Agora o Criar liga esse banco e espera o healthcheck (até 10 minutos) antes do script. O *Verificar ambiente* também diz quando o WTA subiu antes do banco e oferece reiniciar o WTA.
+
+## [1.67.2] - 2026-11-04
+### Corrigido
+- **Nova versão: Criar não parece mais um botão morto**. No ambiente do Nathan o Criar parava na conferência dos scripts (o `linux-winthor/scripts/wta_setup.sh` da pasta é anterior à imagem por versão e não conhece `--version`), mas a explicação ia para o fim da página, fora da vista. Agora essa conferência roda já na leitura e vira o primeiro ponto vermelho de "Antes de criar" ("Scripts do INFR-Docker desatualizados"), com o Criar desabilitado e o motivo no rodapé; a mensagem de qualquer falha do Criar rola até a vista; erro do IPC e os retornos que antes saíam calados agora dizem o que houve.
+- **Como atualizar a pasta do INFR-Docker**: a instrução inclui `git config --global --add safe.directory <pasta>` para a pasta criada por um administrador (o git do usuário recusa com "dubious ownership" e o pull nem roda) e `git checkout -- <script>` quando o arquivo foi alterado na pasta e o pull o manteve.
+
+## [1.67.1] - 2026-11-04
+### Corrigido
+- **Nova versão: features do próprio Karaf não impedem mais a criação**. No ambiente do Nathan, "Antes de criar" bloqueava com "Feature sem repositório na lista" para `spring 4.2.9.RELEASE_1`, `spring-aspects`, `spring-jdbc` e mais 12, porque só olhava os features.xml dos `repo mvn:` da lista. Essas features vêm dos repositórios que o Karaf já traz registrados (`featuresRepositories` do `etc/org.apache.karaf.features.cfg`) e dos `<repository>` que cada features.xml puxa, e o Karaf resolve por eles também. A leitura agora baixa esses XML (do `system/` do Karaf primeiro, depois do Nexus).
+- **Nova versão nunca pede para editar a lista à mão**: feature que nenhum repositório da lista tem é resolvida sozinha. Primeiro o Hub procura o repositório na 801 (os serviços são liberados lá) e acrescenta a linha `repo mvn:` na lista, mantendo a versão pedida; se a 801 não tiver essa versão, a feature volta para a versão que os repositórios da lista têm; se ninguém tiver, ela **fica na versão atual e a criação segue**, com um aviso em vez do bloqueio. A dica depois de um build que para em "não existe em nenhum repositório da lista" também deixou de mandar editar o manifesto.
+- **Recolher menu em monitor baixo**: com muitos módulos ligados, o menu lateral inteiro rolava e o botão *Recolher menu* ficava escondido lá embaixo. Agora só a lista de módulos rola; o logo e o botão de recolher/expandir ficam sempre à vista.
+- **Clima da tela de início atrás do proxy da empresa**: a consulta ia pelo `fetch` do Node, que ignora o proxy e os certificados do Windows e só dizia "fetch failed". Agora vai pela rede do Chromium (a mesma do navegador), e quando ainda falha o cartão diz o motivo (DNS, proxy, certificado, firewall, sem internet ou tempo esgotado) com o código técnico.
+
+## [1.67.0] - 2026-11-03
+### Adicionado
+- **Copiar relatório para suporte** (Assistente INFR → Verificar, e na mensagem do Gerar em Nova versão): um clique junta num texto só o que ajuda a achar o problema de um ambiente, em vez de prints do terminal, e copia para colar na conversa. O relatório traz a versão do Hub, a branch, o commit e as alterações locais da pasta do INFR-Docker, **se cada script conhece as opções que o Hub passa** (aponta o `wta_setup.sh` antigo), os arquivos `wta.env`/`.env` da versão, o Docker, as imagens, o disco e a memória, o estado e o fim do log de cada container e o log do Gerar (os primeiros erros com contexto, o fim e o do Gerar anterior). Senhas, tokens, `usuário:senha@` em URL, cabeçalhos Authorization e conexões do Oracle saem escondidos (`***`). O arquivo também fica guardado na pasta de dados do Hub (`diagnosticos`, os 20 mais recentes), para o caso de o navegador não deixar copiar.
+- **A IA do Assistente INFR ajuda depois que o Gerar falha**: quando o Hub percebe que o Gerar parou (o ambiente é relido a cada 15 s), a IA lê uma versão compacta do relatório (resumo, scripts desatualizados, branch e alterações da pasta do INFR-Docker, containers, primeiros `[ERRO]` do log e o fim dele, tudo com senhas e tokens escondidos), explica o que aconteceu e traz os comandos para você copiar (ex.: `git fetch origin && git checkout feature/imagem-por-versao && git pull` quando o script está velho). Ela fala uma vez por falha e continua sem executar nada. Na caixa da IA dá para responder ("já atualizei a pasta") e **colar a saída do terminal** sem perder a conversa, e a tela Verificar ganhou o botão **Perguntar à IA** quando há falha.
+- **Nova versão sem a frase com campos no meio**: a tela agora vai em passos: **1 · De onde copiar** (um cartão por ambiente, com a versão do WinThor e se está no ar, em parte ou parado), **2 · O que fazer com ele** (Atualizar para uma versão ou Só clonar, em cartões), **3 · O ambiente novo** (Nome, Versão do WinThor e Banco lado a lado, com rótulo em cima e dica embaixo) e **4 · Antes de criar**, que mostra uma faixa de resumo ("1 impede · 2 avisos · 11 conferidos") e abre a lista sozinha quando algo impede ou há aviso com comando para copiar. A caixa da IA fica no topo, como atalho. As marcas de campo preenchido pela IA, a versão travada no Só clonar e a leitura automática da prévia continuam como antes; os cartões são botões de verdade (`radiogroup`), navegáveis pelo teclado.
+- **Ajustes da tela Nova versão depois do teste real**: o botão do rodapé e os textos da revisão, da IA e da Ajuda passam a dizer **Criar** ("Criar <nome>", "antes de criar", "a criação parou antes de terminar"), no lugar de Gerar; os cartões de origem e de modo seguem o padrão de rádio (setas movem e escolhem, Tab entra só no escolhido); a lista de "Antes de criar" tem um controle só (Ver/Ocultar detalhes, com tudo o que passou dentro) e o log e o comando ficam em "Registro técnico".
+- **Verificar não fica mais preso em "Subindo"**: ambiente sem WSH conta como no ar quando não há criação em andamento, ou quando o log da criação mostra que foi sem WSH (`Sem --wsh-jar`, comando sem `--wsh-jar` ou o banner `Pronto: ambiente`) ("Banco e WTA rodando; este ambiente não tem WSH"); e o WTA com o Karaf travado, com bundles que estouraram o tempo de inicialização no log (`has timed out waiting for`), aparece como **"O WTA não termina de subir"**, com os bundles citados, mesmo quando a raiz responde HTTP 200. Só conta a subida atual do WTA: timeouts de antes do último start (`docker logs --timestamps` contra o `StartedAt`) são ignorados. Entrou também no catálogo de falhas da IA (agora 13), separado do Karaf ainda subindo.
+- **O relatório lê o banco também no Oracle 23ai**: a leitura só-leitura usa o `ORACLE_HOME` e o `ORACLE_SID` do próprio container (o do XE 11g é só reserva) e entra no PDB `FREEPDB1` no 23ai; se o sqlplus não iniciar, o relatório diz "Não deu para ler o banco: o sqlplus não iniciou nesta imagem (<imagem>)" em vez da saída crua.
+- **Mais conferências em "Antes de criar" (Atualizar e Só clonar)**, para pegar antes do Gerar o que o `new_version_env.sh` não corrige sozinho: a imagem `linux-winthor:<v>-debian` que é a mesma de outra tag ou do WTA de origem (o build seria pulado e o ambiente subiria com as features erradas; mostra `docker rmi` do nome), portas fixas da versão (SSH, JMX, JMS) em uso por outro WTA, `wta-<nome>`, `wsh-<nome>` ou o volume `wta-<nome>-data` de uma tentativa anterior (o script só reinicia o antigo; mostra os comandos para recriar, que você roda), outro ambiente da mesma versão que cairia no banco novo ao ser recriado, e jar ou `wsh-<origem>` inexistentes (o script pararia em "Jar do WSH não encontrado"). O Hub nunca executa os comandos que apagam algo.
+- **Banco clonado da Central de Controle no relatório**: o relatório para suporte e o que a IA lê passam a trazer, só em leitura (`sqlplus -S / as sysdba` como `oracle` no container, sem senha), os objetos INVALID do schema do WTA e as linhas de `PCVERSAOBD` com a rotina terminando em espaço (trigger `TRG_PCGRUPOSCAMPANHAI_LOG_EXCL`, que causa "Falha na Atualização! '-1'" e ORA-04098).
+- **A IA conhece as 13 falhas mais prováveis do Gerar** (scripts velhos, imagem repetida, porta em uso, container ou volume antigo, configuração por versão, banco da Central, Karaf ainda subindo, jar do WSH, WSH que recusa a versão, `Winthor.ini`, memória "Exited (137)" e disco): o prompt traz sintoma, causa e o que fazer, e o Hub aponta a que combina com o log. Comandos que apagam e o SQL de correção ficam só no texto, para rodar num ambiente de teste com backup.
+
+### Corrigido
+- **O Verificar ambiente não mostra mais o erro do build anterior**: ao gerar de novo um ambiente com o mesmo nome, a tela ficava parada na leitura do build que falhou (a releitura automática para quando a leitura é de falha) e mostrava o erro antigo enquanto o novo rodava. Agora cada Gerar tira o log do anterior do caminho (fica ao lado como `.prev`, que o relatório inclui) antes de abrir o terminal e a tela relê o ambiente do zero.
+- **Gerar que para no meio aparece como falha**: se o script do Gerar parar com `[ERRO]` depois de criar só parte do ambiente (ex.: o banco foi restaurado e o WTA não subiu por "Flag desconhecida: --version"), o Verificar mostra "O Gerar parou antes de criar tudo", com o que foi criado, o que falta e a linha do erro, em vez de ficar em "Subindo" para sempre.
+
+## [1.66.0] - 2026-11-03
+### Corrigido
+- **Scripts do INFR-Docker desatualizados avisam antes de abrir o terminal**: com a pasta do INFR-Docker numa branch antiga, subir o WTA de uma versão abria um terminal que só dizia "[ERRO] Flag desconhecida: --version". Agora, antes de abrir qualquer terminal (Oracle, WTA, WSH ou Nova versão), o Hub confere se cada script da pasta conhece as opções que vai receber, incluindo os que o `new_version_env.sh` chama por dentro, e diz qual arquivo está atrás e como atualizar a pasta.
+
+## [1.65.0] - 2026-11-03
+### Alterado
+- **A tela de início fica até você entrar**: sem contagem, sem *Ficar nesta tela* e sem a opção *Abrir sempre nesta tela de início*. Ao abrir o Hub, ela mostra o resumo e entra só quando você clica em *Entrar no cockpit* (ou aperta Enter).
+- **Tela de início reorganizada como painel**: saudação, data e *Entrar no cockpit* no topo; Este PC, Sua semana, Clima e Ambientes WinThor lado a lado numa grade da largura da tela (um embaixo do outro em tela estreita); Novidades da versão numa faixa embaixo.
+
+### Corrigido
+- **Nova versão: a lista que já existe também é conferida pelos repositórios**. O "Manter a lista da 40" reaproveitava o `versions/40.features` gravado antes da correção da 1.62.0, com feature numa versão que nenhum `repo mvn:` da lista tinha, e o build continuava parando em "não existe em nenhum repositório da lista". Agora a leitura baixa os features.xml das duas listas (a nova e a existente) e, antes de gerar:
+  - a feature cuja versão não está em nenhum repositório da lista volta para a versão mais nova que eles têm, e o Gerar regrava só essa linha (a lista anterior fica ao lado como `.bak`);
+  - a feature que nenhum repositório da lista tem, em versão nenhuma, impede o Gerar com o como resolver.
+
+## [1.64.0] - 2026-11-03
+### Alterado
+- **Telas do INFR-Docker mais largas**: Nova versão, Primeiros passos, Início e as telas de Oracle, WTA e WSH usavam uma coluna estreita no meio do modal; agora usam a mesma largura do Verificar.
+
+### Corrigido
+- **Cartão de versão cortava a versão nova**: com atualização disponível, "v1.61.0 → …" escondia o número da versão nova atrás dos botões. Agora a versão aparece inteira e os botões descem de linha quando falta espaço.
+
+## [1.63.0] - 2026-11-03
+### Corrigido
+- **Só clonar travava com imagem fora do padrão**: se a imagem do WTA de origem não diz a versão (ex.: `linux-winthor:1.93-debian`), o clone parava em "Não deu para saber a versão". Agora você informa a versão na frase e, ao gerar, o Hub marca a imagem da origem com o nome que o script procura (`docker tag`, sem copiar nada), e o ambiente sobe com ela, sem build.
+- **Banco copiado de uma linha acima não impede mais**: criar uma versão menor que a da origem com o banco copiado dela (ex.: 39 a partir do master na 40) só avisa "O banco vem da 40", com a opção de um Oracle vazio. Antes impedia o Gerar sem ter conferido nada no banco.
+
+## [1.62.0] - 2026-11-03
+### Corrigido
+- **Nova versão: feature sem repositório quebrava o build** ("Feature ... não existe em nenhum repositório da lista"). Ao subir uma feature pelo catálogo da 801, o Hub trocava a versão mesmo sem achar o repositório Maven dela, ou aproveitava o repositório de outra feature, ou de outra versão, só porque a versão batia. Agora só vale o repositório da própria feature (ou do artefato com o nome dela) na mesma versão; sem ele, a feature fica na versão de origem e aparece nas *puladas* com o motivo, em vez de o build falhar no Docker.
+
+## [1.61.0] - 2026-11-03
 ### Adicionado
 - **Tela de início na abertura**: para quem já usa o app, a abertura virou uma tela de início com o que é útil ver num relance:
   - *Este PC*: nome, processador e memória (atualizam a cada 5 s) e há quanto tempo está ligado;

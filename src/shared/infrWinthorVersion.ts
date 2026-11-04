@@ -106,6 +106,15 @@ export interface NewVersionEnvInput {
   oraclePort?: number;
   wtaPort?: number;
   wshPort?: number;
+  /** Clone de imagem fora do padrão: marca esta imagem como linux-winthor:<versão>-debian antes do script */
+  tagImage?: string;
+}
+
+const IMAGE_REF = /^[A-Za-z0-9][A-Za-z0-9._/:@-]{0,199}$/;
+
+/** Nome de imagem do Docker seguro para ir no comando (sem espaço, aspas ou `;`). */
+export function isValidImageRef(image: string | undefined): image is string {
+  return typeof image === 'string' && IMAGE_REF.test(image.trim());
 }
 
 const validPort = (p: number | undefined) => p === undefined || (Number.isInteger(p) && p > 0 && p <= 65535);
@@ -126,8 +135,13 @@ export function buildNewVersionEnvCommand(input: NewVersionEnvInput): string | n
   if (containers.some((c) => c && !ENV_NAME.test(c))) return null;
   if (![input.oraclePort, input.wtaPort, input.wshPort].every(validPort)) return null;
   const [dbSource, dbContainer, wtaFrom, wshFrom] = containers;
+  if (input.tagImage !== undefined && !isValidImageRef(input.tagImage)) return null;
   const opt = (flag: string, value: string | number | undefined) => (value ? ` ${flag} ${value}` : '');
+  // O script pula o build quando linux-winthor:<versão>-debian existe; a tag só cria esse nome para a imagem da origem
+  const target = `linux-winthor:${version.trim()}-debian`;
+  const tag = input.tagImage ? `{ docker image inspect ${target} >/dev/null 2>&1 || docker tag ${input.tagImage.trim()} ${target}; } && ` : '';
   return (
+    tag +
     `./new_version_env.sh --version ${version.trim()} --name ${name.trim()} --from ${from.trim()}` +
     (dbMode !== 'clone' ? ` --db-mode ${dbMode}` : '') +
     opt('--db-source', dbMode === 'clone' ? dbSource : undefined) +
@@ -138,6 +152,22 @@ export function buildNewVersionEnvCommand(input: NewVersionEnvInput): string | n
     opt('--wta-port', input.wtaPort) +
     opt('--wsh-port', input.wshPort) +
     opt('--wsh-jar', jar)
+  );
+}
+
+/**
+ * Antes do new_version_env.sh: o banco de destino que já existe parado (de uma criação anterior, ou a distro que
+ * desligou) é ligado, e o build espera o healthcheck dele. O script só diz "já existe; não é recriado" e liga o WTA
+ * com o banco fechado, e os serviços do WTA que leem o banco travam (Nathan, homolog). Até 10 minutos.
+ */
+export function wakeDbCommand(input: Pick<NewVersionEnvInput, 'name' | 'dbContainer'>): string {
+  const c = input.dbContainer?.trim() || (isValidEnvName(input.name) ? `oracle-${input.name.trim()}` : '');
+  if (!ENV_NAME.test(c)) return '';
+  return (
+    `if [ "$(docker inspect -f '{{.State.Running}}' ${c} 2>/dev/null)" = false ]; then ` +
+    `echo "hub: ${c} estava parado; ligando e esperando o banco abrir"; docker start ${c} >/dev/null; ` +
+    `for i in $(seq 1 120); do h=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{end}}' ${c}); ` +
+    `if [ "$h" = healthy ] || [ -z "$h" ]; then break; fi; sleep 5; done; echo "hub: ${c} $h"; fi`
   );
 }
 

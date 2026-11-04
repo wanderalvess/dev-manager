@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { Routine801CatalogResponse } from './types';
 import {
+  NO_REPO_REASON,
+  addManifestRepos,
+  catalogRepoFor,
   checkManifestAgainstWsh,
   compareManifests,
   compareVersions,
@@ -109,7 +112,18 @@ describe('manifesto de versão do INFR-Docker', () => {
 describe('upgradeManifestFromCatalog com várias versões da mesma feature', () => {
   const origin = parseVersionManifest('feature winthor-core-servico 1.40.3.1\n');
   const item = (versao: string, status = 'HOMOLOGACAO') =>
-    ({ nome: 'winthor-core-servico', versao, status, comando: 'UPDATE', codigoRotina: 0, codigoModulo: 0, tipoProjeto: 'SERVICO', descricao: '', dependencias: [] }) as any;
+    ({
+      nome: 'winthor-core-servico',
+      versao,
+      status,
+      comando: 'UPDATE',
+      codigoRotina: 0,
+      codigoModulo: 0,
+      tipoProjeto: 'SERVICO',
+      descricao: '',
+      dependencias: [],
+      featureMavenUrl: `mvn:g/winthor-core-servico-features/${versao}/xml/features`
+    }) as any;
 
   it('escolhe a mais nova, em qualquer ordem do catálogo (a 801 do WTA 40 manda 1.40.4.2 antes de 1.40.4.1)', () => {
     const up = upgradeManifestFromCatalog(origin, { repositorios: [], funcionalidades: [item('1.40.4.2'), item('1.40.4.1')] }, 40);
@@ -125,6 +139,42 @@ describe('upgradeManifestFromCatalog com várias versões da mesma feature', () 
   });
 });
 
+describe('repositório da versão nova (build do Nathan: winthor-integracao-2650 1.40.1.2 sem repo)', () => {
+  const origin = parseVersionManifest('repo mvn:g/winthor-integracao-2650-features/1.40.0.2/xml/features\nfeature winthor-integracao-2650 1.40.0.2\n');
+  const entry = (versao: string, featureMavenUrl?: string) => feature('winthor-integracao-2650', versao, 'LIBERADO', featureMavenUrl);
+  const repo = (artifactId: string, version: string) => ({ comando: 'INSTALL', repositorio: { groupId: 'g', artifactId, version, featureMavenUrl: `mvn:g/${artifactId}/${version}/xml/features` } });
+
+  it('sem repositório da versão, não sobe: fica na de origem e vai para as puladas com o motivo', () => {
+    const up = upgradeManifestFromCatalog(origin, { repositorios: [], funcionalidades: [entry('1.40.1.2')] }, 40);
+    expect(up.changes).toEqual([]);
+    expect(up.manifest.features).toEqual([{ name: 'winthor-integracao-2650', version: '1.40.0.2' }]);
+    expect(up.skipped).toEqual([{ name: 'winthor-integracao-2650', version: '1.40.1.2', reason: NO_REPO_REASON }]);
+  });
+
+  it('repositório de outra versão (a 801 ligou à 1.40.0.2) não conta', () => {
+    const url = 'mvn:g/winthor-integracao-2650-features/1.40.0.2/xml/features';
+    const up = upgradeManifestFromCatalog(origin, { repositorios: [], funcionalidades: [entry('1.40.1.2', url)] }, 40);
+    expect(up.changes).toEqual([]);
+    expect(up.skipped[0].reason).toBe(NO_REPO_REASON);
+  });
+
+  it('artefato de outra feature na mesma versão não serve; o com o nome dela, sim', () => {
+    const outra = { repositorios: [repo('winthor-pedido-venda-features', '1.40.1.2')], funcionalidades: [entry('1.40.1.2')] };
+    expect(catalogRepoFor('winthor-integracao-2650', '1.40.1.2', outra)).toBeUndefined();
+
+    const certo = { repositorios: [repo('winthor-integracao-features', '1.40.1.2'), repo('winthor-integracao-2650-features', '1.40.1.2')], funcionalidades: [entry('1.40.1.2')] };
+    expect(catalogRepoFor('winthor-integracao-2650', '1.40.1.2', certo)).toBe('mvn:g/winthor-integracao-2650-features/1.40.1.2/xml/features');
+    const up = upgradeManifestFromCatalog(origin, certo, 40);
+    expect(up.changes).toEqual([{ name: 'winthor-integracao-2650', from: '1.40.0.2', to: '1.40.1.2' }]);
+    expect(up.manifest.repos).toContain('mvn:g/winthor-integracao-2650-features/1.40.1.2/xml/features');
+  });
+
+  it('a mais nova sem repositório dá lugar à anterior que tem', () => {
+    const catalog = { repositorios: [], funcionalidades: [entry('1.40.1.2'), entry('1.40.1.1', 'mvn:g/winthor-integracao-2650-features/1.40.1.1/xml/features')] };
+    expect(upgradeManifestFromCatalog(origin, catalog, 40).changes).toEqual([{ name: 'winthor-integracao-2650', from: '1.40.0.2', to: '1.40.1.1' }]);
+  });
+});
+
 describe('manifestLineOf', () => {
   it('usa o núcleo (winthor-core-*) mesmo com a maioria das features em linha antiga', () => {
     const m38 = parseVersionManifest('feature winthor-core-data 1.38.5.10\nfeature winthor-a 1.36.0.1\nfeature winthor-b 1.36.2.0\nfeature winthor-c 1.36.1.0\n');
@@ -136,5 +186,19 @@ describe('manifestLineOf', () => {
     expect(manifestLineOf(m)).toBe(39);
     expect(manifestLineOf(parseVersionManifest('feature a 1.38.0.1\nfeature b 1.39.0.1\n'))).toBe(39);
     expect(manifestLineOf(parseVersionManifest('feature a 1.9.15\n'))).toBeUndefined();
+  });
+});
+
+describe('addManifestRepos', () => {
+  it('acrescenta depois do último repo, sem repetir, e mantém o resto e o fim de linha', () => {
+    const text = '# lista\r\nrepo mvn:a/b/1/xml/features\r\n\r\nfeature x 1\r\n';
+    expect(addManifestRepos(text, ['mvn:c/d/2/xml/features', 'mvn:a/b/1/xml/features', 'mvn:c/d/2/xml/features'])).toBe(
+      '# lista\r\nrepo mvn:a/b/1/xml/features\r\nrepo mvn:c/d/2/xml/features\r\n\r\nfeature x 1\r\n'
+    );
+    expect(addManifestRepos(text, [])).toBe(text);
+  });
+
+  it('sem nenhum repo, entra antes da primeira feature', () => {
+    expect(addManifestRepos('# lista\nfeature x 1\n', ['mvn:c/d/2/xml/features'])).toBe('# lista\nrepo mvn:c/d/2/xml/features\nfeature x 1\n');
   });
 });

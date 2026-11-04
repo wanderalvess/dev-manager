@@ -54,14 +54,30 @@ describe('verificação do ambiente', () => {
     expect(summarizeEnvCheck(missing, undefined, { ...failed, failure: undefined }).status).toBe('missing');
   });
 
+  it('script da criação que parou com [ERRO] depois de criar só o banco: falha, não "subindo" para sempre (erro do Nathan)', () => {
+    const oracle: InfrContainerCheck = { role: 'oracle', container: 'oracle-homolog', exists: true, state: 'running', restarts: 0, ports: [], logTail: [] };
+    const cs = [oracle, { ...oracle, role: 'wta' as const, container: 'wta-homolog', exists: false }, { ...oracle, role: 'wsh' as const, container: 'wsh-homolog', exists: false }];
+    const log = { path: '/tmp/x', exists: true, failure: '[ERRO] Flag desconhecida: --version', stage: '4/5 WTA wta-homolog', tail: ['x'] };
+    const s = summarizeEnvCheck(cs, undefined, log);
+    expect(s).toMatchObject({ status: 'fail', title: 'A criação parou antes de terminar' });
+    expect(s.detail).toContain('Criado: Banco Oracle. Falta: WTA, WSH.');
+    expect(s.detail).toContain('Flag desconhecida: --version');
+    // Sem marcador do script (ex.: linha ORA- solta), segue como "subindo"; e sem log, também
+    expect(summarizeEnvCheck(cs, undefined, { ...log, failure: 'ORA-01089: immediate shutdown' }).status).toBe('starting');
+    expect(summarizeEnvCheck(cs).status).toBe('starting');
+  });
+
   it('no ar só com os três rodando e o WTA respondendo; senão, subindo', () => {
     const ok: InfrContainerCheck[] = ['oracle', 'wta', 'wsh'].map((role) => ({ role: role as any, container: `${role}-a`, exists: true, state: 'running', restarts: 0, ports: [], logTail: [] }));
     expect(summarizeEnvCheck(ok, { url: 'u', status: 302 }).status).toBe('ok');
     const semHttp = summarizeEnvCheck(ok, { url: 'u', error: 'ECONNREFUSED' });
     expect(semHttp.status).toBe('starting');
     expect(semHttp.detail).toContain('WTA ainda não responde (ECONNREFUSED)');
-    const semWsh = summarizeEnvCheck([ok[0], ok[1], { ...ok[2], exists: false }], { url: 'u', status: 200 });
+    // WSH ausente: com a criação em andamento (há log) ainda é esperado; sem log é opcional (ver infrEnvCheckStuck.test.ts)
+    const emAndamento = { path: '/tmp/x.log', exists: true, tail: ['[4/5] WTA'] };
+    const semWsh = summarizeEnvCheck([ok[0], ok[1], { ...ok[2], exists: false }], { url: 'u', status: 200 }, emAndamento);
     expect(semWsh).toMatchObject({ status: 'starting', title: 'Subindo: 2 de 3 no ar' });
+    expect(summarizeEnvCheck([ok[0], ok[1], { ...ok[2], exists: false }], { url: 'u', status: 200 }).status).toBe('ok');
   });
 
   it('comandos para copiar ou executar, só com nome válido', () => {
@@ -73,7 +89,7 @@ describe('verificação do ambiente', () => {
     expect(infrCheckCommands('x; rm -rf /')).toEqual([]);
   });
 
-  it('comando longo do Gerar em várias linhas, uma opção por linha', () => {
+  it('comando longo da criação em várias linhas, uma opção por linha', () => {
     expect(multilineCommand('./new_version_env.sh --version 40 --name a')).toBe('./new_version_env.sh \\\n  --version 40 \\\n  --name a');
   });
 });

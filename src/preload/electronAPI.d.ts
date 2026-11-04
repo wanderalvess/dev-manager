@@ -6,8 +6,10 @@ import type {
   InfrVersionPreview,
   InfrVersionPreviewRequest
 } from '../shared/infrVersionManifest';
-import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
+import type { InfrCheckCommandId, InfrEnvCheck, InfrRole } from '../shared/infrEnvCheck';
+import type { InfrDiagnosticRequest, InfrDiagnosticResult } from '../shared/infrDiagnosticTypes';
 import type { WeatherReport } from '../shared/weather';
+import type { JiraTodayReport } from '../shared/jiraToday';
 import type { InfrOriginCheck } from '../shared/infrOriginCheck';
 import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../shared/infrFirstSteps';
 import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../shared/infrActiveEnv';
@@ -403,6 +405,7 @@ export interface ElectronAPI {
   previewInfrVersion?: (req: InfrVersionPreviewRequest) => Promise<InfrVersionPreview>;
   saveInfrVersionManifest?: (req: InfrManifestSaveRequest) => Promise<InfrManifestSaveResult>;
   checkInfrEnvironment?: (params: { distro?: string; name: string }) => Promise<InfrEnvCheck>;
+  buildInfrDiagnostic?: (req: InfrDiagnosticRequest) => Promise<InfrDiagnosticResult>;
   checkInfrOrigin?: (req: { distro?: string; infrPath?: string; fromEnv: string }) => Promise<InfrOriginCheck>;
   checkInfrFirstSteps?: (req: { distro?: string; infrPath?: string; version?: string }) => Promise<InfrFirstStepsResult>;
   runInfrFirstStepsAction?: (req: InfrFirstStepsActionRequest) => Promise<{ success: boolean; output: string }>;
@@ -410,6 +413,7 @@ export interface ElectronAPI {
   applyInfrActiveEnvironment?: (req: { distro?: string; name: string }) => Promise<InfrActiveEnvApplyResult>;
   clearInfrActiveEnvironment?: () => Promise<{ success: boolean }>;
   startInfrEnvironment?: (req: { distro?: string; name: string }) => Promise<StartEnvResult>;
+  fixInfrContainer?: (req: { distro?: string; name: string; role: InfrRole; action: 'start' | 'restart' }) => Promise<{ success: boolean; output: string }>;
   openInfrCheckTerminal?: (req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }) => Promise<{ success: boolean; output: string }>;
   setDockerTargetWslDistro?: (distro: string | null) => Promise<DockerDaemonStatus>;
   getContainerEnvironments?: () => Promise<{ environments: ContainerEnvironment[]; snapshotsDir?: string }>;
@@ -475,6 +479,8 @@ export interface ElectronAPI {
   getSystemMetrics: () => Promise<SystemMetrics>;
   /** Clima da tela de início pelo Open-Meteo (só o nome da cidade sai da máquina) */
   getWeather?: (city: string) => Promise<WeatherReport>;
+  /** Jira da tela de início (em andamento, prazos, onde parei, horas da semana e sprint), com a fonte Jira da Documentação */
+  getJiraToday?: (force?: boolean) => Promise<JiraTodayReport>;
 
   // Leitor e Monitor de Logs em Tempo Real (Tail -f)
   startLogWatch: (

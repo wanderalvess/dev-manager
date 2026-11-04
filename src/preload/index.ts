@@ -16,8 +16,10 @@ import type {
   InfrVersionPreview,
   InfrVersionPreviewRequest
 } from '../shared/infrVersionManifest';
-import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
+import type { InfrCheckCommandId, InfrEnvCheck, InfrRole } from '../shared/infrEnvCheck';
+import type { InfrDiagnosticRequest, InfrDiagnosticResult } from '../shared/infrDiagnosticTypes';
 import type { WeatherReport } from '../shared/weather';
+import type { JiraTodayReport } from '../shared/jiraToday';
 import type { InfrOriginCheck } from '../shared/infrOriginCheck';
 import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../shared/infrFirstSteps';
 import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../shared/infrActiveEnv';
@@ -677,6 +679,7 @@ const electronAPI = {
   saveInfrVersionManifest: (req: InfrManifestSaveRequest): Promise<InfrManifestSaveResult> =>
     ipcRenderer.invoke('infr:version-save', req),
   checkInfrEnvironment: (params: { distro?: string; name: string }): Promise<InfrEnvCheck> => ipcRenderer.invoke('infr:env-check', params),
+  buildInfrDiagnostic: (req: InfrDiagnosticRequest): Promise<InfrDiagnosticResult> => ipcRenderer.invoke('infr:diagnostic', req),
   checkInfrOrigin: (req: { distro?: string; infrPath?: string; fromEnv: string }): Promise<InfrOriginCheck> => ipcRenderer.invoke('infr:origin-check', req),
   checkInfrFirstSteps: (req: { distro?: string; infrPath?: string; version?: string }): Promise<InfrFirstStepsResult> =>
     ipcRenderer.invoke('infr:first-steps', req),
@@ -686,6 +689,8 @@ const electronAPI = {
   applyInfrActiveEnvironment: (req: { distro?: string; name: string }): Promise<InfrActiveEnvApplyResult> => ipcRenderer.invoke('infr:active-env-apply', req),
   clearInfrActiveEnvironment: (): Promise<{ success: boolean }> => ipcRenderer.invoke('infr:active-env-clear'),
   startInfrEnvironment: (req: { distro?: string; name: string }): Promise<StartEnvResult> => ipcRenderer.invoke('infr:start-environment', req),
+  fixInfrContainer: (req: { distro?: string; name: string; role: InfrRole; action: 'start' | 'restart' }): Promise<{ success: boolean; output: string }> =>
+    ipcRenderer.invoke('infr:env-fix', req),
   openInfrCheckTerminal: (req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }): Promise<{ success: boolean; output: string }> =>
     ipcRenderer.invoke('infr:env-check-terminal', req),
   setDockerTargetWslDistro: (distro: string | null): Promise<DockerDaemonStatus> =>
@@ -797,6 +802,7 @@ const electronAPI = {
   // Métricas do Sistema
   getSystemMetrics: (): Promise<SystemMetrics> => ipcRenderer.invoke('system:get-metrics'),
   getWeather: (city: string): Promise<WeatherReport> => ipcRenderer.invoke('system:get-weather', city),
+  getJiraToday: (force?: boolean): Promise<JiraTodayReport> => ipcRenderer.invoke('system:get-jira-today', force),
 
   // Leitor e Monitor de Logs em Tempo Real (Tail -f)
   startLogWatch: (

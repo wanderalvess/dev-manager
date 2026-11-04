@@ -22,7 +22,9 @@ import { DockerService } from '../main/services/DockerService';
 import { wslService } from '../main/services/WslService';
 import { InfrVersionService } from '../main/services/infr/InfrVersionService';
 import { InfrEnvCheckService } from '../main/services/infr/InfrEnvCheckService';
+import { InfrDiagnosticService } from '../main/services/infr/InfrDiagnosticService';
 import { WeatherService } from '../main/services/WeatherService';
+import { JiraTodayService } from '../main/services/JiraTodayService';
 import { InfrOriginCheckService } from '../main/services/infr/InfrOriginCheckService';
 import { InfrFirstStepsService } from '../main/services/infr/InfrFirstStepsService';
 import { InfrFirstStepsActions } from '../main/services/infr/InfrFirstStepsActions';
@@ -1411,6 +1413,7 @@ app.post('/api/infr/run-script', async (req, res) => {
 wslService.setProjectsRootProvider(() => configService.getSettings().projectsPath);
 const infrVersionService = new InfrVersionService(wslService, routine801Service);
 const infrEnvCheckService = new InfrEnvCheckService(wslService);
+const infrDiagnosticService = new InfrDiagnosticService(wslService, infrEnvCheckService, { hubVersion: () => appVersion, dataDir: getAppDataDir });
 const infrOriginCheckService = new InfrOriginCheckService(wslService, routine801Service);
 const infrFirstStepsService = new InfrFirstStepsService(wslService, routine801Service);
 const infrFirstStepsActions = new InfrFirstStepsActions(wslService);
@@ -1487,10 +1490,37 @@ app.post('/api/infr/env-check', async (req, res) => {
   }
 });
 
+app.post('/api/infr/diagnostic', async (req, res) => {
+  try {
+    const { distro, name, infrPath, version, notes, forAi } = req.body || {};
+    res.json(
+      await infrDiagnosticService.build({
+        forAi: forAi === true,
+        distro: typeof distro === 'string' ? distro : undefined,
+        name: String(name || ''),
+        infrPath: typeof infrPath === 'string' ? infrPath : undefined,
+        version: typeof version === 'string' ? version : undefined,
+        notes: typeof notes === 'string' ? notes : undefined
+      })
+    );
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.post('/api/infr/env-check/terminal', async (req, res) => {
   try {
     const { distro, name, id, wtaPort } = req.body || {};
     res.json(await infrEnvCheckService.openCheckTerminal(distro, String(name || ''), id, typeof wtaPort === 'number' ? wtaPort : undefined));
+  } catch (err: any) {
+    res.status(500).json({ success: false, output: err.message });
+  }
+});
+
+app.post('/api/infr/env-check/fix', async (req, res) => {
+  try {
+    const { distro, name, role, action } = req.body || {};
+    res.json(await infrEnvCheckService.fixContainer(distro, String(name || ''), role, action));
   } catch (err: any) {
     res.status(500).json({ success: false, output: err.message });
   }
@@ -1800,6 +1830,12 @@ app.get('/api/system/metrics', async (_req, res) => {
 const weatherService = new WeatherService();
 app.get('/api/system/weather', async (req, res) => {
   res.json(await weatherService.getWeather(String(req.query.city ?? '')));
+});
+
+// Jira da tela de início, com a credencial da fonte Jira da Documentação
+const jiraTodayService = new JiraTodayService(() => configService.getSettings());
+app.get('/api/system/jira-today', async (req, res) => {
+  res.json(await jiraTodayService.getToday(req.query.force === '1'));
 });
 
 // 12. Bundles Karaf

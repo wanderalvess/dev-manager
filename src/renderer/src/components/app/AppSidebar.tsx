@@ -51,6 +51,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, shortcut, 
 /**
  * Menu lateral com todos os módulos visíveis, agrupados como no antigo menu do cabeçalho (só a partir de lg).
  * Recolhível numa faixa de ícones para devolver espaço às telas largas; a escolha fica salva nesta máquina.
+ * O botão de recolher fica preso embaixo, fora da área que rola, para não sumir em monitor de pouca altura.
  */
 export const AppSidebar: React.FC<AppSidebarProps> = ({ activeTab, setActiveTab, navGroups, onOpenWhatsNew }) => {
   const [appVersion, setAppVersion] = useState<string | null>(null);
@@ -75,7 +76,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ activeTab, setActiveTab,
   return (
     <aside
       aria-label="Módulos"
-      className={`hidden lg:flex flex-col shrink-0 bg-card border-r border-border/80 overflow-y-auto transition-[width] duration-200 ${
+      className={`hidden lg:flex flex-col shrink-0 min-h-0 bg-card border-r border-border/80 overflow-hidden transition-[width] duration-200 ${
         collapsed ? 'w-[60px]' : 'w-56'
       }`}
     >
@@ -98,7 +99,8 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ activeTab, setActiveTab,
         )}
       </div>
 
-      <nav className="flex-1 px-2.5 pb-3 space-y-3">
+      {/* Só a lista de módulos rola: em monitor baixo, o logo e o botão de recolher continuam sempre à vista */}
+      <nav className="flex-1 min-h-0 overflow-y-auto px-2.5 pb-3 space-y-3">
         {navGroups.map((group) => (
           <div key={group.id} data-tour={`nav-${group.id}`} className="space-y-0.5">
             {collapsed ? (
@@ -137,7 +139,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ activeTab, setActiveTab,
         </div>
       </nav>
 
-      <div className="px-2.5 pb-3 shrink-0">
+      <div className="px-2.5 py-2 shrink-0 border-t border-border/80">
         <button
           type="button"
           onClick={toggle}
