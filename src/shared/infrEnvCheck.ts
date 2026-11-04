@@ -4,6 +4,7 @@
  * como comandos para copiar ou abrir no terminal.
  */
 import type { BuildLogReport } from './infrBuildLog';
+import type { InfrHttpProbe, InfrPostItem } from './infrPostCheck';
 import { isValidEnvName } from './infrWinthorVersion';
 
 export type InfrRole = 'oracle' | 'wta' | 'wsh';
@@ -41,6 +42,10 @@ export interface InfrEnvCheck {
   /** Fim do log do build (new_version_env.sh), quando a criação foi aberto por este Hub nesta distro */
   buildLog?: BuildLogReport;
   summary?: { status: InfrEnvStatus; title: string; detail: string };
+  /** Rota de login do WTA (sem credencial): 404 é a autenticação que ainda não subiu */
+  wtaLogin?: InfrHttpProbe;
+  /** Validação depois da criação: banco, ordem de subida, Karaf, login e WSH */
+  post?: InfrPostItem[];
 }
 
 export type InfrCheckCommandId = 'ps' | 'logs-oracle' | 'logs-wta' | 'logs-wsh' | 'wta-http';

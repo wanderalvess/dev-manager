@@ -18,7 +18,7 @@ import type {
   InfrVersionPreview,
   InfrVersionPreviewRequest
 } from '../../../../shared/infrVersionManifest';
-import type { InfrCheckCommandId, InfrEnvCheck } from '../../../../shared/infrEnvCheck';
+import type { InfrCheckCommandId, InfrEnvCheck, InfrRole } from '../../../../shared/infrEnvCheck';
 import type { InfrDiagnosticRequest, InfrDiagnosticResult } from '../../../../shared/infrDiagnosticTypes';
 import type { InfrOriginCheck } from '../../../../shared/infrOriginCheck';
 import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../../../../shared/infrFirstSteps';
@@ -292,6 +292,13 @@ export function createWslApi({ apiFetch, wsManager }: BridgeDeps) {
         return await apiFetch<InfrDiagnosticResult>('/api/infr/diagnostic', { method: 'POST', body: JSON.stringify(req) });
       } catch (err: any) {
         return { success: false, error: err.message };
+      }
+    },
+    fixInfrContainer: async (req: { distro?: string; name: string; role: InfrRole; action: 'start' | 'restart' }) => {
+      try {
+        return await apiFetch<{ success: boolean; output: string }>('/api/infr/env-check/fix', { method: 'POST', body: JSON.stringify(req) });
+      } catch (err: any) {
+        return { success: false, output: err.message };
       }
     },
     openInfrCheckTerminal: async (req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }) => {

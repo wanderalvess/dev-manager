@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { InfrCheckCommandId, InfrEnvCheck } from '../../../../shared/infrEnvCheck';
 import { wtaHostPort } from '../../../../shared/infrEnvCheck';
+import type { InfrPostFix } from '../../../../shared/infrPostCheck';
 
 /**
  * Verificação de um ambiente: lê o estado pelo Hub, repete a cada 15 s se pedido e abre os comandos no terminal.
@@ -54,7 +55,27 @@ export function useInfrEnvCheck(distro: string | undefined, initialName: string,
     setMessage(res?.output ?? 'Executar não está disponível neste modo; use Copiar.');
   };
 
-  return { name, setName, result, loading, auto, setAuto, check, run, wtaPort, message };
+  // Correção da validação (ligar o banco, reiniciar o WTA): volta a conferir sozinho enquanto ele sobe
+  const [fixing, setFixing] = useState<string | null>(null);
+  const fix = async (f: InfrPostFix) => {
+    const api = window.electronAPI;
+    if (!api?.fixInfrContainer || !name.trim()) return;
+    setFixing(`${f.role}:${f.action}`);
+    try {
+      const res = await api.fixInfrContainer({ distro, name: name.trim(), role: f.role, action: f.action });
+      setMessage(res.output);
+      if (res.success) {
+        setAuto(true);
+        await check();
+      }
+    } catch (err: any) {
+      setMessage(`Não foi possível: ${err?.message || err}`);
+    } finally {
+      setFixing(null);
+    }
+  };
+
+  return { name, setName, result, loading, auto, setAuto, check, run, wtaPort, message, fix, fixing };
 }
 
 export type InfrEnvCheckState = ReturnType<typeof useInfrEnvCheck>;

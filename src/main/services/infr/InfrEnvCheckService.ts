@@ -11,8 +11,10 @@ import {
   summarizeEnvCheck,
   wtaHostPort,
   type InfrCheckCommandId,
-  type InfrEnvCheck
+  type InfrEnvCheck,
+  type InfrRole
 } from '../../../shared/infrEnvCheck';
+import { WTA_LOGIN_PATH, postChecks, refineSummary, type InfrHttpProbe } from '../../../shared/infrPostCheck';
 import { buildLogPath, buildLogProbeScript, parseBuildLogProbe } from '../../../shared/infrBuildLog';
 import { commandFailureDetail } from '../../../shared/infrNewVersionScripts';
 import type { WslService } from '../WslService';
@@ -52,17 +54,20 @@ export class InfrEnvCheckService {
     const containers = parseEnvCheckOutput(output, n);
     const wta = containers.find((c) => c.role === 'wta');
     const port = wta?.exists ? wtaHostPort(wta.ports) : undefined;
-    let wtaHttp: InfrEnvCheck['wtaHttp'];
-    if (port && wta?.state === 'running') {
-      const url = `http://localhost:${port}/`;
+    const probe = async (url: string): Promise<InfrHttpProbe> => {
       try {
         const res = await httpRequest(url, { method: 'GET', headers: {}, timeout: 5000 });
-        wtaHttp = { url, status: res.status };
+        return { url, status: res.status };
       } catch (err: any) {
-        wtaHttp = { url, error: String(err?.message || err) };
+        return { url, error: String(err?.message || err) };
       }
-    }
+    };
+    const up = !!port && wta?.state === 'running';
+    const wtaHttp: InfrEnvCheck['wtaHttp'] = up ? await probe(`http://localhost:${port}/`) : undefined;
+    // A raiz responde mesmo com o Karaf travado; a rota de login só existe com a autenticação no ar
+    const wtaLogin = up && wtaHttp?.status ? await probe(`http://localhost:${port}${WTA_LOGIN_PATH}`) : undefined;
     const buildLog = await this.readBuildLog(distro, n);
+    const post = postChecks(containers, wtaHttp, wtaLogin);
     return {
       success: true,
       name: n,
@@ -70,9 +75,28 @@ export class InfrEnvCheckService {
       checkedAt: new Date().toISOString(),
       containers,
       wtaHttp,
+      wtaLogin,
       buildLog,
-      summary: summarizeEnvCheck(containers, wtaHttp, buildLog)
+      post,
+      summary: refineSummary(summarizeEnvCheck(containers, wtaHttp, buildLog), post)
     };
+  }
+
+  /**
+   * Correção da validação: liga ou reinicia um container do ambiente. O nome sai do papel e do nome do ambiente
+   * validados; a tela nunca manda o comando.
+   */
+  public async fixContainer(distroName: string | undefined, name: string, role: InfrRole, action: 'start' | 'restart'): Promise<{ success: boolean; output: string }> {
+    if (!isValidEnvName(name) || !INFR_ROLES.includes(role) || !['start', 'restart'].includes(action)) return { success: false, output: 'Pedido inválido.' };
+    const distro = await this.distroOf(distroName);
+    if (!distro) return { success: false, output: 'Distro WSL inválida.' };
+    const container = `${role}-${name.trim()}`;
+    try {
+      await execWsl(['-d', distro, '--', 'docker', action, container], { timeout: 120000 });
+      return { success: true, output: `${container}: ${action === 'start' ? 'ligado' : 'reiniciado'}. O Hub confere de novo enquanto ele sobe.` };
+    } catch (err: any) {
+      return { success: false, output: `Não foi possível ${action === 'start' ? 'ligar' : 'reiniciar'} ${container}: ${commandFailureDetail(err)}` };
+    }
   }
 
   /** Fim do log que o terminal do Criar grava em /tmp da distro; sem o arquivo, não há relatório. */

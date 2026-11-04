@@ -155,6 +155,22 @@ export function buildNewVersionEnvCommand(input: NewVersionEnvInput): string | n
   );
 }
 
+/**
+ * Antes do new_version_env.sh: o banco de destino que já existe parado (de uma criação anterior, ou a distro que
+ * desligou) é ligado, e o build espera o healthcheck dele. O script só diz "já existe; não é recriado" e liga o WTA
+ * com o banco fechado, e os serviços do WTA que leem o banco travam (Nathan, homolog). Até 10 minutos.
+ */
+export function wakeDbCommand(input: Pick<NewVersionEnvInput, 'name' | 'dbContainer'>): string {
+  const c = input.dbContainer?.trim() || (isValidEnvName(input.name) ? `oracle-${input.name.trim()}` : '');
+  if (!ENV_NAME.test(c)) return '';
+  return (
+    `if [ "$(docker inspect -f '{{.State.Running}}' ${c} 2>/dev/null)" = false ]; then ` +
+    `echo "hub: ${c} estava parado; ligando e esperando o banco abrir"; docker start ${c} >/dev/null; ` +
+    `for i in $(seq 1 120); do h=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{end}}' ${c}); ` +
+    `if [ "$h" = healthy ] || [ -z "$h" ]; then break; fi; sleep 5; done; echo "hub: ${c} $h"; fi`
+  );
+}
+
 export interface InfrContainerInfo {
   name: string;
   image: string;
