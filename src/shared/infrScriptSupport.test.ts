@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { scriptGaps, scriptGapsMessage, scriptKnowsFlag, scriptRequirements } from './infrScriptSupport';
+import { newVersionScriptGaps, scriptGaps, scriptGapsMessage, scriptKnowsFlag, scriptRequirements } from './infrScriptSupport';
 import { buildNewVersionEnvCommand, buildWtaSetupCommand } from './infrWinthorVersion';
 
 // O wta_setup.sh de antes da imagem por versão (o da pasta do Nathan) e o de agora
@@ -40,6 +40,20 @@ describe('scripts do INFR-Docker desatualizados', () => {
     expect(reqs).toEqual(expect.arrayContaining(['new_version_env.sh', 'wta_setup.sh', 'restore_rman.sh']));
     const gaps = scriptGaps(command, () => null);
     expect(gaps.find((g) => g.script === 'new_version_env.sh')).toMatchObject({ absent: true });
+  });
+
+  it('a leitura da Nova versão já acha o wta_setup.sh antigo, sem esperar o clique em Criar', () => {
+    const files: Record<string, string> = { 'linux-winthor/scripts/wta_setup.sh': WTA_OLD };
+    // Os outros scripts já atualizados (como na pasta do Nathan): conhecem todas as opções
+    const all = ['--version', '--name', '--from', '--container', '--port', '--origem', '--destino', '--usuario', '--senha'].map((f) => `  ${f}) ;;`).join('\n');
+    const gaps = newVersionScriptGaps((p) => files[p] ?? all);
+    expect(gaps).toEqual([{ script: 'wta_setup.sh', path: 'linux-winthor/scripts/wta_setup.sh', missing: ['--version', '--distro', '--ssh-port', '--jmx-port', '--jms-port'] }]);
+  });
+
+  it('mensagem ensina a destravar o git da pasta de outro dono e o arquivo alterado que o pull manteve', () => {
+    const msg = scriptGapsMessage([{ script: 'wta_setup.sh', path: 'linux-winthor/scripts/wta_setup.sh', missing: ['--version'] }], 'C:\\Projetos\\INFR-Docker');
+    expect(msg).toContain('git config --global --add safe.directory C:/Projetos/INFR-Docker');
+    expect(msg).toContain('git checkout -- linux-winthor/scripts/wta_setup.sh');
   });
 
   it('setup sem versão não exige nada além do que o script antigo já conhece', () => {

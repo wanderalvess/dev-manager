@@ -146,6 +146,8 @@ export interface InfrVersionPreview {
   existing?: ExistingVersionManifest;
   /** Registro de cada passo (comandos, respostas HTTP, login sem senha), para mostrar e copiar */
   log?: string[];
+  /** Scripts do INFR-Docker que não conhecem as opções da criação: a mensagem de como atualizar (impede o Criar) */
+  scriptGaps?: string;
 }
 
 /** Gravação de `versions/<versão>.features`; sem `overwrite`, não substitui um manifesto existente. */

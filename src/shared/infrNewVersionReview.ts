@@ -11,7 +11,7 @@ export type InfrReviewStatus = 'ok' | 'warn' | 'block';
 export type InfrReviewFix = 'useSourceOracle' | 'emptyOracle';
 
 export interface InfrReviewItem {
-  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'artefatos' | 'ensaio' | 'portas' | 'disco' | 'memoria' | 'rede' | 'wsh' | 'banco' | 'imagem' | 'manifesto' | 'portasfixas' | 'arquivosenv' | 'repositorios' | 'imagemmesma' | 'recriar' | 'jarwsh';
+  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'artefatos' | 'ensaio' | 'portas' | 'disco' | 'memoria' | 'rede' | 'wsh' | 'banco' | 'imagem' | 'manifesto' | 'portasfixas' | 'arquivosenv' | 'repositorios' | 'imagemmesma' | 'recriar' | 'jarwsh' | 'scripts';
   status: InfrReviewStatus;
   title: string;
   detail: string;

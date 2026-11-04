@@ -10,7 +10,7 @@ import {
   type InfrEnvironmentsResult
 } from '../../../../shared/infrWinthorVersion';
 import type { InfrEnvTemplate, InfrManifestSource, InfrVersionPreview } from '../../../../shared/infrVersionManifest';
-import { reviewBlocks, reviewNewVersion, type InfrReviewFix } from '../../../../shared/infrNewVersionReview';
+import { reviewBlocks, reviewNewVersion, type InfrReviewFix, type InfrReviewItem } from '../../../../shared/infrNewVersionReview';
 import { useInfrOriginCheck } from './useInfrOriginCheck';
 
 /** Campos que a leitura da origem usa: mudar um deles descarta a leitura; portas e banco não, a conferência recalcula na hora. */
@@ -214,6 +214,8 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
           wshJar: form.wshJar || undefined
         });
   // O que já existe na distro (imagem repetida, container e volume de antes, portas fixas, jar do WSH)
+  // Scripts do INFR-Docker sem as opções da criação: o primeiro ponto, que nada adianta antes de atualizar a pasta
+  const scriptsItem: InfrReviewItem[] = preview?.scriptGaps ? [{ id: 'scripts', status: 'block', title: 'Scripts do INFR-Docker desatualizados', detail: preview.scriptGaps }] : [];
   const review = preview?.success
     ? (() => {
         const extra = reviewBuildState({
@@ -229,7 +231,7 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
         const ids = new Set(baseReview.map((r) => r.id));
         const add = extra.filter((x) => !(clone && ids.has(x.id)));
         const dbAt = baseReview.findIndex((r) => r.id === 'banco');
-        return dbAt < 0 ? [...baseReview, ...add] : [...baseReview.slice(0, dbAt), ...add, ...baseReview.slice(dbAt)];
+        return dbAt < 0 ? [...scriptsItem, ...baseReview, ...add] : [...scriptsItem, ...baseReview.slice(0, dbAt), ...add, ...baseReview.slice(dbAt)];
       })()
     : baseReview;
   const blocked = reviewBlocks(review);
@@ -290,8 +292,14 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
 
   const generate = async (): Promise<boolean> => {
     const api = window.electronAPI;
-    if (!api?.saveInfrVersionManifest || !api.runInfrSetupScript || !preview || !command) return false;
-    if (!clone && !preview.manifestText) return false;
+    if (!api?.saveInfrVersionManifest || !api.runInfrSetupScript || !preview || !command) {
+      setMessage('A criação não está disponível nesta versão do Hub (falta a ponte com o Windows). Reinicie o Hub.');
+      return false;
+    }
+    if (!clone && !preview.manifestText) {
+      setMessage('A leitura não trouxe a lista de features. Clique em Conferir de novo e tente criar outra vez.');
+      return false;
+    }
     setBusy('generate');
     try {
       const keepExisting = !!preview.existing && manifestSource === 'existing';
@@ -330,6 +338,10 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
       setMessage(`Manifesto: ${saved.path}. Configuração: ${env?.path ?? '—'}. ${res.output}`);
       if (res.success) onGenerated?.(form.name.trim());
       return !!res.success;
+    } catch (err: any) {
+      // Sem isto um erro do IPC só liberava o botão, e o clique parecia não fazer nada
+      setMessage(`Não foi possível iniciar a criação: ${err?.message || err}`);
+      return false;
     } finally {
       setBusy(null);
     }

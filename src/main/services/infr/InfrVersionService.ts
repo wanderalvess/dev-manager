@@ -47,6 +47,7 @@ import { mergeDependencyFixes, resolveDependencies } from '../../../shared/infrF
 import { buildEnvFile, envFieldsFor, parseEnvLines, pickEnv, type InfrEnvTarget } from '../../../shared/infrEnvConfig';
 import type { InfrEnvSaveRequest, InfrEnvTemplate, InfrManifestSaveRequest, InfrManifestSaveResult } from '../../../shared/infrVersionManifest';
 import { INFR_NEW_VERSION_SCRIPTS, commandFailureDetail, missingNewVersionScriptsMessage, originContainerMessage } from '../../../shared/infrNewVersionScripts';
+import { newVersionScriptGaps, scriptGapsMessage } from '../../../shared/infrScriptSupport';
 import { previewClone, readBuildState } from './infrClonePreview';
 import { checkXmlDependencies } from './infrXmlDependencies';
 import { repairAbsentFeatures, withXmlDependencies } from '../../../shared/infrFeatureXml';
@@ -134,6 +135,16 @@ export class InfrVersionService {
       result = await this.previewSteps(req, trace);
     } catch (err: any) {
       result = { success: false, error: `Erro inesperado na prévia: ${err?.message || err}` };
+    }
+    // A mesma conferência que o Criar faz antes de abrir o terminal, já aqui: vira um ponto vermelho em Antes de criar
+    const infr = result.success ? this.wsl.resolveInfrPaths(req.infrPath) : null;
+    if (infr) {
+      const gaps = newVersionScriptGaps((rel) => {
+        const file = path.join(infr.windows, rel);
+        return fs.existsSync(file) ? fs.readFileSync(file, 'utf-8') : null;
+      });
+      trace(gaps.length ? `Scripts desatualizados: ${gaps.map((g) => (g.absent ? `${g.path} não existe` : `${g.path} sem ${g.missing.join(' ')}`)).join('; ')}` : 'Scripts conhecem as opções da criação');
+      if (gaps.length) result = { ...result, scriptGaps: scriptGapsMessage(gaps, infr.windows) };
     }
     trace(result.success ? 'Prévia concluída' : `Prévia parou: ${result.error}`);
     return { ...result, log };

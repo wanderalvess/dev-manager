@@ -4,6 +4,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.67.2] - 2026-11-04
+### Corrigido
+- **Nova versão: Criar não parece mais um botão morto**. No ambiente do Nathan o Criar parava na conferência dos scripts (o `linux-winthor/scripts/wta_setup.sh` da pasta é anterior à imagem por versão e não conhece `--version`), mas a explicação ia para o fim da página, fora da vista. Agora essa conferência roda já na leitura e vira o primeiro ponto vermelho de "Antes de criar" ("Scripts do INFR-Docker desatualizados"), com o Criar desabilitado e o motivo no rodapé; a mensagem de qualquer falha do Criar rola até a vista; erro do IPC e os retornos que antes saíam calados agora dizem o que houve.
+- **Como atualizar a pasta do INFR-Docker**: a instrução inclui `git config --global --add safe.directory <pasta>` para a pasta criada por um administrador (o git do usuário recusa com "dubious ownership" e o pull nem roda) e `git checkout -- <script>` quando o arquivo foi alterado na pasta e o pull o manteve.
+
 ## [1.67.1] - 2026-11-04
 ### Corrigido
 - **Nova versão: features do próprio Karaf não impedem mais a criação**. No ambiente do Nathan, "Antes de criar" bloqueava com "Feature sem repositório na lista" para `spring 4.2.9.RELEASE_1`, `spring-aspects`, `spring-jdbc` e mais 12, porque só olhava os features.xml dos `repo mvn:` da lista. Essas features vêm dos repositórios que o Karaf já traz registrados (`featuresRepositories` do `etc/org.apache.karaf.features.cfg`) e dos `<repository>` que cada features.xml puxa, e o Karaf resolve por eles também. A leitura agora baixa esses XML (do `system/` do Karaf primeiro, depois do Nexus).

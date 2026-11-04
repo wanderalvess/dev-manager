@@ -93,12 +93,26 @@ export function scriptGaps(command: string, read: (relPath: string) => string | 
   return gaps;
 }
 
+/**
+ * Scripts que a criação da Nova versão chama (o new_version_env.sh e os que ele chama por dentro), conferidos já na
+ * leitura: sem isso o Criar só descobria ao clicar, depois de gravar a configuração.
+ */
+export function newVersionScriptGaps(read: (relPath: string) => string | null): ScriptGap[] {
+  return scriptGaps('./new_version_env.sh --version --name --from', read);
+}
+
 /** Mensagem para a pessoa, com o que falta e como atualizar a pasta. */
 export function scriptGapsMessage(gaps: ScriptGap[], infrWindowsPath: string): string {
   const what = gaps.map((g) => (g.absent ? `${g.path} não existe` : `${g.path} não conhece ${g.missing.join(', ')}`)).join('; ');
+  const changed = gaps.filter((g) => !g.absent).map((g) => g.path);
   return (
     `Os scripts do INFR-Docker em ${infrWindowsPath} estão desatualizados: ${what}. O terminal pararia em "Flag desconhecida". ` +
     `Como resolver: atualize a pasta para a branch com a imagem por versão (hoje feature/imagem-por-versao): ` +
-    `git fetch origin && git checkout feature/imagem-por-versao && git pull, dentro de ${infrWindowsPath}.`
-  );
+    `git fetch origin && git checkout feature/imagem-por-versao && git pull, dentro de ${infrWindowsPath}. ` +
+    // A pasta criada por um administrador recusa o git do usuário ("dubious ownership") e o pull nem roda
+    `Se o git disser "dubious ownership", rode antes: git config --global --add safe.directory ${infrWindowsPath.replace(/\\/g, '/')}. ` +
+    (changed.length
+      ? `Se a branch já é essa e o arquivo continua antigo, ele foi alterado na pasta e o pull o manteve: git checkout -- ${changed.join(' ')} e git pull de novo.`
+      : '')
+  ).trim();
 }
