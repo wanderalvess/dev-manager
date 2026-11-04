@@ -123,12 +123,37 @@ describe('InfrVersionService: versão nova a partir de outro ambiente', () => {
       ].join('\n');
       const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
       expect(res.existing?.repair).toEqual({
-        repairs: [{ name: 'winthor-integracao-2650', from: '1.40.1.2', to: '1.40.0.2', reason: 'a 1.40.1.2 não está em nenhum repositório da lista' }],
-        unresolved: []
+        repairs: [{ name: 'winthor-integracao-2650', from: '1.40.1.2', to: '1.40.0.2', reason: 'a 1.40.1.2 não está em nenhum repositório da lista nem na 801' }],
+        added: [],
+        kept: []
       });
       expect(res.existing?.repairText).toContain('# lista da 40\n');
       expect(res.existing?.repairText).toContain('feature winthor-integracao-2650 1.40.0.2\nfeature winthor-core-data 1.40.0.3');
-      expect(res.repair).toEqual({ repairs: [], unresolved: [] });
+      expect(res.repair).toEqual({ repairs: [], added: [], kept: [] });
+    });
+
+    it('lista existente com feature sem repositório que a 801 tem: o repositório da 801 entra na lista e a versão fica', async () => {
+      const versions = path.join(dir, 'linux-winthor', 'versions');
+      fs.mkdirSync(versions, { recursive: true });
+      fs.writeFileSync(
+        path.join(versions, '40.features'),
+        '# lista da 40\nrepo mvn:g/winthor-core-features/1.40.0.3/xml/features\n\nfeature winthor-core-data 1.40.0.3\nfeature spring 4.2.9.RELEASE_1\nfeature winthor-sumida 1.40.0.1\n'
+      );
+      routine801.fetchUpdates.mockResolvedValueOnce({
+        repositorios: [],
+        funcionalidades: [
+          { nome: 'winthor-sumida', versao: '1.40.0.1', codigoRotina: 0, codigoModulo: 0, tipoProjeto: 'SERVICO', descricao: '', status: 'LIBERADO', featureMavenUrl: 'mvn:g/winthor-sumida-features/1.40.0.1/xml/features' }
+        ]
+      });
+      xmlOut = '@@FILE g/winthor-core-features/1.40.0.3/winthor-core-features-1.40.0.3-features.xml\n<features><feature name="winthor-core-data" version="1.40.0.3"/></features>\n@@END';
+      const res = await service().preview({ fromEnv: 'master', targetVersion: '40' });
+      expect(res.existing?.repair).toEqual({
+        repairs: [],
+        added: [{ name: 'winthor-sumida', version: '1.40.0.1', repo: 'mvn:g/winthor-sumida-features/1.40.0.1/xml/features' }],
+        kept: [{ name: 'spring', version: '4.2.9.RELEASE_1' }]
+      });
+      expect(res.existing?.repairText).toContain('repo mvn:g/winthor-core-features/1.40.0.3/xml/features\nrepo mvn:g/winthor-sumida-features/1.40.0.1/xml/features\n\nfeature winthor-core-data');
+      expect(res.existing?.repairText).toContain('feature spring 4.2.9.RELEASE_1');
     });
 
     it('o clone não baixa features.xml', async () => {

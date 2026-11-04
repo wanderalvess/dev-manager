@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Routine801CatalogResponse } from './types';
 import {
   NO_REPO_REASON,
+  addManifestRepos,
   catalogRepoFor,
   checkManifestAgainstWsh,
   compareManifests,
@@ -185,5 +186,19 @@ describe('manifestLineOf', () => {
     expect(manifestLineOf(m)).toBe(39);
     expect(manifestLineOf(parseVersionManifest('feature a 1.38.0.1\nfeature b 1.39.0.1\n'))).toBe(39);
     expect(manifestLineOf(parseVersionManifest('feature a 1.9.15\n'))).toBeUndefined();
+  });
+});
+
+describe('addManifestRepos', () => {
+  it('acrescenta depois do último repo, sem repetir, e mantém o resto e o fim de linha', () => {
+    const text = '# lista\r\nrepo mvn:a/b/1/xml/features\r\n\r\nfeature x 1\r\n';
+    expect(addManifestRepos(text, ['mvn:c/d/2/xml/features', 'mvn:a/b/1/xml/features', 'mvn:c/d/2/xml/features'])).toBe(
+      '# lista\r\nrepo mvn:a/b/1/xml/features\r\nrepo mvn:c/d/2/xml/features\r\n\r\nfeature x 1\r\n'
+    );
+    expect(addManifestRepos(text, [])).toBe(text);
+  });
+
+  it('sem nenhum repo, entra antes da primeira feature', () => {
+    expect(addManifestRepos('# lista\nfeature x 1\n', ['mvn:c/d/2/xml/features'])).toBe('# lista\nrepo mvn:c/d/2/xml/features\nfeature x 1\n');
   });
 });

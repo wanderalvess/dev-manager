@@ -32,23 +32,34 @@ describe('repositório de cada feature (build do Nathan)', () => {
     preview: { ...base.preview, existing: { ...base.preview.existing!, repair, ...(repairText ? { repairText } : {}) } }
   });
 
+  const none = { repairs: [], added: [], kept: [] };
+
   it('lista existente com versão sem repositório: avisa que a criação a corrige', () => {
-    const items = reviewNewVersion(withRepair({ repairs: [{ name: 'winthor-integracao-2650', from: '1.40.1.2', to: '1.40.0.2' }], unresolved: [] }, 'x'));
-    expect(byId(items, 'repositorios')).toMatchObject({ status: 'warn', title: 'A lista da 39 é corrigida ao criar' });
+    const items = reviewNewVersion(withRepair({ ...none, repairs: [{ name: 'winthor-integracao-2650', from: '1.40.1.2', to: '1.40.0.2' }] }, 'x'));
+    expect(byId(items, 'repositorios')).toMatchObject({ status: 'warn', title: 'A lista da 39 é ajustada ao criar' });
     expect(byId(items, 'repositorios').detail).toContain('winthor-integracao-2650 1.40.1.2 → 1.40.0.2');
-    expect(byId(items, 'features').detail).toContain('só as versões sem repositório são trocadas');
+    expect(byId(items, 'features').detail).toContain('acrescenta os repositórios da 801');
   });
 
-  it('feature que nenhum repositório da lista tem, em versão nenhuma, impede com o como resolver', () => {
-    const items = reviewNewVersion(withRepair({ repairs: [], unresolved: [{ name: 'winthor-integracao-2650', version: '1.40.1.2' }] }));
-    expect(byId(items, 'repositorios')).toMatchObject({ status: 'block', title: 'Feature sem repositório na lista' });
-    expect(byId(items, 'repositorios').detail).toContain('Como resolver');
-    expect(reviewBlocks(items)).toBe(true);
+  it('repositório trazido da 801: ok, sem pedir nada', () => {
+    const items = reviewNewVersion(withRepair({ ...none, added: [{ name: 'winthor-integracao-2650', version: '1.40.1.2', repo: 'mvn:g/a/1.40.1.2/xml/features' }] }, 'x'));
+    expect(byId(items, 'repositorios')).toMatchObject({ status: 'ok', title: 'Repositórios trazidos da 801' });
+    expect(byId(items, 'repositorios').detail).toContain('o repositório veio da 801');
+  });
+
+  it('feature que nem a lista nem a 801 têm (spring do ambiente do Nathan): fica na versão atual e não impede', () => {
+    const kept = Array.from({ length: 15 }, (_, i) => ({ name: `spring-${i}`, version: '4.2.9.RELEASE_1' }));
+    const items = reviewNewVersion(withRepair({ ...none, kept }));
+    expect(byId(items, 'repositorios').status).toBe('warn');
+    expect(byId(items, 'repositorios').detail).toContain('ficam na versão atual');
+    expect(byId(items, 'repositorios').detail).toContain('e mais 12');
+    expect(byId(items, 'repositorios').detail).not.toMatch(/acrescente|Como resolver/);
+    expect(reviewBlocks(items.filter((i) => i.id === 'repositorios'))).toBe(false);
   });
 
   it('sem conferência (algum XML não veio), não mostra nada; conferida e limpa, ok', () => {
     expect(reviewNewVersion(base).some((i) => i.id === 'repositorios')).toBe(false);
-    expect(byId(reviewNewVersion(withRepair({ repairs: [], unresolved: [] })), 'repositorios').status).toBe('ok');
+    expect(byId(reviewNewVersion(withRepair(none)), 'repositorios').status).toBe('ok');
   });
 });
 

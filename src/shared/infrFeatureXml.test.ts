@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_XML_REPOS,
   absentForManifest,
+  buildKarafCfgScript,
   featuresAbsentFromXml,
+  parseKarafCfgOutput,
+  parseKarafFeaturesCfg,
+  parseRepositoryRefs,
+  reachableXmlPaths,
   repairAbsentFeatures,
   buildFeatureXmlFetchScript,
   checkManifestWithFeatureXml,
@@ -61,8 +66,29 @@ describe('feature que nenhum repositório da lista tem', () => {
     ]);
     const r = repairAbsentFeatures(lista, absent);
     expect(r.repairs.map((c) => [c.name, c.from, c.to])).toEqual([['winthor-integracao-2650', '1.40.1.2', '1.40.0.2']]);
-    expect(r.unresolved.map((a) => a.name)).toEqual(['winthor-sumida']);
+    expect(r.kept).toEqual([{ name: 'winthor-sumida', version: '1.0.0' }]);
+    expect(r.added).toEqual([]);
     expect(r.manifest.features[0]).toEqual({ name: 'winthor-integracao-2650', version: '1.40.0.2' });
+    expect(r.manifest.features[2]).toEqual({ name: 'winthor-sumida', version: '1.0.0' });
+  });
+
+  it('a 801 vem primeiro: o repositório dela entra na lista e a versão pedida fica; sem ela, nada some da lista', () => {
+    const absent = [
+      { name: 'winthor-integracao-2650', version: '1.40.1.2', available: ['1.40.0.2'] },
+      { name: 'winthor-sumida', version: '1.0.0', available: [] }
+    ];
+    const catalog = {
+      repositorios: [],
+      funcionalidades: [
+        { nome: 'winthor-integracao-2650', versao: '1.40.1.2', codigoRotina: 0, codigoModulo: 0, tipoProjeto: 'SERVICO', descricao: '', status: 'LIBERADO', featureMavenUrl: 'mvn:g/winthor-integracao-2650-features/1.40.1.2/xml/features' }
+      ]
+    } as any;
+    const r = repairAbsentFeatures(lista, absent, catalog);
+    expect(r.added).toEqual([{ name: 'winthor-integracao-2650', version: '1.40.1.2', repo: 'mvn:g/winthor-integracao-2650-features/1.40.1.2/xml/features' }]);
+    expect(r.repairs).toEqual([]);
+    expect(r.kept.map((k) => k.name)).toEqual(['winthor-sumida']);
+    expect(r.manifest.repos.at(-1)).toBe('mvn:g/winthor-integracao-2650-features/1.40.1.2/xml/features');
+    expect(r.manifest.features).toEqual(lista.features);
   });
 
   it('só confere com todos os XML da lista; os de outra lista não contam', () => {
@@ -76,6 +102,69 @@ describe('feature que nenhum repositório da lista tem', () => {
       [outra, '<features><feature name="winthor-sumida" version="1.0.0"/></features>']
     ]);
     expect(absentForManifest(lista, files)?.map((a) => a.name)).toEqual(['winthor-integracao-2650', 'winthor-sumida']);
+  });
+});
+
+describe('repositórios que o Karaf já traz e os puxados pelos XML', () => {
+  const SPRING = 'org/apache/karaf/features/spring/4.2.9/spring-4.2.9-features.xml';
+  const STANDARD = 'org/apache/karaf/features/standard/4.2.9/standard-4.2.9-features.xml';
+  const LEGACY = 'org/apache/karaf/features/spring-legacy/4.2.9/spring-legacy-4.2.9-features.xml';
+  // Cfg real de um Karaf 4.2: valor em várias linhas com barra invertida no fim
+  const CFG = [
+    '# Comma separated list of features repositories to register by default',
+    'featuresRepositories = \\',
+    '    mvn:org.apache.karaf.features/enterprise/4.2.9/xml/features, \\',
+    '    mvn:org.apache.karaf.features/spring/4.2.9/xml/features, \\',
+    '    mvn:org.apache.karaf.features/standard/${karaf.version}/xml/features',
+    '',
+    'featuresBoot = instance, package'
+  ].join('\n');
+
+  it('lê o featuresRepositories do Karaf, em várias linhas, sem as entradas com variável', () => {
+    expect(parseKarafFeaturesCfg(CFG)).toEqual(['mvn:org.apache.karaf.features/enterprise/4.2.9/xml/features', 'mvn:org.apache.karaf.features/spring/4.2.9/xml/features']);
+    expect(parseKarafFeaturesCfg('featuresBoot = x')).toEqual([]);
+    expect(parseKarafCfgOutput(`lixo\n@@KARAFCFG\n${CFG}\n@@KARAFCFG_END\n@@FILE a`)).toEqual([
+      'org/apache/karaf/features/enterprise/4.2.9/enterprise-4.2.9-features.xml',
+      SPRING
+    ]);
+    expect(parseKarafCfgOutput('@@KARAFCFG\n\n@@KARAFCFG_END')).toEqual([]);
+    expect(buildKarafCfgScript()).toContain("'/opt/pcsist/produtos/winthor/etc/org.apache.karaf.features.cfg'");
+  });
+
+  it('segue os <repository> em cadeia e devolve os que faltam baixar', () => {
+    expect(parseRepositoryRefs(CORE)).toEqual(['mvn:com.totvs.pcsist.winthor/core-features/0.38.0.2/xml/features']);
+    const files = new Map([
+      [STANDARD, `<features><repository>mvn:org.apache.karaf.features/spring/4.2.9/xml/features</repository></features>`],
+      [SPRING, `<features><!-- <repository>mvn:x/comentado/1/xml/features</repository> --><repository>mvn:org.apache.karaf.features/spring-legacy/4.2.9/xml/features</repository></features>`]
+    ]);
+    expect(reachableXmlPaths([STANDARD], files)).toEqual({ paths: [STANDARD, SPRING], pending: [LEGACY] });
+  });
+
+  it('feature do Karaf (spring) não conta como sem repositório; a que nenhum tem continua ausente', () => {
+    const lista = manifest(
+      [
+        ['winthor-core-data', '1.40.0.3'],
+        ['spring', '4.2.9.RELEASE_1'],
+        ['spring-jdbc', '4.2.9.RELEASE_1'],
+        ['winthor-sumida', '1.0.0']
+      ],
+      ['mvn:g/winthor-core-features/1.40.0.3/xml/features']
+    );
+    const own = 'g/winthor-core-features/1.40.0.3/winthor-core-features-1.40.0.3-features.xml';
+    const files = new Map([
+      [own, '<features><feature name="winthor-core-data" version="1.40.0.3"/></features>'],
+      [SPRING, '<features><feature name="spring" version="4.2.9.RELEASE_1"/><repository>mvn:org.apache.karaf.features/spring-legacy/4.2.9/xml/features</repository></features>'],
+      [LEGACY, '<features><feature name="spring-jdbc" version="4.2.9.RELEASE_1"/></features>']
+    ]);
+    expect(absentForManifest(lista, files)?.map((a) => a.name)).toEqual(['spring', 'spring-jdbc', 'winthor-sumida']);
+    expect(absentForManifest(lista, files, [SPRING])?.map((a) => a.name)).toEqual(['winthor-sumida']);
+  });
+
+  it('o roteiro lê primeiro do system/ do Karaf, só com caminho seguro', () => {
+    const script = buildFeatureXmlFetchScript(['https://nexus/repo'], ['g/a/1/a-1-features.xml'], '/opt/pcsist/produtos/winthor/system');
+    expect(script).toContain("LOCAL='/opt/pcsist/produtos/winthor/system'");
+    expect(script).toContain('[ -f "$LOCAL/$p" ]');
+    expect(buildFeatureXmlFetchScript(['https://nexus/repo'], [], "/x'; rm -rf /")).toContain("LOCAL=''");
   });
 });
 

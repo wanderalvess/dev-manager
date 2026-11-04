@@ -11,7 +11,8 @@
  */
 import { SAFE_REPO_URL, mvnFeaturePath } from './infrFeatureArtifacts';
 import { satisfiesSpec, type DependencyIssue, type DependencyReport } from './infrFeatureDependencies';
-import { compareVersions, type ManifestChange, type VersionManifest } from './infrVersionManifest';
+import { catalogRepoFor, compareVersions, type ManifestChange, type ManifestRepoRepair, type VersionManifest } from './infrVersionManifest';
+import type { Routine801CatalogResponse } from './types';
 
 export interface XmlFeatureDependency {
   name: string;
@@ -61,6 +62,44 @@ export function parseFeaturesXml(xml: string): XmlFeature[] {
   return list;
 }
 
+/**
+ * Repositórios que um features.xml puxa (`<repository>mvn:...</repository>`): o Karaf os registra junto, então as
+ * features deles também valem para quem lista o XML.
+ */
+export function parseRepositoryRefs(xml: string): string[] {
+  const text = xml.replace(/<!--[\s\S]*?-->/g, '');
+  return [...text.matchAll(/<repository\b[^>]*>\s*([^<\s]+)\s*<\/repository>/g)].map((m) => m[1]);
+}
+
+/** Pasta do Karaf do WTA no container (a mesma do `org.ops4j.pax.url.mvn.cfg`). */
+export const KARAF_HOME = '/opt/pcsist/produtos/winthor';
+
+/**
+ * Repositórios que o Karaf já traz registrados (`featuresRepositories` do `etc/org.apache.karaf.features.cfg`): é deles
+ * que vêm `spring`, `jdbc`, `scr` e as outras features do próprio Karaf, que a lista do INFR-Docker não declara.
+ * Entrada com variável (`${karaf.version}`) não dá para resolver aqui e fica de fora.
+ */
+export function parseKarafFeaturesCfg(cfg: string): string[] {
+  const joined = cfg.replace(/\\\r?\n/g, ' ');
+  const line = joined.split(/\r?\n/).find((l) => /^\s*featuresRepositories\s*[=:]/.test(l));
+  if (!line) return [];
+  return line
+    .replace(/^\s*featuresRepositories\s*[=:]\s*/, '')
+    .split(',')
+    .map((x) => x.trim())
+    .filter((x) => x.startsWith('mvn:') && !x.includes('${'));
+}
+
+/** Imprime o `etc/org.apache.karaf.features.cfg` entre marcadores, para ir no mesmo roteiro da coleta dos XML. */
+export const buildKarafCfgScript = () => `echo '@@KARAFCFG'; cat '${KARAF_HOME}/etc/org.apache.karaf.features.cfg' 2>/dev/null; echo; echo '@@KARAFCFG_END'`;
+
+/** Caminhos no Maven dos repositórios que o Karaf já traz, lidos da saída de `buildKarafCfgScript`. */
+export function parseKarafCfgOutput(output: string): string[] {
+  const m = /^@@KARAFCFG\r?\n([\s\S]*?)^@@KARAFCFG_END/m.exec(output);
+  if (!m) return [];
+  return [...new Set(parseKarafFeaturesCfg(m[1]).map(mvnFeaturePath).filter((p): p is string => !!p && SAFE_PATH.test(p)))];
+}
+
 const SAFE_PATH = /^[A-Za-z0-9_./-]+$/;
 /** No máximo estes repositórios por prévia (a lista nova e a existente juntas): protege o tempo e a rede. */
 export const MAX_XML_REPOS = 140;
@@ -78,18 +117,22 @@ export function featureXmlPaths(manifest: VersionManifest, all = false): { mvn: 
 
 /**
  * Script (sh, DENTRO do container) que baixa os features.xml em paralelo (8 por vez), tentando cada repositório do Karaf,
- * e imprime `@@FILE <caminho>`, o XML e `@@END` (ou `@@MISS <caminho>` quando nenhum repositório tem).
+ * e imprime `@@FILE <caminho>`, o XML e `@@END` (ou `@@MISS <caminho>` quando nenhum repositório tem). Com `localDir`
+ * (o `system/` do Karaf), lê de lá primeiro: os repositórios do próprio Karaf vêm na imagem, não no Nexus.
  */
-export function buildFeatureXmlFetchScript(repositories: string[], paths: string[]): string {
+export function buildFeatureXmlFetchScript(repositories: string[], paths: string[], localDir?: string): string {
   const repos = repositories.filter((r) => SAFE_REPO_URL.test(r));
   const list = paths.filter((p) => SAFE_PATH.test(p));
+  const local = localDir && SAFE_PATH.test(localDir) ? localDir : '';
   return [
     'command -v curl >/dev/null 2>&1 || { echo NOCURL; exit 0; }',
     'dir=/tmp/hub-xml; rm -rf "$dir"; mkdir -p "$dir"',
     // Uma lista entre aspas simples (as URLs validadas não têm espaço nem aspas): a expansão `$REPOS` as separa sem deixar aspas nelas
     `REPOS='${repos.join(' ')}'`,
+    `LOCAL='${local}'`,
     'fetch() {',
     '  p="$1"; n="$2"; f="$dir/$n.xml"',
+    '  if [ -n "$LOCAL" ] && [ -f "$LOCAL/$p" ]; then { echo "@@FILE $p"; head -c ' + MAX_XML_BYTES + ' "$LOCAL/$p"; echo; echo "@@END"; } > "$dir/$n.out"; return; fi',
     '  for r in $REPOS; do',
     '    c=$(curl -s -m 15 -o "$f" -w "%{http_code}" "$r/$p" 2>/dev/null || echo 000)',
     '    if [ "$c" = "200" ]; then { echo "@@FILE $p"; head -c ' + MAX_XML_BYTES + ' "$f"; echo; echo "@@END"; } > "$dir/$n.out"; rm -f "$f"; return; fi',
@@ -151,18 +194,47 @@ export interface XmlDependencyReport {
   absent?: AbsentFeature[];
   /** O mesmo para o versions/<versão>.features que já existe */
   existingAbsent?: AbsentFeature[];
+  /** Repositórios que o Karaf já traz (featuresRepositories), também conferidos */
+  karafRepos?: number;
   /** Por que não deu para conferir (sem curl, sem repositórios, falha do comando) */
   error?: string;
 }
 
 /**
- * Features ausentes de uma lista, olhando só os XML dos repositórios DELA (o build não vê os da outra lista). Undefined se
- * algum XML da lista não veio: sem ele, uma feature pareceria ausente sem estar.
+ * Caminhos dos features.xml que o Karaf enxerga partindo de `start`: eles e os `<repository>` que cada um puxa, em
+ * cadeia. Os que não vieram em `files` ficam de fora (e em `pending`, para baixar).
  */
-export function absentForManifest(manifest: VersionManifest, files: Map<string, string>): AbsentFeature[] | undefined {
+export function reachableXmlPaths(start: string[], files: Map<string, string>): { paths: string[]; pending: string[] } {
+  const seen = new Set<string>();
+  const pending = new Set<string>();
+  const queue = [...start];
+  while (queue.length) {
+    const p = queue.shift() as string;
+    if (seen.has(p) || pending.has(p)) continue;
+    const xml = files.get(p);
+    if (xml === undefined) {
+      pending.add(p);
+      continue;
+    }
+    seen.add(p);
+    for (const ref of parseRepositoryRefs(xml)) {
+      const path = mvnFeaturePath(ref);
+      if (path && SAFE_PATH.test(path)) queue.push(path);
+    }
+  }
+  return { paths: [...seen], pending: [...pending] };
+}
+
+/**
+ * Features ausentes de uma lista, olhando os XML dos repositórios DELA (o build não vê os da outra lista), os que eles
+ * puxam por `<repository>` e os que o Karaf já traz (`karafPaths`). Undefined se algum XML da lista não veio: sem ele,
+ * uma feature pareceria ausente sem estar.
+ */
+export function absentForManifest(manifest: VersionManifest, files: Map<string, string>, karafPaths: string[] = []): AbsentFeature[] | undefined {
   const paths = featureXmlPaths(manifest, true).map((p) => p.path);
   if (paths.some((p) => !files.has(p))) return undefined;
-  return featuresAbsentFromXml(manifest, paths.flatMap((p) => parseFeaturesXml(files.get(p) as string)));
+  const all = reachableXmlPaths([...paths, ...karafPaths], files).paths;
+  return featuresAbsentFromXml(manifest, all.flatMap((p) => parseFeaturesXml(files.get(p) as string)));
 }
 
 /**
@@ -201,8 +273,9 @@ export interface AbsentFeature {
 }
 
 /**
- * Features da lista que o build não acharia: o install_features.sh só procura nos `repo mvn:` da própria lista e para em
- * "Feature X/versão não existe em nenhum repositório da lista". `features` deve vir só dos XML desses repositórios.
+ * Features da lista que o build não acharia: o Karaf procura nos `repo mvn:` da própria lista, nos `<repository>` que eles
+ * puxam e nos que ele já traz, e para em "Feature X/versão não existe em nenhum repositório da lista". `features` deve vir
+ * só dos XML desses repositórios (nunca dos de outra lista).
  */
 export function featuresAbsentFromXml(manifest: VersionManifest, features: XmlFeature[]): AbsentFeature[] {
   const versions = new Map<string, Set<string>>();
@@ -213,22 +286,32 @@ export function featuresAbsentFromXml(manifest: VersionManifest, features: XmlFe
 }
 
 /**
- * Volta cada feature ausente para a versão mais nova que os repositórios da lista têm dela; a que não tem nenhuma fica em
- * `unresolved` (precisa de um `repo mvn:` novo, que só a pessoa sabe qual é).
+ * Resolve cada feature ausente sem pedir nada à pessoa (os serviços são liberados na 801, então o repositório deve estar
+ * lá): 1) a 801 informa o repositório dessa versão → ele entra na lista; 2) senão, a feature volta para a versão mais nova
+ * que os repositórios da lista têm; 3) senão, fica na versão atual e a criação segue.
  */
-export function repairAbsentFeatures(manifest: VersionManifest, absent: AbsentFeature[]): { manifest: VersionManifest; repairs: ManifestChange[]; unresolved: AbsentFeature[] } {
+export function repairAbsentFeatures(
+  manifest: VersionManifest,
+  absent: AbsentFeature[],
+  catalog?: Routine801CatalogResponse
+): { manifest: VersionManifest } & ManifestRepoRepair {
   const repairs: ManifestChange[] = [];
-  const unresolved: AbsentFeature[] = [];
+  const added: ManifestRepoRepair['added'] = [];
+  const kept: ManifestRepoRepair['kept'] = [];
   const target = new Map<string, string>();
+  const repos = [...manifest.repos];
   for (const a of absent) {
-    if (a.available.length === 0) unresolved.push(a);
-    else {
+    const repo = catalog ? catalogRepoFor(a.name, a.version, catalog) : undefined;
+    if (repo) {
+      added.push({ name: a.name, version: a.version, repo });
+      if (!repos.includes(repo)) repos.push(repo);
+    } else if (a.available.length > 0) {
       target.set(a.name, a.available[0]);
-      repairs.push({ name: a.name, from: a.version, to: a.available[0], reason: `a ${a.version} não está em nenhum repositório da lista` });
-    }
+      repairs.push({ name: a.name, from: a.version, to: a.available[0], reason: `a ${a.version} não está em nenhum repositório da lista nem na 801` });
+    } else kept.push({ name: a.name, version: a.version });
   }
   const features = manifest.features.map((f) => (target.has(f.name) ? { name: f.name, version: target.get(f.name) as string } : f));
-  return { manifest: { ...manifest, features }, repairs, unresolved };
+  return { manifest: { ...manifest, repos, features }, repairs, added, kept };
 }
 
 /** Junta o que os features.xml acharam ao relatório de dependências do catálogo, sem repetir o mesmo conflito. */

@@ -16,10 +16,12 @@ import {
   parseVersionManifest,
   parseWshDependencies,
   rewriteFeatureVersions,
+  addManifestRepos,
   serializeVersionManifest,
   upgradeManifestFromCatalog,
   type InfrVersionPreview,
-  type InfrVersionPreviewRequest
+  type InfrVersionPreviewRequest,
+  type ManifestRepoRepair
 } from '../../../shared/infrVersionManifest';
 import {
   buildArtifactProbeScript,
@@ -221,7 +223,7 @@ export class InfrVersionService {
     const repositories = await this.karafRepositories(distro, container, trace);
     // Os features.xml das duas listas: a feature que nenhum repositório da lista tem quebra o build em "não existe em nenhum repositório"
     const xmlDeps = await checkXmlDependencies((script, ms) => this.runScriptInContainer(distro, container, script, ms), repositories, upgrade.manifest, trace, existing);
-    const fixed = xmlDeps.absent ? repairAbsentFeatures(upgrade.manifest, xmlDeps.absent) : null;
+    const fixed = xmlDeps.absent ? repairAbsentFeatures(upgrade.manifest, xmlDeps.absent, catalog) : null;
     const manifest = fixed?.manifest ?? upgrade.manifest;
     const changes = fixed ? upgrade.changes.map((c) => ({ ...c, to: manifest.features.find((f) => f.name === c.name)?.version ?? c.to })).filter((c) => c.to !== c.from) : upgrade.changes;
     const result: InfrVersionPreview = {
@@ -235,18 +237,25 @@ export class InfrVersionService {
       preflight: await this.preflight(distro, target, repositories, trace),
       buildState: await readBuildState((d, s, t, tr) => this.run(d, s, t, tr), distro, req, trace),
       manifestText: serializeVersionManifest(manifest, header),
-      ...(fixed ? { repair: { repairs: fixed.repairs, unresolved: fixed.unresolved } } : {})
+      ...(fixed ? { repair: { repairs: fixed.repairs, added: fixed.added, kept: fixed.kept } } : {})
     };
+    const repairTrace = (label: string, r: ManifestRepoRepair) =>
+      trace(
+        `Features sem repositório (${label}): ${r.added.length} com repositório da 801 (${r.added.map((a) => a.name).join(', ') || '-'}), ` +
+          `${r.repairs.length} voltam para a versão dos repositórios, ${r.kept.length} ficam na versão atual (${r.kept.map((k) => `${k.name} ${k.version}`).join(', ') || '-'})`
+      );
+    if (result.repair) repairTrace('lista nova', result.repair);
     trace(`Manifesto: ${changes.length} sobem, ${upgrade.behind.length} sem versão da linha ${target}; ${existingFile} ${existing ? `já existe (${existing.features.length} features)` : 'não existe'}`);
     // A lista existente como a criação vai gravá-la: com as features sem repositório de volta à versão que os repositórios dela têm
     let existingFinal = existing;
     if (existing?.features.length) {
       result.existing = { path: existingFile, count: existing.features.length, comparison: compareManifests(existing, manifest) };
       if (xmlDeps.existingAbsent && existingText !== null) {
-        const r = repairAbsentFeatures(existing, xmlDeps.existingAbsent);
+        const r = repairAbsentFeatures(existing, xmlDeps.existingAbsent, catalog);
         existingFinal = r.manifest;
-        result.existing.repair = { repairs: r.repairs, unresolved: r.unresolved };
-        if (r.repairs.length) result.existing.repairText = rewriteFeatureVersions(existingText, r.repairs);
+        result.existing.repair = { repairs: r.repairs, added: r.added, kept: r.kept };
+        repairTrace('lista existente', result.existing.repair);
+        if (r.repairs.length || r.added.length) result.existing.repairText = addManifestRepos(rewriteFeatureVersions(existingText, r.repairs), r.added.map((a) => a.repo));
       }
     }
     if (req.wshJar) {
