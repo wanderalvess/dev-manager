@@ -12,6 +12,7 @@ import { useAppShellOnboarding } from './hooks/app/useAppShellOnboarding';
 import { useAppShellNotifications } from './hooks/app/useAppShellNotifications';
 import { useGlobalShortcuts } from './hooks/app/useGlobalShortcuts';
 import { useModuleVisibility } from './hooks/app/useModuleVisibility';
+import { useSplashEntry } from './hooks/app/useSplashEntry';
 
 export const App: React.FC = () => {
   const {
@@ -28,6 +29,7 @@ export const App: React.FC = () => {
   // Toda navegação passa por `navigate`, que barra páginas de módulos desligados em Configurações → Módulos.
   const modules = useModuleVisibility(activeTab, setActiveTab, visitedTabs, data.settingsVersion);
   const { navigate } = modules;
+  const splashEntry = useSplashEntry(onboarding.handleSplashEnter, navigate);
 
   // Atalhos Alt+N: manter em sincronia com Header, QuickLauncherModal e a tabela da Ajuda
   // (fonte do mapa em utils/appShellNavigation.ts).
@@ -93,7 +95,8 @@ export const App: React.FC = () => {
         isNewUser={onboarding.isNewUser}
         onSplashStartOnboarding={onboarding.handleSplashStartOnboarding}
         onSplashExplore={onboarding.handleSplashExplore}
-        onSplashEnter={onboarding.handleSplashEnter}
+        onSplashEnter={splashEntry.enter}
+        onSplashOpenTab={splashEntry.openTab}
         onSplashWhatsNew={onboarding.handleSplashWhatsNew}
         onSettingsSaved={data.handleSettingsSaved}
         onOpenSettings={onboarding.handleWelcomeOpenSettings}

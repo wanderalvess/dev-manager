@@ -19,6 +19,7 @@ import type {
 import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
 import type { InfrDiagnosticRequest, InfrDiagnosticResult } from '../shared/infrDiagnosticTypes';
 import type { WeatherReport } from '../shared/weather';
+import type { JiraTodayReport } from '../shared/jiraToday';
 import type { InfrOriginCheck } from '../shared/infrOriginCheck';
 import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../shared/infrFirstSteps';
 import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../shared/infrActiveEnv';
@@ -799,6 +800,7 @@ const electronAPI = {
   // Métricas do Sistema
   getSystemMetrics: (): Promise<SystemMetrics> => ipcRenderer.invoke('system:get-metrics'),
   getWeather: (city: string): Promise<WeatherReport> => ipcRenderer.invoke('system:get-weather', city),
+  getJiraToday: (force?: boolean): Promise<JiraTodayReport> => ipcRenderer.invoke('system:get-jira-today', force),
 
   // Leitor e Monitor de Logs em Tempo Real (Tail -f)
   startLogWatch: (

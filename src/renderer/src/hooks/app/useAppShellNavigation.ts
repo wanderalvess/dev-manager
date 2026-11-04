@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { TOUR_STORAGE_KEY } from '../../components/onboarding/tourSteps';
 import { WELCOME_STORAGE_KEY } from '../../components/onboarding/welcomeSteps';
-import { resolveInitialTab } from '../../utils/appShellNavigation';
+import { LAST_TAB_STORAGE_KEY, resolveInitialTab } from '../../utils/appShellNavigation';
 
 const getInitialTab = (): string => {
   try {
     const hasSeenOnboarding =
       window.localStorage.getItem(TOUR_STORAGE_KEY) || window.localStorage.getItem(WELCOME_STORAGE_KEY);
-    return resolveInitialTab(!!hasSeenOnboarding);
+    return resolveInitialTab(!!hasSeenOnboarding, window.localStorage.getItem(LAST_TAB_STORAGE_KEY));
   } catch {
     return 'help';
   }
@@ -27,6 +27,11 @@ export function useAppShellNavigation() {
       next.add(activeTab);
       return next;
     });
+    try {
+      window.localStorage.setItem(LAST_TAB_STORAGE_KEY, activeTab);
+    } catch {
+      // localStorage indisponível
+    }
   }, [activeTab]);
 
   const navigateToHelp = useCallback((search?: string) => {

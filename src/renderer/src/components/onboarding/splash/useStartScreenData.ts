@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { SystemAppInfo, SystemMetrics } from '../../../../../shared/types';
 import type { InfrEnvironment } from '../../../../../shared/infrWinthorVersion';
-import type { UsageSummary } from '../../../../../shared/usageMetricsTypes';
+import type { UsageDays, UsageSummary } from '../../../../../shared/usageMetricsTypes';
+import type { JiraTodayReport } from '../../../../../shared/jiraToday';
 import { computeImpact } from '../../../../../shared/usageImpact';
 import { sanitizeBaselineOverrides } from '../../../../../shared/usageBaselines';
 import { isValidCity, type WeatherReport } from '../../../../../shared/weather';
@@ -13,13 +14,17 @@ export interface StartScreenWeek {
   summary: UsageSummary;
   /** Tempo economizado nos últimos 7 dias (mesma conta do Meu uso) */
   savedMs: number;
+  /** Automações por dia, para as barras da semana quando o Jira não está ligado */
+  days: UsageDays;
 }
 
 /**
- * Dados da tela de início: o PC, a semana no Hub, os ambientes WinThor e o clima. Cada parte carrega sozinha e falha
- * sozinha (um cartão sem dado não derruba a abertura). CPU e memória se atualizam enquanto a tela está aberta.
+ * Dados da tela de início: o PC, a semana no Hub, o Jira, os ambientes WinThor e o clima. Cada parte carrega sozinha e
+ * falha sozinha (um cartão sem dado não derruba a abertura). CPU e memória se atualizam enquanto a tela está aberta.
  */
 export function useStartScreenData(active: boolean) {
+  const [jira, setJira] = useState<JiraTodayReport | null>(null);
+  const [disabledModules, setDisabledModules] = useState<string[]>([]);
   const [appInfo, setAppInfo] = useState<SystemAppInfo | null>(null);
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
   const [week, setWeek] = useState<StartScreenWeek | null>(null);
@@ -49,14 +54,18 @@ export function useStartScreenData(active: boolean) {
       .then(async (s) => {
         if (!alive) return;
         setCity(s.startCity ?? '');
+        setDisabledModules(s.disabledModules ?? []);
         if (s.startCity) void loadWeather(s.startCity);
         if (s.usageMetricsEnabled === false) {
           setUsageOff(true);
           return;
         }
         const [summary, days] = await Promise.all([api.getUsageSummary({ from: weekStart(now) }), api.getUsageDays()]);
-        if (alive) setWeek({ summary, savedMs: computeImpact(days, sanitizeBaselineOverrides(s.usageBaselines), now).week.savedMs });
+        if (alive) setWeek({ summary, days, savedMs: computeImpact(days, sanitizeBaselineOverrides(s.usageBaselines), now).week.savedMs });
       })
+      .catch(() => undefined);
+    api?.getJiraToday?.()
+      .then((r) => alive && setJira(r))
       .catch(() => undefined);
     api?.listInfrEnvironments?.()
       .then((r) => alive && setEnvs(r.success ? r.environments : []))
@@ -82,7 +91,13 @@ export function useStartScreenData(active: boolean) {
     return null;
   };
 
-  return { appInfo, metrics, week, usageOff, envs, city, weather, weatherLoading, saveCity };
+  /** Busca o Jira de novo, sem o cache de 5 minutos (botão "Tentar de novo"). */
+  const reloadJira = () => {
+    setJira(null);
+    window.electronAPI?.getJiraToday?.(true).then(setJira).catch(() => undefined);
+  };
+
+  return { appInfo, metrics, week, usageOff, jira, reloadJira, disabledModules, envs, city, weather, weatherLoading, saveCity };
 }
 
 export type StartScreenData = ReturnType<typeof useStartScreenData>;
