@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.67.1] - 2026-11-04
 ### Corrigido
 - **Recolher menu em monitor baixo**: com muitos módulos ligados, o menu lateral inteiro rolava e o botão *Recolher menu* ficava escondido lá embaixo. Agora só a lista de módulos rola; o logo e o botão de recolher/expandir ficam sempre à vista.
 - **Clima da tela de início atrás do proxy da empresa**: a consulta ia pelo `fetch` do Node, que ignora o proxy e os certificados do Windows e só dizia "fetch failed". Agora vai pela rede do Chromium (a mesma do navegador), e quando ainda falha o cartão diz o motivo (DNS, proxy, certificado, firewall, sem internet ou tempo esgotado) com o código técnico.
