@@ -11,6 +11,7 @@ import type { ArtifactReport } from './infrFeatureArtifacts';
 import type { PreflightItem } from './infrPreflight';
 import type { DependencyReport } from './infrFeatureDependencies';
 import type { InfrCloneInfo } from './infrClone';
+import type { InfrBuildState } from './infrBuildState';
 
 export interface ManifestFeature {
   name: string;
@@ -64,6 +65,8 @@ export interface InfrVersionPreviewRequest {
   /** Ambiente de origem (master): lê o container wta-master */
   fromEnv: string;
   targetVersion: string;
+  /** Nome do ambiente novo: o Hub confere se já existe container ou volume dele */
+  name?: string;
   /** URL do WTA de origem para o catálogo da 801; vazio = porta publicada do wta-<origem> */
   originWtaUrl?: string;
   /** Jar do WSH da versão alvo, caminho no WSL (/opt/wsh/40/winthor-integracao-core.jar) */
@@ -100,7 +103,7 @@ export interface ExistingVersionManifest {
   wshCheck?: WshDependencyCheck[];
   /** Conferida pelos features.xml dos repositórios dela (ausente = não deu para conferir) */
   repair?: ManifestRepoRepair;
-  /** O arquivo com as versões corrigidas, que o Gerar grava no lugar do existente */
+  /** O arquivo com as versões corrigidas, que o Criar grava no lugar do existente */
   repairText?: string;
 }
 
@@ -121,6 +124,8 @@ export interface InfrVersionPreview {
   artifacts?: ArtifactReport;
   /** Portas, disco, memória e rede da distro para o ambiente novo */
   preflight?: PreflightItem[];
+  /** O que já existe na distro e muda o resultado da criação (imagem repetida, volume, jar do WSH) */
+  buildState?: InfrBuildState;
   /** Resultado do ensaio da resolução, quando pedido */
   dryRun?: DryRunReport;
   /** Leitura de um clone (cloneOnly): versão e imagem da origem, e o que já existe na distro */

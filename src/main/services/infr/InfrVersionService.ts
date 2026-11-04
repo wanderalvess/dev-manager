@@ -45,7 +45,7 @@ import { mergeDependencyFixes, resolveDependencies } from '../../../shared/infrF
 import { buildEnvFile, envFieldsFor, parseEnvLines, pickEnv, type InfrEnvTarget } from '../../../shared/infrEnvConfig';
 import type { InfrEnvSaveRequest, InfrEnvTemplate, InfrManifestSaveRequest, InfrManifestSaveResult } from '../../../shared/infrVersionManifest';
 import { INFR_NEW_VERSION_SCRIPTS, commandFailureDetail, missingNewVersionScriptsMessage, originContainerMessage } from '../../../shared/infrNewVersionScripts';
-import { previewClone } from './infrClonePreview';
+import { previewClone, readBuildState } from './infrClonePreview';
 import { checkXmlDependencies } from './infrXmlDependencies';
 import { repairAbsentFeatures, withXmlDependencies } from '../../../shared/infrFeatureXml';
 import type { Routine801Service } from '../Routine801Service';
@@ -233,11 +233,12 @@ export class InfrVersionService {
       dependencies: withXmlDependencies(dep, xmlDeps),
       artifacts: await this.checkArtifacts(distro, container, repositories, origin, manifest, catalog, changes, trace),
       preflight: await this.preflight(distro, target, repositories, trace),
+      buildState: await readBuildState((d, s, t, tr) => this.run(d, s, t, tr), distro, req, trace),
       manifestText: serializeVersionManifest(manifest, header),
       ...(fixed ? { repair: { repairs: fixed.repairs, unresolved: fixed.unresolved } } : {})
     };
     trace(`Manifesto: ${changes.length} sobem, ${upgrade.behind.length} sem versão da linha ${target}; ${existingFile} ${existing ? `já existe (${existing.features.length} features)` : 'não existe'}`);
-    // A lista existente como o Gerar vai gravá-la: com as features sem repositório de volta à versão que os repositórios dela têm
+    // A lista existente como a criação vai gravá-la: com as features sem repositório de volta à versão que os repositórios dela têm
     let existingFinal = existing;
     if (existing?.features.length) {
       result.existing = { path: existingFile, count: existing.features.length, comparison: compareManifests(existing, manifest) };

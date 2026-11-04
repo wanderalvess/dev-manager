@@ -1,5 +1,5 @@
 /**
- * Conferência antes de gerar uma versão nova (Assistente INFR → Nova versão, passo 4): cada ponto
+ * Conferência antes de criar uma versão nova (Assistente INFR → Nova versão, passo 4): cada ponto
  * diz se está ok, se merece atenção ou se impede o ambiente de subir, numa frase.
  */
 import type { InfrDbMode } from './infrWinthorVersion';
@@ -11,7 +11,7 @@ export type InfrReviewStatus = 'ok' | 'warn' | 'block';
 export type InfrReviewFix = 'useSourceOracle' | 'emptyOracle';
 
 export interface InfrReviewItem {
-  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'artefatos' | 'ensaio' | 'portas' | 'disco' | 'memoria' | 'rede' | 'wsh' | 'banco' | 'imagem' | 'manifesto' | 'portasfixas' | 'arquivosenv' | 'repositorios';
+  id: 'origem' | 'versao' | 'features' | 'dependencias' | 'artefatos' | 'ensaio' | 'portas' | 'disco' | 'memoria' | 'rede' | 'wsh' | 'banco' | 'imagem' | 'manifesto' | 'portasfixas' | 'arquivosenv' | 'repositorios' | 'imagemmesma' | 'recriar' | 'jarwsh';
   status: InfrReviewStatus;
   title: string;
   detail: string;
@@ -147,10 +147,10 @@ function reviewRepoCoverage(r: ManifestRepoRepair | undefined, version: string, 
     return {
       id: 'repositorios',
       status: 'warn',
-      title: existing ? `A lista da ${version} é corrigida ao gerar` : 'Lista corrigida pelos repositórios',
+      title: existing ? `A lista da ${version} é corrigida ao criar` : 'Lista corrigida pelos repositórios',
       detail:
         `${list.length > 3 ? `${list.slice(0, 3).join(', ')} e mais ${list.length - 3}` : list.join(', ')}: a versão pedida não está em nenhum repositório da lista, e o build pararia nela. ` +
-        `${existing ? `O Gerar regrava ${file} com a versão que os repositórios têm.` : 'A lista nova já sai com a versão que os repositórios têm.'} Para manter a mais nova, acrescente o "repo mvn:" dela na lista.`
+        `${existing ? `A criação regrava ${file} com a versão que os repositórios têm.` : 'A lista nova já sai com a versão que os repositórios têm.'} Para manter a mais nova, acrescente o "repo mvn:" dela na lista.`
     };
   }
   return { id: 'repositorios', status: 'ok', title: 'Repositório de cada feature', detail: 'Toda feature da lista está num repositório dela (conferido nos features.xml do Nexus).' };
@@ -304,5 +304,5 @@ export function reviewDatabase(i: InfrReviewInput): InfrReviewItem {
   return { id: 'banco', status: 'warn', title, detail: `${i.dbContainer} sobe vazio: importe o dump da versão antes de usar o WTA.` };
 }
 
-/** Algum ponto impede de gerar. */
+/** Algum ponto impede de criar. */
 export const reviewBlocks = (items: InfrReviewItem[]) => items.some((it) => it.status === 'block');

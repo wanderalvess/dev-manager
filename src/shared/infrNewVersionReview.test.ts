@@ -32,9 +32,9 @@ describe('repositório de cada feature (build do Nathan)', () => {
     preview: { ...base.preview, existing: { ...base.preview.existing!, repair, ...(repairText ? { repairText } : {}) } }
   });
 
-  it('lista existente com versão sem repositório: avisa que o Gerar a corrige', () => {
+  it('lista existente com versão sem repositório: avisa que a criação a corrige', () => {
     const items = reviewNewVersion(withRepair({ repairs: [{ name: 'winthor-integracao-2650', from: '1.40.1.2', to: '1.40.0.2' }], unresolved: [] }, 'x'));
-    expect(byId(items, 'repositorios')).toMatchObject({ status: 'warn', title: 'A lista da 39 é corrigida ao gerar' });
+    expect(byId(items, 'repositorios')).toMatchObject({ status: 'warn', title: 'A lista da 39 é corrigida ao criar' });
     expect(byId(items, 'repositorios').detail).toContain('winthor-integracao-2650 1.40.1.2 → 1.40.0.2');
     expect(byId(items, 'features').detail).toContain('só as versões sem repositório são trocadas');
   });

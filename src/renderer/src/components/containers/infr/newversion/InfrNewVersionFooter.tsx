@@ -2,10 +2,10 @@ import React from 'react';
 import { Play, RotateCw } from 'lucide-react';
 import type { InfrNewVersionState } from '../../../../hooks/containers/useInfrNewVersion';
 
-/** Rodapé da Nova versão: o que será criado, o que ainda impede e o único Gerar. */
+/** Rodapé da Nova versão: o que será criado, o que ainda impede e o único Criar. */
 export const InfrNewVersionFooter: React.FC<{
   s: InfrNewVersionState;
-  /** A IA levou a tela até aqui sem bloqueio: o Gerar ganha destaque */
+  /** A IA levou a tela até aqui sem bloqueio: o Criar ganha destaque */
   aiReady: boolean;
   onGenerate: () => void;
   onCancel: () => void;
@@ -18,10 +18,10 @@ export const InfrNewVersionFooter: React.FC<{
   const note = s.issue
     ? { text: s.issue, cls: 'text-danger' }
     : aiReady
-      ? { text: 'A IA chegou até aqui. Nada foi criado ainda: Gerar grava a configuração e abre o terminal com o build (uns 30 minutos).', cls: 'text-foreground' }
+      ? { text: 'A IA chegou até aqui. Nada foi criado ainda: Criar grava a configuração e abre o terminal com o build (uns 30 minutos).', cls: 'text-foreground' }
       : s.clone
-        ? { text: `Gerar grava a configuração e abre o terminal; a imagem já existe, então não há build. O ${form.from || 'ambiente de origem'} não muda.`, cls: 'text-muted-foreground' }
-        : { text: `Gerar grava a configuração e abre o terminal com o build (uns 30 minutos). O ${form.from || 'ambiente de origem'} não muda.`, cls: 'text-muted-foreground' };
+        ? { text: `Criar grava a configuração e abre o terminal; a imagem já existe, então não há build. O ${form.from || 'ambiente de origem'} não muda.`, cls: 'text-muted-foreground' }
+        : { text: `Criar grava a configuração e abre o terminal com o build (uns 30 minutos). O ${form.from || 'ambiente de origem'} não muda.`, cls: 'text-muted-foreground' };
 
   return (
     <footer className={`shrink-0 border-t border-border/80 px-5 md:px-6 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 ${aiReady && !s.issue ? 'bg-warning/5' : 'bg-card'}`}>
@@ -53,7 +53,7 @@ export const InfrNewVersionFooter: React.FC<{
         }`}
       >
         {s.busy === 'generate' ? <RotateCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-current" />}
-        Gerar {form.name || 'ambiente'}
+        Criar {form.name || 'ambiente'}
       </button>
     </footer>
   );

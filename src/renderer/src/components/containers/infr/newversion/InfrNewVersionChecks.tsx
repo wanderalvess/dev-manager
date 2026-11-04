@@ -15,11 +15,12 @@ const TONE: Record<InfrReviewStatus, InfrCheckTone> = { ok: 'ok', warn: 'warn', 
 const SMALL = 'inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border text-xs font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
 
 /**
- * "Antes de gerar": a conferência da origem (pasta, WTA e login) e a leitura do catálogo da 801 numa lista só.
+ * "Antes de criar": a conferência da origem (pasta, WTA e login) e a leitura do catálogo da 801 numa lista só.
  * O que impede vem primeiro, com a ação de resolver ali; o que passou fica numa linha, para abrir se quiser.
  */
 export const InfrNewVersionChecks: React.FC<{ s: InfrNewVersionState; distro?: string }> = ({ s, distro }) => {
-  const [showOk, setShowOk] = useState(false);
+  // null = automático: abre quando algo impede ou há aviso com comando para copiar; a pessoa pode forçar
+  const [manualOpen, setManualOpen] = useState<boolean | null>(null);
   const [starting, setStarting] = useState(false);
   const { form, origin, preview } = s;
   const r = origin.result;
@@ -112,11 +113,22 @@ export const InfrNewVersionChecks: React.FC<{ s: InfrNewVersionState; distro?: s
   const blocks = items.filter((i) => i.tone === 'block').length;
   const warns = items.filter((i) => i.tone === 'warn').length;
   const waiting = items.some((i) => i.tone === 'pending' || i.tone === 'busy');
+  const firstBlock = items.find((i) => i.tone === 'block');
+  // Aviso que traz um comando ou um botão (docker, git...) tem de aparecer sem a pessoa abrir nada
+  const hasCommand = open.some((i) => i.tone === 'warn' && (!!i.extra || /(docker|git|sudo|wsl) /i.test(i.detail ?? '')));
+  const listOpen = manualOpen ?? (blocks > 0 || hasCommand || open.some((i) => i.tone === 'pending'));
   const summary = blocks
-    ? { text: `${blocks} ${blocks > 1 ? 'itens impedem' : 'item impede'}`, cls: 'text-danger' }
+    ? 'text-danger'
     : waiting
-      ? { text: 'conferindo', cls: 'text-muted-foreground' }
-      : { text: `nada impede${warns ? ` · ${warns} ${warns > 1 ? 'avisos' : 'aviso'}` : ''}`, cls: 'text-success' };
+      ? 'text-muted-foreground'
+      : 'text-success';
+  const parts = [
+    blocks ? `${blocks} ${blocks > 1 ? 'impedem' : 'impede'}` : '',
+    warns ? `${warns} ${warns > 1 ? 'avisos' : 'aviso'}` : '',
+    okItems.length ? `${okItems.length} ${okItems.length > 1 ? 'conferidos' : 'conferido'}` : '',
+    !blocks && waiting ? 'conferindo' : '',
+    !blocks && !waiting && !warns ? 'nada impede' : ''
+  ].filter(Boolean);
 
   const recheck = async () => {
     await origin.check();
@@ -124,11 +136,21 @@ export const InfrNewVersionChecks: React.FC<{ s: InfrNewVersionState; distro?: s
   };
 
   return (
-    <section aria-label="Antes de gerar" className="space-y-2.5">
+    <section aria-label="Antes de criar" className="space-y-2.5">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h3 className="text-base font-bold text-foreground">Antes de gerar</h3>
-        <span className={`text-xs font-semibold ${summary.cls}`}>{summary.text}</span>
+        <h3 className="text-sm font-bold text-foreground">
+          <span className="text-muted-foreground font-mono">4 ·</span> Antes de criar
+        </h3>
+        <span role="status" className={`text-xs font-semibold ${summary}`}>
+          {parts.join(' · ')}
+        </span>
+        {!listOpen && firstBlock && <span className="text-xs text-danger break-words">{firstBlock.title}</span>}
         <span className="flex-1" />
+        {items.length > 0 && (
+          <button type="button" onClick={() => setManualOpen(!listOpen)} aria-expanded={listOpen} className="inline-flex items-center gap-1 text-xs font-semibold text-warning hover:underline cursor-pointer">
+            {listOpen ? 'Ocultar detalhes' : 'Ver detalhes'} <ChevronDown className={`w-3 h-3 transition ${listOpen ? 'rotate-180' : ''}`} />
+          </button>
+        )}
         <button type="button" onClick={recheck} disabled={origin.loading || s.busy !== null || !form.from} className="inline-flex items-center gap-1.5 text-xs font-semibold text-warning hover:underline cursor-pointer disabled:opacity-50">
           <RotateCw className={`w-3.5 h-3.5 ${origin.loading ? 'animate-spin' : ''}`} /> Conferir de novo
         </button>
@@ -137,29 +159,13 @@ export const InfrNewVersionChecks: React.FC<{ s: InfrNewVersionState; distro?: s
       {items.length === 0 ? (
         <p className="text-xs text-muted-foreground p-4 rounded-xl border border-dashed border-border">Escolha a origem para o Hub conferir.</p>
       ) : (
-        <ul className="rounded-xl border border-border/80 bg-card overflow-hidden">
-          {open.map((it) => (
-            <InfrCheckRow key={it.key} item={it} />
-          ))}
-          {okItems.length > 0 &&
-            (showOk ? (
-              okItems.map((it) => <InfrCheckRow key={it.key} item={it} />)
-            ) : (
-              <InfrCheckRow
-                item={{
-                  key: 'ok',
-                  tone: 'ok',
-                  title: `${okItems.length} ${okItems.length > 1 ? 'conferidos' : 'conferido'}`,
-                  detail: okItems.map((i) => i.title).join(' · ')
-                }}
-              />
+        listOpen && (
+          <ul className="rounded-xl border border-border/80 bg-card overflow-hidden">
+            {[...open, ...okItems].map((it) => (
+              <InfrCheckRow key={it.key} item={it} />
             ))}
-        </ul>
-      )}
-      {okItems.length > 0 && (
-        <button type="button" onClick={() => setShowOk((v) => !v)} className="inline-flex items-center gap-1 text-2xs font-semibold text-warning hover:underline cursor-pointer">
-          {showOk ? 'Recolher o que passou' : 'Ver o detalhe do que passou'} <ChevronDown className={`w-3 h-3 transition ${showOk ? 'rotate-180' : ''}`} />
-        </button>
+          </ul>
+        )
       )}
 
       {preview?.success && !s.clone && <InfrManifestChoice s={s} />}
@@ -174,13 +180,18 @@ export const InfrNewVersionChecks: React.FC<{ s: InfrNewVersionState; distro?: s
               </div>
             </details>
           )}
-          {!!preview.log?.length && <InfrPreviewLog lines={preview.log} open={!preview.success} />}
-          {s.command && (
-            <details className="rounded-xl border border-border/80 bg-card px-4 py-3">
-              <summary className="text-xs font-semibold text-foreground cursor-pointer">Comando que o Gerar vai rodar</summary>
-              <div className="mt-3 space-y-2">
-                <InfrCommandLine block command={`cd linux-winthor/scripts\n${multilineCommand(s.command)}`} />
-                <p className="text-2xs text-muted-foreground">Roda a partir da pasta do INFR-Docker no WSL.</p>
+          {(!!preview.log?.length || !!s.command) && (
+            <details open={!preview.success} className="rounded-xl border border-border/80 bg-card px-4 py-3">
+              <summary className="text-xs font-semibold text-foreground cursor-pointer">Registro técnico</summary>
+              <div className="mt-3 space-y-3">
+                {!!preview.log?.length && <InfrPreviewLog lines={preview.log} open={!preview.success} />}
+                {s.command && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-foreground">Comando que a criação vai rodar</p>
+                    <InfrCommandLine block command={`cd linux-winthor/scripts\n${multilineCommand(s.command)}`} />
+                    <p className="text-2xs text-muted-foreground">Roda a partir da pasta do INFR-Docker no WSL.</p>
+                  </div>
+                )}
               </div>
             </details>
           )}

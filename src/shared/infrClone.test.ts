@@ -84,7 +84,7 @@ describe('reviewClone', () => {
     expect(r.imagem.detail).toContain('Como resolver');
   });
 
-  it('imagem da origem fora do padrão não impede: o Gerar a marca com o nome da versão', () => {
+  it('imagem da origem fora do padrão não impede: a criação a marca com o nome da versão', () => {
     const r = byId(reviewClone(base({ clone: { ...base().clone, imageExists: false, tagFrom: 'linux-winthor:1.93-debian' } })));
     expect(r.imagem.status).toBe('ok');
     expect(r.imagem.detail).toContain('linux-winthor:1.93-debian');

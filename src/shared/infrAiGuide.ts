@@ -4,6 +4,8 @@
  * (sempre com credenciais mascaradas) e a leitura da resposta. Quem executa é a tela, com confirmação nos pontos de risco.
  */
 import type { InfrEnvCheck } from './infrEnvCheck';
+import { maskDiagnostic } from './infrDiagnostic';
+import { knownFailuresPrompt, matchKnownFailures } from './infrAiKnownFailures';
 import { maskUrlCredentials } from './infrFeatureArtifacts';
 import { isValidEnvName, isValidWinthorVersion } from './infrWinthorVersion';
 
@@ -16,7 +18,7 @@ export type GuideAction =
   | { action: 'set'; field: GuideField; value: string; why: string }
   /** Lê a origem e o catálogo e confere tudo (passo 4) */
   | { action: 'preview'; why: string }
-  /** Pede ao usuário a confirmação para gerar; só ele gera */
+  /** Pede ao usuário a confirmação para criar; só ele gera */
   | { action: 'generate'; why: string }
   /** Confere os containers do ambiente novo */
   | { action: 'verify'; why: string }
@@ -37,8 +39,12 @@ export interface GuideContext {
   review: { id: string; status: string; title: string; detail: string }[];
   /** Erro ao ler a origem, quando a prévia falhou */
   previewError?: string;
-  /** Resumo da verificação dos containers depois do Gerar */
+  /** Resumo da verificação dos containers depois da criação */
   verify?: { status: string; lines: string[] };
+  /** Relatório compacto do ambiente (scripts, pasta, containers, erros da criação); substitui as linhas da verificação */
+  diagnostic?: string;
+  /** Saída do terminal que o usuário colou */
+  pasted?: string;
   /** Últimas ações e resultados, mais antigas primeiro */
   history: string[];
 }
@@ -70,10 +76,45 @@ const DB_MODES = ['clone', 'empty', 'existing'];
 
 /** Esconde o que não pode sair da máquina: usuário:senha@ em URL e pares senha/token/chave. */
 export function maskForAi(text: string): string {
-  return maskUrlCredentials(text).replace(
-    /\b(senha|password|passwd|pass|pwd|token|secret|apikey|api_key)(\s*[=:]\s*)("[^"]*"|'[^']*'|\S+)/gi,
-    '$1$2***'
+  return maskDiagnostic(
+    maskUrlCredentials(text).replace(/\b(senha|password|passwd|pass|pwd|token|secret|apikey|api_key)(\s*[=:]\s*)("[^"]*"|'[^']*'|\S+)/gi, '$1$2***')
   );
+}
+
+/**
+ * Identifica uma falha do ambiente para a IA falar dela uma vez só: o mesmo erro lido de novo (a cada 15 s ou ao reabrir a
+ * tela) dá a mesma assinatura. Devolve null quando não há falha.
+ */
+export function envFailureSignature(check: InfrEnvCheck | null | undefined): string | null {
+  const s = check?.summary;
+  if (!check?.success || s?.status !== 'fail') return null;
+  return [check.name ?? '', s.title, check.buildLog?.failure ?? '', check.buildLog?.stage ?? ''].join('|');
+}
+
+/**
+ * Decide se a leitura do ambiente deve acordar a IA: só enquanto a criação está em andamento, para o ambiente do formulário
+ * e uma vez por falha (a mesma assinatura lida de novo não chama o modelo). Devolve a assinatura a registrar, ou null.
+ */
+export function failureToExplain(opts: { check: InfrEnvCheck | null | undefined; status: string; formName: string; lastSignature: string | null }): string | null {
+  const sig = envFailureSignature(opts.check);
+  if (!sig || opts.status !== 'building' || sig === opts.lastSignature) return null;
+  if (opts.check?.name && opts.check.name !== opts.formName.trim()) return null;
+  return sig;
+}
+
+export interface GuideConversation {
+  goal: string;
+  history: string[];
+  pasted?: string;
+}
+
+/** Resposta do usuário depois da falha: soma ao que já existe (pedido, histórico, saída colada) em vez de recomeçar. */
+export function continueConversation(prev: GuideConversation, text: string, terminalOutput?: string): GuideConversation {
+  const t = text.trim();
+  const out = terminalOutput?.trim();
+  const history = [...prev.history, `o usuário respondeu: ${maskForAi(t) || '(sem texto)'}`];
+  if (out) history.push('o usuário colou a saída do terminal (ela vem no fim do contexto)');
+  return { goal: prev.goal || t || 'Entender o erro do terminal', history, pasted: out ? maskForAi(out).slice(-3500) : prev.pasted };
 }
 
 /** Confere o valor de um campo; devolve o motivo da recusa ou '' quando serve. */
@@ -162,11 +203,13 @@ export const GUIDE_SYSTEM_PROMPT = [
   'Ações:',
   '- {"action":"set","field":"from|version|name|dbMode|oraclePort|wtaPort|wshPort|dryRun","value":"...","why":"..."}: preenche um campo. dbMode: clone, empty ou existing.',
   '- {"action":"preview","why":"..."}: lê a origem e o catálogo e confere tudo. Faça depois de preencher origem, versão e nome.',
-  '- {"action":"generate","why":"..."}: só pede ao usuário a confirmação para gerar (o build leva uns 30 minutos). Peça apenas com a conferência sem itens bloqueados.',
-  '- {"action":"verify","why":"..."}: confere os containers depois de gerar.',
+  '- {"action":"generate","why":"..."}: só pede ao usuário a confirmação para criar (o build leva uns 30 minutos). Peça apenas com a conferência sem itens bloqueados.',
+  '- {"action":"verify","why":"..."}: confere os containers depois de criar.',
   '- {"action":"say","why":"explicação ou diagnóstico","commands":["comando opcional para o usuário copiar"]}: orienta sem mexer em nada.',
   '- {"action":"done","why":"..."}: terminou ou não há mais o que fazer.',
-  'Regras: não invente ambientes, portas ou nomes fora do que o contexto mostra. Item bloqueado na conferência não se contorna: explique e proponha a correção (campo diferente ou dbMode). Em falha, diagnostique pelo log e pela conferência; se não houver correção possível com as ações acima, use say. Nunca sugira comandos que apaguem, parem ou recriem containers, volumes ou arquivos: o ambiente que existe pode ser o único funcionando; em "commands" só leitura (docker ps, docker logs, curl) ou git fetch/checkout. Uma ação por resposta.'
+  'Regras: não invente ambientes, portas ou nomes fora do que o contexto mostra. Item bloqueado na conferência não se contorna: explique e proponha a correção (campo diferente ou dbMode). Em falha, diagnostique pelo log e pela conferência; se não houver correção possível com as ações acima, use say. Nunca sugira comandos que apaguem, parem ou recriem containers, volumes ou arquivos: o ambiente que existe pode ser o único funcionando; em "commands" só leitura (docker ps, docker logs, free -m, df, curl) ou git fetch/checkout. Se a correção apaga algo (docker rm/rmi, volume, SQL), descreva no texto de "why", só do ambiente novo e dizendo o que apaga; SQL só para rodar num ambiente de teste, com backup. Uma ação por resposta.',
+  'Depois de uma falha da criação você recebe um "Relatório do ambiente". Responda com say: diga em português simples o que aconteceu e o que fazer, apontando a causa pela evidência (scripts desatualizados, branch da pasta, primeiro [ERRO] do log, container que falta), e traga em "commands" os comandos para o usuário copiar e rodar (diga em "why" em que pasta rodar). Se o relatório indicar SCRIPTS DESATUALIZADOS, a causa é a pasta do INFR-Docker velha: use o comando de atualização da própria mensagem. Se o usuário disser que já resolveu, não repita: use verify para reler o ambiente. Saída de terminal colada pelo usuário vale como evidência.',
+  knownFailuresPrompt()
 ].join('\n');
 
 /** Mensagem de contexto do turno: estado do formulário, conferência, verificação e histórico recente, tudo mascarado. */
@@ -177,9 +220,9 @@ export function buildGuideUserMessage(ctx: GuideContext): string {
   if (ctx.previewError) lines.push(`A prévia falhou: ${ctx.previewError}`);
   if (ctx.review.length) {
     lines.push('Conferência do passo 4:');
-    for (const r of ctx.review.slice(0, 14)) lines.push(`- [${r.status}] ${r.title}: ${r.detail}`.slice(0, 500));
+    for (const r of ctx.review.slice(0, 18)) lines.push(`- [${r.status}] ${r.title}: ${r.detail}`.slice(0, 700));
   }
-  if (ctx.verify) {
+  if (ctx.verify && !ctx.diagnostic) {
     lines.push(`Verificação do ambiente: ${ctx.verify.status}`);
     for (const l of ctx.verify.lines.slice(0, 40)) lines.push(`  ${l}`);
   }
@@ -187,6 +230,13 @@ export function buildGuideUserMessage(ctx: GuideContext): string {
     lines.push('Até aqui:');
     for (const h of ctx.history.slice(-10)) lines.push(`- ${h}`);
   }
-  lines.push('Qual a próxima ação? Responda só com o JSON.');
-  return maskForAi(lines.join('\n')).slice(0, 12000);
+  // O relatório e o que foi colado vão por último, cada um com teto próprio: a pergunta final nunca é cortada
+  const tail: string[] = [];
+  if (ctx.diagnostic) tail.push(`Relatório do ambiente (lido agora pelo Hub):\n${ctx.diagnostic.slice(0, 8000)}`);
+  if (ctx.pasted?.trim()) tail.push(`Saída do terminal colada pelo usuário:\n${ctx.pasted.slice(-3500)}`);
+  // Pista do Hub: as falhas conhecidas que combinam com o que foi lido (ajuda modelos pequenos a escolher a entrada certa)
+  const hints = matchKnownFailures([...lines, ctx.diagnostic ?? '', ctx.pasted ?? '', ctx.verify?.status ?? '', ...(ctx.verify?.lines ?? [])].join('\n'));
+  if (hints.length) tail.push(`Pista do Hub: o que foi lido combina com a falha conhecida ${hints.map((h) => `${h.id} (${h.name})`).join(', ')}.`);
+  tail.push('Qual a próxima ação? Responda só com o JSON.');
+  return maskForAi([lines.join('\n').slice(0, 6000), ...tail].join('\n'));
 }

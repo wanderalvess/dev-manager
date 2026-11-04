@@ -6,6 +6,7 @@ import { isValidEnvName, isValidImageRef, isValidWinthorVersion } from '../../..
 import type { InfrVersionPreview, InfrVersionPreviewRequest } from '../../../shared/infrVersionManifest';
 import type { PreflightItem } from '../../../shared/infrPreflight';
 import { commandFailureDetail, missingNewVersionScriptsMessage, originContainerMessage } from '../../../shared/infrNewVersionScripts';
+import { buildStateScript, parseBuildState } from '../../../shared/infrBuildState';
 import type { WslService } from '../WslService';
 
 type Trace = (line: string) => void;
@@ -49,7 +50,7 @@ export async function previewClone(deps: InfrCloneDeps, req: InfrVersionPreviewR
     return { success: false, error: `A imagem do ${container} é da distro "${parsed.distro}"; o Hub clona só imagens debian (o padrão do script).` };
   }
   if (!parsed && !isValidWinthorVersion(req.targetVersion)) {
-    return { success: false, error: `A imagem do ${container} (${image || 'sem nome'}) não diz a versão do WinThor. Como resolver: informe a versão do ${from} na frase.` };
+    return { success: false, error: `A imagem do ${container} (${image || 'sem nome'}) não diz a versão do WinThor. Como resolver: informe a versão do ${from} nos campos.` };
   }
   if (!parsed && !isValidImageRef(image)) {
     return { success: false, error: `O nome da imagem do ${container} (${image}) não é um nome de imagem do Docker que o Hub saiba repassar.` };
@@ -81,5 +82,20 @@ export async function previewClone(deps: InfrCloneDeps, req: InfrVersionPreviewR
   const preflight = (await deps.preflight(distro, version, null, trace, req.ports)).filter((i) => i.id !== 'portas' || i.status === 'block');
 
   const clone: InfrCloneInfo = { version, image: imageName, imageExists, originState: state, manifestExists, ...(tagFrom ? { tagFrom } : {}) };
-  return { success: true, clone, preflight, ...(manifestText ? { manifestText } : {}) };
+  const buildState = await readBuildState(deps.run, distro, req, trace);
+  return { success: true, clone, preflight, ...(buildState ? { buildState } : {}), ...(manifestText ? { manifestText } : {}) };
+}
+
+/** Imagens, volume do WTA novo e jar do WSH da distro (só leitura); falha na leitura não impede a prévia. */
+export async function readBuildState(run: InfrCloneDeps['run'], distro: string, req: InfrVersionPreviewRequest, trace: Trace) {
+  if (!req.name) return undefined;
+  const script = buildStateScript({ name: req.name, from: req.fromEnv, wshJar: req.wshJar });
+  if (script === 'echo invalid') return undefined;
+  try {
+    const out = await run(distro, `echo ${Buffer.from(script).toString('base64')} | base64 -d | bash`, 30000, trace);
+    return { ...parseBuildState(out), forName: req.name };
+  } catch (err: any) {
+    trace(`Não deu para ler imagens e volumes da distro: ${commandFailureDetail(err)}`);
+    return undefined;
+  }
 }

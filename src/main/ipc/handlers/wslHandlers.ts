@@ -1,5 +1,8 @@
-import { ipcMain } from 'electron';
+import { app, ipcMain } from 'electron';
 import { wslService } from '../../services/WslService';
+import { getAppDataDir } from '../../services/ConfigService';
+import { InfrDiagnosticService } from '../../services/infr/InfrDiagnosticService';
+import type { InfrDiagnosticRequest } from '../../../shared/infrDiagnosticTypes';
 import { InfrVersionService } from '../../services/infr/InfrVersionService';
 import type { InfrEnvSaveRequest, InfrManifestSaveRequest, InfrVersionPreviewRequest } from '../../../shared/infrVersionManifest';
 import { InfrEnvCheckService } from '../../services/infr/InfrEnvCheckService';
@@ -20,6 +23,7 @@ export function registerWslHandlers(ctx: IpcContext): void {
   wslService.setProjectsRootProvider(() => ctx.configService.getSettings().projectsPath);
   const infrVersionService = new InfrVersionService(wslService, ctx.routine801Service);
   const infrEnvCheckService = new InfrEnvCheckService(wslService);
+  const infrDiagnosticService = new InfrDiagnosticService(wslService, infrEnvCheckService, { hubVersion: () => app.getVersion(), dataDir: getAppDataDir });
   const infrOriginCheckService = new InfrOriginCheckService(wslService, ctx.routine801Service);
   const infrFirstStepsService = new InfrFirstStepsService(wslService, ctx.routine801Service);
   const infrFirstStepsActions = new InfrFirstStepsActions(wslService);
@@ -83,6 +87,10 @@ export function registerWslHandlers(ctx: IpcContext): void {
 
   ipcMain.handle('infr:env-check', async (_, { distro, name }: { distro?: string; name: string }) => {
     return await infrEnvCheckService.check(distro, name);
+  });
+
+  ipcMain.handle('infr:diagnostic', async (_, req: InfrDiagnosticRequest) => {
+    return await infrDiagnosticService.build(req);
   });
 
   ipcMain.handle('infr:env-check-terminal', async (_, req: { distro?: string; name: string; id: InfrCheckCommandId; wtaPort?: number }) => {

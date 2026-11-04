@@ -76,7 +76,7 @@ export function getInfrVersionFaq(): FaqItem[] {
               cada ambiente da distro aparece como Oracle → WTA → WSH, com o estado e a porta de cada parte e a ação que faz sentido (Iniciar, Abrir o
               WinThor, Verificar, Copiar para outra versão). Dali saem as tarefas Nova versão, Montar do zero e Verificar, cada uma numa tela com o caminho
               de volta no cabeçalho, que também mostra a distro e a pasta do INFR-Docker (vermelho quando faltam scripts). Na Nova versão, portas, WSH e a
-              configuração copiada da origem ficam em <em>Ajustes</em>, fechado, com os valores à vista; o rodapé diz o que será criado e tem o Gerar. Um
+              configuração copiada da origem ficam em <em>Ajustes</em>, fechado, com os valores à vista; o rodapé diz o que será criado e tem o botão Criar. Um
               clone de banco que não vai funcionar (Oracle que não é o XE do INFR-Docker) oferece as saídas: usar aquele Oracle direto ou subir um vazio.
             </li>
             <li>
@@ -86,14 +86,14 @@ export function getInfrVersionFaq(): FaqItem[] {
               &quot;Não foi possível ler a origem&quot; e pede para rodar <code className={C}>git checkout feature/imagem-por-versao</code> na pasta.
             </li>
             <li>
-              <strong className="text-foreground">Antes de gerar:</strong> ao escolher a origem, o assistente confere se a pasta do INFR-Docker tem os
+              <strong className="text-foreground">Antes de criar:</strong> ao escolher a origem, o assistente confere se a pasta do INFR-Docker tem os
               scripts, se o <code className={C}>wta-&lt;origem&gt;</code> está rodando e responde, e se o login do WTA entra; com as três em verde, lê o
               catálogo da 801 sozinho. Tudo fica numa lista só: o que impede vem primeiro, com a ação de resolver ali (com a origem parada,{' '}
               <em>Iniciar o &lt;origem&gt;</em>), e o que passou fica recolhido numa linha. Sem usuário, ou com a senha recusada, a própria linha do login pede
               usuário e senha; Salvar e testar grava em Configurações → Rotinas WinThor e confere de novo.
             </li>
             <li>
-              <strong className="text-foreground">O ambiente subiu?</strong> Depois do Gerar, o assistente abre <strong className="text-foreground">Verificar ambiente</strong>{' '}
+              <strong className="text-foreground">O ambiente subiu?</strong> Depois da criação, o assistente abre <strong className="text-foreground">Verificar ambiente</strong>{' '}
               (também pela tela de ambientes). Ele mostra o ambiente como Oracle → WTA → WSH, com o estado de <code className={C}>oracle-</code>, <code className={C}>wta-</code> e{' '}
               <code className={C}>wsh-&lt;nome&gt;</code>, o fim do log de cada um e se o WTA responde, e repete a leitura a cada 15 s enquanto o
               ambiente sobe. Um WSH reiniciando com &quot;Versão exigida&quot; no log aparece como falha, com a linha do log. Cada teste também vem
@@ -120,7 +120,7 @@ export function getInfrVersionFaq(): FaqItem[] {
             <li>
               <strong className="text-foreground">Banco e portas da versão nova:</strong> clonar o banco de um Oracle escolhido (RMAN), usar um
               Oracle que já existe ou criar um vazio para importar o dump depois; container e portas vêm sugeridos pela versão e podem ser
-              mudados. Ao gerar, o Hub grava <code className={C}>versions/40.features</code> e abre o terminal com o{' '}
+              mudados. Ao criar, o Hub grava <code className={C}>versions/40.features</code> e abre o terminal com o{' '}
               <code className={C}>new_version_env.sh</code>, que monta a imagem, o banco, o WTA e o WSH.
             </li>
             <li>

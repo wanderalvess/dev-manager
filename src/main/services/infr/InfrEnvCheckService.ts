@@ -18,7 +18,7 @@ import { commandFailureDetail } from '../../../shared/infrNewVersionScripts';
 import type { WslService } from '../WslService';
 
 /**
- * Verificar um ambiente do INFR-Docker depois do Gerar: estado, health, reinícios, portas e fim do
+ * Verificar um ambiente do INFR-Docker depois da criação: estado, health, reinícios, portas e fim do
  * log de oracle/wta/wsh-<nome> numa só chamada ao WSL, e se o WTA responde pela porta publicada.
  */
 export class InfrEnvCheckService {
@@ -38,7 +38,9 @@ export class InfrEnvCheckService {
     const script = INFR_ROLES.map(
       (role) =>
         `echo '@@c ${role}-${n}'; docker inspect -f '${format}' ${role}-${n} 2>/dev/null || echo MISSING; ` +
-        `echo '@@ports'; docker port ${role}-${n} 2>/dev/null; echo '@@logs'; docker logs --tail 30 ${role}-${n} 2>&1 | tail -n 30`
+        `echo '@@ports'; docker port ${role}-${n} 2>/dev/null; echo '@@logs'; docker logs --tail 30 ${role}-${n} 2>&1 | tail -n 30` +
+        // Karaf travado: só o WTA, e no log inteiro (o fim do log pode já ter passado das linhas de timeout)
+        (role === 'wta' ? `; echo '@@stuck'; docker logs --timestamps ${role}-${n} 2>&1 | grep -E 'has timed out waiting|pacotes em transi' | tail -n 40 | cut -c1-300` : '')
     ).join('; ');
     let output: string;
     try {
@@ -73,7 +75,7 @@ export class InfrEnvCheckService {
     };
   }
 
-  /** Fim do log que o terminal do Gerar grava em /tmp da distro; sem o arquivo, não há relatório. */
+  /** Fim do log que o terminal do Criar grava em /tmp da distro; sem o arquivo, não há relatório. */
   private async readBuildLog(distro: string, name: string): Promise<InfrEnvCheck['buildLog']> {
     const path = buildLogPath(name);
     if (!path) return undefined;

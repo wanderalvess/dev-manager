@@ -14,6 +14,7 @@ import { InfrHomeTab } from '../infr/home/InfrHomeTab';
 import { useInfrNewVersion } from '../../../hooks/containers/useInfrNewVersion';
 import { useInfrAiGuide } from '../../../hooks/containers/useInfrAiGuide';
 import { useInfrEnvCheck } from '../../../hooks/containers/useInfrEnvCheck';
+import { useInfrDiagnostic } from '../../../hooks/containers/useInfrDiagnostic';
 import { InfrVerifyTab } from '../infr/InfrVerifyTab';
 import { InfrFirstStepsTab } from '../infr/firststeps/InfrFirstStepsTab';
 import { useInfrFirstSteps } from '../../../hooks/containers/useInfrFirstSteps';
@@ -58,14 +59,21 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
 }) => {
   const state = useInfrBootstrapModalState({ onLoadInfrScripts, onRunInfrScript });
   const [verifyName, setVerifyName] = useState('');
+  // Cada abertura relê o ambiente, mesmo com o nome do Criação anterior (a leitura que ficou pode ser de um build que falhou)
+  const [verifyKey, setVerifyKey] = useState(0);
   const openVerify = (name: string) => {
     setVerifyName(name);
+    setVerifyKey((k) => k + 1);
     state.setActiveTab('verify');
   };
-  // Depois do Gerar, abre a verificação do ambiente novo
+  // Depois da criação, abre a verificação do ambiente novo
   const newVersion = useInfrNewVersion(distro, state.customPath || undefined, openVerify);
-  const ai = useInfrAiGuide(newVersion, distro);
-  const verify = useInfrEnvCheck(distro || newVersion.envs?.distro, verifyName);
+  const ai = useInfrAiGuide(newVersion, distro, state.customPath || undefined);
+  const verify = useInfrEnvCheck(distro || newVersion.envs?.distro, verifyName, verifyKey);
+  // O Hub relê o ambiente enquanto a criação roda; quando aparece falha, a IA explica (uma vez por falha)
+  const onEnvCheck = ai.onEnvCheck;
+  useEffect(() => onEnvCheck(verify.result), [verify.result]); // eslint-disable-line react-hooks/exhaustive-deps
+  const diag = useInfrDiagnostic(distro || newVersion.envs?.distro, state.customPath || undefined);
   const [guideOpen, setGuideOpen] = useState(false);
   const firstSteps = useInfrFirstSteps(distro, state.customPath || undefined, isOpen && state.activeTab === 'firstSteps', openVerify);
   const { envs, loadEnvironments } = newVersion;
@@ -143,9 +151,9 @@ export const InfrBootstrapModal: React.FC<InfrBootstrapModalProps> = ({
         ) : view === 'firstSteps' ? (
           <InfrFirstStepsTab f={firstSteps} onGoTo={selectTab} />
         ) : view === 'newVersion' ? (
-          <InfrNewVersionTab s={newVersion} ai={ai} distro={distro} onCancel={goHome} />
+          <InfrNewVersionTab s={newVersion} ai={ai} diag={diag} distro={distro} onCancel={goHome} />
         ) : view === 'verify' ? (
-          <InfrVerifyTab v={verify} ai={ai} envNames={envs?.environments.map((e) => e.name) ?? []} onNewVersion={copyFrom} />
+          <InfrVerifyTab v={verify} ai={ai} diag={diag} envNames={envs?.environments.map((e) => e.name) ?? []} onNewVersion={copyFrom} />
         ) : (
           <div className="flex-1 min-w-0 overflow-auto scrollbar-thin">
             <div className="max-w-6xl mx-auto px-5 md:px-6 py-8 space-y-4">
