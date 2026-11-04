@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.67.1] - 2026-11-04
+### Corrigido
+- **Nova versão: features do próprio Karaf não impedem mais a criação**. No ambiente do Nathan, "Antes de criar" bloqueava com "Feature sem repositório na lista" para `spring 4.2.9.RELEASE_1`, `spring-aspects`, `spring-jdbc` e mais 12, porque só olhava os features.xml dos `repo mvn:` da lista. Essas features vêm dos repositórios que o Karaf já traz registrados (`featuresRepositories` do `etc/org.apache.karaf.features.cfg`) e dos `<repository>` que cada features.xml puxa, e o Karaf resolve por eles também. A leitura agora baixa esses XML (do `system/` do Karaf primeiro, depois do Nexus) e só acusa a feature que nenhum deles tem.
+
 ## [1.67.0] - 2026-11-03
 ### Adicionado
 - **Copiar relatório para suporte** (Assistente INFR → Verificar, e na mensagem do Gerar em Nova versão): um clique junta num texto só o que ajuda a achar o problema de um ambiente, em vez de prints do terminal, e copia para colar na conversa. O relatório traz a versão do Hub, a branch, o commit e as alterações locais da pasta do INFR-Docker, **se cada script conhece as opções que o Hub passa** (aponta o `wta_setup.sh` antigo), os arquivos `wta.env`/`.env` da versão, o Docker, as imagens, o disco e a memória, o estado e o fim do log de cada container e o log do Gerar (os primeiros erros com contexto, o fim e o do Gerar anterior). Senhas, tokens, `usuário:senha@` em URL, cabeçalhos Authorization e conexões do Oracle saem escondidos (`***`). O arquivo também fica guardado na pasta de dados do Hub (`diagnosticos`, os 20 mais recentes), para o caso de o navegador não deixar copiar.

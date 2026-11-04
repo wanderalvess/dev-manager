@@ -1,6 +1,10 @@
 import {
   absentForManifest,
   buildFeatureXmlFetchScript,
+  buildKarafCfgScript,
+  KARAF_HOME,
+  parseKarafCfgOutput,
+  reachableXmlPaths,
   checkManifestWithFeatureXml,
   featureXmlPaths,
   parseFeatureXmlFetchOutput,
@@ -37,24 +41,41 @@ export async function checkXmlDependencies(
     trace('Dependências pelos features.xml não conferidas: o Karaf não lista repositórios http');
     return { ...base, error: 'o Karaf não lista repositórios http (ou o container não deixou ler o org.ops4j.pax.url.mvn.cfg)' };
   }
-  const paths = [...new Set([...featureXmlPaths(manifest, true), ...(existing ? featureXmlPaths(existing, true) : [])].map((p) => p.path))].slice(0, MAX_XML_REPOS);
+  const listPaths = [...new Set([...featureXmlPaths(manifest, true), ...(existing ? featureXmlPaths(existing, true) : [])].map((p) => p.path))];
+  const paths = listPaths.slice(0, MAX_XML_REPOS);
+  const system = `${KARAF_HOME}/system`;
   try {
-    const out = await run(buildFeatureXmlFetchScript(repositories, paths), 180000);
+    // Junto com os XML da lista vem o featuresRepositories do Karaf: as features dele (spring, jdbc...) não estão na lista
+    const out = await run(`${buildKarafCfgScript()}\n${buildFeatureXmlFetchScript(repositories, paths, system)}`, 180000);
     const fetched = parseFeatureXmlFetchOutput(out);
     if (fetched.noCurl) {
       trace('Dependências pelos features.xml não conferidas: o container não tem curl');
       return { ...base, error: 'o container não tem curl' };
     }
+    const karafPaths = parseKarafCfgOutput(out);
+    trace(`Repositórios que o Karaf já traz (featuresRepositories): ${karafPaths.length ? karafPaths.length : 'nenhum lido'}`);
+    // O Karaf também registra os <repository> que cada XML puxa; baixa esses em até 3 rodadas, além dos do próprio Karaf
+    const missed = new Set(fetched.missing);
+    for (let round = 0; round < 3; round++) {
+      const pending = reachableXmlPaths([...listPaths, ...karafPaths], fetched.files).pending.filter((p) => !missed.has(p)).slice(0, 60);
+      if (pending.length === 0) break;
+      const more = parseFeatureXmlFetchOutput(await run(buildFeatureXmlFetchScript(repositories, pending, system), 180000));
+      for (const [p, xml] of more.files) fetched.files.set(p, xml);
+      for (const p of more.missing) missed.add(p);
+      for (const p of pending) if (!more.files.has(p)) missed.add(p);
+      trace(`Repositórios puxados pelos XML e pelo Karaf: ${more.files.size} de ${pending.length} baixados`);
+    }
     const own = new Set(probes.map((p) => p.path));
     const files = new Map([...fetched.files].filter(([p]) => own.has(p)));
     const features = [...files.values()].flatMap(parseFeaturesXml);
-    const absent = absentForManifest(manifest, fetched.files);
-    const existingAbsent = existing ? absentForManifest(existing, fetched.files) : undefined;
+    const absent = absentForManifest(manifest, fetched.files, karafPaths);
+    const existingAbsent = existing ? absentForManifest(existing, fetched.files, karafPaths) : undefined;
     const result: XmlDependencyReport = {
       ...base,
       fetched: files.size,
       missing: fetched.missing.filter((p) => own.has(p)).length,
       ...checkManifestWithFeatureXml(manifest, features),
+      karafRepos: karafPaths.length,
       ...(absent ? { absent } : {}),
       ...(existingAbsent ? { existingAbsent } : {})
     };

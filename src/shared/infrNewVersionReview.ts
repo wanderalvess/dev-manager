@@ -126,7 +126,8 @@ export function reviewNewVersion(i: InfrReviewInput): InfrReviewItem[] {
 
 /**
  * Cada feature da lista está num repositório dela? É o que o build confere primeiro ("Feature X/versão não existe em
- * nenhum repositório da lista"); aqui sai dos features.xml baixados na leitura. Sem conferência (algum XML não veio), nada.
+ * nenhum repositório da lista"); aqui sai dos features.xml baixados na leitura: os da lista, os `<repository>` que eles
+ * puxam e os `featuresRepositories` do Karaf (spring, jdbc...). Sem conferência (algum XML da lista não veio), nada.
  */
 function reviewRepoCoverage(r: ManifestRepoRepair | undefined, version: string, existing: boolean): InfrReviewItem | null {
   if (!r) return null;
@@ -138,7 +139,7 @@ function reviewRepoCoverage(r: ManifestRepoRepair | undefined, version: string, 
       status: 'block',
       title: 'Feature sem repositório na lista',
       detail:
-        `${names(r.unresolved)}: nenhum "repo mvn:" da lista tem essa feature, em nenhuma versão, e o build pararia em "não existe em nenhum repositório da lista". ` +
+        `${names(r.unresolved)}: nenhum "repo mvn:" da lista tem essa feature, em nenhuma versão (nem os repositórios que eles puxam, nem os que o Karaf já traz), e o build pararia em "não existe em nenhum repositório da lista". ` +
         `Como resolver: acrescente em ${file} a linha "repo mvn:<grupo>/<artefato>/<versão>/xml/features" do Nexus que tem a feature, ou tire a feature da lista, e confira de novo.`
     };
   }
@@ -153,7 +154,7 @@ function reviewRepoCoverage(r: ManifestRepoRepair | undefined, version: string, 
         `${existing ? `A criação regrava ${file} com a versão que os repositórios têm.` : 'A lista nova já sai com a versão que os repositórios têm.'} Para manter a mais nova, acrescente o "repo mvn:" dela na lista.`
     };
   }
-  return { id: 'repositorios', status: 'ok', title: 'Repositório de cada feature', detail: 'Toda feature da lista está num repositório dela (conferido nos features.xml do Nexus).' };
+  return { id: 'repositorios', status: 'ok', title: 'Repositório de cada feature', detail: 'Toda feature da lista está num repositório dela, nos que eles puxam ou nos que o Karaf já traz (conferido nos features.xml).' };
 }
 
 /** O Karaf de origem simulou a instalação das features trocadas? Só avisa: ele ainda tem o estado da versão antiga. */
