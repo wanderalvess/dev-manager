@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { InfrNewVersionState } from '../../../hooks/containers/useInfrNewVersion';
 import type { InfrAiGuideState } from '../../../hooks/containers/useInfrAiGuide';
 import type { InfrDiagnosticState } from '../../../hooks/containers/useInfrDiagnostic';
@@ -39,6 +39,12 @@ export const InfrNewVersionTab: React.FC<{ s: InfrNewVersionState; ai: InfrAiGui
     if (s.formIssue.includes('Ajustes')) setAdjustOpen(true);
   }, [s.formIssue]);
 
+  // A mensagem do Criar fica no fim da página: rola até ela, ou o clique parece não ter feito nada
+  const messageRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (s.message) messageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [s.message]);
+
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       <div className="flex-1 min-h-0 overflow-auto scrollbar-thin">
@@ -57,7 +63,7 @@ export const InfrNewVersionTab: React.FC<{ s: InfrNewVersionState; ai: InfrAiGui
           <InfrNewVersionChecks s={s} distro={distro} />
 
           {s.message && (
-            <div className="space-y-3 p-3 rounded-xl bg-muted/40">
+            <div ref={messageRef} className="space-y-3 p-3 rounded-xl bg-muted/40">
               <p className="text-xs text-foreground/80 break-words">{s.message}</p>
               {/* Gerar que não abriu ou deu erro: o relatório leva a mensagem, o comando e o registro da leitura */}
               <InfrDiagnosticButton
