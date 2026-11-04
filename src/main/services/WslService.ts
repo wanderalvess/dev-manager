@@ -1112,6 +1112,18 @@ export class WslService {
     });
     if (gaps.length > 0) return { success: false, output: scriptGapsMessage(gaps, infr.windows) };
 
+    // O log do Gerar anterior sai do caminho antes do terminal novo abrir: o Verificar ambiente não pode ler o erro do build
+    // antigo como se fosse deste (o tee só trunca o arquivo quando o terminal começa a rodar). Ele fica ao lado como
+    // `.prev`, que o relatório para suporte inclui para comparar com a tentativa nova.
+    if (scriptType === 'version' && options.newEnv?.name && /^[a-zA-Z0-9_.-]{1,40}$/.test(options.newEnv.name.trim())) {
+      const log = `/tmp/hub-nova-versao-${options.newEnv.name.trim()}.log`;
+      try {
+        await execFileAsync('wsl.exe', ['-d', targetDistro, '--', 'sh', '-c', `[ -f ${log} ] && mv -f ${log} ${log}.prev; true`], { timeout: 15000 });
+      } catch {
+        // sem mover o log antigo o terminal ainda sobrescreve o arquivo ao começar
+      }
+    }
+
     try {
       const wtArgs = [
         '-w', '0', 'nt',

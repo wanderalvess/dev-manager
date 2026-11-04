@@ -1,3 +1,4 @@
+import { reviewBuildState } from '../../../../shared/infrBuildState';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { cloneDefaultPorts, parseWtaImage, reviewClone, usedHostPorts } from '../../../../shared/infrClone';
 import {
@@ -166,7 +167,7 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
   const formIssue = !form.from
     ? 'Escolha o ambiente de origem.'
     : clone && !originVersion && !isValidWinthorVersion(form.version)
-      ? `A imagem do WTA do ${form.from} (${originImage || 'sem imagem'}) não diz a versão: informe a versão do ${form.from} na frase.`
+      ? `A imagem do WTA do ${form.from} (${originImage || 'sem imagem'}) não diz a versão: informe a versão do ${form.from} nos campos.`
       : !isValidWinthorVersion(form.version)
       ? 'Informe a versão nova (ex.: 40).'
       : !isValidEnvName(form.name) || form.name === form.from
@@ -184,7 +185,7 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
                   : '';
 
   const sourceImage = envs?.oracles.find((o) => o.name === form.dbSource)?.image;
-  const review = !preview
+  const baseReview = !preview
     ? []
     : clone && preview.success && preview.clone
       ? reviewClone({
@@ -212,14 +213,33 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
           dbContainer: form.dbContainer,
           wshJar: form.wshJar || undefined
         });
+  // O que já existe na distro (imagem repetida, container e volume de antes, portas fixas, jar do WSH)
+  const review = preview?.success
+    ? (() => {
+        const extra = reviewBuildState({
+          mode: clone ? 'clone' : 'update',
+          version: clone && preview.clone ? preview.clone.version : form.version,
+          name: form.name,
+          from: form.from,
+          state: preview.buildState,
+          envs: envs?.environments ?? [],
+          withWsh: !!form.wshJar
+        });
+        // Antes do banco, que fecha a lista; um ponto de portas fixas do clone não se repete
+        const ids = new Set(baseReview.map((r) => r.id));
+        const add = extra.filter((x) => !(clone && ids.has(x.id)));
+        const dbAt = baseReview.findIndex((r) => r.id === 'banco');
+        return dbAt < 0 ? [...baseReview, ...add] : [...baseReview.slice(0, dbAt), ...add, ...baseReview.slice(dbAt)];
+      })()
+    : baseReview;
   const blocked = reviewBlocks(review);
-  // O que impede o Gerar agora, na ordem em que a pessoa resolve (vazio = pode gerar)
+  // O que impede a criação agora, na ordem em que a pessoa resolve (vazio = pode criar)
   const issue =
     formIssue ||
     (origin.loading && !origin.result
       ? 'Conferindo a origem (pasta, WTA e login)...'
       : origin.blocked
-        ? 'Resolva o que está em vermelho em Antes de gerar.'
+        ? 'Resolva o que está em vermelho em Antes de criar.'
         : busy === 'preview'
           ? clone
             ? 'Conferindo a imagem e as portas do clone...'
@@ -229,7 +249,7 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
               ? 'Falta conferir a imagem e as portas do clone.'
               : 'Falta ler a origem e o catálogo da 801.'
             : !preview.success || blocked
-              ? 'Resolva o que está em vermelho em Antes de gerar.'
+              ? 'Resolva o que está em vermelho em Antes de criar.'
               : '');
   const canGenerate = !issue && !!command && busy === null;
 
@@ -254,6 +274,7 @@ export function useInfrNewVersion(distro?: string, infrPath?: string, onGenerate
         infrPath,
         fromEnv: form.from,
         targetVersion: form.version,
+        name: form.name,
         wshJar: form.wshJar || undefined,
         originWtaUrl: form.originWtaUrl || undefined,
         dryRun: form.dryRun === '1' && !clone,

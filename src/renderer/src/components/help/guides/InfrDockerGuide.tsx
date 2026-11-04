@@ -205,13 +205,13 @@ const InfrDockerGuideSteps: React.FC = () => {
         <li>WTA → Executar. Abra <code className={CODE}>http://localhost:8038/</code> e conclua a Configuração inicial.</li>
         <li>WSH → Executar (precisa do jar do WSH e do Winthor.ini em /opt na distro).</li>
       </ol>
-      <h3 className={H3}>Gerar uma versão nova a partir de um ambiente que funciona</h3>
+      <h3 className={H3}>Criar uma versão nova a partir de um ambiente que funciona</h3>
       <ol className={OL}>
         <li>Assistente INFR → Nova versão. Escolha o ambiente (ex.: master), a versão nova (40) e o nome (develop).</li>
         <li>Banco: copiar (RMAN, só entre Oracles XE do INFR-Docker), usar um que já existe ou subir um vazio.</li>
         <li>WTA, WSH e portas: confira as portas e escolha o jar do WSH (o de produção serve). Senha em branco mantém a da origem.</li>
-        <li>Revisar e gerar: verde está ok, amarelo pede atenção, vermelho impede de gerar e mostra a saída.</li>
-        <li>Gerar: o Hub grava os arquivos e abre o terminal com o new_version_env.sh (imagem, banco, WTA e WSH).</li>
+        <li>Revisar e criar: verde está ok, amarelo pede atenção, vermelho impede de criar e mostra a saída.</li>
+        <li>Criar: o Hub grava os arquivos e abre o terminal com o new_version_env.sh (imagem, banco, WTA e WSH).</li>
       </ol>
       <h3 className={H3}>Ver o log do WinThor dentro do container</h3>
       <ul className="list-disc pl-5 space-y-1 text-sm text-foreground/85">

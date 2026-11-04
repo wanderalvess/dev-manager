@@ -1,34 +1,41 @@
 import React from 'react';
+import { Check } from 'lucide-react';
 import type { InfrNewVersionState } from '../../../../hooks/containers/useInfrNewVersion';
+import { InfrStepTitle } from './InfrNewVersionOrigin';
+import { radioProps } from './radioProps';
 
 const MODES: { clone: boolean; label: string; hint: string }[] = [
-  { clone: false, label: 'Atualizar para uma versão', hint: 'Sobe as features pelo catálogo da 801 e monta a imagem da versão (build de uns 30 minutos).' },
-  { clone: true, label: 'Só clonar, sem mudar nada', hint: 'Cópia do ambiente na mesma versão, com a imagem que já existe: sem build e sem mexer nas features.' }
+  { clone: false, label: 'Atualizar para uma versão', hint: 'Sobe as features pelo catálogo da 801 e monta a imagem da versão. Leva uns 30 minutos.' },
+  { clone: true, label: 'Só clonar, sem mudar nada', hint: 'Mesma versão e mesma imagem da origem, sem build. Leva poucos minutos.' }
 ];
 
-/** Escolha entre atualizar para outra versão e clonar o ambiente como ele está. */
-export const InfrNewVersionMode: React.FC<{ s: InfrNewVersionState }> = ({ s }) => {
-  const current = MODES.find((m) => m.clone === s.clone) ?? MODES[0];
-  return (
-    <div className="space-y-1.5">
-      <div role="radiogroup" aria-label="O que fazer com a origem" className="inline-flex rounded-xl border border-border/80 bg-muted/30 p-1 gap-1">
-        {MODES.map((m) => {
-          const active = m.clone === s.clone;
-          return (
-            <button
-              key={m.label}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              onClick={() => !active && s.update('clone', m.clone ? '1' : '')}
-              className={`px-3.5 h-8 rounded-lg text-xs font-semibold cursor-pointer transition ${active ? 'bg-card text-foreground shadow-xs ring-1 ring-warning/50' : 'text-muted-foreground hover:text-foreground'}`}
-            >
-              {m.label}
-            </button>
-          );
-        })}
-      </div>
-      <p className="text-xs text-muted-foreground">{current.hint}</p>
+/** Passo 2: o que fazer com a origem, atualizar para outra versão ou clonar como ela está. */
+export const InfrNewVersionMode: React.FC<{ s: InfrNewVersionState }> = ({ s }) => (
+  <section aria-labelledby="nv-passo-modo" className="space-y-2.5">
+    <InfrStepTitle n={2} id="nv-passo-modo">
+      O que fazer com ele
+    </InfrStepTitle>
+    <div role="radiogroup" aria-labelledby="nv-passo-modo" className="grid gap-3 grid-cols-1 sm:grid-cols-2">
+      {MODES.map((m, i) => {
+        const on = m.clone === s.clone;
+        return (
+          <button
+            key={m.label}
+            type="button"
+            {...radioProps({ index: i, count: MODES.length, checked: on, anyChecked: true, pickAt: (n) => s.update('clone', MODES[n].clone ? '1' : '') })}
+            onClick={() => !on && s.update('clone', m.clone ? '1' : '')}
+            className={`relative text-left rounded-xl bg-card px-4 py-3.5 cursor-pointer transition focus:outline-hidden focus-visible:ring-2 focus-visible:ring-warning/60 ${on ? 'border-2 border-foreground' : 'border border-border/80 hover:border-foreground/40'}`}
+          >
+            <span className="block text-sm font-semibold text-foreground pr-6">{m.label}</span>
+            <span className="mt-1 block text-xs text-muted-foreground leading-relaxed">{m.hint}</span>
+            {on && (
+              <span aria-hidden="true" className="absolute top-3 right-3 w-5 h-5 rounded-full bg-foreground text-background flex items-center justify-center">
+                <Check className="w-3 h-3" />
+              </span>
+            )}
+          </button>
+        );
+      })}
     </div>
-  );
-};
+  </section>
+);

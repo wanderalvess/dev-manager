@@ -34,7 +34,7 @@ export const GUIDE_PROJECTS: GuideProject[] = [
   {
     name: 'Hub Manager',
     what: 'Este aplicativo.',
-    why: 'Roda os scripts do INFR-Docker por você, mostra o estado dos containers, confere versões e banco antes de gerar e explica os erros conhecidos.',
+    why: 'Roda os scripts do INFR-Docker por você, mostra o estado dos containers, confere versões e banco antes de criar e explica os erros conhecidos.',
     container: 'nenhum: comanda os de cima'
   }
 ];
@@ -82,7 +82,7 @@ export const GUIDE_HUB_TASKS: GuideHubTask[] = [
   {
     task: 'Ambiente numa versão nova',
     manual: 'exportar features, montar manifesto, build_version.sh, clonar banco, dois .env, new_version_env.sh',
-    hub: 'Assistente INFR → Nova versão (uma tela, confere tudo antes de gerar)'
+    hub: 'Assistente INFR → Nova versão (uma tela, confere tudo antes de criar)'
   },
   { task: 'Conferir os scripts da pasta', manual: 'ls em cada pasta', hub: 'Cabeçalho do assistente e Scripts e pasta' },
   { task: 'Subir tudo na ordem', manual: 'três comandos, esperando cada um', hub: 'Botão Subir WinThor' },

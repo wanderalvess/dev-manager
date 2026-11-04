@@ -7,6 +7,7 @@ import type {
   InfrVersionPreviewRequest
 } from '../shared/infrVersionManifest';
 import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
+import type { InfrDiagnosticRequest, InfrDiagnosticResult } from '../shared/infrDiagnosticTypes';
 import type { WeatherReport } from '../shared/weather';
 import type { InfrOriginCheck } from '../shared/infrOriginCheck';
 import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../shared/infrFirstSteps';
@@ -403,6 +404,7 @@ export interface ElectronAPI {
   previewInfrVersion?: (req: InfrVersionPreviewRequest) => Promise<InfrVersionPreview>;
   saveInfrVersionManifest?: (req: InfrManifestSaveRequest) => Promise<InfrManifestSaveResult>;
   checkInfrEnvironment?: (params: { distro?: string; name: string }) => Promise<InfrEnvCheck>;
+  buildInfrDiagnostic?: (req: InfrDiagnosticRequest) => Promise<InfrDiagnosticResult>;
   checkInfrOrigin?: (req: { distro?: string; infrPath?: string; fromEnv: string }) => Promise<InfrOriginCheck>;
   checkInfrFirstSteps?: (req: { distro?: string; infrPath?: string; version?: string }) => Promise<InfrFirstStepsResult>;
   runInfrFirstStepsAction?: (req: InfrFirstStepsActionRequest) => Promise<{ success: boolean; output: string }>;

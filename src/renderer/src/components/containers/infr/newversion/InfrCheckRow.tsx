@@ -15,7 +15,7 @@ export interface InfrCheckItem {
 const ICON: Record<InfrCheckTone, React.ReactNode> = {
   ok: <CheckCircle2 className="w-[18px] h-[18px] text-success" aria-label="Ok" />,
   warn: <AlertTriangle className="w-[18px] h-[18px] text-warning" aria-label="Atenção" />,
-  block: <XCircle className="w-[18px] h-[18px] text-danger" aria-label="Impede de gerar" />,
+  block: <XCircle className="w-[18px] h-[18px] text-danger" aria-label="Impede de criar" />,
   pending: <CircleDashed className="w-[18px] h-[18px] text-muted-foreground/60" aria-label="Aguardando" />,
   busy: <RotateCw className="w-[18px] h-[18px] text-warning animate-spin" aria-label="Conferindo" />
 };
@@ -28,7 +28,7 @@ const BOX: Record<InfrCheckTone, string> = {
   busy: ''
 };
 
-/** Uma linha de "Antes de gerar": ícone do estado, o que foi conferido, o detalhe e, quando dá, a ação para resolver. */
+/** Uma linha de "Antes de criar": ícone do estado, o que foi conferido, o detalhe e, quando dá, a ação para resolver. */
 export const InfrCheckRow: React.FC<{ item: InfrCheckItem }> = ({ item }) => {
   const muted = item.tone === 'pending';
   return (

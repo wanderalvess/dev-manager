@@ -17,6 +17,7 @@ import type {
   InfrVersionPreviewRequest
 } from '../shared/infrVersionManifest';
 import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
+import type { InfrDiagnosticRequest, InfrDiagnosticResult } from '../shared/infrDiagnosticTypes';
 import type { WeatherReport } from '../shared/weather';
 import type { InfrOriginCheck } from '../shared/infrOriginCheck';
 import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../shared/infrFirstSteps';
@@ -677,6 +678,7 @@ const electronAPI = {
   saveInfrVersionManifest: (req: InfrManifestSaveRequest): Promise<InfrManifestSaveResult> =>
     ipcRenderer.invoke('infr:version-save', req),
   checkInfrEnvironment: (params: { distro?: string; name: string }): Promise<InfrEnvCheck> => ipcRenderer.invoke('infr:env-check', params),
+  buildInfrDiagnostic: (req: InfrDiagnosticRequest): Promise<InfrDiagnosticResult> => ipcRenderer.invoke('infr:diagnostic', req),
   checkInfrOrigin: (req: { distro?: string; infrPath?: string; fromEnv: string }): Promise<InfrOriginCheck> => ipcRenderer.invoke('infr:origin-check', req),
   checkInfrFirstSteps: (req: { distro?: string; infrPath?: string; version?: string }): Promise<InfrFirstStepsResult> =>
     ipcRenderer.invoke('infr:first-steps', req),

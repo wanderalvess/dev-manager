@@ -2,8 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { InfrCheckCommandId, InfrEnvCheck } from '../../../../shared/infrEnvCheck';
 import { wtaHostPort } from '../../../../shared/infrEnvCheck';
 
-/** Verificação de um ambiente: lê o estado pelo Hub, repete a cada 15 s se pedido e abre os comandos no terminal. */
-export function useInfrEnvCheck(distro: string | undefined, initialName: string) {
+/**
+ * Verificação de um ambiente: lê o estado pelo Hub, repete a cada 15 s se pedido e abre os comandos no terminal.
+ * `refreshKey` muda a cada vez que a tela é aberta para um ambiente (inclusive o mesmo nome de um Criação anterior):
+ * a leitura anterior, que pode ser de um build que falhou, é descartada e o estado é lido de novo.
+ */
+export function useInfrEnvCheck(distro: string | undefined, initialName: string, refreshKey = 0) {
   const [name, setName] = useState(initialName);
   const [result, setResult] = useState<InfrEnvCheck | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,13 +30,14 @@ export function useInfrEnvCheck(distro: string | undefined, initialName: string)
     }
   }, [distro, name]);
 
-  // Lê quando o nome para de mudar (não a cada letra digitada)
+  // Lê quando o nome para de mudar (não a cada letra digitada) ou quando a tela é reaberta; o resultado antigo some
+  // na hora, para não mostrar o erro de um build anterior enquanto o novo roda
   useEffect(() => {
     setResult(null);
     if (!name.trim()) return;
     const timer = setTimeout(check, 600);
     return () => clearTimeout(timer);
-  }, [name, distro]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [name, distro, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Enquanto sobe, repete sozinho; para quando está no ar ou falhou
   const status = result?.summary?.status;

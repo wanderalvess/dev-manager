@@ -3,6 +3,7 @@
  * (sem a imagem por versão) recusa `--version` com "[ERRO] Flag desconhecida" só depois de abrir o terminal. Aqui o
  * Hub lê o comando que vai rodar, acha cada `./script.sh --opção` e confere no texto do script, antes de abrir nada.
  */
+import { buildNewVersionEnvCommand, buildWshSetupCommand, buildWtaSetupCommand } from './infrWinthorVersion';
 
 /** Onde fica cada script, a partir da raiz do INFR-Docker. */
 export const INFR_SCRIPT_PATHS: Record<string, string> = {
@@ -48,6 +49,19 @@ export function scriptRequirements(command: string): ScriptRequirement[] {
     for (const n of NESTED[m[1]] ?? []) add(n.script, n.flags);
   }
   return [...byScript].map(([script, flags]) => ({ script, flags: [...flags] }));
+}
+
+/** Todos os scripts e opções que o Hub usa nos fluxos do Assistente (Nova versão com todas as opções, WTA, Oracle e WSH de uma versão). */
+export function hubScriptRequirements(): ScriptRequirement[] {
+  const commands = [
+    buildNewVersionEnvCommand({
+      version: '40', name: 'x', from: 'y', dbMode: 'clone', dbSource: 'a', dbContainer: 'b', wtaFrom: 'c', wshFrom: 'd', wshJar: '/j.jar', oraclePort: 1, wtaPort: 2, wshPort: 3
+    }),
+    buildWtaSetupCommand({ container: 'x', port: 1, version: '40' }),
+    './oracle_setup.sh --container x --port 1',
+    buildWshSetupCommand('40')
+  ];
+  return scriptRequirements(commands.filter(Boolean).join(' && '));
 }
 
 /** A opção aparece como caso do `case "$1" in` do script (`--version)` ou `--version|-v)`). */

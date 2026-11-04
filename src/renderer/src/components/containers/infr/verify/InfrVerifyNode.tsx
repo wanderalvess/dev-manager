@@ -32,7 +32,7 @@ export const InfrVerifyNode: React.FC<{ c: InfrContainerCheck; selected: boolean
       <span className="text-2xs text-muted-foreground break-words">
         {c.exists
           ? `${[...new Set(c.ports.map((p) => p.replace(/^.*:(\d+)$/, ':$1')))].join(' ') || 'sem porta publicada'}${c.restarts ? ` · ${c.restarts} reinícios` : ''}`
-          : 'O Gerar cria na ordem banco, WTA, WSH.'}
+          : 'A criação segue a ordem banco, WTA, WSH.'}
       </span>
       {extra}
     </button>
