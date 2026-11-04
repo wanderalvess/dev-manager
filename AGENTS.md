@@ -327,6 +327,26 @@ Checklist automático a cada ciclo de versão / release:
    - Manter a tag correspondente (`vX.Y.Z`) criada no commit que introduz a versão, garantindo
      que não existam versões no CHANGELOG sem tag no Git ou tags órfãs sem seção no changelog.
 
+Armadilhas já vistas no fechamento de versão:
+
+- No `package-lock.json` mude só as linhas 3 e 9 (a versão do app). Substituir o número no arquivo inteiro
+  altera dependências com a mesma versão (o `mime-db`, por exemplo).
+- A versão aparece também em [helpData.tsx](src/renderer/src/components/help/helpData.tsx) (3 lugares) e em
+  [src/mcp/index.ts](src/mcp/index.ts) (2 lugares); a seção `[Não lançado]` do CHANGELOG vira `[X.Y.Z] - data`.
+- Ordem: PR com CI verde → merge → tag em `origin/main` → `npm run build:electron` → desfazer as mudanças em
+  `build/installerHeader.bmp` e `build/installerSidebar.bmp` que o build gera → `npm run release:publish` → conferir
+  com `gh release view` (instalador, portátil e `latest.yml`, sem rascunho).
+- Nunca crie junção para `node_modules` dentro de um worktree: `git worktree remove --force` apaga o conteúdo do
+  destino.
+
+## Ambientes WinThor (INFR-Docker)
+
+O Hub cria, verifica e diagnostica ambientes WinThor (Oracle, WTA/Karaf e WSH em Docker no WSL) rodando os scripts do
+repositório INFR-Docker. O comportamento dos scripts que o Hub assume, as decisões de tela e o que falta validar
+estão em [docs/decisions/0004](docs/decisions/0004-ambientes-winthor-infr-docker.md). A lógica pura fica em
+`src/shared/infr*.ts` (com teste ao lado), os serviços em `src/main/services/infr/`. Comando destrutivo aparece só
+para copiar: o Hub nunca o executa.
+
 ## Proibição de Caminhos Hardcoded & Nomes Genéricos
 
 - **Nunca chumbar caminhos absolutos ou específicos de usuário no código**: Caminhos de diretórios, pastas de projetos ou executáveis informados pelo usuário no chat (ex: `C:\Users\...\`) são de seu ambiente pessoal.
