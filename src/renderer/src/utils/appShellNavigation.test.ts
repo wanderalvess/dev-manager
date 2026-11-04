@@ -4,6 +4,7 @@ import {
   collectPageTourKeys,
   isQuickLauncherToggle,
   resolveAltShortcutTab,
+  resolveEnterTab,
   resolveInitialTab
 } from './appShellNavigation';
 
@@ -41,6 +42,18 @@ describe('appShellNavigation', () => {
   it('resolve a aba inicial', () => {
     expect(resolveInitialTab(true)).toBe('env');
     expect(resolveInitialTab(false)).toBe('help');
+    expect(resolveInitialTab(true, 'git')).toBe('git');
+    expect(resolveInitialTab(true, 'aba-que-nao-existe')).toBe('env');
+    expect(resolveInitialTab(false, 'git')).toBe('help');
+  });
+
+  it('ao entrar, usa a aba das Configurações só se existir e estiver ligada', () => {
+    expect(resolveEnterTab('database', [])).toBe('database');
+    expect(resolveEnterTab('database', ['database'])).toBeNull();
+    expect(resolveEnterTab('', [])).toBeNull();
+    expect(resolveEnterTab(undefined, [])).toBeNull();
+    expect(resolveEnterTab('xpto', [])).toBeNull();
+    expect(resolveEnterTab('help', ['env'])).toBe('help');
   });
 
   it('filtra chaves de tours de página', () => {

@@ -15,6 +15,7 @@ import { ModulesStep } from './steps/ModulesStep';
 import { ThemeStep } from './steps/ThemeStep';
 import { EnvStep } from './steps/EnvStep';
 import { McpStep } from './steps/McpStep';
+import { StartStep } from './steps/StartStep';
 import { DoneStep } from './steps/DoneStep';
 
 interface OnboardingWizardProps {
@@ -203,6 +204,16 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onFi
               onDetect={() => void detect(false)}
               onOpenSettings={(section) => void openSettings(section)}
               onOpenInfrFirstSteps={() => void openInfrFirstSteps()}
+            />
+          )}
+          {step.id === 'start' && (
+            <StartStep
+              settings={settings}
+              disabledModules={disabledModules}
+              onSaved={async () => {
+                onSettingsSaved();
+                await loadSettings();
+              }}
             />
           )}
           {step.id === 'mcp' && <McpStep exampleIndex={mcpIndex} onExampleChange={setMcpIndex} />}

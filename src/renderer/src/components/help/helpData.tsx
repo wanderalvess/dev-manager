@@ -17,6 +17,7 @@ import { getApiScenarioFaq } from './faq/apiScenarioFaq';
 import { getRemoteControlFaq } from './faq/remoteControlFaq';
 import { getDeployCancellationFaq } from './faq/deployCancellationFaq';
 import { getUpdateFaq } from './faq/updateFaq';
+import { getStartScreenFaq } from './faq/startScreenFaq';
 import { getInfrVersionFaq } from './faq/infrVersionFaq';
 import { McpSafetyNote } from './modules/McpSafetyNote';
 import { MCP_TOOL_COUNT } from '../../../../shared/mcpCatalog';
@@ -1760,7 +1761,8 @@ export function getFaqList({
     ...getApiScenarioFaq(),
     ...getDeployCancellationFaq(onNavigate),
     ...getInfrVersionFaq(),
-    ...getUpdateFaq(handleOpenLink)
+    ...getUpdateFaq(handleOpenLink),
+    ...getStartScreenFaq()
   ];
 }
 

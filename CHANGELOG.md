@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Adicionado
+- **Jira na tela de início**: com um projeto Jira cadastrado em Documentação › Confluence & Jira, a tela de início usa a mesma credencial para mostrar **Continuar de onde parou** (a issue em que você lançou horas por último e quanto lançou naquele dia), **Jira · hoje** (a sprint ativa com o progresso e os dias que faltam, suas issues em andamento e as com prazo até hoje, cada uma abrindo no Jira) e as **horas lançadas desde segunda** em Sua semana. A saudação ganhou uma linha com o resumo do dia ("2 issues em andamento, 1 com prazo até hoje, a sprint termina em 4 dias, 1 ambiente no ar."). Só leitura, com a consulta guardada por 5 minutos; descrição e comentários das issues não são lidos.
+- **Sem Jira, a tela de início não insiste**: no lugar dos cartões do Jira entram os **módulos mais usados na semana** (sem uso contado, Ambiente Dev, Database Studio, Deploy e Git), e cada um entra no cockpit direto na sua aba.
+- **Tela ao entrar** (Configurações › Aparência): escolha a aba que o **Entrar no cockpit** abre. Sem escolha, o Hub abre na **última aba que você usou** (antes abria sempre no Ambiente Dev).
+- **Etapa Tela de início no onboarding** (agora em 7 etapas): liga o Jira com URL, token pessoal e a chave do projeto (opcional), com **Testar conexão**, e escolhe a tela ao entrar. Sem chave de projeto, a busca de documentação lê só as suas issues, não o Jira inteiro.
+
+### Alterado
+- **Tela de início redesenhada**: cartões em grade com o mesmo visual no tema claro e no escuro (seguem a cor do tema), medidores de processador e memória, barras da semana de segunda a domingo (horas do Jira, ou automações do Hub sem Jira) e as novidades da versão numa faixa embaixo. Saíram os textos "ecossistema WinThor", "tudo carregado" e as dicas de teclado ("Enter para entrar"); Enter e Esc continuam funcionando.
+
 ## [1.67.2] - 2026-11-04
 ### Corrigido
 - **Nova versão: Criar não parece mais um botão morto**. No ambiente do Nathan o Criar parava na conferência dos scripts (o `linux-winthor/scripts/wta_setup.sh` da pasta é anterior à imagem por versão e não conhece `--version`), mas a explicação ia para o fim da página, fora da vista. Agora essa conferência roda já na leitura e vira o primeiro ponto vermelho de "Antes de criar" ("Scripts do INFR-Docker desatualizados"), com o Criar desabilitado e o motivo no rodapé; a mensagem de qualquer falha do Criar rola até a vista; erro do IPC e os retornos que antes saíam calados agora dizem o que houve.

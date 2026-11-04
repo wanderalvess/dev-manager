@@ -27,6 +27,7 @@ export const ONBOARDING_STEPS = [
   { id: 'modules', label: 'Módulos', hint: 'Ligue o que você usa' },
   { id: 'theme', label: 'Tema', hint: 'Escolha o visual' },
   { id: 'env', label: 'Ambiente', hint: 'Caminhos e checklist' },
+  { id: 'start', label: 'Tela de início', hint: 'Jira e tela ao entrar' },
   { id: 'mcp', label: 'IA & MCP', hint: 'Agentes no comando' },
   { id: 'done', label: 'Pronto', hint: 'Atalhos e tour' }
 ] as const;

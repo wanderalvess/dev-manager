@@ -43,6 +43,7 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
   { id: 'field-usageBaselines', tab: 'usage', label: 'Quanto tempo você levava à mão (linha de base)', keywords: 'linha de base tempo manual levava a mao minutos referencia antes economia padrao estimativa confirmar' },
   { id: 'field-usageSummary', tab: 'usage', label: 'Resumo do meu uso (execuções por módulo e semana)', keywords: 'uso resumo execucoes modulo semana sucesso falha tempo meu uso metricas' },
   { id: 'field-modules', tab: 'appearance', label: 'Ligar / Desligar Módulos da barra lateral', keywords: 'modulos paginas navegacao menu barra lateral sidebar cabecalho ocultar esconder desligar ligar perfil dev qa operacao' },
+  { id: 'field-startTab', tab: 'appearance', label: 'Tela ao entrar no cockpit (aba inicial)', keywords: 'tela inicial aba inicial entrar cockpit abrir em ultima aba usada pagina padrao inicio' },
   { id: 'field-theme', tab: 'appearance', label: 'Tema (claro, escuro e variantes)', keywords: 'tema cor claro escuro dark light papel ambar midnight cyberpunk nebula nordic aparencia visual' },
   { id: 'field-otlpPort', tab: 'ports', label: 'Porta do receptor APM (OTLP)', keywords: 'otlp opentelemetry apm traces receptor porta 4318' }
 ];

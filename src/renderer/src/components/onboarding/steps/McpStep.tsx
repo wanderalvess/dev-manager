@@ -14,7 +14,7 @@ export const McpStep: React.FC<McpStepProps> = ({ exampleIndex, onExampleChange 
   const mcp = MCP_EXAMPLES[exampleIndex];
   return (
     <>
-      <Eyebrow n={5}>IA &amp; MCP</Eyebrow>
+      <Eyebrow n={6}>IA &amp; MCP</Eyebrow>
       <StepTitle>Seus agentes de IA também pilotam o cockpit.</StepTitle>
       <StepLead>
         O servidor MCP embutido expõe o Hub Manager ao Claude Code e a outros assistentes. Você pede em linguagem natural e o agente

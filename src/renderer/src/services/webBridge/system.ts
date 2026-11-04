@@ -13,6 +13,7 @@ import type {
 import type { ElectronAPI } from '../../../../preload/index';
 import type { BridgeDeps } from './core';
 import type { WeatherReport } from '../../../../shared/weather';
+import { emptyJiraToday, type JiraTodayReport } from '../../../../shared/jiraToday';
 
 /** Adaptador web (REST/WebSocket) dos canais: Diálogos Nativos do Sistema & Verificação de Caminhos; Rede & Detecção de IPs (Local e WSL); Métricas do Sistema; Auto-update (No modo Web/Docker operações de auto-update desktop são no-op). */
 export function createSystemApi({ apiFetch }: BridgeDeps) {
@@ -125,6 +126,14 @@ export function createSystemApi({ apiFetch }: BridgeDeps) {
         return await apiFetch<WeatherReport>(`/api/system/weather?city=${encodeURIComponent(city)}`);
       } catch (err) {
         return { success: false, error: err instanceof Error ? err.message : 'Não foi possível ler o clima.' };
+      }
+    },
+
+    getJiraToday: async (force?: boolean): Promise<JiraTodayReport> => {
+      try {
+        return await apiFetch<JiraTodayReport>(`/api/system/jira-today${force ? '?force=1' : ''}`);
+      } catch (err) {
+        return emptyJiraToday({ configured: true, error: err instanceof Error ? err.message : 'Não foi possível ler o Jira.' });
       }
     },
 

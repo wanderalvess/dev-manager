@@ -24,6 +24,7 @@ import { InfrVersionService } from '../main/services/infr/InfrVersionService';
 import { InfrEnvCheckService } from '../main/services/infr/InfrEnvCheckService';
 import { InfrDiagnosticService } from '../main/services/infr/InfrDiagnosticService';
 import { WeatherService } from '../main/services/WeatherService';
+import { JiraTodayService } from '../main/services/JiraTodayService';
 import { InfrOriginCheckService } from '../main/services/infr/InfrOriginCheckService';
 import { InfrFirstStepsService } from '../main/services/infr/InfrFirstStepsService';
 import { InfrFirstStepsActions } from '../main/services/infr/InfrFirstStepsActions';
@@ -1820,6 +1821,12 @@ app.get('/api/system/metrics', async (_req, res) => {
 const weatherService = new WeatherService();
 app.get('/api/system/weather', async (req, res) => {
   res.json(await weatherService.getWeather(String(req.query.city ?? '')));
+});
+
+// Jira da tela de início, com a credencial da fonte Jira da Documentação
+const jiraTodayService = new JiraTodayService(() => configService.getSettings());
+app.get('/api/system/jira-today', async (req, res) => {
+  res.json(await jiraTodayService.getToday(req.query.force === '1'));
 });
 
 // 12. Bundles Karaf

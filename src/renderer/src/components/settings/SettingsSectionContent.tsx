@@ -6,6 +6,7 @@ import { PathStatusBadge } from './PathStatusBadge';
 import { AutoDetectResult } from './AutoDetectResult';
 import { SettingsOverview } from './overview/SettingsOverview';
 import { ThemeSettingsCard } from './appearance/ThemeSettingsCard';
+import { StartTabSettingsCard } from './appearance/StartTabSettingsCard';
 import { DirsTab } from './tabs/DirsTab';
 import { KarafTab } from './tabs/KarafTab';
 import { RoutinesTab } from './tabs/RoutinesTab';
@@ -168,6 +169,7 @@ export const SettingsSectionContent: React.FC<SettingsSectionContentProps> = (pr
       return (
         <div className="space-y-4">
           <ModulesTab settings={settings} setSettings={setSettings} />
+          <StartTabSettingsCard settings={settings} setSettings={setSettings} />
           <ThemeSettingsCard />
         </div>
       );

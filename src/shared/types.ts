@@ -635,6 +635,8 @@ export interface AppSettings {
   usageMetricsEnabled?: boolean;
   /** Cidade do clima da tela de início; vazia = clima desligado (nada é consultado) */
   startCity?: string;
+  /** Aba aberta ao clicar em Entrar no cockpit; vazia = a última aba usada */
+  startTab?: string;
   /** Tempo que a pessoa levava para fazer à mão cada automação (minutos). Quem não está aqui usa o padrão. */
   usageBaselines?: UsageBaselineOverrides;
   /** Personal Access Token (PAT) do Azure DevOps para consulta de Work Items e automação de branches (criptografado em repouso) */

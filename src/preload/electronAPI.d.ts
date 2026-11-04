@@ -9,6 +9,7 @@ import type {
 import type { InfrCheckCommandId, InfrEnvCheck } from '../shared/infrEnvCheck';
 import type { InfrDiagnosticRequest, InfrDiagnosticResult } from '../shared/infrDiagnosticTypes';
 import type { WeatherReport } from '../shared/weather';
+import type { JiraTodayReport } from '../shared/jiraToday';
 import type { InfrOriginCheck } from '../shared/infrOriginCheck';
 import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../shared/infrFirstSteps';
 import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../shared/infrActiveEnv';
@@ -477,6 +478,8 @@ export interface ElectronAPI {
   getSystemMetrics: () => Promise<SystemMetrics>;
   /** Clima da tela de início pelo Open-Meteo (só o nome da cidade sai da máquina) */
   getWeather?: (city: string) => Promise<WeatherReport>;
+  /** Jira da tela de início (em andamento, prazos, onde parei, horas da semana e sprint), com a fonte Jira da Documentação */
+  getJiraToday?: (force?: boolean) => Promise<JiraTodayReport>;
 
   // Leitor e Monitor de Logs em Tempo Real (Tail -f)
   startLogWatch: (

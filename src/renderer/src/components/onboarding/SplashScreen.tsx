@@ -5,9 +5,8 @@ import { Modal } from '../ui/Modal';
 import { SPLASH_BOOT_ITEMS } from './onboardingContent';
 import { getSplashTiming } from './splashTiming';
 import { SplashBootPanel, SplashStepsPanel } from './splash/SplashPanels';
-import { SplashStartPanel } from './splash/SplashStartPanel';
+import { StartHome } from './splash/StartHome';
 import { useStartScreenData } from './splash/useStartScreenData';
-import { greeting } from './splash/startScreenUtils';
 import { extractVersionHighlights } from '../../utils/changelogUtils';
 import changelogRaw from '../../../../../CHANGELOG.md?raw';
 
@@ -19,6 +18,8 @@ interface SplashScreenProps {
   onStartOnboarding: () => void;
   onExplore: () => void;
   onEnter: () => void;
+  /** Cartão da tela de início que leva direto a um módulo */
+  onOpenTab: (tab: string) => void;
   onWhatsNew: () => void;
 }
 
@@ -41,9 +42,6 @@ const SECONDARY_BUTTON =
   'h-14 px-6 rounded-2xl border border-border text-muted-foreground hover:text-foreground font-semibold cursor-pointer transition-colors';
 const PAGE_X = 'px-6 sm:px-16 lg:px-24';
 
-/** "terça-feira, 3 de novembro" */
-const todayLabel = (now: Date): string => now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
-
 export const SplashScreen: React.FC<SplashScreenProps> = ({
   isOpen,
   isNewUser,
@@ -51,6 +49,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
   onStartOnboarding,
   onExplore,
   onEnter,
+  onOpenTab,
   onWhatsNew
 }) => {
   const [completed, setCompleted] = useState(0);
@@ -85,9 +84,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
   const showNews = home && news !== null && news.items.length > 0;
   let letterIndex = 0;
 
-  let hint = 'Esc para pular a abertura';
-  if (done) hint = isNewUser ? 'Enter para começar · Esc para explorar sozinho' : 'Enter para entrar';
-
   return (
     <Modal
       open={isOpen}
@@ -119,28 +115,24 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         </svg>
       )}
 
-      <header className={`relative h-16 shrink-0 ${PAGE_X} flex items-center justify-between font-mono text-xs text-muted-foreground`}>
-        <span>HUB MANAGER{appVersion ? ` · v${appVersion}` : ''}</span>
-        <span>ecossistema WinThor</span>
+      {/* Na tela de início, uma luz da cor do tema atrás da saudação (no claro e no escuro) */}
+      {home && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -left-48 -top-96 w-[80rem] h-[48rem] bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.18)_0%,transparent_60%)]"
+        />
+      )}
+
+      <header className={`relative h-16 shrink-0 ${PAGE_X} flex items-center font-mono text-xs text-muted-foreground`}>
+        <span className="flex items-center gap-3">
+          {home && <AppLogo size="xs" />}
+          HUB MANAGER{appVersion ? ` · v${appVersion}` : ''}
+        </span>
       </header>
 
       {home ? (
-        <main className={`relative flex-1 min-h-0 overflow-y-auto ${PAGE_X} py-6`}>
-          <div className="max-w-6xl mx-auto flex flex-col gap-8 animate-splash-rise">
-            <section aria-label="Boas-vindas" className="flex flex-wrap items-center justify-between gap-6">
-              <div className="flex items-center gap-5 min-w-0">
-                <AppLogo size="lg" />
-                <div className="min-w-0">
-                  <h1 className="m-0 text-4xl sm:text-5xl font-extrabold tracking-tight leading-none">{greeting(new Date())}.</h1>
-                  <p className="m-0 mt-2 text-base text-muted-foreground first-letter:uppercase">{todayLabel(new Date())} · tudo carregado</p>
-                </div>
-              </div>
-              <button type="button" autoFocus onClick={onEnter} className={`${PRIMARY_BUTTON} px-8`}>
-                Entrar no cockpit <ArrowRight className="w-4 h-4" />
-              </button>
-            </section>
-            <SplashStartPanel data={start} news={showNews ? news : null} onWhatsNew={onWhatsNew} />
-          </div>
+        <main className={`relative flex-1 min-h-0 overflow-y-auto ${PAGE_X} pt-2 pb-8`}>
+          <StartHome data={start} news={showNews ? news : null} onEnter={onEnter} onOpenTab={onOpenTab} onWhatsNew={onWhatsNew} />
         </main>
       ) : (
         <main className={`relative flex-1 min-h-0 overflow-y-auto ${PAGE_X} py-6 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-24 items-center`}>
@@ -189,9 +181,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         </main>
       )}
 
-      <footer className={`relative h-20 shrink-0 ${PAGE_X} flex items-center justify-between gap-4 font-mono text-xs text-muted-foreground`}>
-        <span>{hint}</span>
-        {!done && (
+      {!done && (
+        <footer className={`relative h-20 shrink-0 ${PAGE_X} flex items-center justify-end font-mono text-xs text-muted-foreground`}>
           <button
             type="button"
             onClick={skip}
@@ -199,8 +190,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           >
             Pular abertura
           </button>
-        )}
-      </footer>
+        </footer>
+      )}
     </Modal>
   );
 };

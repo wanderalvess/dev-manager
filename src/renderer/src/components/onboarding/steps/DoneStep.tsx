@@ -22,7 +22,7 @@ interface DoneStepProps {
   onStartTour: () => void;
 }
 
-/** Etapa 6: resumo do que ficou configurado, atalhos para guardar e o convite para o tour guiado. */
+/** Etapa 7: resumo do que ficou configurado, atalhos para guardar e o convite para o tour guiado. */
 export const DoneStep: React.FC<DoneStepProps> = ({ disabledModules, checklist, onOpenSettings, onStartTour }) => {
   const { mode, variant } = useTheme();
   const theme = ONBOARDING_THEMES.find((t) => t.id === variant);
