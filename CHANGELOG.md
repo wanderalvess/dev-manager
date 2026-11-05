@@ -4,6 +4,10 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.68.1] - 2026-11-05
+### Corrigido
+- **Nova versão (INFR-Docker)**: o terminal que cria a versão não quebra mais com `syntax error: unexpected end of file` e `ligando: command not found` quando o container do banco está parado ou ausente. O script agora é entregue ao WSL codificado, sem passar por aspas e `;` do Windows Terminal.
+
 ## [1.68.0] - 2026-11-04
 ### Adicionado
 - **Jira na tela de início**: com um projeto Jira cadastrado em Documentação › Confluence & Jira, a tela de início usa a mesma credencial para mostrar **Continuar de onde parou** (a issue em que você lançou horas por último e quanto lançou naquele dia), **Jira · hoje** (a sprint ativa com o progresso e os dias que faltam, suas issues em andamento e as com prazo até hoje, cada uma abrindo no Jira) e as **horas lançadas desde segunda** em Sua semana. A saudação ganhou uma linha com o resumo do dia ("2 issues em andamento, 1 com prazo até hoje, a sprint termina em 4 dias, 1 ambiente no ar."). Só leitura, com a consulta guardada por 5 minutos; descrição e comentários das issues não são lidos.
