@@ -25,11 +25,11 @@ export const StartHome: React.FC<StartHomeProps> = ({ data, news, onEnter, onOpe
   const now = new Date();
   const summary = heroSummary(data.jira, data.envs, now);
   return (
-    <div className="max-w-7xl mx-auto flex flex-col gap-3.5 sm:gap-4 animate-splash-rise">
+    <div className="w-full flex-1 min-h-0 flex flex-col gap-3.5 sm:gap-4 2xl:gap-5 animate-splash-rise">
       <section aria-label="Boas-vindas" className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1.5 min-w-0">
           <p className="m-0 font-mono text-xs text-muted-foreground uppercase tracking-wider">{todayLabel(now)}</p>
-          <h1 className="m-0 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-none">
+          <h1 className="m-0 text-3xl sm:text-4xl lg:text-5xl 2xl:text-6xl font-extrabold tracking-tight leading-none">
             {greeting(now)}
             <span className="text-primary">.</span>
           </h1>

@@ -33,7 +33,7 @@ export const HelpModulesTab: React.FC<HelpModulesTabProps> = ({
 }) => {
   return (
     // Mesma ordem dos grupos do menu lateral (header/headerNavConfig.ts); Integrações e MCP fecham a lista.
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-2 min-[1700px]:grid-cols-3 gap-4">
       <EnvironmentModuleCard debugPort={debugPort} onNavigate={onNavigate} />
       <ContainersModuleCard onNavigate={onNavigate} />
       <RoutinesModuleCard onNavigate={onNavigate} />

@@ -3,7 +3,7 @@ import { InfrDockerDiagram } from './InfrDockerDiagram';
 import { GUIDE_BOOT, GUIDE_HUB_TASKS, GUIDE_LOCATIONS, GUIDE_PROBLEMS, GUIDE_PROJECTS, GUIDE_VERSIONS } from './infrDockerGuideData';
 
 const H2 = 'text-base font-bold text-foreground mt-8 mb-2 scroll-mt-4';
-const P = 'text-sm leading-relaxed text-foreground/85';
+const P = 'max-w-4xl text-sm leading-relaxed text-foreground/85';
 const TABLE = 'w-full text-xs border-collapse';
 const TH = 'text-left font-semibold text-foreground bg-muted/50 px-3 py-2 border-b border-border';
 const TD = 'align-top px-3 py-2 border-b border-border/60 text-foreground/85';
@@ -61,7 +61,7 @@ export const InfrDockerGuide: React.FC<{ openLink?: (url: string) => void }> = (
   const goTo = (id: string) => document.getElementById(`infr-guia-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   return (
-    <article className="max-w-4xl space-y-3">
+    <article className="space-y-3">
       <header className="space-y-2">
         <h1 className="text-xl font-bold text-foreground">Ambientes WinThor no Docker: INFR-Docker e Hub</h1>
         <p className={P}>
@@ -83,7 +83,7 @@ export const InfrDockerGuide: React.FC<{ openLink?: (url: string) => void }> = (
       </header>
 
       <h2 id="infr-guia-pagina" className={H2}>Em uma página</h2>
-      <div className="rounded-xl border border-border/80 bg-card p-3">
+      <div className="max-w-5xl rounded-xl border border-border/80 bg-card p-3">
         <InfrDockerDiagram />
       </div>
       <p className={P}>O Hub não substitui o INFR-Docker: ele roda os mesmos scripts e confere antes. O WTA só sobe com o banco no ar, e o WSH só com os dois.</p>

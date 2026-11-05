@@ -32,8 +32,8 @@ export const SplashStartPanel: React.FC<{
   // Lendo, ou cadastrado e com erro: o cartão do Jira; sem fonte Jira, os outros indicadores
   const jiraLayout = jira === null || jira.configured;
   return (
-    <div className="w-full flex flex-col gap-3 sm:gap-3.5">
-      <section aria-label="Tela de início" className="grid grid-cols-1 md:grid-cols-6 xl:grid-cols-12 gap-3 sm:gap-3.5 xl:auto-rows-[13rem]">
+    <div className="w-full flex-1 min-h-0 flex flex-col gap-3 sm:gap-3.5">
+      <section aria-label="Tela de início" className="grid grid-cols-1 md:grid-cols-6 xl:grid-cols-12 gap-3 sm:gap-3.5 2xl:gap-5 xl:flex-1 xl:auto-rows-[minmax(13rem,1fr)]">
         {jiraLayout ? (
           <>
             {jira?.success ? (

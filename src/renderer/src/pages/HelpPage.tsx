@@ -150,7 +150,7 @@ export const HelpPage: React.FC<HelpPageProps> = ({
       />
 
       <div ref={contentRef} className="flex-1 min-w-0 min-h-0 overflow-y-auto pr-1 -mr-1">
-        <div className="max-w-5xl flex flex-col gap-4 min-h-full">
+        <div className="w-full max-w-[120rem] flex flex-col gap-4 min-h-full">
           <HelpSectionHeader category={activeCategory} />
 
           {activeCategory === 'overview' && (

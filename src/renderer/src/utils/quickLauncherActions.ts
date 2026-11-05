@@ -20,6 +20,7 @@ import {
   CheckCheck,
   PlayCircle,
   Zap,
+  Camera,
   ListChecks,
   Globe,
   Plug,
@@ -195,6 +196,13 @@ const NAVIGATION_ACTIONS: NavigationActionSpec[] = [
     title: 'Validação de Cenários',
     subtitle: 'Cenários de comportamento do WinThor em homologação, como o bloqueio de login',
     icon: ListChecks
+  },
+  {
+    id: 'act-evidence',
+    tab: 'evidence',
+    title: 'Evidências',
+    subtitle: 'Grave tela, prints e passos de teste ou desenvolvimento em relatório HTML/PDF',
+    icon: Camera
   },
   {
     id: 'act-http-client',

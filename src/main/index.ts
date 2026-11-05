@@ -380,9 +380,11 @@ function createWindow() {
 
 app.whenReady().then(() => {
   // Rejeitar solicitações de permissões não autorizadas do SO (câmera, microfone, geolocalização)
-  session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
-    callback(false);
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    // display-capture: gravação de tela do módulo Evidências (a fonte é escolhida pelo main em setDisplayMediaRequestHandler)
+    callback(permission === 'display-capture');
   });
+  session.defaultSession.setPermissionCheckHandler((_webContents, permission) => permission === 'display-capture');
 
   createWindow();
 

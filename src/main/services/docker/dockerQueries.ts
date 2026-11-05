@@ -26,7 +26,8 @@ export async function listContainers(ctx: DockerContext): Promise<DockerContaine
 
     return parseContainerList(stdout);
   } catch (err: any) {
-    console.warn('[DockerService] Motor de containers indisponível ou offline:', err?.message || err);
+    const detail = String(err?.stderr || err?.message || err).replace(/\0/g, '').trim().split(/\r?\n/)[0];
+    console.warn('[DockerService] Motor de containers indisponível ou offline:', detail);
     return [];
   }
 }

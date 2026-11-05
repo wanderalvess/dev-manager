@@ -131,7 +131,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       </header>
 
       {home ? (
-        <main className={`relative flex-1 min-h-0 overflow-y-auto ${PAGE_X} pt-1 pb-4 sm:pb-6`}>
+        <main className={`relative flex-1 min-h-0 overflow-y-auto flex flex-col ${PAGE_X} 2xl:px-24 pt-1 pb-4 sm:pb-6`}>
           <StartHome data={start} news={showNews ? news : null} onEnter={onEnter} onOpenTab={onOpenTab} onWhatsNew={onWhatsNew} />
         </main>
       ) : (

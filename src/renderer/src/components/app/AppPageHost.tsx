@@ -31,6 +31,7 @@ const QualityRegressionPage = lazy(() =>
 );
 const QualityRunnersPage = lazy(() => import('../../pages/QualityRunnersPage').then((m) => ({ default: m.QualityRunnersPage })));
 const QualityTautPage = lazy(() => import('../../pages/QualityTautPage').then((m) => ({ default: m.QualityTautPage })));
+const EvidencePage = lazy(() => import('../../pages/EvidencePage').then((m) => ({ default: m.EvidencePage })));
 const QualityScenariosPage = lazy(() =>
   import('../../pages/QualityScenariosPage').then((m) => ({ default: m.QualityScenariosPage }))
 );
@@ -217,6 +218,9 @@ export const AppPageHost: React.FC<AppPageHostProps> = ({
             <QualityScenariosPage isActive={activeTab === 'quality-scenarios'} />
           </PageSlot>
         </QualityValidationProvider>
+        <PageSlot id="evidence" {...slot}>
+          <EvidencePage isActive={activeTab === 'evidence'} />
+        </PageSlot>
         <PageSlot id="integrations" {...slot}>
           <IntegrationsPage
             projects={projects}

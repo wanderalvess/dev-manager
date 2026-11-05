@@ -15,6 +15,7 @@ import {
   ClipboardCheck,
   PlayCircle,
   Zap,
+  Camera,
   ListChecks,
   FlaskConical,
   Globe,
@@ -227,6 +228,13 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
         shortLabel: 'Cenários',
         icon: ListChecks,
         description: 'Cenários de comportamento do WinThor em homologação, como o bloqueio de login'
+      },
+      {
+        id: 'evidence',
+        label: 'Evidências',
+        shortLabel: 'Evidências',
+        icon: Camera,
+        description: 'Grave tela, prints e passos de teste ou desenvolvimento em relatório HTML/PDF'
       }
     ]
   }

@@ -33,7 +33,7 @@ const c = (text: string) => <code className={GUIDE_CODE}>{text}</code>;
  * mapeada e como ler e levar o resultado para o Jira. Aparece na Central de Ajuda (Guias) e no botão Como usar.
  */
 export const ScenarioValidationGuide: React.FC = () => (
-  <article className="max-w-4xl space-y-3">
+  <article className="space-y-3">
     <header className="space-y-2">
       <h1 className="text-xl font-bold text-foreground">Validação de Cenários: manual de uso</h1>
       <p className={GUIDE_P}>

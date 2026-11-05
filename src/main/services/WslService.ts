@@ -392,7 +392,8 @@ export class WslService {
       this.lastFetchTime = 0;
       return true;
     } catch (err) {
-      console.error(`[WslService] Erro ao finalizar distro ${distroName}:`, err);
+      const detail = String((err as any)?.stderr || (err as any)?.message || err).replace(/\0/g, "").trim();
+      console.warn(`[WslService] Falha ao finalizar distro ${distroName}: ${detail}`);
       return false;
     }
   }
@@ -1127,19 +1128,22 @@ export class WslService {
       }
     }
 
+    // Aspas e ";" do script se perdem entre wt.exe e wsl.exe ("ligando: command not found"): vai em base64, sem caracteres especiais
+    const scriptB64 = Buffer.from(`${cmdToRun}; echo ''; echo 'Pressione Enter para fechar...'; read -r`, 'utf-8').toString('base64');
+
     try {
       const wtArgs = [
         '-w', '0', 'nt',
         '--title', title,
         'wsl.exe', '-d', targetDistro, '--',
-        'bash', '-c', wtArg(`${cmdToRun}; echo ''; echo 'Pressione Enter para fechar...'; read -r`)
+        'bash', '-c', `source <(echo ${scriptB64} | base64 -d)`
       ];
 
       const wtChild = spawn('wt.exe', wtArgs, { detached: true, stdio: 'ignore' });
       wtChild.on('error', () => {
         const child = spawn(
           'cmd.exe',
-          ['/c', 'start', title, 'cmd.exe', '/k', `wsl.exe -d ${targetDistro} -- bash -c "${cmdToRun}"`],
+          ['/c', 'start', title, 'cmd.exe', '/k', `wsl.exe -d ${targetDistro} -- bash -c "source <(echo ${scriptB64} | base64 -d)"`],
           { detached: true, stdio: 'ignore' }
         );
         child.unref();

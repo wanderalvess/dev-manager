@@ -4,7 +4,7 @@ import type { GuideRow } from './scenarioGuideData';
 /** Peças de texto dos guias da Central de Ajuda, no mesmo visual do guia Ambientes WinThor no Docker. */
 export const GUIDE_H2 = 'text-base font-bold text-foreground mt-8 mb-2 scroll-mt-4';
 export const GUIDE_H3 = 'text-sm font-bold text-foreground mt-4 mb-1.5';
-export const GUIDE_P = 'text-sm leading-relaxed text-foreground/85';
+export const GUIDE_P = 'max-w-4xl text-sm leading-relaxed text-foreground/85';
 export const GUIDE_CODE = 'font-mono text-[0.92em] text-foreground';
 export const GUIDE_OL = 'list-decimal pl-5 space-y-1 text-sm text-foreground/85 marker:text-muted-foreground';
 export const GUIDE_UL = 'list-disc pl-5 space-y-1 text-sm text-foreground/85';
