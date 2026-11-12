@@ -1,119 +1,122 @@
-import React, { useState } from 'react';
-import { Play, RefreshCw, Square, Terminal } from 'lucide-react';
-import { GitProjectInfo } from '../../../shared/types';
-import { OnboardingTour } from '../components/onboarding/OnboardingTour';
-import { usePageTour } from '../components/onboarding/usePageTour';
-import { KARAF_TOUR_STEPS, KARAF_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/karafTour';
-import { KarafDiagnosticsPanel } from '../components/karaf/diagnostics/KarafDiagnosticsPanel';
-import { KarafToolCards, type KarafTool } from '../components/karaf/page/KarafToolCards';
-import { KarafBundleManagerModal } from '../components/KarafBundleManagerModal';
-import { KarafFeaturesModal } from '../components/karaf/modals/KarafFeaturesModal';
-import { KarafJvmMemoryModal } from '../components/KarafJvmMemoryModal';
-import { Routine801CatalogModal } from '../components/Routine801CatalogModal';
-import { useKarafStatus } from '../hooks/deploy/useKarafStatus';
-import { useKarafDiagnostics } from '../hooks/deploy/useKarafDiagnostics';
+import React, { useEffect, useState } from 'react';
+import { Cpu, Play, Square, RotateCw, Terminal } from 'lucide-react';
+import type { GitProjectInfo, KarafBundleInfo, KarafFeatureInfo } from '../../../shared/types';
+import { showToast } from '../components/ToastHost';
 import { useKarafConsole } from '../hooks/karafConsole/KarafConsoleContext';
 
-interface KarafPageProps {
-  projects: GitProjectInfo[];
-}
+export const KarafPage: React.FC<{ projects: GitProjectInfo[] }> = () => {
+  const [bundles, setBundles] = useState<KarafBundleInfo[]>([]);
+  const [features, setFeatures] = useState<KarafFeatureInfo[]>([]);
+  const [search, setSearch] = useState('');
+  const { openWithTail } = useKarafConsole();
 
-const STATUS_STYLE: Record<'online' | 'offline' | 'checking', { label: string; className: string }> = {
-  online: { label: 'Online', className: 'bg-success/10 text-success' },
-  offline: { label: 'Offline', className: 'bg-danger/10 text-danger' },
-  checking: { label: 'Verificando…', className: 'bg-muted text-muted-foreground' }
-};
+  const load = async () => {
+    const [b, f] = await Promise.all([
+      window.electronAPI.listKarafBundles(),
+      window.electronAPI.listKarafFeatures()
+    ]);
+    if (Array.isArray(b)) setBundles(b);
+    if (Array.isArray(f)) setFeatures(f);
+  };
 
-/** Gestão e diagnóstico do Apache Karaf: bundles, features, catálogo 801, memória da JVM e diagnósticos rápidos. */
-export const KarafPage: React.FC<KarafPageProps> = ({ projects }) => {
-  const tour = usePageTour(KARAF_TOUR_STORAGE_KEY);
-  const karaf = useKarafStatus();
-  const diagnostics = useKarafDiagnostics(false);
-  const { setOpen: setConsoleOpen } = useKarafConsole();
-  const [openTool, setOpenTool] = useState<KarafTool | null>(null);
+  useEffect(() => {
+    void load();
+  }, []);
 
-  const statusKey = karaf.isKarafOnline === null ? 'checking' : karaf.isKarafOnline ? 'online' : 'offline';
-  const status = STATUS_STYLE[statusKey];
-  const closeTool = () => setOpenTool(null);
+  const manage = async (id: string, action: 'start' | 'stop' | 'restart') => {
+    const res = await window.electronAPI.manageKarafBundle(action, id);
+    showToast(res.output, 'info');
+    await load();
+  };
+
+  const filtered = bundles.filter((b) =>
+    `${b.id} ${b.name} ${b.symbolicName || ''}`.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="h-full flex flex-col px-4 py-3 md:px-5 md:py-4 space-y-3 overflow-y-auto max-w-full">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="min-w-0">
-            <h1 className="text-lg leading-tight font-bold tracking-tight text-foreground flex items-center gap-3">
-              Karaf
-              <span className={`text-[13px] font-medium px-2.5 py-0.5 rounded-full ${status.className}`}>
-                {status.label}
-              </span>
-            </h1>
-            <p className="sr-only">
-              Bundles, features, catálogo 801, memória da JVM e diagnósticos do servidor OSGi.
-            </p>
-          </div>
+    <div className="h-full overflow-y-auto p-5 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-lg font-extrabold text-foreground flex items-center gap-2">
+            <Cpu className="w-5 h-5 text-primary" /> Apache Karaf &amp; OSGi Bundles
+          </h1>
+          <p className="text-xs text-muted-foreground">Gerenciamento de bundles, features Maven e console interativo.</p>
         </div>
-
         <div className="flex items-center gap-2">
-          {diagnostics.isDiagRunning !== null && (
-            <button
-              type="button"
-              onClick={() => void diagnostics.abortDiagnostic()}
-              className="px-3 h-10 rounded-[10px] bg-danger/10 hover:bg-danger/20 text-danger text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <Square className="w-3 h-3" />
-              Interromper diagnóstico
-            </button>
-          )}
-          {karaf.isKarafOnline === false && (
-            <button
-              type="button"
-              onClick={() => void karaf.handleStartEmbeddedKaraf()}
-              disabled={karaf.isStartingKaraf}
-              className="px-4 h-10 rounded-[10px] bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
-            >
-              {karaf.isStartingKaraf ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-              Iniciar Karaf embedded
-            </button>
-          )}
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Filtrar bundles..."
+            className="px-3 py-1.5 rounded-xl border border-border bg-card text-xs w-56 focus:outline-none focus:border-primary"
+          />
           <button
             type="button"
-            onClick={() => setConsoleOpen(true)}
-            className="px-3 h-10 rounded-[10px] bg-card hover:bg-muted text-foreground border border-border text-sm font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
-            title="Abrir o Console Karaf (Ctrl+`)"
+            onClick={() => openWithTail()}
+            className="px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 cursor-pointer"
           >
-            <Terminal className="w-4 h-4 text-muted-foreground" />
-            Console
-          </button>
-          <button
-            type="button"
-            onClick={tour.open}
-            className="px-3 h-10 rounded-[10px] text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-            title="Rever o tour guiado desta tela"
-          >
-            Tour
+            <Terminal className="w-3.5 h-3.5" /> Abrir Console
           </button>
         </div>
       </div>
 
-      <KarafToolCards onOpen={setOpenTool} />
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <table className="w-full text-left border-collapse text-xs">
+          <thead className="bg-muted/40 border-b border-border text-2xs uppercase text-muted-foreground">
+            <tr>
+              <th className="px-3 py-2.5">ID</th>
+              <th className="px-3 py-2.5">Estado</th>
+              <th className="px-3 py-2.5">Versão</th>
+              <th className="px-3 py-2.5">Bundle / Symbolic Name</th>
+              <th className="px-3 py-2.5 text-right">Ações</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/60">
+            {filtered.map((b) => (
+              <tr key={b.id} className="hover:bg-muted/20">
+                <td className="px-3 py-2 font-mono">{b.id}</td>
+                <td className="px-3 py-2">
+                  <span className={`px-2 py-0.5 rounded-full text-2xs font-bold ${
+                    b.state === 'Active' ? 'bg-success/15 text-success' : b.state === 'Waiting' ? 'bg-warning/15 text-warning' : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {b.state}
+                  </span>
+                </td>
+                <td className="px-3 py-2 font-mono text-2xs">{b.version}</td>
+                <td className="px-3 py-2">
+                  <div className="font-semibold text-foreground">{b.name}</div>
+                  <div className="text-2xs font-mono text-muted-foreground">{b.symbolicName}</div>
+                </td>
+                <td className="px-3 py-2 text-right space-x-1 whitespace-nowrap">
+                  <button type="button" onClick={() => void manage(b.id, 'start')} className="p-1.5 rounded hover:bg-muted text-success cursor-pointer" title="Start">
+                    <Play className="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" onClick={() => void manage(b.id, 'restart')} className="p-1.5 rounded hover:bg-muted text-primary cursor-pointer" title="Restart">
+                    <RotateCw className="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" onClick={() => void manage(b.id, 'stop')} className="p-1.5 rounded hover:bg-muted text-danger cursor-pointer" title="Stop">
+                    <Square className="w-3.5 h-3.5" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-      <KarafDiagnosticsPanel
-        isDeploying={false}
-        isDiagRunning={diagnostics.isDiagRunning}
-        onRunDiagnostic={(cmd, label) => void diagnostics.runDiagnostic(cmd, label)}
-      />
-
-      <KarafBundleManagerModal isOpen={openTool === 'bundles'} onClose={closeTool} projects={projects} />
-      <KarafFeaturesModal isOpen={openTool === 'features'} onClose={closeTool} />
-      <Routine801CatalogModal isOpen={openTool === 'catalog801'} onClose={closeTool} />
-      <KarafJvmMemoryModal isOpen={openTool === 'jvm'} onClose={closeTool} />
-
-      <OnboardingTour
-        steps={KARAF_TOUR_STEPS}
-        isOpen={tour.isOpen}
-        onClose={tour.close}
-        storageKey={KARAF_TOUR_STORAGE_KEY}
-      />
+      <div className="bg-card border border-border rounded-xl p-4 space-y-2">
+        <h2 className="text-sm font-bold text-foreground">Features Instaladas ({features.length})</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          {features.map((f) => (
+            <div key={f.name} className="p-3 rounded-lg border border-border bg-muted/20 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-mono font-bold text-foreground">{f.name}</span>
+                <span className="text-2xs font-bold text-success">{f.status}</span>
+              </div>
+              <div className="text-2xs text-muted-foreground mt-0.5">v{f.version} • {f.description}</div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

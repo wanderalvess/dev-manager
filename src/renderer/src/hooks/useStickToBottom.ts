@@ -1,23 +1,20 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { isNearBottom } from '../utils/stickToBottom';
+import { useEffect, useRef, useState } from 'react';
 
-/**
- * Mantém um contêiner rolável colado no fim enquanto `deps` mudam, pausando se o usuário rolar para cima
- * (e retomando quando ele voltar ao fim). Retorna o `ref` e o `onScroll` para o contêiner.
- */
-export function useStickToBottom<T extends HTMLElement>(deps: readonly unknown[]) {
+export function useStickToBottom<T extends HTMLElement>(deps: unknown[] = []) {
   const ref = useRef<T>(null);
-  const stuck = useRef(true);
+  const [pinned, setPinned] = useState(true);
 
-  const onScroll = useCallback(() => {
+  const onScroll = () => {
     const el = ref.current;
     if (!el) return;
-    stuck.current = isNearBottom(el.scrollHeight, el.scrollTop, el.clientHeight);
-  }, []);
+    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setPinned(distance < 24);
+  };
 
   useEffect(() => {
-    const el = ref.current;
-    if (el && stuck.current) el.scrollTop = el.scrollHeight;
+    if (pinned && ref.current) {
+      ref.current.scrollTop = ref.current.scrollHeight;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 

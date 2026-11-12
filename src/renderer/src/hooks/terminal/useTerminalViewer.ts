@@ -1,54 +1,58 @@
-import { useRef, useEffect, useState } from 'react';
-import { useCopyToClipboard } from '../useCopyToClipboard';
-import {
-  filterTerminalLogs,
-  formatTerminalLogsForCopy,
-  type TerminalFilterType,
-  type TerminalLog
-} from '../../utils/terminalViewerUtils';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { EnvironmentLog } from '../../../../shared/types';
 
 export function useTerminalViewer(
-  logs: TerminalLog[],
+  logs: (string | EnvironmentLog)[],
   defaultWordWrap: boolean,
-  externalSearch: { text: string; nonce: number } | null = null
+  externalSearch: { text: string; nonce: number } | null
 ) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const { copy: copyLogs, copiedKey } = useCopyToClipboard(2000);
-  const copied = copiedKey === 'logs';
-  const [filterType, setFilterType] = useState<TerminalFilterType>('all');
   const [searchFilter, setSearchFilter] = useState('');
-  const [autoScroll, setAutoScroll] = useState(true);
+  const [filterType, setFilterType] = useState('all');
   const [wordWrap, setWordWrap] = useState(defaultWordWrap);
+  const [autoScroll, setAutoScroll] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (externalSearch) setSearchFilter(externalSearch.text);
+    if (externalSearch?.text !== undefined) {
+      setSearchFilter(externalSearch.text);
+    }
   }, [externalSearch]);
 
-  // Auto-rolagem para o fim a cada novo log enquanto ativa
+  const filteredLogs = useMemo(() => {
+    const q = searchFilter.trim().toLowerCase();
+    if (!q) return logs;
+    return logs.filter((l) => {
+      const txt = typeof l === 'string' ? l : l.message;
+      return txt.toLowerCase().includes(q);
+    });
+  }, [logs, searchFilter]);
+
   useEffect(() => {
     if (autoScroll && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [logs, autoScroll]);
+  }, [filteredLogs.length, autoScroll]);
 
-  const handleCopy = () => {
-    copyLogs(formatTerminalLogsForCopy(logs), 'logs');
+  const handleCopy = async () => {
+    const text = filteredLogs.map((l) => (typeof l === 'string' ? l : l.message)).join('\n');
+    await navigator.clipboard?.writeText(text).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
 
-  const filteredLogs = filterTerminalLogs(logs, filterType, searchFilter);
-
   return {
-    scrollRef,
-    copied,
-    filterType,
-    setFilterType,
     searchFilter,
     setSearchFilter,
-    autoScroll,
-    setAutoScroll,
+    filterType,
+    setFilterType,
     wordWrap,
     setWordWrap,
+    autoScroll,
+    setAutoScroll,
+    copied,
     handleCopy,
-    filteredLogs
+    filteredLogs,
+    scrollRef
   };
 }

@@ -1,35 +1,32 @@
-import { useState, useMemo } from 'react';
-import { filterTextLines } from '../../utils/textLineFilter';
+import { useCallback, useMemo, useState } from 'react';
 
-/** Histórico persistido do console Karaf embedded (sobrevive a reinícios, diferente do console ao vivo). */
 export function useKarafHistory() {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [output, setOutput] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [search, setSearch] = useState<string>('');
+  const [isOpen, setIsOpen] = useState(false);
+  const [output, setOutput] = useState('');
+  const [search, setSearch] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filtered = useMemo(() => filterTextLines(output, search), [output, search]);
-
-  const open = async () => {
+  const open = useCallback(async () => {
     setIsOpen(true);
-    setSearch('');
-    if (!window.electronAPI?.getKarafPersistedLogs) return;
     setIsLoading(true);
     try {
-      const res = await window.electronAPI.getKarafPersistedLogs();
+      const res = await window.electronAPI?.getKarafPersistedLogs?.();
       setOutput(res?.output || '');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const clear = async () => {
-    if (!window.electronAPI?.clearKarafPersistedLogs) return;
-    await window.electronAPI.clearKarafPersistedLogs();
+  const clear = useCallback(async () => {
+    await window.electronAPI?.clearKarafPersistedLogs?.();
     setOutput('');
-  };
+  }, []);
 
-  const close = () => setIsOpen(false);
+  const filtered = useMemo(() => {
+    if (!search.trim()) return output;
+    const q = search.toLowerCase();
+    return output.split('\n').filter((l) => l.toLowerCase().includes(q)).join('\n');
+  }, [output, search]);
 
-  return { isOpen, output, filtered, isLoading, search, setSearch, open, clear, close };
+  return { isOpen, output, filtered, search, isLoading, setSearch, open, clear, close: () => setIsOpen(false) };
 }

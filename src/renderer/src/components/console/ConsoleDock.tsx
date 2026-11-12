@@ -74,31 +74,33 @@ export const ConsoleDock: React.FC = () => {
       {/* A barra inteira alterna o console; o botão Recolher/Expandir é o controle explícito (e o acessível por teclado). */}
       <div
         onClick={toggle}
-        className="flex items-center gap-2 px-3 h-8 text-2xs font-semibold text-muted-foreground cursor-pointer hover:bg-muted/40 transition"
+        className="flex items-center gap-2 px-3 h-9 text-2xs font-semibold text-muted-foreground cursor-pointer hover:bg-muted/40 transition whitespace-nowrap overflow-hidden"
       >
-        <Terminal className="w-3.5 h-3.5 text-primary" />
-        <span>Console Karaf</span>
-        <span className={`w-1.5 h-1.5 rounded-full ${isEmbeddedRunning ? 'bg-emerald-500' : 'bg-muted-foreground/40'}`} />
-        <span>{isEmbeddedRunning ? 'embedded ativo' : 'sem Karaf embedded'}</span>
-        <span className="ml-auto">{logs.length} linhas</span>
+        <Terminal className="w-3.5 h-3.5 text-primary shrink-0" />
+        <span className="shrink-0">Console Karaf</span>
+        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isEmbeddedRunning ? 'bg-emerald-500' : 'bg-muted-foreground/40'}`} />
+        <span className="hidden sm:inline truncate">{isEmbeddedRunning ? 'embedded ativo' : 'sem Karaf embedded'}</span>
+        <span className="ml-auto hidden sm:inline shrink-0">{logs.length} linhas</span>
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             history.open();
           }}
           title="Ver histórico persistido do Karaf embedded (sobrevive a reinícios)"
-          className="flex items-center gap-1 hover:text-foreground transition cursor-pointer"
+          className="ml-auto sm:ml-0 flex items-center gap-1 hover:text-foreground transition cursor-pointer shrink-0"
         >
           <History className="w-3 h-3" /> Histórico
         </button>
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             toggle();
           }}
           aria-expanded={isOpen}
           title="Abrir/fechar o console (Ctrl+`)"
-          className="flex items-center gap-1 px-2 py-0.5 rounded-lg border border-border bg-card hover:bg-muted hover:text-foreground transition cursor-pointer"
+          className="flex items-center gap-1 px-2 py-0.5 rounded-lg border border-border bg-card hover:bg-muted hover:text-foreground transition cursor-pointer shrink-0"
         >
           {isOpen ? 'Recolher' : 'Expandir'}
           {isOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}

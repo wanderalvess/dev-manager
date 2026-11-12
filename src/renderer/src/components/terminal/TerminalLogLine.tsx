@@ -1,48 +1,17 @@
 import React from 'react';
-import {
-  getTerminalEntryStyle,
-  getTerminalStringLogColor,
-  type TerminalLog
-} from '../../utils/terminalViewerUtils';
+import type { EnvironmentLog } from '../../../../shared/types';
 
-interface TerminalLogLineProps {
-  log: TerminalLog;
-  index: number;
-  wordWrap: boolean;
-}
-
-export const TerminalLogLine: React.FC<TerminalLogLineProps> = ({ log, index, wordWrap }) => {
-  const widthClass = wordWrap ? 'w-full min-w-0' : 'w-fit min-w-full';
-  const textWrapClass = wordWrap ? 'whitespace-pre-wrap wrap-break-word' : 'whitespace-pre';
-
-  if (typeof log === 'string') {
-    const color = getTerminalStringLogColor(log);
-    return (
-      <div
-        className={`flex items-start space-x-2 font-mono text-2xs leading-relaxed group hover:bg-slate-800/40 px-1 rounded ${widthClass}`}
-      >
-        <span className="text-slate-600 select-none w-6 text-right text-2xs shrink-0 font-mono opacity-60">
-          {index + 1}
-        </span>
-        <span className={`flex-1 min-w-0 ${textWrapClass} ${color}`}>{log}</span>
-      </div>
-    );
-  }
-
-  const { color, badge } = getTerminalEntryStyle(log.type);
-
+export const TerminalLogLine: React.FC<{ log: string | EnvironmentLog; index: number; wordWrap: boolean }> = ({
+  log,
+  wordWrap
+}) => {
+  const text = typeof log === 'string' ? log : `[${log.level.toUpperCase()}] ${log.message}`;
+  const isErr = /error|exception|failed|falha/i.test(text) || (typeof log !== 'string' && log.level === 'error');
+  const isWarn = /warn|aviso/i.test(text) || (typeof log !== 'string' && log.level === 'warn');
+  const color = isErr ? 'text-red-400' : isWarn ? 'text-amber-300' : 'text-slate-200';
   return (
-    <div
-      className={`flex items-start space-x-2 font-mono text-2xs py-0.5 leading-relaxed group hover:bg-slate-800/40 px-1 rounded ${widthClass}`}
-    >
-      <span className="text-slate-600 select-none w-6 text-right text-2xs shrink-0 font-mono opacity-60">
-        {index + 1}
-      </span>
-      <span className="text-slate-500 select-none text-2xs shrink-0">{log.timestamp}</span>
-      <span className={`text-2xs uppercase px-1.5 py-0.2 rounded border font-semibold select-none shrink-0 ${badge}`}>
-        {log.type}
-      </span>
-      <span className={`flex-1 min-w-0 ${textWrapClass} ${color}`}>{log.message}</span>
+    <div className={`font-mono text-2xs leading-5 ${color} ${wordWrap ? 'whitespace-pre-wrap break-words' : 'whitespace-pre'}`}>
+      {text}
     </div>
   );
 };

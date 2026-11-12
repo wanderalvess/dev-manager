@@ -1,142 +1,110 @@
-import React from 'react';
-import { Globe, BookOpen } from 'lucide-react';
-import { useHttpClientState } from '../hooks/http/useHttpClientState';
-import { HttpSidebar } from '../components/http/HttpSidebar';
-import { HttpRequestBar } from '../components/http/HttpRequestBar';
-import { HttpRequestEditorTabs } from '../components/http/HttpRequestEditorTabs';
-import { HttpResponseViewer } from '../components/http/HttpResponseViewer';
-import { HttpEnvironmentModal } from '../components/http/HttpEnvironmentModal';
-import { HttpImportPostmanModal } from '../components/http/HttpImportPostmanModal';
-import { HttpCurlModal } from '../components/http/HttpCurlModal';
-import { HttpAiDiagnosticModal } from '../components/http/HttpAiDiagnosticModal';
+import React, { useState } from 'react';
+import { Globe, Send } from 'lucide-react';
+import type { HttpProbeResult } from '../../../shared/types';
 
-interface HttpClientPageProps {
-  onNavigateToSettings?: () => void;
-  onNavigateToQaRegression?: (rawJson: string) => void;
-  settingsVersion?: number;
-  isActive?: boolean;
-}
+export const HttpClientPage: React.FC<{
+  onNavigateToSettings: () => void;
+  onNavigateToQaRegression: () => void;
+  isActive: boolean;
+  settingsVersion: number;
+}> = () => {
+  const [method, setMethod] = useState('GET');
+  const [url, setUrl] = useState('https://jsonplaceholder.typicode.com/todos/1');
+  const [headersText, setHeadersText] = useState('{\n  "Accept": "application/json"\n}');
+  const [body, setBody] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [response, setResponse] = useState<HttpProbeResult | null>(null);
 
-export const HttpClientPage: React.FC<HttpClientPageProps> = ({
-  onNavigateToQaRegression
-}) => {
-  const state = useHttpClientState();
+  const send = async () => {
+    setLoading(true);
+    try {
+      let headers: Record<string, string> = {};
+      try {
+        headers = JSON.parse(headersText || '{}');
+      } catch {
+        headers = {};
+      }
+      const res = await window.electronAPI.probeHttpEndpoint({ method, url, headers, body });
+      setResponse(res);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden bg-background">
-      {/* Topo / Header do Módulo */}
-      <div className="flex items-center justify-between px-5 py-3.5 bg-card border-b border-border select-none">
-        <div className="flex items-center gap-2.5">
-          <Globe className="w-5 h-5 text-muted-foreground" />
+    <div className="h-full overflow-y-auto p-5 space-y-4">
+      <div>
+        <h1 className="text-lg font-extrabold text-foreground flex items-center gap-2">
+          <Globe className="w-5 h-5 text-primary" /> API Studio (Cliente HTTP)
+        </h1>
+        <p className="text-xs text-muted-foreground">Execução real de requisições REST via proxy do servidor com medição de latência.</p>
+      </div>
+
+      <div className="flex items-center gap-2 bg-card border border-border rounded-xl p-2.5">
+        <select
+          value={method}
+          onChange={(e) => setMethod(e.target.value)}
+          className="px-3 py-2 rounded-lg border border-border bg-background font-mono text-xs font-bold text-primary"
+        >
+          {['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].map((m) => <option key={m}>{m}</option>)}
+        </select>
+        <input
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://..."
+          className="flex-1 px-3 py-2 rounded-lg border border-border bg-background font-mono text-xs text-foreground focus:outline-none focus:border-primary"
+        />
+        <button
+          type="button"
+          onClick={send}
+          disabled={loading}
+          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+        >
+          <Send className="w-3.5 h-3.5" /> {loading ? 'Enviando...' : 'Enviar'}
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-card border border-border rounded-xl p-4 space-y-3">
           <div>
-            <h1 className="text-xl font-semibold text-foreground tracking-tight leading-tight">API Studio</h1>
-            <p className="text-[13px] text-muted-foreground">
-              Teste e homologação de APIs REST WinThor/Karaf com coleções Postman, variáveis e autenticação automática.
-            </p>
+            <div className="text-xs font-bold text-foreground mb-1">Headers (JSON)</div>
+            <textarea
+              value={headersText}
+              onChange={(e) => setHeadersText(e.target.value)}
+              rows={4}
+              className="w-full p-2.5 rounded-lg border border-border bg-background font-mono text-xs"
+            />
           </div>
-        </div>
-      </div>
-
-      {/* Conteúdo Principal Dividido: Sidebar vs Workspace */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar Esquerda: Coleções, Pastas e Ambientes */}
-        <HttpSidebar
-          collections={state.collections}
-          environments={state.environments}
-          selectedEnvId={state.selectedEnvId}
-          onSelectEnv={state.setSelectedEnvId}
-          onOpenEnvModal={() => state.setIsEnvModalOpen(true)}
-          onOpenImportModal={() => state.setIsImportModalOpen(true)}
-          activeRequestId={state.currentRequest.id}
-          onSelectRequest={state.setCurrentRequest}
-          onNewRequest={state.handleNewRequest}
-          onNewCollection={() => state.setIsImportModalOpen(true)}
-          onDeleteRequest={state.handleDeleteRequest}
-          onDeleteCollection={state.handleDeleteCollection}
-          onRestoreHistory={state.handleRestoreHistory}
-          onClearHistory={state.handleClearHistory}
-          history={state.history}
-        />
-
-        {/* Workspace Central */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Barra de Requisição: Método, URL e Botão Enviar */}
-          <HttpRequestBar
-            method={state.currentRequest.method}
-            setMethod={(method) => state.setCurrentRequest({ ...state.currentRequest, method })}
-            url={state.currentRequest.url}
-            setUrl={(url) => state.setCurrentRequest({ ...state.currentRequest, url })}
-            onSend={state.handleExecute}
-            onSave={state.handleSaveRequest}
-            onOpenCurlModal={(mode) => {
-              state.setCurlModalMode(mode);
-              state.setIsCurlModalOpen(true);
-            }}
-            isLoading={state.isLoading}
-          />
-
-          {/* Painéis: Editor de Parâmetros/Body vs Visualizador de Resposta */}
-          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-            {/* Editor de Requisição */}
-            <div className="flex-1 flex flex-col overflow-hidden min-h-[300px]">
-              <HttpRequestEditorTabs
-                request={state.currentRequest}
-                onRequestChange={state.setCurrentRequest}
-                activeToken={state.activeToken}
-                onLoginWinThorPrompt={() => state.setIsEnvModalOpen(true)}
+          {!['GET', 'HEAD'].includes(method) && (
+            <div>
+              <div className="text-xs font-bold text-foreground mb-1">Body</div>
+              <textarea
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                rows={5}
+                className="w-full p-2.5 rounded-lg border border-border bg-background font-mono text-xs"
               />
             </div>
+          )}
+        </div>
 
-            {/* Visualizador de Resposta */}
-            <div className="flex-1 flex flex-col overflow-hidden min-h-[300px]">
-              <HttpResponseViewer
-                response={state.response}
-                isLoading={state.isLoading}
-                onSendToQaRegression={onNavigateToQaRegression}
-                onUpdateActiveToken={state.handleUpdateActiveToken}
-                onOpenAiDiagnostic={() => state.setIsAiModalOpen(true)}
-              />
-            </div>
+        <div className="bg-card border border-border rounded-xl p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-foreground">Resposta</span>
+            {response && (
+              <div className="flex items-center gap-2 text-2xs font-mono">
+                <span className={`px-2 py-0.5 rounded-full font-bold ${response.ok ? 'bg-success/15 text-success' : 'bg-danger/15 text-danger'}`}>
+                  {response.status} {response.statusText}
+                </span>
+                <span className="text-muted-foreground">{response.latencyMs} ms • {response.sizeBytes} B</span>
+              </div>
+            )}
           </div>
+          <pre className="p-3 rounded-xl bg-muted/30 border border-border text-foreground font-mono text-2xs max-h-80 overflow-auto whitespace-pre-wrap">
+            {response ? response.error || response.body : 'Envie uma requisição para inspecionar headers e payload.'}
+          </pre>
         </div>
       </div>
-
-      {/* Modais Globais do Módulo */}
-      <HttpEnvironmentModal
-        isOpen={state.isEnvModalOpen}
-        onClose={() => state.setIsEnvModalOpen(false)}
-        environments={state.environments}
-        selectedEnvId={state.selectedEnvId}
-        onSaveEnvironments={state.handleSaveEnvironments}
-        onSelectEnvironment={state.setSelectedEnvId}
-        onTokenUpdated={(token) => {
-          state.loadData();
-        }}
-      />
-
-      <HttpImportPostmanModal
-        isOpen={state.isImportModalOpen}
-        onClose={() => state.setIsImportModalOpen(false)}
-        onImportSuccess={state.handleImportSuccess}
-      />
-
-      <HttpCurlModal
-        isOpen={state.isCurlModalOpen}
-        onClose={() => state.setIsCurlModalOpen(false)}
-        mode={state.curlModalMode}
-        currentRequest={state.currentRequest}
-        activeToken={state.activeToken}
-        onImportSuccess={state.handleImportCurl}
-      />
-
-      {state.response && (
-        <HttpAiDiagnosticModal
-          isOpen={state.isAiModalOpen}
-          onClose={() => state.setIsAiModalOpen(false)}
-          request={state.currentRequest}
-          response={state.response}
-        />
-      )}
     </div>
   );
 };

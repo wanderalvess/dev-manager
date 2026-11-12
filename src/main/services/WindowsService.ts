@@ -31,7 +31,7 @@ import { KarafService } from './KarafService';
 import { DatabaseService } from './DatabaseService';
 import { NetworkService } from './NetworkService';
 import { execFileAsync, isSafeUrl, isValidIdentifier } from '../utils/security';
-import { checkPortOpen } from '../utils/network';
+import { checkPortOpen, findNetstatListeningPid } from '../utils/network';
 import { launchProcessSafely } from '../utils/routineLaunchUtils';
 import { isWslKaraf, launchWslServerDebug, killWslKarafProcesses } from '../utils/karafWslUtils';
 import { wtArg } from '../utils/windowsTerminal';
@@ -136,7 +136,7 @@ export class WindowsService {
       if (err?.stdout?.includes('1060') || err?.message?.includes('1060')) {
         return 'NOT_INSTALLED';
       }
-      return 'STOPPED';
+      return 'UNKNOWN';
     }
   }
 
@@ -385,8 +385,13 @@ export class WindowsService {
 
   public launchServerDebug(launchMode?: 'wt' | 'cmd', customDebugPort?: number): boolean {
     const settings = this.configService.getSettings();
+    const cachedWt = this.commandAvailabilityCache.get('wt.exe');
+    if (process.platform === 'win32' && cachedWt === undefined && launchMode !== 'cmd') {
+      void this.isCommandAvailable('wt.exe');
+    }
+    const hasWt = cachedWt ?? true;
+
     if (isWslKaraf(settings)) {
-      const hasWt = this.commandAvailabilityCache.get('wt.exe') ?? false;
       return launchWslServerDebug(settings, hasWt, launchMode, customDebugPort);
     }
 
@@ -398,7 +403,6 @@ export class WindowsService {
         if (process.platform === 'win32') {
           const scriptName = path.basename(exe);
           const cmdExe = childEnv.ComSpec || process.env.ComSpec || process.env.COMSPEC || 'cmd.exe';
-          const hasWt = this.commandAvailabilityCache.get('wt.exe') ?? false;
           const useWt = launchMode === 'wt' || (!launchMode && hasWt);
 
           if (useWt) {
@@ -496,23 +500,11 @@ export class WindowsService {
         const lines = netstatOutput.split('\n');
 
         for (const item of monitoredPorts) {
-          let inUse = false;
-          let pid: string | undefined = undefined;
-
-          const matchingLine = lines.find(
-            (l) => l.includes(`:${item.port} `) || l.includes(`:${item.port}\t`) || l.includes(`:${item.port}\r`)
-          );
-
-          if (matchingLine && matchingLine.includes('LISTENING')) {
-            inUse = true;
-            const tokens = matchingLine.trim().split(/\s+/);
-            pid = tokens[tokens.length - 1];
-          }
-
+          const pid = findNetstatListeningPid(lines, item.port);
           results.push({
             port: item.port,
             label: item.label,
-            inUse,
+            inUse: Boolean(pid),
             pid
           });
         }
@@ -1063,11 +1055,11 @@ export class WindowsService {
       const currentState = await this.getServiceStatus(step.targetName);
       if (currentState === 'STOPPED' || currentState === 'NOT_INSTALLED') {
         pushLog('success', `Serviço ${step.targetName}: já está parado, nada a fazer.`);
+        stopped = true;
       } else {
         pushLog('info', `Parando serviço ${step.targetName}...`);
-        await this.stopService(step.targetName);
+        stopped = (await this.stopService(step.targetName)) || stopped;
       }
-      stopped = true;
     }
 
     if (step.type === 'service-stop' && (step.targetName || step.name)) {
@@ -1075,22 +1067,22 @@ export class WindowsService {
       const currentState = await this.getServiceStatus(srv);
       if (currentState === 'STOPPED' || currentState === 'NOT_INSTALLED') {
         pushLog('success', `Serviço ${srv}: já está parado, nada a fazer.`);
+        stopped = true;
       } else {
         pushLog('info', `Garantindo parada do serviço ${srv}...`);
-        await this.stopService(srv);
+        stopped = (await this.stopService(srv)) || stopped;
       }
-      stopped = true;
     }
 
     if (step.type === 'kill-process' && (step.targetName || step.name)) {
       const proc = step.targetName || step.name;
       if (!(await this.isProcessRunning(proc))) {
         pushLog('success', `Processo ${proc}: já não está em execução, nada a fazer.`);
+        stopped = true;
       } else {
         pushLog('info', `Encerrando processo ${proc}...`);
-        await this.killProcess(proc);
+        stopped = (await this.killProcess(proc)) || stopped;
       }
-      stopped = true;
     }
 
     if (step.command && step.command.toLowerCase().includes('docker start')) {

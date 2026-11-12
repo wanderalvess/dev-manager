@@ -1,18 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { APP_MODULE_IDS, isModuleEnabled, normalizeDisabledModules } from '../../../../shared/appModules';
 import { NAV_THEME_GROUPS } from '../../components/header/headerNavConfig';
-import { TOUR_STEPS } from '../../components/onboarding/tourSteps';
-import { showToast } from '../../components/ToastHost';
-import { filterMountedTabs, filterNavGroups, filterTourSteps, resolveFallbackTab } from '../../utils/moduleVisibility';
+import { DEFAULT_TOUR_STEPS } from '../../components/onboarding/tourSteps';
 
-const findModuleLabel = (tab: string): string =>
-  NAV_THEME_GROUPS.flatMap((group) => group.items).find((item) => item.id === tab)?.label ?? tab;
-
-/**
- * Módulos ligados/desligados (Configurações → Módulos): relê a lista a cada save de configurações,
- * filtra Header/tour/páginas montadas, barra a navegação para página desligada (atalhos, Ctrl+K, links
- * entre páginas) e tira o usuário da página atual se ela acabou de ser desligada.
- */
 export function useModuleVisibility(
   activeTab: string,
   setActiveTab: (tab: string) => void,
@@ -20,53 +9,40 @@ export function useModuleVisibility(
   settingsVersion: number
 ) {
   const [disabledModules, setDisabledModules] = useState<string[]>([]);
-  // Até a primeira leitura, nenhuma página de módulo monta: evita abrir (e já disparar o polling de) uma
-  // página que estava desligada só para desmontá-la logo depois.
-  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const api = window.electronAPI;
-    if (!api?.getSettings) {
-      setIsLoaded(true);
-      return;
-    }
-    let cancelled = false;
-    api
-      .getSettings()
-      .then((settings) => {
-        if (!cancelled) setDisabledModules(normalizeDisabledModules(settings.disabledModules));
-      })
-      .catch((err) => console.warn('[App] Falha ao carregar os módulos ligados:', err))
-      .finally(() => {
-        if (!cancelled) setIsLoaded(true);
-      });
-    return () => {
-      cancelled = true;
-    };
+    window.electronAPI?.getSettings?.().then((s) => {
+      if (Array.isArray(s?.disabledModules)) setDisabledModules(s.disabledModules);
+    }).catch(() => {});
   }, [settingsVersion]);
 
-  useEffect(() => {
-    const fallback = resolveFallbackTab(activeTab, disabledModules);
-    if (fallback !== activeTab) setActiveTab(fallback);
-  }, [activeTab, disabledModules, setActiveTab]);
+  const navGroups = useMemo(() => {
+    if (disabledModules.length === 0) return NAV_THEME_GROUPS;
+    return NAV_THEME_GROUPS.map((g) => ({
+      ...g,
+      items: g.items.filter((item) => !disabledModules.includes(item.id))
+    })).filter((g) => g.items.length > 0);
+  }, [disabledModules]);
 
   const navigate = useCallback(
     (tab: string) => {
-      if (isModuleEnabled(tab, disabledModules)) {
-        setActiveTab(tab);
-        return;
-      }
-      showToast(`O módulo "${findModuleLabel(tab)}" está desligado. Ligue-o em Configurações → Módulos.`, 'info');
+      if (disabledModules.includes(tab)) return;
+      setActiveTab(tab);
     },
     [disabledModules, setActiveTab]
   );
 
-  const navGroups = useMemo(() => filterNavGroups(NAV_THEME_GROUPS, disabledModules), [disabledModules]);
-  const tourSteps = useMemo(() => filterTourSteps(TOUR_STEPS, navGroups), [navGroups]);
-  const mountedTabs = useMemo(
-    () => (isLoaded ? filterMountedTabs(visitedTabs, disabledModules) : filterMountedTabs(visitedTabs, APP_MODULE_IDS)),
-    [isLoaded, visitedTabs, disabledModules]
-  );
+  const mountedTabs = useMemo(() => {
+    const out = new Set(visitedTabs);
+    out.add(activeTab);
+    return out;
+  }, [visitedTabs, activeTab]);
 
-  return { disabledModules, navigate, navGroups, tourSteps, mountedTabs };
+  return {
+    disabledModules,
+    navGroups,
+    navigate,
+    mountedTabs,
+    tourSteps: DEFAULT_TOUR_STEPS
+  };
 }

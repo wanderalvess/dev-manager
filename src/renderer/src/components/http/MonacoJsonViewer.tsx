@@ -9,6 +9,10 @@ interface MonacoJsonViewerProps {
   placeholder?: string;
 }
 
+function getMonacoTheme(): 'vs' | 'vs-dark' {
+  return document.documentElement.classList.contains('light') ? 'vs' : 'vs-dark';
+}
+
 export const MonacoJsonViewer: React.FC<MonacoJsonViewerProps> = ({
   value,
   onChange,
@@ -18,15 +22,17 @@ export const MonacoJsonViewer: React.FC<MonacoJsonViewerProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const isUpdatingFromProp = useRef(false);
+  const initialValueRef = useRef(value);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Configuração do editor Monaco
     const editor = monaco.editor.create(containerRef.current, {
-      value: value || '',
+      value: initialValueRef.current || '',
       language: language === 'json' ? 'json' : 'plaintext',
-      theme: 'vs-dark',
+      theme: getMonacoTheme(),
       readOnly,
       automaticLayout: true,
       minimap: { enabled: false },
@@ -48,12 +54,16 @@ export const MonacoJsonViewer: React.FC<MonacoJsonViewerProps> = ({
 
     const disposable = editor.onDidChangeModelContent(() => {
       if (isUpdatingFromProp.current) return;
-      if (onChange) {
-        onChange(editor.getValue());
-      }
+      onChangeRef.current?.(editor.getValue());
     });
 
+    const observer = new MutationObserver(() => {
+      monaco.editor.setTheme(getMonacoTheme());
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
     return () => {
+      observer.disconnect();
       disposable.dispose();
       editor.dispose();
       editorRef.current = null;
@@ -72,5 +82,5 @@ export const MonacoJsonViewer: React.FC<MonacoJsonViewerProps> = ({
     }
   }, [value]);
 
-  return <div ref={containerRef} className="w-full h-full min-h-[140px] bg-[#0d1117] rounded" />;
+  return <div ref={containerRef} className="w-full h-full min-h-[140px] bg-card border border-border rounded" />;
 };

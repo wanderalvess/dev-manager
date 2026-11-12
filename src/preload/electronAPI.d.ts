@@ -174,6 +174,7 @@ export interface ElectronAPI {
   // Karaf Deployer & Console Embutido
   startEmbeddedKaraf: () => Promise<boolean>;
   sendKarafInput: (input: string) => Promise<boolean>;
+  sendKarafInterrupt?: () => Promise<boolean>;
   stopEmbeddedKaraf: () => Promise<boolean>;
   isEmbeddedKarafRunning: () => Promise<boolean>;
   isKarafRunning: (sshPort?: number) => Promise<boolean>;
@@ -191,6 +192,7 @@ export interface ElectronAPI {
     skipTests?: boolean
   ) => Promise<{ code: number; stdout: string; stderr: string }>;
   execKarafDiagnostic: (command: string) => Promise<{ code: number; stdout: string; stderr: string }>;
+  abortKarafDiagnostic?: () => Promise<boolean>;
   getKarafDeployHistory: () => Promise<KarafDeployHistoryEntry[]>;
   onKarafDeployResult: (callback: (result: { success: boolean; error?: string }) => void) => () => void;
   onKarafBuildResult: (callback: (result: { code: number; stdout: string; stderr: string }) => void) => () => void;

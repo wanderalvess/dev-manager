@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
@@ -14,13 +14,49 @@
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/renderer/src/*"],
-      "@shared/*": ["src/shared/*"],
-      "@monaco/*": ["node_modules/monaco-editor/esm/vs/*"]
+      "@shared/*": ["src/shared/*"]
     }
   },
-  "include": ["src"]
+  "include": [
+    "server.ts",
+    "vite.config.ts",
+    "src/shared/**/*.ts",
+    "src/preload/electronAPI.d.ts",
+    "src/renderer/src/main.tsx",
+    "src/renderer/src/App.tsx",
+    "src/renderer/src/context/**/*.ts",
+    "src/renderer/src/context/**/*.tsx",
+    "src/renderer/src/services/**/*.ts",
+    "src/renderer/src/hooks/**/*.ts",
+    "src/renderer/src/hooks/**/*.tsx",
+    "src/renderer/src/utils/**/*.ts",
+    "src/renderer/src/pages/**/*.tsx",
+    "src/renderer/src/components/AppLogo.tsx",
+    "src/renderer/src/components/Header.tsx",
+    "src/renderer/src/components/ThemeToggle.tsx",
+    "src/renderer/src/components/ToastHost.tsx",
+    "src/renderer/src/components/QuickLauncherModal.tsx",
+    "src/renderer/src/components/TerminalViewer.tsx",
+    "src/renderer/src/components/MarkdownReader.tsx",
+    "src/renderer/src/components/WhatsNewModal.tsx",
+    "src/renderer/src/components/app/**/*.tsx",
+    "src/renderer/src/components/app/updateNotice.ts",
+    "src/renderer/src/components/header/HeaderNav.tsx",
+    "src/renderer/src/components/header/QuickSearchButton.tsx",
+    "src/renderer/src/components/header/StatusPopover.tsx",
+    "src/renderer/src/components/header/headerNavConfig.ts",
+    "src/renderer/src/components/console/**/*.tsx",
+    "src/renderer/src/components/environment/modals/KarafEmbeddedOutputModal.tsx",
+    "src/renderer/src/components/ui/**/*.tsx",
+    "src/renderer/src/components/ui/**/*.ts",
+    "src/renderer/src/components/onboarding/**/*.tsx",
+    "src/renderer/src/components/onboarding/**/*.ts",
+    "src/renderer/src/components/quicklauncher/**/*.tsx",
+    "src/renderer/src/components/terminal/**/*.tsx",
+    "src/renderer/src/components/whatsnew/**/*.tsx",
+    "src/renderer/src/components/settings/settingsSearchData.ts"
+  ]
 }

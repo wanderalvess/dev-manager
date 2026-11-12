@@ -1,113 +1,110 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import type { GitProjectInfo, RoutineItem } from '../../../../shared/types';
-import { isModuleEnabled } from '../../../../shared/appModules';
-import { buildQuickLauncherItems } from '../../utils/quickLauncherItems';
-import type { QuickLauncherItem } from '../../utils/quickLauncherActions';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { GitPullRequest, RefreshCw, Settings, HelpCircle } from 'lucide-react';
+import { NAV_THEME_GROUPS } from '../../components/header/headerNavConfig';
+import type { QuickLauncherItem } from '../../components/quicklauncher/QuickLauncherList';
+import type { GitProjectInfo } from '../../../../shared/types';
 
-interface UseQuickLauncherParams {
+export function useQuickLauncher(params: {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (tab: string) => void;
   disabledModules: readonly string[];
   projects: GitProjectInfo[];
   onRefreshAll: () => void;
-}
-
-export function useQuickLauncher({
-  isOpen,
-  onClose,
-  onNavigate,
-  disabledModules,
-  projects,
-  onRefreshAll
-}: UseQuickLauncherParams) {
-  const [search, setSearch] = useState<string>('');
-  const [routines, setRoutines] = useState<RoutineItem[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+}) {
+  const { isOpen, onClose, onNavigate, disabledModules, projects, onRefreshAll } = params;
+  const [search, setSearch] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Carregar rotinas Delphi (não varre o disco com o Catálogo de Rotinas desligado)
-  const routinesEnabled = isModuleEnabled('routines', disabledModules);
   useEffect(() => {
-    if (isOpen && window.electronAPI) {
-      if (routinesEnabled) {
-        window.electronAPI.listRoutines().then((data) => {
-          setRoutines(data || []);
-        });
-      } else {
-        setRoutines([]);
-      }
+    if (isOpen) {
       setSearch('');
       setSelectedIndex(0);
-      // Aguarda o modal montar antes de focar o campo de busca.
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 50);
+      setTimeout(() => inputRef.current?.focus(), 20);
     }
-  }, [isOpen, routinesEnabled]);
+  }, [isOpen]);
 
-  const launchRoutine = useCallback(async (fullPath: string) => {
-    if (window.electronAPI) {
-      await window.electronAPI.launchRoutine(fullPath);
-    }
-  }, []);
-
-  // Lista agregada e filtrada de itens
-  const filteredItems = useMemo<QuickLauncherItem[]>(
-    () =>
-      buildQuickLauncherItems({
-        search,
-        routines,
-        projects,
-        onNavigate,
-        onRefreshAll,
-        onClose,
-        launchRoutine,
-        disabledModules
-      }),
-    [search, routines, projects, onNavigate, onRefreshAll, onClose, launchRoutine, disabledModules]
-  );
-
-  // Resetar índice quando os resultados mudarem
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [filteredItems.length]);
-
-  // Rolar item selecionado para a visão
-  useEffect(() => {
-    if (listRef.current) {
-      const activeEl = listRef.current.children[selectedIndex] as HTMLElement;
-      if (activeEl) {
-        activeEl.scrollIntoView({ block: 'nearest' });
+  const allItems = useMemo<QuickLauncherItem[]>(() => {
+    const items: QuickLauncherItem[] = [];
+    for (const g of NAV_THEME_GROUPS) {
+      for (const m of g.items) {
+        if (disabledModules.includes(m.id)) continue;
+        items.push({
+          id: `nav-${m.id}`,
+          label: m.label,
+          description: m.description,
+          category: g.shortTitle,
+          badge: m.shortcut,
+          icon: m.icon,
+          action: () => { onNavigate(m.id); onClose(); }
+        });
       }
     }
-  }, [selectedIndex]);
+    items.push(
+      {
+        id: 'nav-settings',
+        label: 'Configurações',
+        description: 'Módulos, diretórios, bancos e preferências',
+        category: 'Sistema',
+        icon: Settings,
+        action: () => { onNavigate('settings'); onClose(); }
+      },
+      {
+        id: 'nav-help',
+        label: 'Central de Ajuda',
+        description: 'Documentação, atalhos e diagnósticos',
+        category: 'Sistema',
+        badge: 'Alt+H',
+        icon: HelpCircle,
+        action: () => { onNavigate('help'); onClose(); }
+      },
+      {
+        id: 'act-refresh',
+        label: 'Atualizar Status Geral',
+        description: 'Recarregar serviços, portas e repositórios',
+        category: 'Ação',
+        icon: RefreshCw,
+        action: () => { onRefreshAll(); onClose(); }
+      }
+    );
+    for (const p of projects) {
+      items.push({
+        id: `proj-${p.name}`,
+        label: p.name,
+        description: `Branch: ${p.branch}`,
+        category: 'Git',
+        icon: GitPullRequest,
+        action: () => { onNavigate('git'); onClose(); }
+      });
+    }
+    return items;
+  }, [disabledModules, projects, onNavigate, onClose, onRefreshAll]);
+
+  const filteredItems = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return allItems;
+    return allItems.filter(
+      (i) =>
+        i.label.toLowerCase().includes(q) ||
+        (i.description || '').toLowerCase().includes(q) ||
+        i.category.toLowerCase().includes(q)
+    );
+  }, [allItems, search]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev < filteredItems.length - 1 ? prev + 1 : 0));
+      setSelectedIndex((i) => Math.min(filteredItems.length - 1, i + 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : filteredItems.length - 1));
-    } else if (e.key === 'Enter') {
+      setSelectedIndex((i) => Math.max(0, i - 1));
+    } else if (e.key === 'Enter' && filteredItems[selectedIndex]) {
       e.preventDefault();
-      if (filteredItems[selectedIndex]) {
-        filteredItems[selectedIndex].onSelect();
-      }
+      filteredItems[selectedIndex].action();
     }
-    // Esc é tratado pelo Modal
   };
 
-  return {
-    search,
-    setSearch,
-    selectedIndex,
-    setSelectedIndex,
-    filteredItems,
-    inputRef,
-    listRef,
-    handleKeyDown
-  };
+  return { search, setSearch, selectedIndex, setSelectedIndex, filteredItems, inputRef, listRef, handleKeyDown };
 }

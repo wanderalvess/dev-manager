@@ -24,6 +24,8 @@ export const evidenceApi = {
   evidenceListSources: (): Promise<EvidenceCaptureSource[]> => ipcRenderer.invoke('evidence:list-sources'),
   evidenceCapture: (id: string, sourceId?: string, title?: string): Promise<EvidenceSession> =>
     ipcRenderer.invoke('evidence:capture', id, sourceId, title),
+  evidenceAddImage: (id: string, dataUrl: string, title?: string): Promise<EvidenceSession> =>
+    ipcRenderer.invoke('evidence:add-image', id, dataUrl, title),
   evidenceAddNote: (id: string, title?: string): Promise<EvidenceSession> => ipcRenderer.invoke('evidence:add-note', id, title),
   evidenceUpdateStep: (id: string, stepId: string, patch: EvidenceStepPatch): Promise<EvidenceSession> =>
     ipcRenderer.invoke('evidence:update-step', id, stepId, patch),

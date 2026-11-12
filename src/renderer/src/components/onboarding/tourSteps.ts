@@ -1,71 +1,12 @@
 export interface TourStep {
-  /** data-tour do elemento alvo, ou null para passo de boas-vindas sem spotlight */
-  target: string | null;
+  target: string;
   title: string;
-  desc: string;
+  content: string;
 }
 
-export const TOUR_STORAGE_KEY = 'devManager:onboardingTourV2';
-
-export const TOUR_STEPS: TourStep[] = [
-  {
-    target: null,
-    title: 'Onde fica cada coisa',
-    desc: 'Um passeio de menos de 1 minuto pelo menu lateral e pelo cabeçalho: os grupos de páginas, a busca e os atalhos que você vai usar todo dia.'
-  },
-  {
-    target: 'nav-infra',
-    title: 'Infraestrutura & Ambiente',
-    desc: 'Serviços e esteira do ambiente, containers, WinThor e WSL, catálogo de rotinas, deploy e Karaf.'
-  },
-  {
-    target: 'nav-obs',
-    title: 'Observabilidade & Diagnóstico',
-    desc: 'Logs em tempo real, APM e traces, e o rastreio da integração de ponta a ponta.'
-  },
-  {
-    target: 'nav-data',
-    title: 'Banco de Dados & Backups',
-    desc: 'SQL runner de Oracle, MySQL e Postgres, e os backups com agendamento e webhooks.'
-  },
-  {
-    target: 'nav-dev',
-    title: 'Desenvolvimento & DevOps',
-    desc: 'Git e Azure DevOps, documentação semântica (RAG) e o API Studio.'
-  },
-  {
-    target: 'nav-qa',
-    title: 'Qualidade & Homologação',
-    desc: 'Homologação, Validador Regressivo, Test Runners e TAUT (Cypress).'
-  },
-  {
-    target: 'nav-integrations',
-    title: 'Integrações',
-    desc: 'MCP, provedores de LLM, Azure DevOps, Jira, Confluence e mais, com o estado de cada uma e um atalho para configurá-la.'
-  },
-  {
-    target: 'search',
-    title: 'Busca Rápida',
-    desc: 'Ctrl+K encontra páginas, rotinas, repositórios e ações sem tirar a mão do teclado.'
-  },
-  {
-    target: 'status',
-    title: 'Diagnósticos & Rede',
-    desc: 'IP local, IP do WSL e uso de CPU/RAM da máquina, sempre à vista.'
-  },
-  {
-    target: 'help',
-    title: 'Central de Ajuda',
-    desc: 'Tutoriais de cada módulo, FAQ, atalhos de teclado — e o botão para refazer este tour.'
-  },
-  {
-    target: 'settings',
-    title: 'Configurações',
-    desc: 'Caminhos, portas, conexões e integrações. Em Módulos você liga ou desliga as páginas do menu lateral.'
-  },
-  {
-    target: 'refresh',
-    title: 'Atualizar Tudo',
-    desc: 'Recarrega de uma vez o status de serviços, portas e repositórios Git.'
-  }
+export const TOUR_STORAGE_KEY = 'hubManager.tour.seen';
+export const DEFAULT_TOUR_STEPS: TourStep[] = [
+  { target: 'nav-infra', title: 'Infraestrutura & Ambiente', content: 'Gerencie serviços locais, portas, containers, deploy e Karaf OSGi.' },
+  { target: 'nav-data', title: 'Banco de Dados & Backups', content: 'Execute consultas SQL multi-vendor e agende backups.' },
+  { target: 'search', title: 'Busca Rápida (Ctrl+K)', content: 'Acesse qualquer módulo, rotina ou repositório pelo teclado.' }
 ];

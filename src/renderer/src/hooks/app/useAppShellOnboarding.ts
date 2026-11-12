@@ -1,290 +1,59 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { showToast } from '../../components/ToastHost';
-import { PAGE_TOURS_PREF_KEY } from '../../components/onboarding/usePageTour';
-import { TOUR_STORAGE_KEY } from '../../components/onboarding/tourSteps';
-import { WELCOME_STORAGE_KEY } from '../../components/onboarding/welcomeSteps';
-import { getMissingRequiredPaths, pickDetectedPaths, shouldClearStaleOnboarding } from '../../utils/environmentPageUtils';
-import { collectPageTourKeys } from '../../utils/appShellNavigation';
-import { requestInfrFirstSteps } from '../../utils/infrDeepLink';
-import changelogRaw from '../../../../../CHANGELOG.md?raw';
+import { useCallback, useEffect, useState } from 'react';
 
-// Welcome, tour guiado, prompt de tours por página, novidades (changelog) e versão do app.
 export function useAppShellOnboarding(setActiveTab: (tab: string) => void) {
-  const [isTourOpen, setIsTourOpen] = useState<boolean>(() => {
-    try {
-      return !window.localStorage.getItem(TOUR_STORAGE_KEY);
-    } catch {
-      return false;
-    }
-  });
-  // Abertura (SplashScreen) a cada vez que o app abre. Quem nunca concluiu o onboarding termina a
-  // abertura com o convite para ele; quem já usa entra direto.
-  const [isSplashOpen, setIsSplashOpen] = useState<boolean>(true);
-  const [isNewUser, setIsNewUser] = useState<boolean>(() => {
-    try {
-      return !window.localStorage.getItem(WELCOME_STORAGE_KEY);
-    } catch {
-      return false;
-    }
-  });
-  // O onboarding em etapas só abre quando a pessoa escolhe "Configurar meu cockpit" na abertura.
-  const [isWelcomeOpen, setIsWelcomeOpen] = useState<boolean>(false);
-  // Havia marcadores de onboarding já na abertura? Lido uma vez, antes de o usuário interagir.
-  const hadMarkersAtMount = useRef<boolean>(false);
-  if (hadMarkersAtMount.current === false) {
-    try {
-      hadMarkersAtMount.current =
-        !!window.localStorage.getItem(TOUR_STORAGE_KEY) || !!window.localStorage.getItem(WELCOME_STORAGE_KEY);
-    } catch {
-      // localStorage indisponível
-    }
-  }
-  const [isPageToursPromptOpen, setIsPageToursPromptOpen] = useState<boolean>(false);
-  const [isWhatsNewOpen, setIsWhatsNewOpen] = useState<boolean>(false);
-  const [changelogContent, setChangelogContent] = useState<string>('');
-  const [appVersion, setAppVersion] = useState<string>('');
+  const [isSplashOpen, setIsSplashOpen] = useState(false);
+  const [isNewUser] = useState(false);
+  const [isWelcomeOpen, setIsWelcomeOpen] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
+  const [isPageToursPromptOpen, setIsPageToursPromptOpen] = useState(false);
+  const [isWhatsNewOpen, setIsWhatsNewOpen] = useState(false);
+  const [changelogContent, setChangelogContent] = useState('');
+  const [appVersion, setAppVersion] = useState('1.68.1');
 
-  const handleOpenWhatsNew = useCallback(async () => {
-    if (window.electronAPI?.getChangelog) {
-      try {
-        const content = await window.electronAPI.getChangelog();
-        if (content && !content.startsWith('Erro ao ler')) {
-          setChangelogContent(content);
-          setIsWhatsNewOpen(true);
-          return;
-        }
-      } catch {
-        // segue para o fallback estático
-      }
-    }
-    setChangelogContent(changelogRaw);
-    setIsWhatsNewOpen(true);
-  }, []);
-
-  const handleCloseTour = useCallback(() => {
-    setIsTourOpen(false);
-    try {
-      window.localStorage.setItem(TOUR_STORAGE_KEY, JSON.stringify({ done: true, ts: Date.now() }));
-    } catch {
-      // localStorage indisponível
-    }
-
-    // O tour mostra onde ficam as telas, mas sem os caminhos essenciais (Karaf, repositórios, IDE)
-    // configurados o app não faz nada de útil ainda — manda pra Configurações, que já tem seu
-    // próprio checklist detalhado (computeSetupChecklistStatus) pra guiar os campos específicos;
-    // o toast aqui só aponta pra lá, sem repetir/discordar da lista de campos que o checklist define.
-    (async () => {
-      let missingPaths: string[] = [];
-      try {
-        if (window.electronAPI?.getSettings) {
-          let st = await window.electronAPI.getSettings();
-
-          // Instalação nova: preenche sozinho o que a detecção achar (só campos vazios) para o usuário
-          // não começar com tudo em branco. O que não for achado continua na checklist de Configurações.
-          if (getMissingRequiredPaths(st).length > 0 && window.electronAPI.autoDetectPaths) {
-            try {
-              const filled = pickDetectedPaths(st, await window.electronAPI.autoDetectPaths());
-              const filledCount = Object.keys(filled).length;
-              if (filledCount > 0) {
-                st = await window.electronAPI.saveSettings(filled);
-                showToast(`${filledCount} caminho(s) do ambiente detectado(s) automaticamente. Confira em Configurações.`, 'success');
-              }
-            } catch {
-              // detecção é só conveniência: se falhar, o usuário preenche manualmente
-            }
-          }
-
-          missingPaths = getMissingRequiredPaths(st);
-        }
-      } catch {
-        // segue sem checagem de setup — não bloqueia o fluxo de onboarding
-      }
-
-      if (missingPaths.length > 0) {
-        showToast('Configure seu ambiente antes de continuar — veja o checklist em Configurações.', 'info');
-        setActiveTab('settings');
-      }
-
-      try {
-        // Se ainda não foi perguntado se quer ver tutoriais das próximas telas, abre o modal de escolha.
-        // Roda independente do redirecionamento acima: sem isso, quem tem caminhos pendentes (a
-        // maioria das instalações novas) nunca chegaria a ser perguntado.
-        if (window.localStorage.getItem(PAGE_TOURS_PREF_KEY) === null) {
-          setIsPageToursPromptOpen(true);
-        }
-      } catch {
-        // localStorage indisponível
-      }
-    })();
-  }, [setActiveTab]);
-
-  const markWelcomeDone = () => {
-    try {
-      window.localStorage.setItem(WELCOME_STORAGE_KEY, JSON.stringify({ done: true, ts: Date.now() }));
-    } catch {
-      // localStorage indisponível
-    }
-    setIsNewUser(false);
-  };
-
-  const handleSplashStartOnboarding = useCallback(() => {
-    setIsSplashOpen(false);
-    setIsWelcomeOpen(true);
-  }, []);
-
-  // "Explorar sozinho": pula onboarding e tour, mas mantém a detecção de caminhos e o convite dos tours por página.
-  const handleSplashExplore = useCallback(() => {
-    markWelcomeDone();
-    setIsSplashOpen(false);
-    handleCloseTour();
-  }, [handleCloseTour]);
-
-  const handleSplashEnter = useCallback(() => {
-    setIsSplashOpen(false);
-  }, []);
-
-  const handleSplashWhatsNew = useCallback(() => {
-    setIsSplashOpen(false);
-    handleOpenWhatsNew();
-  }, [handleOpenWhatsNew]);
-
-  // Fim do onboarding: com tour, o tour global abre em seguida (isTourOpen); sem tour, marca o tour como visto.
-  const handleFinishWelcome = useCallback(
-    (wantsTour: boolean) => {
-      setIsWelcomeOpen(false);
-      setIsNewUser(false);
-      if (wantsTour) {
-        try {
-          window.localStorage.removeItem(TOUR_STORAGE_KEY);
-        } catch {
-          // localStorage indisponível
-        }
-        setIsTourOpen(true);
-      } else {
-        handleCloseTour();
-      }
-    },
-    [handleCloseTour]
-  );
-
-  const handleWelcomeOpenSettings = useCallback(() => {
-    markWelcomeDone();
-    setIsWelcomeOpen(false);
-    handleCloseTour();
-    setActiveTab('settings');
-  }, [handleCloseTour, setActiveTab]);
-
-  // Etapa Ambiente → Começar do zero: a tela WinThor & WSL abre o Assistente INFR em Primeiros passos
-  const handleWelcomeOpenInfrFirstSteps = useCallback(() => {
-    markWelcomeDone();
-    setIsWelcomeOpen(false);
-    handleCloseTour();
-    requestInfrFirstSteps();
-    setActiveTab('winthor');
-  }, [handleCloseTour, setActiveTab]);
-
-  // O botão só promete o tour de spotlight — reabrir também a introdução (tema,
-  // slides de boas-vindas) surpreendia quem só queria rever onde ficam os recursos.
-  const handleRestartTour = useCallback(() => {
-    try {
-      window.localStorage.removeItem(PAGE_TOURS_PREF_KEY);
-      window.localStorage.removeItem(TOUR_STORAGE_KEY);
-    } catch {
-      // localStorage indisponível
-    }
-    setIsTourOpen(true);
-  }, []);
-
-  // Diferente de "Ver Tour Guiado": não replaya o tour global inteiro, só limpa a
-  // marca de "já visto" dos tours de cada tela (devManager:tour:*) e a preferência
-  // sim/não — quem clicou "Pular e explorar sozinho" na primeira vez fica preso
-  // nessa escolha pra sempre sem este botão.
-  const handleResetPageTours = useCallback(() => {
-    try {
-      const allKeys: Array<string | null> = [];
-      for (let i = 0; i < window.localStorage.length; i++) {
-        allKeys.push(window.localStorage.key(i));
-      }
-      collectPageTourKeys(allKeys).forEach((key) => window.localStorage.removeItem(key));
-      window.localStorage.removeItem(PAGE_TOURS_PREF_KEY);
-    } catch {
-      // localStorage indisponível
-    }
-    setIsPageToursPromptOpen(true);
-  }, []);
-
-  // Primeira execução após instalação: o estado inicial de isWelcomeOpen/isTourOpen/activeTab já
-  // é calculado de forma síncrona a partir do localStorage (vazio nessa hora, pois é instalação
-  // nova) — então Welcome+Tour já abrem certo antes mesmo deste efeito rodar. Esta chamada ao
-  // Electron (isFirstRun) é assíncrona e pode demorar (ela aguarda checkAdminPrivileges, que
-  // spawna um processo do Windows); NÃO reforçamos aqui a reabertura de Welcome/Tour, porque se o
-  // usuário for rápido e já tiver pulado a introdução antes dela responder, forçar de novo jogava
-  // ele de volta pro onboarding do nada. Só usamos o resultado pra limpar um marcador desalinhado
-  // (ex: pasta de dados restaurada de outra máquina).
   useEffect(() => {
-    if (!window.electronAPI?.getAppInfo) return;
-    window.electronAPI.getAppInfo().then((info) => {
-      // A versão vale também na primeira execução (o modal de novidades e o rodapé dependem dela)
-      if (info.appVersion) {
-        setAppVersion(info.appVersion);
-      }
-
-      if (info.isFirstRun) {
-        if (shouldClearStaleOnboarding(info.isFirstRun, hadMarkersAtMount.current)) {
-          try {
-            window.localStorage.removeItem(TOUR_STORAGE_KEY);
-            window.localStorage.removeItem(WELCOME_STORAGE_KEY);
-            window.localStorage.removeItem(PAGE_TOURS_PREF_KEY);
-          } catch {
-            // localStorage indisponível
-          }
-          setIsNewUser(true);
-        }
-        return;
-      }
-
-      if (info.isAppUpdated) {
-        if (window.electronAPI?.getChangelog) {
-          window.electronAPI.getChangelog().then((content) => {
-            if (content && !content.startsWith('Erro ao ler')) {
-              setChangelogContent(content);
-            } else {
-              setChangelogContent(changelogRaw);
-            }
-            setIsWhatsNewOpen(true);
-          }).catch(() => {
-            setChangelogContent(changelogRaw);
-            setIsWhatsNewOpen(true);
-          });
-        } else {
-          setChangelogContent(changelogRaw);
-          setIsWhatsNewOpen(true);
-        }
-      }
+    window.electronAPI?.getAppInfo?.().then((info) => {
+      if (info?.appVersion) setAppVersion(info.appVersion);
     }).catch(() => {});
   }, []);
+
+  const handleOpenWhatsNew = useCallback(async () => {
+    try {
+      const text = await window.electronAPI?.getChangelog?.();
+      setChangelogContent(text || `# v${appVersion}\n\nHub Manager Cockpit.`);
+    } catch {
+      setChangelogContent(`# v${appVersion}`);
+    }
+    setIsWhatsNewOpen(true);
+  }, [appVersion]);
 
   return {
     isSplashOpen,
     isNewUser,
-    handleSplashStartOnboarding,
-    handleSplashExplore,
-    handleSplashEnter,
-    handleSplashWhatsNew,
-    handleWelcomeOpenSettings,
-    handleWelcomeOpenInfrFirstSteps,
-    isTourOpen,
     isWelcomeOpen,
+    isTourOpen,
     isPageToursPromptOpen,
     setIsPageToursPromptOpen,
     isWhatsNewOpen,
     setIsWhatsNewOpen,
     changelogContent,
     appVersion,
-    handleOpenWhatsNew,
-    handleFinishWelcome,
-    handleCloseTour,
-    handleRestartTour,
-    handleResetPageTours
+    handleSplashStartOnboarding: () => { setIsSplashOpen(false); setIsWelcomeOpen(true); },
+    handleSplashExplore: () => setIsSplashOpen(false),
+    handleSplashEnter: () => setIsSplashOpen(false),
+    handleSplashWhatsNew: () => { setIsSplashOpen(false); void handleOpenWhatsNew(); },
+    handleWelcomeOpenSettings: () => { setIsWelcomeOpen(false); setActiveTab('settings'); },
+    handleWelcomeOpenInfrFirstSteps: () => { setIsWelcomeOpen(false); setActiveTab('winthor'); },
+    handleFinishWelcome: (wantsTour: boolean) => { setIsWelcomeOpen(false); if (wantsTour) setIsTourOpen(true); },
+    handleCloseTour: () => setIsTourOpen(false),
+    handleRestartTour: () => setIsTourOpen(true),
+    handleResetPageTours: () => setIsPageToursPromptOpen(true),
+    handleOpenWhatsNew
   };
+}
+
+export function useAppShellNotifications() {
+  useEffect(() => {
+    const unsub = window.electronAPI?.onBackupScheduleResult?.(() => {});
+    return () => unsub?.();
+  }, []);
 }

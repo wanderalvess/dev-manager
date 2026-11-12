@@ -1,303 +1,232 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { OnboardingTour } from '../components/onboarding/OnboardingTour';
-import { usePageTour } from '../components/onboarding/usePageTour';
-import { DATABASE_TOUR_STEPS, DATABASE_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/databaseTour';
-import { SqlSnippet } from '../../../shared/types';
-import { DEFAULT_PORTS } from '../utils/dbPageTypes';
-import type { ExecutionHistoryItem } from '../utils/dbPageTypes';
-import { useDatabaseLayout } from '../hooks/database/useDatabaseLayout';
-import { useDatabaseConnections } from '../hooks/database/useDatabaseConnections';
-import { useDatabaseSchema } from '../hooks/database/useDatabaseSchema';
-import { useDatabaseHistory } from '../hooks/database/useDatabaseHistory';
-import { quoteTableName } from '../../../shared/sqlIdentifierUtils';
-import { useDatabaseObjects } from '../hooks/database/useDatabaseObjects';
-import { TableSpecModal, type SpecTarget } from '../components/database/spec/TableSpecModal';
-import { readStoredSnippets } from '../hooks/database/useDatabaseSnippets';
-import {
-  MAX_QUERY_TABS,
-  activeTab as getActiveTab,
-  addTab,
-  closeTab,
-  defaultSqlFor,
-  openConnectionTab,
-  readStoredTabs,
-  reconcileTabs,
-  selectTab,
-  setTabSql,
-  storeTabs,
-  type QueryTabsState
-} from '../utils/queryTabsUtils';
+import React, { useEffect, useState } from 'react';
+import { Database, Play, Table2, Clock, HardDriveDownload, CheckCircle2, AlertCircle } from 'lucide-react';
+import type { DatabaseConnectionConfig, DbObjectInfo, QueryResult } from '../../../shared/types';
+import { showToast } from '../components/ToastHost';
 
-// Subcomponentes Modularizados
-import { DatabaseSidebar } from '../components/database/DatabaseSidebar';
-import { DEFAULT_SQL_SNIPPETS } from '../components/database/SqlEditorArea';
-import { ConnectionModal } from '../components/database/ConnectionModal';
-import { getDbBadge } from '../components/database/DatabaseBadge';
-import { DatabaseFirstUseBanner } from '../components/database/DatabaseFirstUseBanner';
-import { DatabaseTabsBar } from '../components/database/DatabaseTabsBar';
-import { DatabaseWorkspace, type WorkspaceStatus } from '../components/database/DatabaseWorkspace';
-import { requestConfirm } from '../components/ui/confirmService';
-import { storePendingBackupConnection } from '../utils/backupsHandoff';
-
-export { DEFAULT_SQL_SNIPPETS };
-export type { ExecutionHistoryItem };
-
-export interface DatabasePageProps {
-  settingsVersion?: number;
-  onNavigateToSettings?: () => void;
-  onNavigateToBackups?: () => void;
+interface DatabasePageProps {
+  settingsVersion: number;
+  onNavigateToSettings: () => void;
+  onNavigateToBackups: () => void;
 }
 
-// Identidade estável: useDatabaseConnections usa setSql nas dependências de loadSettings; uma função nova
-// a cada render fazia as configurações serem recarregadas em loop (re-render infinito e formulários zerando).
-const NOOP_SET_SQL = (): void => undefined;
+const SNIPPETS = [
+  { label: 'Pedidos Recentes', sql: 'SELECT NUMPED, CODCLI, CODFILIAL, VLTOTAL, POSICAO FROM PCPEDC ORDER BY NUMPED DESC' },
+  { label: 'Produtos Estoque Baixo', sql: 'SELECT CODPROD, DESCRICAO, PVENDA, ESTOQUE FROM PCPRODUT WHERE ESTOQUE < 250' },
+  { label: 'Filiais Ativas', sql: 'SELECT * FROM PCFILIAL WHERE ATIVA = \'S\'' },
+  { label: 'Parâmetros PCCONSUM', sql: 'SELECT * FROM PCCONSUM' }
+];
 
-export const DatabasePage: React.FC<DatabasePageProps> = ({ settingsVersion, onNavigateToSettings, onNavigateToBackups }) => {
-  const tour = usePageTour(DATABASE_TOUR_STORAGE_KEY);
-  const [customSnippets, setCustomSnippets] = useState<SqlSnippet[]>(readStoredSnippets);
-  // "Descrever tabela": alvo aberto no painel de especificação (null = fechado)
-  const [specTarget, setSpecTarget] = useState<SpecTarget | null>(null);
+export const DatabasePage: React.FC<DatabasePageProps> = ({ onNavigateToBackups }) => {
+  const [connections, setConnections] = useState<DatabaseConnectionConfig[]>([]);
+  const [activeConn, setActiveConn] = useState<DatabaseConnectionConfig | null>(null);
+  const [tables, setTables] = useState<DbObjectInfo[]>([]);
+  const [sql, setSql] = useState(SNIPPETS[0].sql);
+  const [result, setResult] = useState<QueryResult | null>(null);
+  const [history, setHistory] = useState<any[]>([]);
+  const [running, setRunning] = useState(false);
 
-  // Abas de consulta (texto + conexão de cada uma); o resultado e a transação vivem no workspace da aba
-  const [tabsState, setTabsState] = useState<QueryTabsState>(readStoredTabs);
-  const [workspaceStatus, setWorkspaceStatus] = useState<Record<string, WorkspaceStatus | undefined>>({});
-
-  const layout = useDatabaseLayout();
-  // O SQL inicial agora vem das abas; o hook de conexões só carrega e edita as conexões
-  const conn = useDatabaseConnections({ settingsVersion, setSql: NOOP_SET_SQL, setCustomSnippets });
-  const historyState = useDatabaseHistory();
-
-  const activeTab = getActiveTab(tabsState);
-  const activeConnectionId = activeTab?.connectionId ?? '';
-  const activeConnection = useMemo(
-    () => conn.connections.find((c) => c.id === activeConnectionId) ?? null,
-    [conn.connections, activeConnectionId]
-  );
-
-  const schema = useDatabaseSchema(activeConnection, activeConnectionId);
-  const objectBrowser = useDatabaseObjects(activeConnection, activeConnectionId, schema.tableFilter);
+  const loadMeta = async () => {
+    const [connsRes, tblRes, histRes] = await Promise.all([
+      fetch('/api/db/connections').then((r) => r.json()),
+      window.electronAPI.listDbTables(activeConn as any),
+      fetch('/api/db/history').then((r) => r.json())
+    ]);
+    if (Array.isArray(connsRes)) {
+      setConnections(connsRes);
+      if (!activeConn && connsRes[0]) setActiveConn(connsRes[0]);
+    }
+    if (tblRes?.tables) setTables(tblRes.tables);
+    if (Array.isArray(histRes)) setHistory(histRes);
+  };
 
   useEffect(() => {
-    storeTabs(tabsState);
-  }, [tabsState]);
-
-  // Conexões carregadas (ou alteradas): descarta abas de conexões apagadas e garante ao menos uma aba
-  useEffect(() => {
-    setTabsState((prev) => reconcileTabs(prev, conn.connections));
-  }, [conn.connections]);
-
-  const handleStatusChange = useCallback((id: string, status: WorkspaceStatus) => {
-    setWorkspaceStatus((prev) => {
-      const old = prev[id];
-      return old && old.gridPending === status.gridPending && old.txPending === status.txPending ? prev : { ...prev, [id]: status };
-    });
+    void loadMeta();
   }, []);
 
-  // Um handler estável por aba: o workspace usa o callback em dependências de hooks
-  const sqlHandlers = useRef(new Map<string, (sql: string) => void>());
-  const sqlHandlerFor = (tabId: string) => {
-    let handler = sqlHandlers.current.get(tabId);
-    if (!handler) {
-      handler = (sql: string) => setTabsState((s) => setTabSql(s, tabId, sql));
-      sqlHandlers.current.set(tabId, handler);
+  const runSql = async (queryText = sql) => {
+    setRunning(true);
+    try {
+      const res = await window.electronAPI.executeDbQuery(activeConn || connections[0], queryText, 500);
+      setResult(res);
+      const histRes = await fetch('/api/db/history').then((r) => r.json());
+      if (Array.isArray(histRes)) setHistory(histRes);
+    } finally {
+      setRunning(false);
     }
-    return handler;
   };
 
-  const setActiveSql = (updater: string | ((prev: string) => string)) => {
-    setTabsState((s) => {
-      const current = getActiveTab(s);
-      if (!current) return s;
-      return setTabSql(s, current.id, typeof updater === 'function' ? updater(current.sql) : updater);
-    });
+  const testConn = async () => {
+    if (!activeConn) return;
+    const res = await window.electronAPI.testDbConnection(activeConn);
+    showToast(res.message, res.success ? 'success' : 'error');
   };
-
-  const handleSelectConnection = (connectionId: string) => {
-    const target = conn.connections.find((c) => c.id === connectionId);
-    setTabsState((s) => openConnectionTab(s, connectionId, defaultSqlFor(target?.type)));
-  };
-
-  const handleNewTab = () => {
-    const target = activeConnection ?? conn.connections.find((c) => c.isDefault) ?? conn.connections[0];
-    if (!target) return;
-    setTabsState((s) => addTab(s, { connectionId: target.id, sql: defaultSqlFor(target.type) }));
-  };
-
-  const handleCloseTab = async (id: string) => {
-    const st = workspaceStatus[id];
-    const tab = tabsState.tabs.find((t) => t.id === id);
-    if (st && (st.gridPending > 0 || st.txPending > 0)) {
-      const parts = [
-        st.txPending > 0 ? `${st.txPending} comando(s) sem commit (serão desfeitos com rollback)` : '',
-        st.gridPending > 0 ? `${st.gridPending} alteração(ões) do grid não aplicadas` : ''
-      ].filter(Boolean);
-      const confirmed = await requestConfirm({
-        title: 'Fechar aba com alterações pendentes?',
-        message: `A aba "${tab?.title ?? ''}" tem alterações pendentes:\n  • ${parts.join('\n  • ')}\n\nFechar mesmo assim?`,
-        confirmLabel: 'Fechar aba',
-        tone: 'warning'
-      });
-      if (!confirmed) return;
-    }
-    sqlHandlers.current.delete(id);
-    setWorkspaceStatus((prev) => {
-      const rest = { ...prev };
-      delete rest[id];
-      return rest;
-    });
-    setTabsState((s) => closeTab(s, id));
-  };
-
-  const handleTableClick = (rawName: string) => {
-    // Nomes com maiúsculas ou símbolos precisam de aspas (ex.: public."Clientes" no PostgreSQL)
-    const tableName = activeConnection ? quoteTableName(rawName, activeConnection.type) : rawName;
-    let statement = '';
-    if (activeConnection?.type === 'oracle') {
-      statement = `SELECT * FROM ${tableName} WHERE ROWNUM <= 100`;
-    } else if (activeConnection?.type === 'postgres' || activeConnection?.type === 'mysql') {
-      statement = `SELECT * FROM ${tableName} LIMIT 100`;
-    } else {
-      statement = `SELECT * FROM ${tableName}`;
-    }
-    setActiveSql(statement);
-  };
-
-  const handleInsertColumnName = (colName: string) => {
-    setActiveSql((prev) => (prev ? `${prev} ${colName}` : colName));
-  };
-
-  const layoutProps = {
-    isEditorMaximized: layout.isEditorMaximized,
-    setEditorMaximized: layout.handleSetEditorMaximized,
-    isSidebarCollapsed: layout.isSidebarCollapsed,
-    toggleSidebar: layout.handleToggleSidebar
-  };
-
-  const handleDescribeObject = useCallback((name: string) => setSpecTarget({ name, type: 'TABLE' }), []);
-  const handleOpenBackups = useCallback(() => {
-    if (activeConnectionId) storePendingBackupConnection(activeConnectionId);
-    onNavigateToBackups?.();
-  }, [activeConnectionId, onNavigateToBackups]);
 
   return (
-    <div className="flex flex-col h-full w-full bg-background overflow-hidden select-none">
-      <h1 className="sr-only">Banco de Dados</h1>
-      {conn.settings && conn.connections.length === 0 && (
-        <DatabaseFirstUseBanner
-          onOpenCreateModal={conn.handleOpenCreateModal}
-          onNavigateToSettings={onNavigateToSettings}
-        />
-      )}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Sidebar de Conexões e Tabelas */}
-        <DatabaseSidebar
-          connections={conn.connections}
-          activeConnectionId={activeConnectionId}
-          setActiveConnectionId={handleSelectConnection}
-          onOpenCreateModal={conn.handleOpenCreateModal}
-          onOpenEditModal={conn.handleOpenEditModal}
-          onDeleteConnection={conn.handleDeleteConnection}
-          tables={schema.tables}
-          tablesError={schema.tablesError}
-          filteredTables={schema.filteredTables}
-          tableFilter={schema.tableFilter}
-          setTableFilter={schema.setTableFilter}
-          isLoadingTables={schema.isLoadingTables}
-          onFetchTables={schema.fetchTables}
-          expandedTable={schema.expandedTable}
-          tableColumns={schema.tableColumns}
-          isLoadingColumns={schema.isLoadingColumns}
-          onToggleTableExpand={schema.handleToggleTableExpand}
-          onTableClick={handleTableClick}
-          onInsertColumnName={handleInsertColumnName}
-          onOpenTour={tour.open}
-          activeConnection={activeConnection}
-          getDbBadge={getDbBadge}
-          isCollapsed={layout.isSidebarCollapsed}
-          onToggleCollapse={layout.handleToggleSidebar}
-          onOpenSpec={(name, type) => setSpecTarget({ name, type })}
-          objectType={objectBrowser.objectType}
-          onObjectTypeChange={objectBrowser.setObjectType}
-          objectsOfType={objectBrowser.objectsOfType}
-          objectCounts={objectBrowser.counts}
-          isLoadingObjects={objectBrowser.isLoadingObjects}
-          onFetchObjects={objectBrowser.fetchObjects}
-        />
+    <div className="h-full flex overflow-hidden">
+      <aside className="w-64 border-r border-border bg-card p-3 flex flex-col gap-3 overflow-y-auto shrink-0">
+        <div>
+          <div className="text-2xs font-bold uppercase text-muted-foreground mb-1.5">Conexão Ativa</div>
+          <select
+            value={activeConn?.id || ''}
+            onChange={(e) => setActiveConn(connections.find((c) => c.id === e.target.value) || null)}
+            className="w-full px-2.5 py-1.5 rounded-lg border border-border bg-background text-xs font-semibold text-foreground"
+          >
+            {connections.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={testConn}
+            className="mt-1.5 w-full py-1.5 rounded-lg border border-border hover:bg-muted text-2xs font-semibold text-foreground cursor-pointer"
+          >
+            Testar Conexão
+          </button>
+        </div>
 
-        {/* Área principal: abas de consulta, cada uma com o seu editor e o seu resultado */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {tabsState.tabs.length > 0 && (
-            <DatabaseTabsBar
-              tabs={tabsState.tabs}
-              activeId={tabsState.activeId}
-              connections={conn.connections}
-              status={workspaceStatus}
-              onSelect={(id) => setTabsState((s) => selectTab(s, id))}
-              onClose={handleCloseTab}
-              onNew={handleNewTab}
-              canAdd={tabsState.tabs.length < MAX_QUERY_TABS}
-            />
-          )}
+        <div>
+          <div className="text-2xs font-bold uppercase text-muted-foreground mb-1.5 flex items-center gap-1">
+            <Table2 className="w-3.5 h-3.5 text-primary" /> Tabelas ({tables.length})
+          </div>
+          <div className="space-y-1">
+            {tables.map((t) => (
+              <button
+                key={t.name}
+                type="button"
+                onClick={() => {
+                  const q = `SELECT * FROM ${t.name}`;
+                  setSql(q);
+                  void runSql(q);
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-muted text-xs text-left cursor-pointer"
+              >
+                <span className="font-mono font-semibold text-foreground truncate">{t.name}</span>
+                <span className="text-2xs font-mono text-muted-foreground">{t.rowCount ?? 0}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
-          {/* Todas as abas ficam montadas (só a ativa aparece): trocar de aba não apaga o resultado das outras */}
-          {tabsState.tabs.map((tab) => {
-            const tabConnection = conn.connections.find((c) => c.id === tab.connectionId);
-            if (!tabConnection) return null;
-            const isActive = tab.id === tabsState.activeId;
-            return (
-              <div key={tab.id} className={isActive ? 'flex-1 flex flex-col min-h-0 min-w-0' : 'hidden'}>
-                <DatabaseWorkspace
-                  tab={tab}
-                  connection={tabConnection}
-                  onSqlChange={sqlHandlerFor(tab.id)}
-                  tables={isActive ? schema.tables : []}
-                  tableColumns={isActive ? schema.tableColumns : {}}
-                  setTableColumns={schema.setTableColumns}
-                  customSnippets={customSnippets}
-                  setCustomSnippets={setCustomSnippets}
-                  historyState={historyState}
-                  layout={layoutProps}
-                  onOpenBackups={handleOpenBackups}
-                  onDescribeObject={handleDescribeObject}
-                  onStatusChange={handleStatusChange}
-                />
+        <div>
+          <div className="text-2xs font-bold uppercase text-muted-foreground mb-1.5 flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 text-primary" /> Histórico Recente
+          </div>
+          <div className="space-y-1">
+            {history.slice(0, 6).map((h) => (
+              <button
+                key={h.id}
+                type="button"
+                onClick={() => setSql(h.sql)}
+                className="w-full p-2 rounded-lg border border-border/60 bg-muted/20 hover:bg-muted text-left cursor-pointer"
+              >
+                <div className="font-mono text-2xs text-foreground truncate">{h.sql}</div>
+                <div className="text-2xs text-muted-foreground mt-0.5">{h.rowCount} linhas • {h.executionTimeMs}ms</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      <div className="flex-1 flex flex-col min-w-0 p-4 gap-3 overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Database className="w-5 h-5 text-primary" />
+            <h1 className="text-base font-extrabold text-foreground">Database Studio Multi-Vendor</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            {SNIPPETS.map((s) => (
+              <button
+                key={s.label}
+                type="button"
+                onClick={() => setSql(s.sql)}
+                className="px-2.5 py-1 rounded-lg border border-border bg-card hover:bg-muted text-2xs font-semibold cursor-pointer"
+              >
+                {s.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={onNavigateToBackups}
+              className="px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+            >
+              <HardDriveDownload className="w-3.5 h-3.5 text-primary" /> Backups
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-card border border-border rounded-xl p-3 space-y-2 shrink-0">
+          <textarea
+            value={sql}
+            onChange={(e) => setSql(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                void runSql();
+              }
+            }}
+            rows={4}
+            className="w-full bg-background border border-input rounded-lg p-3 font-mono text-xs text-foreground focus:outline-none focus:border-primary"
+            placeholder="Digite seu SQL (Ctrl+Enter para executar)..."
+          />
+          <div className="flex items-center justify-between">
+            <span className="text-2xs text-muted-foreground font-mono">Atalho: Ctrl + Enter para executar</span>
+            <button
+              type="button"
+              onClick={() => void runSql()}
+              disabled={running}
+              className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:opacity-90"
+            >
+              <Play className="w-3.5 h-3.5" /> Executar SQL
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 bg-card border border-border rounded-xl overflow-hidden flex flex-col min-h-0">
+          {!result ? (
+            <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
+              Execute uma query ou selecione uma tabela ao lado para visualizar os registros.
+            </div>
+          ) : !result.success ? (
+            <div className="p-4 flex items-start gap-2 text-xs text-danger">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span className="font-mono">{result.error}</span>
+            </div>
+          ) : (
+            <>
+              <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between text-2xs">
+                <span className="flex items-center gap-1.5 font-semibold text-success">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> {result.rowCount} registros retornados
+                </span>
+                <span className="font-mono text-muted-foreground">{result.executionTimeMs} ms</span>
               </div>
-            );
-          })}
+              <div className="flex-1 overflow-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead className="bg-muted/50 sticky top-0">
+                    <tr>
+                      {result.columns.map((col) => (
+                        <th key={col} className="px-3 py-2 border-b border-border font-mono font-bold text-foreground whitespace-nowrap">
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.rows.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-muted/30 border-b border-border/50">
+                        {result.columns.map((col) => (
+                          <td key={col} className="px-3 py-1.5 font-mono text-foreground/90 whitespace-nowrap">
+                            {row[col] === null || row[col] === undefined ? <span className="text-muted-foreground italic">NULL</span> : String(row[col])}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       </div>
-
-      <TableSpecModal
-        target={specTarget}
-        connection={activeConnection}
-        onClose={() => setSpecTarget(null)}
-        onSelectData={(name) => {
-          handleTableClick(name);
-          setSpecTarget(null);
-        }}
-      />
-
-      {/* Modal de Conexão */}
-      <ConnectionModal
-        isOpen={conn.isModalOpen}
-        onClose={() => conn.setIsModalOpen(false)}
-        editingConn={conn.editingConn}
-        setEditingConn={conn.setEditingConn}
-        testResult={conn.testResult}
-        isTesting={conn.isTesting}
-        onTestConnection={conn.handleTestConnection}
-        onSaveConnection={conn.handleSaveConnection}
-        defaultPorts={DEFAULT_PORTS}
-      />
-
-
-      <OnboardingTour
-        steps={DATABASE_TOUR_STEPS}
-        isOpen={tour.isOpen}
-        onClose={tour.close}
-        storageKey={DATABASE_TOUR_STORAGE_KEY}
-      />
     </div>
   );
 };
-export default DatabasePage;

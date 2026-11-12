@@ -1,22 +1,26 @@
 import { useEffect } from 'react';
-import { isQuickLauncherToggle, resolveAltShortcutTab } from '../../utils/appShellNavigation';
+import { TAB_SHORTCUTS } from './useAppShellNavigation';
 
-// Atalhos globais (Alt+0..9, Alt+Q e Ctrl+K). Tabela em utils/appShellNavigation.ts.
 export function useGlobalShortcuts(
-  setActiveTab: (tab: string) => void,
-  setIsQuickLauncherOpen: React.Dispatch<React.SetStateAction<boolean>>
-): void {
+  navigate: (tab: string) => void,
+  setQuickLauncherOpen: React.Dispatch<React.SetStateAction<boolean>>
+) {
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isQuickLauncherToggle(e)) {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setIsQuickLauncherOpen((prev) => !prev);
+        setQuickLauncherOpen((prev) => !prev);
         return;
       }
-      const tab = resolveAltShortcutTab(e);
-      if (tab) setActiveTab(tab);
+      if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        const targetTab = TAB_SHORTCUTS[e.key.toLowerCase()];
+        if (targetTab) {
+          e.preventDefault();
+          navigate(targetTab);
+        }
+      }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setActiveTab, setIsQuickLauncherOpen]);
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [navigate, setQuickLauncherOpen]);
 }

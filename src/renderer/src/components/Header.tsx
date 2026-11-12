@@ -106,10 +106,10 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="bg-card/95 border-b border-border/80 px-2.5 sm:px-3 lg:px-4 py-2 flex items-center justify-between shadow-md relative z-30 backdrop-blur-md transition-colors duration-300 gap-2.5 shrink-0 h-14 w-full">
       {/* 1. Identidade do Aplicativo (Esquerda) */}
       {/* A partir de lg a identidade fica no menu lateral (AppSidebar); aqui só no layout compacto. */}
-      <div className="flex items-center gap-2.5 shrink-0 lg:hidden">
+      <div className="flex items-center gap-2 shrink-0 lg:hidden">
         <AppLogo size="sm" showStatusDot />
 
-        <div className="flex flex-col">
+        <div className="hidden sm:flex flex-col">
           <div className="flex items-center gap-1.5">
             <div className="text-sm font-extrabold tracking-tight text-foreground font-sans flex items-center gap-1">
               Hub <span className="text-primary font-bold">Manager</span>
@@ -143,7 +143,7 @@ export const Header: React.FC<HeaderProps> = ({
       <QuickSearchButton onOpenQuickLauncher={onOpenQuickLauncher} />
 
       {/* 4. Ações da Direita: Status do Sistema, Tema, Central de Ajuda, Configurações e Atualizar */}
-      <div className="flex items-center gap-1.5 shrink-0">
+      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
         <StatusPopover
           networkIps={networkIps}
           systemMetrics={systemMetrics}
@@ -155,21 +155,23 @@ export const Header: React.FC<HeaderProps> = ({
 
         <ThemeToggle />
 
-        <IconButton
-          data-tour="help"
-          onClick={() => setActiveTab('help')}
-          tone={activeTab === 'help' ? 'active' : 'neutral'}
-          label="Central de Ajuda, FAQ e Diagnósticos (Alt+H)"
-          icon={<HelpCircle className="w-4 h-4" />}
-        />
+        <div className="hidden sm:flex items-center gap-1.5">
+          <IconButton
+            data-tour="help"
+            onClick={() => setActiveTab('help')}
+            tone={activeTab === 'help' ? 'active' : 'neutral'}
+            label="Central de Ajuda, FAQ e Diagnósticos (Alt+H)"
+            icon={<HelpCircle className="w-4 h-4" />}
+          />
 
-        <IconButton
-          data-tour="settings"
-          onClick={() => setActiveTab('settings')}
-          tone={activeTab === 'settings' ? 'active' : 'neutral'}
-          label="Configurações do Sistema e Portas"
-          icon={<Settings className="w-4 h-4" />}
-        />
+          <IconButton
+            data-tour="settings"
+            onClick={() => setActiveTab('settings')}
+            tone={activeTab === 'settings' ? 'active' : 'neutral'}
+            label="Configurações do Sistema e Portas"
+            icon={<Settings className="w-4 h-4" />}
+          />
+        </div>
 
         <IconButton
           data-tour="refresh"

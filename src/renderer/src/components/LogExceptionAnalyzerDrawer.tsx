@@ -13,6 +13,7 @@ import { LogAnalysisSummary, LogExceptionType } from '../../../shared/types';
 import { analyzeLogText } from '../../../shared/logAnalyzerUtils';
 import { Modal } from './ui/Modal';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { LogExceptionFilterBar } from './LogExceptionFilterBar';
 
 interface LogExceptionAnalyzerDrawerProps {
   isOpen: boolean;
@@ -35,6 +36,16 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
   const summary: LogAnalysisSummary = useMemo(() => {
     return analyzeLogText(lines);
   }, [lines]);
+
+  const { classNotFoundCount, linkCommCount } = useMemo(() => {
+    let classNotFound = 0;
+    let linkComm = 0;
+    for (const m of summary.matches) {
+      if (m.type === 'CLASS_NOT_FOUND') classNotFound += 1;
+      else if (m.type === 'LINK_COMM') linkComm += 1;
+    }
+    return { classNotFoundCount: classNotFound, linkCommCount: linkComm };
+  }, [summary.matches]);
 
   // Filtra as ocorrências
   const filteredMatches = useMemo(() => {
@@ -109,71 +120,13 @@ export const LogExceptionAnalyzerDrawer: React.FC<LogExceptionAnalyzerDrawerProp
           </button>
         </div>
 
-        {/* Segmented Controls de Contagem por Categoria */}
-        <div className="p-2.5 bg-muted/10 border-b border-border/60 flex flex-wrap gap-1 shrink-0 text-xs font-mono">
-          <button
-            onClick={() => setFilterType('ALL')}
-            className={`px-2 py-1 rounded text-2xs font-semibold transition-colors cursor-pointer ${
-              filterType === 'ALL'
-                ? 'bg-card text-foreground border border-border shadow-2xs'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            TODOS ({summary.totalErrors})
-          </button>
-
-          {summary.oraErrorsCount > 0 && (
-            <button
-              onClick={() => setFilterType('ORA')}
-              className={`px-2 py-1 rounded text-2xs font-semibold transition-colors cursor-pointer ${
-                filterType === 'ORA'
-                  ? 'bg-danger/20 text-danger shadow-2xs'
-                  : 'text-danger hover:text-danger'
-              }`}
-            >
-              ORACLE ({summary.oraErrorsCount})
-            </button>
-          )}
-
-          {summary.oomCount > 0 && (
-            <button
-              onClick={() => setFilterType('OOM')}
-              className={`px-2 py-1 rounded text-2xs font-semibold transition-colors cursor-pointer ${
-                filterType === 'OOM'
-                  ? 'bg-danger/20 text-danger shadow-2xs'
-                  : 'text-danger hover:text-danger'
-              }`}
-            >
-              MEMÓRIA OOM ({summary.oomCount})
-            </button>
-          )}
-
-          {summary.npeCount > 0 && (
-            <button
-              onClick={() => setFilterType('NPE')}
-              className={`px-2 py-1 rounded text-2xs font-semibold transition-colors cursor-pointer ${
-                filterType === 'NPE'
-                  ? 'bg-warning/20 text-warning shadow-2xs'
-                  : 'text-warning hover:text-warning'
-              }`}
-            >
-              NULLPOINTER ({summary.npeCount})
-            </button>
-          )}
-
-          {summary.bundleErrorsCount > 0 && (
-            <button
-              onClick={() => setFilterType('BUNDLE')}
-              className={`px-2 py-1 rounded text-2xs font-semibold transition-colors cursor-pointer ${
-                filterType === 'BUNDLE'
-                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shadow-2xs'
-                  : 'text-indigo-400 hover:text-indigo-300'
-              }`}
-            >
-              OSGi BUNDLE ({summary.bundleErrorsCount})
-            </button>
-          )}
-        </div>
+        <LogExceptionFilterBar
+          filterType={filterType}
+          onChangeFilter={setFilterType}
+          summary={summary}
+          classNotFoundCount={classNotFoundCount}
+          linkCommCount={linkCommCount}
+        />
 
         {/* Busca */}
         <div className="p-2.5 border-b border-border/60 bg-background shrink-0">

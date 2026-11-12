@@ -1,294 +1,100 @@
-import React, { useMemo } from 'react';
-import type { GitProjectInfo } from '../../../shared/types';
-import { OnboardingTour } from '../components/onboarding/OnboardingTour';
-import { usePageTour } from '../components/onboarding/usePageTour';
-import { GIT_TOUR_STEPS, GIT_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/gitAzureTour';
-import { buildTargetBranchOptions } from '../utils/gitPageUtils';
-import { getPrBlockedReason } from '../utils/gitViewUtils';
-import { useGitOutput } from '../hooks/git/useGitOutput';
-import { useGitSettingsSync } from '../hooks/git/useGitSettingsSync';
-import { useGitProjectState } from '../hooks/git/useGitProjectState';
-import { useGitOperations } from '../hooks/git/useGitOperations';
-import { useGitPublish } from '../hooks/git/useGitPublish';
-import { useGitUnpushedCounts } from '../hooks/git/useGitUnpushedCounts';
-import { useGitRepoFilter } from '../hooks/git/useGitRepoFilter';
-import { isBranchLocalOnly } from '../utils/gitPublishViewUtils';
-import { useGitBranchModal } from '../hooks/git/useGitBranchModal';
-import { useGitCommit } from '../hooks/git/useGitCommit';
-import { useGitHistory } from '../hooks/git/useGitHistory';
-import { useGitDiff } from '../hooks/git/useGitDiff';
-import { useGitTaskBranch } from '../hooks/git/useGitTaskBranch';
-import { GitPageHeader } from '../components/git/GitPageHeader';
-import { GitRepoList } from '../components/git/GitRepoList';
-import { GitProjectTitleBar } from '../components/git/GitProjectTitleBar';
-import { GitBranchActionsBar } from '../components/git/GitBranchActionsBar';
-import { GitPendingChangesPanel } from '../components/git/GitPendingChangesPanel';
-import { GitPullRequestPanel } from '../components/git/GitPullRequestPanel';
-import { GitOutputConsole } from '../components/git/GitOutputConsole';
-import { GitEmptyState } from '../components/git/GitEmptyState';
-import { GitBranchModal } from '../components/git/modals/GitBranchModal';
-import { GitCommitModal } from '../components/git/modals/GitCommitModal';
-import { useAlteredPoms } from '../hooks/deploy/useAlteredPoms';
-import { alteredPomsInCommit } from '../utils/alteredPoms';
-import { GitHistoryModal } from '../components/git/modals/GitHistoryModal';
-import { GitDiffModal } from '../components/git/modals/GitDiffModal';
-import { GitTaskBranchModal } from '../components/git/modals/GitTaskBranchModal';
-import { AzureArtifactsModal } from '../components/git/modals/AzureArtifactsModal';
-import { useAzureArtifacts } from '../hooks/git/useAzureArtifacts';
+import React, { useEffect, useState } from 'react';
+import { GitPullRequest, GitBranch, GitCommit, RefreshCw } from 'lucide-react';
+import type { GitCommitInfo, GitFileStatus, GitProjectInfo } from '../../../shared/types';
 
-interface GitAzurePageProps {
+export const GitAzurePage: React.FC<{
   projects: GitProjectInfo[];
-  onRefreshProjects: () => void | Promise<void>;
+  onRefreshProjects: () => Promise<void>;
   isRefreshing: boolean;
-  onNavigateToSettings?: () => void;
-  settingsVersion?: number;
-}
+  onNavigateToSettings: () => void;
+  settingsVersion: number;
+}> = ({ projects, onRefreshProjects, isRefreshing }) => {
+  const [selected, setSelected] = useState<GitProjectInfo | null>(null);
+  const [commits, setCommits] = useState<GitCommitInfo[]>([]);
+  const [files, setFiles] = useState<GitFileStatus[]>([]);
 
-export const GitAzurePage: React.FC<GitAzurePageProps> = ({
-  projects,
-  onRefreshProjects,
-  isRefreshing,
-  onNavigateToSettings,
-  settingsVersion
-}) => {
-  const alteredPoms = useAlteredPoms();
-  const tour = usePageTour(GIT_TOUR_STORAGE_KEY);
-  const { gitOutput, gitOutputIsError, setGitOutput, setGitOutputIsError, resetOutput } = useGitOutput();
-  const outputControls = { setGitOutput, setGitOutputIsError };
+  useEffect(() => {
+    if (!selected && projects[0]) setSelected(projects[0]);
+  }, [projects, selected]);
 
-  const { targetBranch, setTargetBranch, preferredTarget } = useGitSettingsSync(settingsVersion, onRefreshProjects);
-
-  const { unpushedCounts, refreshUnpushedCounts } = useGitUnpushedCounts(settingsVersion);
-
-  const {
-    selectedPath,
-    setSelectedPath,
-    searchTerm,
-    setSearchTerm,
-    filteredProjects,
-    currentProject,
-    uncommittedCounts,
-    pendingChanges,
-    isLoadingPendingChanges,
-    refreshUncommittedCounts,
-    refreshAfterGitChange
-  } = useGitProjectState({
-    projects,
-    settingsVersion,
-    onRefreshProjects,
-    refreshUnpushedCounts,
-    resetOutput
-  });
-  const repoFilter = useGitRepoFilter({
-    projects,
-    searchedProjects: filteredProjects,
-    uncommittedCounts,
-    unpushedCounts
-  });
-
-  const targetBranchOptions = useMemo(
-    () =>
-      currentProject
-        ? buildTargetBranchOptions({
-            remoteBranches: currentProject.remoteBranches,
-            currentBranch: currentProject.currentBranch,
-            selected: targetBranch,
-            preferred: preferredTarget
-          })
-        : [],
-    [currentProject, targetBranch, preferredTarget]
-  );
-
-  const prBlockedReason = getPrBlockedReason(currentProject, targetBranch);
-
-  const publish = useGitPublish({ currentProject, ...outputControls, refreshAfterGitChange });
-  const isLocalOnly = isBranchLocalOnly(currentProject);
-
-  const ops = useGitOperations({
-    currentProject,
-    selectedPath,
-    targetBranch,
-    prBlockedReason,
-    ensurePublishedForPr: publish.ensurePublishedForPr,
-    ...outputControls,
-    refreshAfterGitChange,
-    refreshUncommittedCounts
-  });
-  const branchModal = useGitBranchModal({
-    currentProject,
-    isExecutingGit: ops.isExecutingGit,
-    setIsExecutingGit: ops.setIsExecutingGit,
-    ...outputControls,
-    refreshAfterGitChange
-  });
-  const commit = useGitCommit({ currentProject, ...outputControls, refreshAfterGitChange });
-  const history = useGitHistory(currentProject);
-  const diff = useGitDiff(currentProject);
-  const taskBranch = useGitTaskBranch({ currentProject, ...outputControls, refreshAfterGitChange });
-  const artifacts = useAzureArtifacts(currentProject);
+  useEffect(() => {
+    if (!selected) return;
+    fetch(`/api/git/details?path=${encodeURIComponent(selected.path)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setCommits(data.commits || []);
+        setFiles(data.files || []);
+      })
+      .catch(() => {});
+  }, [selected]);
 
   return (
-    <div className="h-full flex flex-col px-4 py-3 md:px-5 md:py-4 space-y-3 overflow-hidden">
-      <GitPageHeader
-        projectCount={projects.length}
-        localOnlyCount={repoFilter.filterCounts['local-only']}
-        changesCount={repoFilter.filterCounts.changes}
-        isBusy={isRefreshing || ops.isSyncing}
-        onOpenTour={tour.open}
-        onSync={ops.handleSyncRepositories}
-      />
-
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden">
-        <GitRepoList
-          projects={repoFilter.visibleProjects}
-          selectedPath={currentProject?.path}
-          uncommittedCounts={uncommittedCounts}
-          unpushedCounts={unpushedCounts}
-          filter={repoFilter.filter}
-          filterCounts={repoFilter.filterCounts}
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          onFilterChange={repoFilter.setFilter}
-          onSelect={setSelectedPath}
-        />
-
-        {/* Coluna Direita: Detalhes do Repositório e Criador de Pull Request */}
-        <div className="lg:col-span-8 flex flex-col space-y-3 overflow-y-auto pr-1">
-          {currentProject ? (
-            <>
-              <div className="bg-card rounded-[14px] p-6 space-y-5 border border-border shadow-xs">
-                <GitProjectTitleBar
-                  project={currentProject}
-                  onOpenAzurePipelines={ops.handleOpenAzurePipelines}
-                  onOpenRemoteRepo={ops.handleOpenRemoteRepo}
-                  onOpenArtifacts={artifacts.canOpen ? artifacts.open : undefined}
-                />
-                <GitBranchActionsBar
-                  project={currentProject}
-                  isExecutingGit={ops.isExecutingGit || publish.isPublishing}
-                  isPublishing={publish.isPublishing}
-                  isLocalOnly={isLocalOnly}
-                  hasPendingChanges={pendingChanges.length > 0}
-                  onPublish={publish.handlePublish}
-                  onOpenBranchModal={() => branchModal.setIsBranchModalOpen(true)}
-                  onOpenTaskBranchModal={taskBranch.openTaskBranchModal}
-                  onOpenDiff={() => diff.handleOpenDiff()}
-                  onOpenHistory={history.handleOpenHistory}
-                  onOpenCommit={commit.openCommitModal}
-                  onExecGit={ops.handleExecGit}
-                />
-                <GitPendingChangesPanel
-                  files={pendingChanges}
-                  isLoading={isLoadingPendingChanges}
-                  ideFeedback={ops.ideFeedback}
-                  onOpenDiff={diff.handleOpenDiff}
-                  onOpenCommit={commit.openCommitModal}
-                  onOpenFileInIde={ops.handleOpenFileInIde}
-                />
-                <GitPullRequestPanel
-                  project={currentProject}
-                  targetBranch={targetBranch}
-                  targetBranchOptions={targetBranchOptions}
-                  prBlockedReason={prBlockedReason}
-                  isLocalOnly={isLocalOnly}
-                  unpushedCount={unpushedCounts[currentProject.path] ?? 0}
-                  isBusy={ops.isOpeningPr || publish.isPublishing}
-                  onTargetBranchChange={setTargetBranch}
-                  onOpenPr={ops.handleOpenPr}
-                />
-              </div>
-
-              {gitOutput && <GitOutputConsole output={gitOutput} isError={gitOutputIsError} />}
-            </>
-          ) : (
-            <GitEmptyState hasProjects={projects.length > 0} onNavigateToSettings={onNavigateToSettings} />
-          )}
+    <div className="h-full flex overflow-hidden">
+      <aside className="w-72 border-r border-border bg-card p-3 space-y-2 overflow-y-auto shrink-0">
+        <div className="flex items-center justify-between pb-1">
+          <span className="text-xs font-bold text-foreground">Repositórios ({projects.length})</span>
+          <button type="button" onClick={() => void onRefreshProjects()} className="p-1 rounded hover:bg-muted cursor-pointer">
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-primary' : ''}`} />
+          </button>
         </div>
+        {projects.map((p) => (
+          <button
+            key={p.name}
+            type="button"
+            onClick={() => setSelected(p)}
+            className={`w-full p-2.5 rounded-xl border text-left transition cursor-pointer ${
+              selected?.name === p.name ? 'bg-accent border-primary/40' : 'bg-muted/20 border-border hover:bg-muted'
+            }`}
+          >
+            <div className="text-xs font-bold text-foreground truncate">{p.name}</div>
+            <div className="flex items-center justify-between text-2xs text-muted-foreground mt-1">
+              <span className="font-mono flex items-center gap-1 truncate"><GitBranch className="w-3 h-3" /> {p.branch}</span>
+              {p.uncommittedCount ? <span className="text-warning font-bold">{p.uncommittedCount} alt.</span> : null}
+            </div>
+          </button>
+        ))}
+      </aside>
+
+      <div className="flex-1 overflow-y-auto p-5 space-y-4">
+        {selected ? (
+          <>
+            <div>
+              <h1 className="text-lg font-extrabold text-foreground flex items-center gap-2">
+                <GitPullRequest className="w-5 h-5 text-primary" /> {selected.name}
+              </h1>
+              <p className="text-2xs font-mono text-muted-foreground">{selected.path} • branch {selected.branch}</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <section className="bg-card border border-border rounded-xl p-4 space-y-2.5">
+                <h2 className="text-sm font-bold text-foreground">Alterações Pendentes ({files.length})</h2>
+                {files.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">Working tree limpo.</p>
+                ) : (
+                  files.map((f, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-xs p-2 rounded-lg bg-muted/20 border border-border/60">
+                      <span className="font-mono truncate">{f.path}</span>
+                      <span className="px-1.5 py-0.5 rounded bg-warning/15 text-warning font-mono text-2xs font-bold">{f.status}</span>
+                    </div>
+                  ))
+                )}
+              </section>
+
+              <section className="bg-card border border-border rounded-xl p-4 space-y-2.5">
+                <h2 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                  <GitCommit className="w-4 h-4 text-primary" /> Histórico Recente
+                </h2>
+                {commits.map((c) => (
+                  <div key={c.hash} className="p-2.5 rounded-lg bg-muted/20 border border-border/60 text-xs">
+                    <div className="font-semibold text-foreground">{c.message}</div>
+                    <div className="text-2xs font-mono text-muted-foreground mt-0.5">{c.shortHash} • {c.author} • {c.date}</div>
+                  </div>
+                ))}
+              </section>
+            </div>
+          </>
+        ) : null}
       </div>
-
-      {branchModal.isBranchModalOpen && currentProject && (
-        <GitBranchModal
-          project={currentProject}
-          newBranchName={branchModal.newBranchName}
-          branchFilter={branchModal.branchFilter}
-          branchError={branchModal.branchError}
-          isExecutingGit={ops.isExecutingGit}
-          onNewBranchNameChange={branchModal.setNewBranchName}
-          onBranchFilterChange={branchModal.setBranchFilter}
-          onCheckout={branchModal.handleCheckoutBranch}
-          onClose={branchModal.closeBranchModal}
-        />
-      )}
-
-      {commit.isCommitModalOpen && currentProject && (
-        <GitCommitModal
-          project={currentProject}
-          commitMessage={commit.commitMessage}
-          commitError={commit.commitError}
-          commitFiles={commit.commitFiles}
-          alteredPoms={alteredPomsInCommit(alteredPoms, currentProject.path, commit.commitFiles.map((f) => f.path))}
-          isLoadingFiles={commit.isLoadingCommitFiles}
-          isCommitting={commit.isCommitting}
-          onMessageChange={commit.setCommitMessage}
-          onInspectFile={(filePath) => {
-            commit.setIsCommitModalOpen(false);
-            diff.handleOpenDiff(filePath);
-          }}
-          onConfirm={commit.handleCommitAndPush}
-          onClose={() => commit.setIsCommitModalOpen(false)}
-        />
-      )}
-
-      {history.isHistoryModalOpen && currentProject && (
-        <GitHistoryModal
-          project={currentProject}
-          commits={history.commitHistory}
-          isLoading={history.isLoadingHistory}
-          error={history.historyError}
-          copiedHash={history.copiedHash}
-          onCopyHash={history.copyHash}
-          onClose={() => history.setIsHistoryModalOpen(false)}
-        />
-      )}
-
-      {diff.isDiffModalOpen && currentProject && (
-        <GitDiffModal
-          project={currentProject}
-          files={diff.diffFiles}
-          selectedFile={diff.selectedDiffFile}
-          diffText={diff.diffText}
-          renderedDiff={diff.renderedDiff}
-          isLoading={diff.isLoadingDiff}
-          error={diff.diffError}
-          copiedKey={diff.copiedDiffKey}
-          onCopyDiff={diff.copyDiff}
-          onSelectFile={diff.handleSelectDiffFile}
-          onOpenFileInIde={ops.handleOpenFileInIde}
-          onCommit={() => {
-            diff.setIsDiffModalOpen(false);
-            commit.openCommitModal();
-          }}
-          onClose={() => diff.setIsDiffModalOpen(false)}
-        />
-      )}
-
-      {taskBranch.isTaskBranchModalOpen && currentProject && (
-        <GitTaskBranchModal
-          project={currentProject}
-          task={taskBranch}
-          copiedKey={diff.copiedDiffKey}
-          onCopy={diff.copyDiff}
-        />
-      )}
-
-      {artifacts.isOpen && currentProject && <AzureArtifactsModal project={currentProject} state={artifacts} />}
-
-      <OnboardingTour
-        steps={GIT_TOUR_STEPS}
-        isOpen={tour.isOpen}
-        onClose={tour.close}
-        storageKey={GIT_TOUR_STORAGE_KEY}
-      />
     </div>
   );
 };

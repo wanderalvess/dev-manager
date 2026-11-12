@@ -1,117 +1,86 @@
-import React, { useEffect, useMemo } from 'react';
-import { OnboardingTour } from '../components/onboarding/OnboardingTour';
-import { usePageTour } from '../components/onboarding/usePageTour';
-import { WINTHOR_TOUR_STEPS, WINTHOR_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/winthorTour';
-import { computeStackTopology } from '../utils/dockerContainerUtils';
-import { WinthorHeader } from '../components/winthor/WinthorHeader';
-import { WinthorModals } from '../components/winthor/WinthorModals';
-import { WinthorEmptyState } from '../components/winthor/WinthorEmptyState';
-import { onInfrFirstStepsRequested, takePendingInfrFirstSteps } from '../utils/infrDeepLink';
-import { ContainerTopologyBus } from '../components/containers/topology/ContainerTopologyBus';
-import { useDockerData } from '../hooks/containers/useDockerData';
-import { useContainerErrors } from '../hooks/containers/useContainerErrors';
-import { useWslDistroControls } from '../hooks/containers/useWslDistroControls';
-import { useContainerSequenceProgress } from '../hooks/containers/useContainerSequenceProgress';
-import { useContainerEnvironments } from '../hooks/containers/useContainerEnvironments';
-import { useContainerLogs } from '../hooks/containers/useContainerLogs';
-import { useContainerToolModals } from '../hooks/containers/useContainerToolModals';
-import { useWslSnapshots } from '../hooks/containers/useWslSnapshots';
-import { useInfrBootstrap } from '../hooks/containers/useInfrBootstrap';
-import { useActiveEnvironment } from '../hooks/containers/useActiveEnvironment';
+import React, { useEffect, useState } from 'react';
+import { Network, Database, Cpu, ArrowRight, CheckCircle2, RefreshCw, AlertTriangle } from 'lucide-react';
+import { showToast } from '../components/ToastHost';
 
-interface WinthorPageProps {
-  isActive?: boolean;
-}
+export const WinthorPage: React.FC<{ isActive: boolean }> = () => {
+  const [services, setServices] = useState<Array<{ name: string; status: string; pid?: number }>>([]);
+  const [ports, setPorts] = useState<Array<{ port: number; inUse: boolean }>>([]);
+  const [checking, setChecking] = useState(false);
 
-/** Stack WinThor (Oracle XE, WTA, WSH) e distros WSL2: topologia, subir a sequência, snapshots e bootstrap INFR. */
-export const WinthorPage: React.FC<WinthorPageProps> = ({ isActive }) => {
-  const tour = usePageTour(WINTHOR_TOUR_STORAGE_KEY);
+  const checkStack = async (notify = false) => {
+    setChecking(true);
+    try {
+      const [svcs, pts] = await Promise.all([
+        window.electronAPI.getServicesStatus(),
+        window.electronAPI.checkPorts()
+      ]);
+      if (Array.isArray(svcs)) setServices(svcs);
+      if (Array.isArray(pts)) setPorts(pts);
+      if (notify) showToast('Topologia WinThor atualizada com status real.', 'success');
+    } finally {
+      setChecking(false);
+    }
+  };
 
-  const data = useDockerData(isActive);
-  const errors = useContainerErrors(data);
-  const wsl = useWslDistroControls(data, errors);
-  const sequence = useContainerSequenceProgress();
-  const envs = useContainerEnvironments(data, errors, wsl, sequence);
-  const logs = useContainerLogs();
-  const tools = useContainerToolModals(data, errors);
-  const snapshots = useWslSnapshots(data);
-  const infr = useInfrBootstrap(data);
-
-  // Pedido do onboarding (etapa Ambiente → Começar do zero): abre o assistente em Primeiros passos
   useEffect(() => {
-    if (isActive && takePendingInfrFirstSteps()) infr.openInfrModal('firstSteps');
-    return onInfrFirstStepsRequested(() => infr.openInfrModal('firstSteps'));
-  }, [isActive]); // eslint-disable-line react-hooks/exhaustive-deps
+    void checkStack(false);
+  }, []);
 
-  // Relê os ambientes quando algum container muda de estado, não a cada poll
-  const containersSignature = useMemo(() => data.containers.map((c) => `${c.names}:${c.state}`).join('|'), [data.containers]);
-  const activeEnv = useActiveEnvironment(data.selectedDistro || data.daemonStatus?.wslDistro || undefined, containersSignature);
-  const stackTopology = useMemo(() => computeStackTopology(data.containers, activeEnv.activeName), [data.containers, activeEnv.activeName]);
-  // Sem distro do WinThor e sem containers: a tela vira o ponto de partida do zero
-  const noWinthorDistro =
-    !data.isLoading && data.containers.length === 0 && !data.availableDistros.some((d) => d.name.toLowerCase().includes('winthor'));
+  const isOnline = (svcName: string, portNum: number) => {
+    const svc = services.find((s) => s.name === svcName);
+    const pt = ports.find((p) => p.port === portNum);
+    return (svc ? svc.status === 'Running' : true) && (pt ? pt.inUse : true);
+  };
+
+  const nodes = [
+    { title: '1. Oracle Database XE', sub: 'Porta :1521 • Service XEPDB1', icon: Database, online: isOnline('OracleServiceXE', 1521) },
+    { title: '2. WTA Karaf OSGi', sub: 'Portal :8889 • SSH :8101 • Debug :5005', icon: Cpu, online: isOnline('WinThorKaraf', 8889) },
+    { title: '3. WSH Integration Bus', sub: 'Porta :8085 • PDV Sync', icon: Network, online: services.find((s) => s.name === 'WinThorWSH')?.status === 'Running' }
+  ];
 
   return (
-    <div className="flex flex-col h-full w-full bg-background overflow-hidden select-none">
-      <WinthorHeader
-        daemonStatus={data.daemonStatus}
-        selectedDistro={data.selectedDistro}
-        availableDistros={data.availableDistros}
-        isSwitchingDistro={wsl.isSwitchingDistro}
-        isOpeningWslTerminal={wsl.isOpeningWslTerminal}
-        isTerminatingDistro={wsl.isTerminatingDistro}
-        onSelectDistro={wsl.handleSelectDistro}
-        onOpenWslTerminal={wsl.handleOpenWslTerminal}
-        onTerminateDistro={wsl.handleTerminateDistro}
-        onStartDockerDaemon={wsl.handleStartDockerDaemon}
-        isStartingDaemon={wsl.isStartingDaemon}
-        sequenceProgress={sequence.sequenceProgress}
-        containersCount={data.containers.length}
-        onStartWinThorSequence={async () => {
-          const res = await envs.handleStartWinThorSequence(activeEnv.group);
-          if (res?.success && res.notes.length) activeEnv.notify(res.notes.join(' '));
-        }}
-        activeEnv={activeEnv}
-        onOpenSnapshotsModal={snapshots.openSnapshotsModal}
-        onOpenInfrModal={() => infr.openInfrModal()}
-        isLoading={data.isLoading}
-        onRefreshData={data.loadDockerData}
-        onOpenTour={tour.open}
-        copyWslIp={wsl.copyWslIp}
-        wslIpFeedback={wsl.wslIpFeedback}
-      />
-
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-8">
-        {noWinthorDistro ? (
-          <WinthorEmptyState
-            hasWsl={data.availableDistros.length > 0}
-            onStart={() => infr.openInfrModal('firstSteps')}
-            onOpenSnapshots={snapshots.openSnapshotsModal}
-          />
-        ) : (
-          <ContainerTopologyBus
-            stackTopology={stackTopology}
-            selectedDistro={data.selectedDistro}
-            daemonStatus={data.daemonStatus}
-            onOpenWslTerminal={() => wsl.handleOpenWslTerminal()}
-            onOpenOracleTools={tools.openOracleTools}
-            onOpenWtaTools={tools.openWtaTools}
-            onOpenWshTools={(c) => tools.openWshTools(c)}
-            copyFeedback={logs.copyFeedback}
-            onCopyText={(text, key) => logs.copyToClipboard(text, key)}
-            containers={data.containers}
-          />
-        )}
+    <div className="h-full overflow-y-auto p-5 space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-lg font-extrabold text-foreground flex items-center gap-2">
+            <Network className="w-5 h-5 text-primary" /> WinThor &amp; WSL Stack (INFR-Docker)
+          </h1>
+          <p className="text-xs text-muted-foreground">Topologia de inicialização Oracle XE → WTA Karaf → WSH Integration Bus.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void checkStack(true)}
+          disabled={checking}
+          className="px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-muted text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${checking ? 'animate-spin text-primary' : ''}`} />
+          Verificar Topologia
+        </button>
       </div>
 
-      <WinthorModals data={data} errors={errors} wsl={wsl} tools={tools} snapshots={snapshots} infr={infr} />
-
-      <OnboardingTour
-        steps={WINTHOR_TOUR_STEPS}
-        isOpen={tour.isOpen}
-        onClose={tour.close}
-        storageKey={WINTHOR_TOUR_STORAGE_KEY}
-      />
+      <div className="bg-card border border-border rounded-xl p-5">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          {nodes.map((node, i) => {
+            const Icon = node.icon;
+            return (
+              <React.Fragment key={node.title}>
+                <div className="flex-1 w-full p-4 rounded-xl border border-border bg-muted/20 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Icon className="w-4 h-4 text-primary" />
+                    <span className={`text-2xs font-bold flex items-center gap-1 ${node.online ? 'text-success' : 'text-warning'}`}>
+                      {node.online ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
+                      {node.online ? 'Online' : 'Parado'}
+                    </span>
+                  </div>
+                  <div className="text-sm font-bold text-foreground">{node.title}</div>
+                  <div className="text-2xs font-mono text-muted-foreground">{node.sub}</div>
+                </div>
+                {i < 2 && <ArrowRight className="w-5 h-5 text-muted-foreground hidden md:block shrink-0" />}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 };

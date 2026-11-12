@@ -1,45 +1,10 @@
-import { app, BrowserWindow, Tray, Menu, nativeImage, shell, session, Notification } from 'electron';
+import { app, BrowserWindow, Tray, shell, session } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { ConfigService, getAppDataDir } from './services/ConfigService';
+import { bootstrapServices, type BootstrappedApp } from './bootstrapServices';
+import { createAppTray, getAppIconPath } from './appTray';
 import { safeSend } from './utils/ipcSend';
-import { WindowsService } from './services/WindowsService';
-import { KarafService } from './services/KarafService';
-import { GitAzureService } from './services/GitAzureService';
-import { AzurePipelineService } from './services/AzurePipelineService';
-import { RoutinesService } from './services/RoutinesService';
-import { DocsIndexService } from './services/DocsIndexService';
-import { DatabaseService } from './services/DatabaseService';
-import { OracleTracerCaptureService } from './services/OracleTracerCaptureService';
-import { BackupService } from './services/BackupService';
-import { BackupSchedulerService } from './services/BackupSchedulerService';
-import { DockerService } from './services/DockerService';
-import { NetworkService } from './services/NetworkService';
-import { DeployService } from './services/DeployService';
-import { LogWatcherService } from './services/LogWatcherService';
-import { KarafLogPersistenceService } from './services/KarafLogPersistenceService';
-import { AutoUpdateService } from './services/AutoUpdateService';
-import { LlmService } from './services/LlmService';
-import { AiUsageService } from './services/AiUsageService';
-import { Routine801Service } from './services/Routine801Service';
-import { DelphiBuildService } from './services/DelphiBuildService';
-import { UsageMetricsService } from './services/UsageMetricsService';
-import { ApmService, getApmReceiverHandlePath } from './services/ApmService';
-import { QaRegressionService } from './services/QaRegressionService';
-import { QaPayloadService } from './services/QaPayloadService';
-import { TestRunnerService } from './services/TestRunnerService';
-import { TautAutomationService } from './services/TautAutomationService';
-import { HttpClientService } from './services/HttpClientService';
-import { IntegrationTraceService } from './services/IntegrationTraceService';
-import { AuthLockoutTestService } from './services/AuthLockoutTestService';
-import { ApiScenarioService } from './services/ApiScenarioService';
-import { ScenarioHistoryService } from './services/ScenarioHistoryService';
-import { HttpCollectionService } from './services/HttpCollectionService';
-import { RemoteControlService } from './services/RemoteControlService';
-import { createRemoteBackend } from './services/remoteControl/remoteBackend';
-import { registerIpcHandlers } from './ipc/registerIpc';
-import { notifyUser } from './services/NotificationService';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,10 +16,7 @@ if (typeof (globalThis as any).__filename === 'undefined') {
   (globalThis as any).__filename = __filename;
 }
 
-// A pasta userData do Electron (localStorage: Matriz de Qualidade, tema, marcadores de onboarding, e o
-// marcador .last_seen_version) deriva do `name` do package.json, que passou de "dev-manager" para
-// "hub-manager" na renomeação. Sem fixar, quem atualiza perde esses dados e vê o onboarding de novo.
-// Mantém a pasta original (a mesma que getAppDataDir() já usa para o config.json).
+// Mantém a pasta userData original ("dev-manager") para preservar dados locais após a renomeação para "hub-manager".
 try {
   app.setPath('userData', path.join(app.getPath('appData'), 'dev-manager'));
 } catch (err) {
@@ -63,34 +25,22 @@ try {
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
+let bootstrappedApp: BootstrappedApp | null = null;
 
-function getAppIconPath(): string | undefined {
-  const possibleIcons = [
-    path.join(app.getAppPath(), 'dist/icon.png'),
-    path.join(app.getAppPath(), 'dist/favicon.ico'),
-    path.join(__dirname, '../../dist/icon.png'),
-    path.join(__dirname, '../../public/icon.png'),
-    path.join(process.cwd(), 'dist/icon.png'),
-    path.join(process.cwd(), 'build/icon.ico'),
-    path.join(process.cwd(), 'build/icon.png'),
-    path.join(process.cwd(), 'public/icon.png')
-  ];
-  return possibleIcons.find((p) => fs.existsSync(p));
-}
-
-function createWindow() {
-  const possiblePreload = [
+function resolvePreloadPath(): string {
+  const candidates = [
     path.join(app.getAppPath(), 'dist-electron/preload/index.cjs'),
     path.join(__dirname, '../preload/index.cjs'),
     path.join(process.cwd(), 'dist-electron/preload/index.cjs'),
     path.join(__dirname, '../preload/index.js'),
     path.join(process.cwd(), 'dist-electron/preload/index.js')
   ];
+  return candidates.find((p) => fs.existsSync(p)) || candidates[0];
+}
 
-  const preloadPath = possiblePreload.find((p) => fs.existsSync(p)) || possiblePreload[0];
+function createWindow(): void {
+  const preloadPath = resolvePreloadPath();
   console.log('[Electron] Carregando Preload:', preloadPath);
-
-  const iconPath = getAppIconPath();
 
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -98,7 +48,7 @@ function createWindow() {
     minWidth: 1000,
     minHeight: 650,
     title: 'Hub Manager',
-    icon: iconPath,
+    icon: getAppIconPath(__dirname),
     webPreferences: {
       preload: preloadPath,
       nodeIntegration: false,
@@ -109,165 +59,13 @@ function createWindow() {
     backgroundColor: '#0B0F17'
   });
 
-  // Iniciar sempre em tela cheia (maximizada)
   mainWindow.maximize();
   mainWindow.once('ready-to-show', () => {
     mainWindow?.maximize();
   });
 
-  const configService = new ConfigService();
-  const usageMetricsService = new UsageMetricsService(configService);
-  usageMetricsService.attachProcessHooks();
-  const karafService = new KarafService(configService);
-  const databaseService = new DatabaseService(configService);
-  // Sessões do editor SQL com transação aberta não podem vazar: ao sair, desfaz o pendente e fecha as conexões
-  app.on('before-quit', () => {
-    void databaseService.closeAllSessions();
-  });
-  const oracleTracerCaptureService = new OracleTracerCaptureService(databaseService);
-  const backupService = new BackupService(configService, databaseService);
-  const backupSchedulerService = new BackupSchedulerService(
-    configService,
-    backupService,
-    path.join(getAppDataDir(), 'backup-scheduler.lock')
-  );
-  backupSchedulerService.onResult = (connectionName, result) => {
-    safeSend(mainWindow, 'backup:schedule-result', { connectionName, result });
-    // Notificação do sistema operacional: garante visibilidade mesmo com a janela
-    // minimizada/em segundo plano, quando o webContents.send acima passa despercebido.
-    if (Notification.isSupported()) {
-      new Notification({
-        title: result.success ? 'Backup agendado concluído' : 'Falha no backup agendado',
-        body: `${connectionName}: ${result.message}`
-      }).show();
-    }
-  };
-  const networkService = new NetworkService();
-  const windowsService = new WindowsService(configService, karafService, databaseService, networkService);
-  const gitAzureService = new GitAzureService(configService, karafService);
-  const azurePipelineService = new AzurePipelineService(configService);
-  const routinesService = new RoutinesService(configService);
-  const docsIndexService = new DocsIndexService(configService, gitAzureService);
-  docsIndexService.onWatchReindexComplete = (status) => {
-    notifyUser(mainWindow, 'docs:reindex-complete', status, {
-      title: 'Documentação reindexada',
-      body: `Índice do RAG atualizado automaticamente (${status.totalChunks} trechos).`
-    });
-  };
-  if (configService.getSettings().autoReindexOnChange) {
-    docsIndexService.startWatching();
-  }
-  const dockerService = new DockerService();
-  const deployService = new DeployService(configService, karafService, dockerService, windowsService, networkService);
-  const logWatcherService = new LogWatcherService();
-  const karafLogPersistenceService = new KarafLogPersistenceService();
-  const autoUpdateService = new AutoUpdateService(
-    (status) => {
-      safeSend(mainWindow, 'update:status', status);
-    },
-    {
-      portable: Boolean(process.env.PORTABLE_EXECUTABLE_FILE),
-      currentVersion: app.getVersion(),
-      openExternal: (url) => shell.openExternal(url)
-    }
-  );
-  const aiUsageService = new AiUsageService(configService);
-  const llmService = new LlmService(configService, docsIndexService, aiUsageService);
-  const routine801Service = new Routine801Service(configService, karafService);
-  const apmService = new ApmService(5000, { configService, queryHandleFile: getApmReceiverHandlePath() });
-  const qaRegressionService = new QaRegressionService(configService, databaseService);
-  const qaPayloadService = new QaPayloadService(configService, databaseService);
-  const testRunnerService = new TestRunnerService(configService, windowsService, karafService);
-  const tautAutomationService = new TautAutomationService(configService, databaseService, testRunnerService);
-  const httpCollectionService = new HttpCollectionService();
-  const httpClientService = new HttpClientService(httpCollectionService);
-  const delphiBuildService = new DelphiBuildService(configService, windowsService);
-  const integrationTraceService = new IntegrationTraceService(
-    configService,
-    databaseService,
-    networkService,
-    windowsService,
-    httpClientService,
-    { logWatcherService, apmTraces: apmService }
-  );
-  const scenarioHistoryService = new ScenarioHistoryService(configService);
-  const authLockoutTestService = new AuthLockoutTestService(configService, scenarioHistoryService);
-  const apiScenarioService = new ApiScenarioService(configService, databaseService, scenarioHistoryService);
-  const remoteControlService = new RemoteControlService(
-    createRemoteBackend({
-      configService,
-      windowsService,
-      karafService,
-      dockerService,
-      deployService,
-      backupSchedulerService,
-      karafLogPersistenceService,
-      sendToWindow: (channel, ...args) => safeSend(mainWindow, channel, ...args)
-    })
-  );
-  apmService.onNewTrace = (summary) => {
-    safeSend(mainWindow, 'apm:new-trace', summary);
-  };
-  apmService.startReceiver().catch((err) => {
-    console.warn('[ApmService] Falha ao iniciar receptor OTLP no boot:', err);
-  });
-
-  registerIpcHandlers({
-    mainWindow,
-    windowsService,
-    karafService,
-    gitAzureService,
-    azurePipelineService,
-    routinesService,
-    configService,
-    docsIndexService,
-    databaseService,
-    backupService,
-    backupSchedulerService,
-    dockerService,
-    networkService,
-    deployService,
-    logWatcherService,
-    karafLogPersistenceService,
-    autoUpdateService,
-    llmService,
-    routine801Service,
-    delphiBuildService,
-    apmService,
-    oracleTracerCaptureService,
-    qaRegressionService,
-    testRunnerService,
-    tautAutomationService,
-    qaPayloadService,
-    httpClientService,
-    httpCollectionService,
-    usageMetricsService,
-    aiUsageService,
-    remoteControlService,
-    integrationTraceService,
-    authLockoutTestService,
-    apiScenarioService,
-    scenarioHistoryService
-  });
-
-  backupSchedulerService.rescheduleAll();
-  // Ao sair, não deixa para trás o Karaf embutido (processo filho), os agendamentos de backup nem a porta OTLP
-  app.on('before-quit', () => {
-    usageMetricsService.dispose();
-    backupSchedulerService.stopAll();
-    void apmService.stopReceiver().catch(() => undefined);
-    void remoteControlService.stop().catch(() => undefined);
-    void karafService.stopEmbeddedKaraf().catch(() => undefined);
-    karafService.stopAllKarafStreams();
-  });
-  autoUpdateService.checkForUpdates();
-  // Rechecagem periódica: cobre o app que fica dias aberto sem reiniciar, sem depender só do check no boot.
-  const AUTO_UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000;
-  const autoUpdateInterval = setInterval(() => autoUpdateService.checkForUpdates(), AUTO_UPDATE_CHECK_INTERVAL_MS);
-
   const devUrl = process.env.VITE_DEV_SERVER_URL || 'http://localhost:5173';
 
-  // Bloquear navegação remota arbitrária no webContents
   mainWindow.webContents.on('will-navigate', (event, url) => {
     const isAllowed = !app.isPackaged ? url.startsWith(devUrl) : url.startsWith('file://');
     if (!isAllowed) {
@@ -276,7 +74,6 @@ function createWindow() {
     }
   });
 
-  // Controlar abertura de novas janelas (redirecionar apenas HTTP/HTTPS para o navegador nativo)
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       shell.openExternal(url);
@@ -290,7 +87,6 @@ function createWindow() {
     console.error(`[Electron] Falha ao carregar frontend (${errorCode}): ${errorDescription}`);
   });
 
-  // Atalho F12 ou Ctrl+Shift+I para DevTools (somente em desenvolvimento)
   if (!app.isPackaged) {
     mainWindow.webContents.on('before-input-event', (_event, input) => {
       if (input.key === 'F12' || (input.control && input.shift && input.key.toLowerCase() === 'i')) {
@@ -310,82 +106,36 @@ function createWindow() {
     }
   }
 
-  // Tray Icon na barra de notificações
-  if (!tray) {
-    try {
-      let trayIcon: Electron.NativeImage;
-      const appIconPath = getAppIconPath();
-      if (appIconPath && fs.existsSync(appIconPath)) {
-        trayIcon = nativeImage.createFromPath(appIconPath).resize({ width: 16, height: 16 });
-      } else {
-        trayIcon = nativeImage.createEmpty();
-      }
-      tray = new Tray(trayIcon);
-      tray.setToolTip('Hub Manager');
-
-      const contextMenu = Menu.buildFromTemplate([
-        {
-          label: 'Abrir Hub Manager',
-          click: () => {
-            if (mainWindow) {
-              mainWindow.show();
-              mainWindow.focus();
-            }
-          }
-        },
-        { type: 'separator' },
-        {
-          label: '⚡ Preparar Ambiente Dev',
-          click: () => {
-            windowsService.resetEnvironment('embedded', (log) => {
-              if (mainWindow) safeSend(mainWindow, 'env:log-event', log);
-            });
-          }
-        },
-        {
-          label: '💻 Abrir IDE / Editor',
-          click: () => windowsService.launchIntelliJ()
-        },
-        {
-          label: '🐛 Iniciar Servidor Debug',
-          click: () => windowsService.launchServerDebug()
-        },
-        { type: 'separator' },
-        {
-          label: 'Sair do Aplicativo',
-          click: () => {
-            app.quit();
-          }
-        }
-      ]);
-
-      tray.setContextMenu(contextMenu);
-      tray.on('double-click', () => {
-        if (mainWindow) {
-          mainWindow.show();
-          mainWindow.focus();
-        }
-      });
-    } catch (err) {
-      console.warn('Não foi possível inicializar Tray da bandeja:', err);
-    }
+  if (!tray && bootstrappedApp) {
+    const winSvc = bootstrappedApp.windowsService;
+    tray = createAppTray({
+      baseDir: __dirname,
+      getMainWindow: () => mainWindow,
+      onPrepareDevEnv: () => {
+        winSvc.resetEnvironment('embedded', (log) => {
+          if (mainWindow) safeSend(mainWindow, 'env:log-event', log);
+        });
+      },
+      onLaunchIde: () => winSvc.launchIntelliJ(),
+      onLaunchServerDebug: () => winSvc.launchServerDebug()
+    });
   }
 
   mainWindow.on('closed', () => {
-    logWatcherService.stopAll();
-    clearInterval(autoUpdateInterval);
+    bootstrappedApp?.logWatcherService.stopAll();
     mainWindow = null;
   });
 }
 
 app.whenReady().then(() => {
-  // Rejeitar solicitações de permissões não autorizadas do SO (câmera, microfone, geolocalização)
   session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
-    // display-capture: gravação de tela do módulo Evidências (a fonte é escolhida pelo main em setDisplayMediaRequestHandler)
     callback(permission === 'display-capture');
   });
   session.defaultSession.setPermissionCheckHandler((_webContents, permission) => permission === 'display-capture');
 
+  if (!bootstrappedApp) {
+    bootstrappedApp = bootstrapServices(() => mainWindow);
+  }
   createWindow();
 
   app.on('activate', () => {
