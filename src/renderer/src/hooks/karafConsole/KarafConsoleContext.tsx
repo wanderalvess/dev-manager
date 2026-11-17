@@ -1,13 +1,23 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { DOCK_DEFAULT_HEIGHT, DOCK_MAX_HEIGHT, DOCK_MIN_HEIGHT } from '../../utils/karafConsoleBuffer';
+import {
+  CONSOLE_MODE_STORAGE_KEY,
+  CONSOLE_WIDTH_STORAGE_KEY,
+  type ConsoleDisplayMode,
+  clampConsoleWidth,
+  readStoredConsoleMode,
+  readStoredConsoleWidth
+} from '../../utils/karafConsoleBuffer';
 
 interface KarafConsoleContextValue {
   logs: string[];
   setLogs: React.Dispatch<React.SetStateAction<string[]>>;
   isOpen: boolean;
-  height: number;
+  width: number;
+  displayMode: ConsoleDisplayMode;
   toggle: () => void;
-  setHeight: (h: number) => void;
+  close: () => void;
+  setWidth: (w: number) => void;
+  toggleDisplayMode: () => void;
   openWithTail: (filter?: string) => void;
   request: { tail?: boolean; filter?: string; nonce: number } | null;
 }
@@ -20,7 +30,8 @@ export const KarafConsoleProvider: React.FC<{ children: React.ReactNode }> = ({ 
     '[INFO] Digite "la" ou "bundle:list" para listar bundles ativos.'
   ]);
   const [isOpen, setIsOpen] = useState(false);
-  const [height, setHeightState] = useState(DOCK_DEFAULT_HEIGHT);
+  const [width, setWidthState] = useState<number>(readStoredConsoleWidth);
+  const [displayMode, setDisplayMode] = useState<ConsoleDisplayMode>(readStoredConsoleMode);
   const [request, setRequest] = useState<{ tail?: boolean; filter?: string; nonce: number } | null>(null);
 
   useEffect(() => {
@@ -34,16 +45,51 @@ export const KarafConsoleProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   const toggle = useCallback(() => setIsOpen((prev) => !prev), []);
-  const setHeight = useCallback((h: number) => {
-    setHeightState(Math.max(DOCK_MIN_HEIGHT, Math.min(DOCK_MAX_HEIGHT, h)));
+  const close = useCallback(() => setIsOpen(false), []);
+
+  const setWidth = useCallback((w: number) => {
+    const clamped = clampConsoleWidth(w);
+    setWidthState(clamped);
+    try {
+      localStorage.setItem(CONSOLE_WIDTH_STORAGE_KEY, String(clamped));
+    } catch {
+      // ignora em ambiente sem storage
+    }
   }, []);
+
+  const toggleDisplayMode = useCallback(() => {
+    setDisplayMode((prev) => {
+      const next: ConsoleDisplayMode = prev === 'side' ? 'modal' : 'side';
+      try {
+        localStorage.setItem(CONSOLE_MODE_STORAGE_KEY, next);
+      } catch {
+        // ignora em ambiente sem storage
+      }
+      return next;
+    });
+  }, []);
+
   const openWithTail = useCallback((filter?: string) => {
     setIsOpen(true);
     setRequest({ tail: true, filter, nonce: Date.now() });
   }, []);
 
   return (
-    <KarafConsoleContext.Provider value={{ logs, setLogs, isOpen, height, toggle, setHeight, openWithTail, request }}>
+    <KarafConsoleContext.Provider
+      value={{
+        logs,
+        setLogs,
+        isOpen,
+        width,
+        displayMode,
+        toggle,
+        close,
+        setWidth,
+        toggleDisplayMode,
+        openWithTail,
+        request
+      }}
+    >
       {children}
     </KarafConsoleContext.Provider>
   );

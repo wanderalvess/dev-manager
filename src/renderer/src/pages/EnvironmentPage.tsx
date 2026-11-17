@@ -4,6 +4,7 @@ import type { PortStatus, ProcessStatus, ServiceStatus } from '../../../shared/t
 import type { SettingsTab } from '../components/settings/settingsSearchData';
 import { showToast } from '../components/ToastHost';
 import { useKarafConsole } from '../hooks/karafConsole/KarafConsoleContext';
+import { SystemHealthDashboard } from '../components/environment/SystemHealthDashboard';
 
 interface EnvironmentPageProps {
   services: ServiceStatus[];
@@ -18,7 +19,8 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
   services,
   onRefreshServices,
   onNavigateToSettings,
-  onNavigateToHelp
+  onNavigateToHelp,
+  isActive
 }) => {
   const [ports, setPorts] = useState<PortStatus[]>([]);
   const [processes, setProcesses] = useState<ProcessStatus[]>([]);
@@ -133,6 +135,8 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
         </div>
       )}
 
+      <SystemHealthDashboard isActive={isActive} />
+
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-start">
         <section className="xl:col-span-2 bg-card border border-border rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
@@ -179,12 +183,12 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
           </h2>
           <div className="space-y-2">
             {ports.map((p) => (
-              <div key={p.port} className="flex items-center justify-between px-3 py-2 rounded-lg border border-border/70 bg-muted/20 text-xs">
-                <div className="min-w-0">
-                  <span className="font-mono font-bold text-primary">:{p.port}</span>
-                  <span className="ml-2 text-foreground truncate">{p.label}</span>
+              <div key={p.port} className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-border/70 bg-muted/20 text-xs">
+                <div className="min-w-0 flex-1 flex items-center gap-2">
+                  <span className="font-mono font-bold text-primary shrink-0">:{p.port}</span>
+                  <span className="text-foreground truncate">{p.label}</span>
                 </div>
-                <span className={`text-2xs font-mono px-2 py-0.5 rounded-full ${p.inUse ? 'bg-success/15 text-success font-bold' : 'bg-muted text-muted-foreground'}`}>
+                <span className={`shrink-0 text-2xs font-mono px-2 py-0.5 rounded-full ${p.inUse ? 'bg-success/15 text-success font-bold' : 'bg-muted text-muted-foreground'}`}>
                   {p.inUse ? 'ATIVA' : 'LIVRE'}
                 </span>
               </div>

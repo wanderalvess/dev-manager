@@ -20,6 +20,7 @@ export const TerminalToolbar: React.FC<{
   onClear: () => void;
   hasLogs: boolean;
   onAbort?: () => void;
+  showTitle?: boolean;
 }> = ({
   title,
   lineCount,
@@ -36,26 +37,29 @@ export const TerminalToolbar: React.FC<{
   onCopy,
   onClear,
   hasLogs,
-  onAbort
+  onAbort,
+  showTitle = true
 }) => (
-  <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-[#0d1320] border-b border-slate-800 text-xs text-slate-300 shrink-0">
-    <div className="flex items-center gap-2">
-      <span className={`w-2 h-2 rounded-full ${isRunning ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
-      <span className="font-semibold text-slate-100">{title}</span>
-      <span className="text-2xs font-mono text-slate-400">({lineCount})</span>
+  <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-[#0d1320] border-b border-slate-800 text-xs text-slate-300 shrink-0 min-w-0">
+    <div className="flex items-center gap-1.5 shrink-0">
+      <span className={`w-2 h-2 rounded-full shrink-0 ${isRunning ? 'bg-emerald-400' : 'bg-slate-500'}`} />
+      {showTitle && <span className="font-semibold text-slate-100 truncate">{title}</span>}
+      <span className="text-2xs font-mono tabular-nums text-slate-400 whitespace-nowrap">
+        {showTitle ? `(${lineCount})` : `${lineCount} l.`}
+      </span>
     </div>
-    <div className="flex items-center gap-1.5">
-      <div className="flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-md px-2 py-0.5">
-        <Search className="w-3 h-3 text-slate-400" />
+    <div className="flex items-center gap-1 min-w-0 flex-1 justify-end">
+      <div className="flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-md px-2 py-0.5 min-w-0 flex-1 max-w-[150px]">
+        <Search className="w-3 h-3 text-slate-400 shrink-0" />
         <input
           value={searchFilter}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Filtrar..."
-          className="bg-transparent text-2xs text-slate-200 placeholder:text-slate-500 focus:outline-none w-28"
+          className="bg-transparent text-2xs text-slate-200 placeholder:text-slate-500 focus:outline-none w-full min-w-0"
         />
       </div>
       {isRunning && onAbort && (
-        <button type="button" onClick={onAbort} className="px-2 py-1 rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 text-2xs flex items-center gap-1 cursor-pointer">
+        <button type="button" onClick={onAbort} className="px-2 py-1 rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 text-2xs flex items-center gap-1 cursor-pointer shrink-0 whitespace-nowrap">
           <Square className="w-3 h-3" /> Parar
         </button>
       )}

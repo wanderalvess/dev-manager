@@ -69,25 +69,27 @@ export const App: React.FC = () => {
         onRefreshAll={data.refreshAll}
       />
 
-      {/* Conteúdo da Aba Ativa */}
-      <AppPageHost
-        activeTab={activeTab}
-        setActiveTab={navigate}
-        visitedTabs={modules.mountedTabs}
-        settingsVersion={data.settingsVersion}
-        services={data.services}
-        projects={data.projects}
-        isRefreshing={data.isRefreshing}
-        helpSearch={helpSearch}
-        fetchServices={data.fetchServices}
-        fetchProjects={data.fetchProjects}
-        navigateToHelp={navigateToHelp}
-        onSettingsSaved={data.handleSettingsSaved}
-        onRestartTour={onboarding.handleRestartTour}
-        onResetPageTours={onboarding.handleResetPageTours}
-      />
+      {/* Conteúdo da Aba Ativa + Painel Lateral do Console Karaf */}
+      <div className="flex flex-1 min-h-0 overflow-hidden relative">
+        <AppPageHost
+          activeTab={activeTab}
+          setActiveTab={navigate}
+          visitedTabs={modules.mountedTabs}
+          settingsVersion={data.settingsVersion}
+          services={data.services}
+          projects={data.projects}
+          isRefreshing={data.isRefreshing}
+          helpSearch={helpSearch}
+          fetchServices={data.fetchServices}
+          fetchProjects={data.fetchProjects}
+          navigateToHelp={navigateToHelp}
+          onSettingsSaved={data.handleSettingsSaved}
+          onRestartTour={onboarding.handleRestartTour}
+          onResetPageTours={onboarding.handleResetPageTours}
+        />
 
-      <ConsoleDock />
+        <ConsoleDock />
+      </div>
       </div>
 
       <AppGlobalModals

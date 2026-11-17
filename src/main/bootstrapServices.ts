@@ -35,6 +35,7 @@ import { RoutinesService } from './services/RoutinesService';
 import { ScenarioHistoryService } from './services/ScenarioHistoryService';
 import { TautAutomationService } from './services/TautAutomationService';
 import { TestRunnerService } from './services/TestRunnerService';
+import { TerminalSessionService } from './services/TerminalSessionService';
 import { UsageMetricsService } from './services/UsageMetricsService';
 import { WindowsService } from './services/WindowsService';
 import { safeSend } from './utils/ipcSend';
@@ -118,6 +119,7 @@ export function bootstrapServices(getMainWindow: () => BrowserWindow | null): Bo
     { logWatcherService, apmTraces: apmService }
   );
   const scenarioHistoryService = new ScenarioHistoryService(configService);
+  const terminalSessionService = new TerminalSessionService();
   const authLockoutTestService = new AuthLockoutTestService(configService, scenarioHistoryService);
   const apiScenarioService = new ApiScenarioService(configService, databaseService, scenarioHistoryService);
   const remoteControlService = new RemoteControlService(
@@ -175,7 +177,8 @@ export function bootstrapServices(getMainWindow: () => BrowserWindow | null): Bo
     integrationTraceService,
     authLockoutTestService,
     apiScenarioService,
-    scenarioHistoryService
+    scenarioHistoryService,
+    terminalSessionService
   });
 
   backupSchedulerService.rescheduleAll();
@@ -193,6 +196,7 @@ export function bootstrapServices(getMainWindow: () => BrowserWindow | null): Bo
     void remoteControlService.stop().catch(() => undefined);
     void karafService.stopEmbeddedKaraf().catch(() => undefined);
     karafService.stopAllKarafStreams();
+    terminalSessionService.disposeAll();
   });
 
   return { windowsService, logWatcherService };

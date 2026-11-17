@@ -16,6 +16,13 @@ import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../shared/infr
 import type { StartEnvResult } from '../shared/infrEnvStart';
 import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
 import type {
+  TerminalCreateRequest,
+  TerminalDataEvent,
+  TerminalExitEvent,
+  TerminalProfile,
+  TerminalSessionInfo
+} from '../shared/terminalTypes';
+import type {
   AppSettings,
   UsageDays,
   AiUsagePeriod,
@@ -181,6 +188,15 @@ export interface ElectronAPI {
   onKarafStdout: (callback: (chunk: string) => void) => () => void;
   getKarafPersistedLogs: (maxChars?: number) => Promise<{ output: string }>;
   clearKarafPersistedLogs: () => Promise<{ success: boolean }>;
+
+  // Terminal Integrado (PowerShell, CMD, Git Bash, WSL, Bash, SSH)
+  listTerminalProfiles: () => Promise<TerminalProfile[]>;
+  createTerminalSession: (req: TerminalCreateRequest) => Promise<TerminalSessionInfo>;
+  sendTerminalInput: (sessionId: string, input: string) => Promise<boolean>;
+  interruptTerminalSession: (sessionId: string) => Promise<boolean>;
+  closeTerminalSession: (sessionId: string) => Promise<boolean>;
+  onTerminalData: (callback: (event: TerminalDataEvent) => void) => () => void;
+  onTerminalExit: (callback: (event: TerminalExitEvent) => void) => () => void;
   deployKaraf: (request: KarafDeployRequest) => Promise<{ success: boolean; error?: string }>;
   buildAndDeployKaraf: (
     request: KarafDeployRequest,

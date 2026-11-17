@@ -29,7 +29,7 @@ export const HelpPage: React.FC<{
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
         {[
           ['Ctrl + K', 'Abrir Busca Rápida (Quick Launcher)'],
-          ['Ctrl + `', 'Abrir / recolher Console Karaf'],
+          ['Ctrl + `', 'Abrir / fechar painel lateral do Console Karaf'],
           ['Alt + 1', 'Ambiente Dev'],
           ['Alt + 2', 'Banco de Dados'],
           ['Alt + 3', 'Containers'],

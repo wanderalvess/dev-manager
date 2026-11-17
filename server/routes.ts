@@ -8,6 +8,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { state, saveSettingsToDisk } from './state';
 import { executeInMemorySql } from './sqlEngine';
+import { registerTerminalRoutes } from './terminalRoutes';
 import type { DocSearchResult, GitCommitInfo, GitFileStatus, GitProjectInfo } from '../src/shared/types';
 
 const execFileAsync = promisify(execFile);
@@ -74,6 +75,7 @@ function collectMarkdownFiles(rootDir: string): string[] {
 }
 
 export function registerApiRoutes(app: Express, broadcast: (channel: string, payload: any) => void): void {
+  registerTerminalRoutes(app, broadcast);
   const pkgPath = path.resolve(process.cwd(), 'package.json');
   let appVersion = '1.68.1';
   try {

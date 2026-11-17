@@ -9,6 +9,7 @@ export interface ModalProps {
   closeOnBackdrop?: boolean;
   ariaLabel?: string;
   panelClassName?: string;
+  backdropClassName?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -19,7 +20,8 @@ export const Modal: React.FC<ModalProps> = ({
   placement = 'center',
   closeOnBackdrop = true,
   ariaLabel = 'Diálogo',
-  panelClassName = 'bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg p-5'
+  panelClassName = 'bg-card border border-border rounded-2xl shadow-xl w-full max-w-lg p-5',
+  backdropClassName = 'bg-black/60 backdrop-blur-xs'
 }) => {
   useEffect(() => {
     if (!open) return;
@@ -40,7 +42,7 @@ export const Modal: React.FC<ModalProps> = ({
       onClick={(e) => {
         if (closeOnBackdrop && e.target === e.currentTarget) onClose();
       }}
-      className={`fixed inset-0 z-50 flex justify-center bg-black/60 backdrop-blur-xs p-4 ${
+      className={`fixed inset-0 z-50 flex justify-center p-4 ${backdropClassName} ${
         placement === 'top' ? 'items-start pt-16' : 'items-center'
       }`}
     >

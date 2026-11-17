@@ -130,6 +130,33 @@ export function installWebApiBridge(): void {
     },
     clearKarafPersistedLogs: async () => ({ success: true }),
     onKarafStdout: (cb: (chunk: string) => void) => subscribeWs('karaf:stdout', cb),
+
+    // Terminal Integrado
+    listTerminalProfiles: () => apiFetch('/api/terminal/profiles'),
+    createTerminalSession: (req) =>
+      apiFetch('/api/terminal/sessions', { method: 'POST', body: JSON.stringify(req) }),
+    sendTerminalInput: async (sessionId: string, input: string) => {
+      const res = await apiFetch<{ ok: boolean }>(`/api/terminal/sessions/${encodeURIComponent(sessionId)}/input`, {
+        method: 'POST',
+        body: JSON.stringify({ input })
+      });
+      return res.ok;
+    },
+    interruptTerminalSession: async (sessionId: string) => {
+      const res = await apiFetch<{ ok: boolean }>(`/api/terminal/sessions/${encodeURIComponent(sessionId)}/interrupt`, {
+        method: 'POST'
+      });
+      return res.ok;
+    },
+    closeTerminalSession: async (sessionId: string) => {
+      const res = await apiFetch<{ ok: boolean }>(`/api/terminal/sessions/${encodeURIComponent(sessionId)}`, {
+        method: 'DELETE'
+      });
+      return res.ok;
+    },
+    onTerminalData: (cb) => subscribeWs('terminal:data', cb),
+    onTerminalExit: (cb) => subscribeWs('terminal:exit', cb),
+
     listKarafBundles: () => apiFetch('/api/karaf/bundles'),
     manageKarafBundle: (action, bundleId) =>
       apiFetch(`/api/karaf/bundles/${encodeURIComponent(bundleId)}/${action}`, { method: 'POST' }),

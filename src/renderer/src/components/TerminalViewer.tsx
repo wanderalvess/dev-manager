@@ -14,12 +14,17 @@ interface TerminalViewerProps {
   isRunning?: boolean;
   onSendCommand?: (cmd: string) => void;
   inputPlaceholder?: string;
+  promptLabel?: string;
+  inputDisabled?: boolean;
+  inputAutoFocus?: boolean;
+  emptyMessage?: string;
   defaultWordWrap?: boolean;
   onToggleMaximize?: () => void;
   isMaximized?: boolean;
   /** Aplica um filtro de texto vindo de fora (ex.: "ver log deste bundle"); o nonce reaplica o mesmo texto. */
   externalSearch?: { text: string; nonce: number } | null;
   onAbort?: () => void;
+  showTitle?: boolean;
   className?: string;
 }
 
@@ -30,15 +35,20 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
   isRunning = false,
   onSendCommand,
   inputPlaceholder = 'Digite um comando OSGi Karaf (ex: bundle:list, la, feature:list, log:display)...',
+  promptLabel = 'karaf>',
+  inputDisabled = false,
+  inputAutoFocus = false,
+  emptyMessage = 'Nenhum registro de log no momento.',
   defaultWordWrap = false,
   onToggleMaximize,
   isMaximized = false,
   externalSearch = null,
   onAbort,
+  showTitle = true,
   className = ''
 }) => {
   const viewer = useTerminalViewer(logs, defaultWordWrap, externalSearch);
-  const command = useTerminalCommandInput(onSendCommand, onAbort);
+  const command = useTerminalCommandInput(onSendCommand, onAbort, onClear);
   const { wordWrap, filteredLogs } = viewer;
 
   return (
@@ -62,6 +72,7 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
         onClear={onClear}
         hasLogs={logs.length > 0}
         onAbort={onAbort}
+        showTitle={showTitle}
       />
 
       {/* Conteúdo com Estilo Phosphor Terminal */}
@@ -77,7 +88,7 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
         {filteredLogs.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-slate-400 font-mono text-xs italic space-y-1">
             <Terminal className="w-8 h-8 opacity-20 text-primary" />
-            <span>Nenhum registro de log no momento.</span>
+            <span>{emptyMessage}</span>
           </div>
         ) : (
           filteredLogs.map((log, idx) => (
@@ -90,6 +101,9 @@ export const TerminalViewer: React.FC<TerminalViewerProps> = ({
         <TerminalCommandInput
           value={command.inputCommand}
           placeholder={inputPlaceholder}
+          promptLabel={promptLabel}
+          disabled={inputDisabled}
+          autoFocus={inputAutoFocus}
           onChange={command.setInputCommand}
           onKeyDown={command.handleKeyDown}
           onSubmit={command.handleSend}
