@@ -38,7 +38,7 @@ export class InfrActiveEnvService {
     if (!found) return { success: false, error: `O ambiente ${req.name} não existe na distro ${r.distro ?? ''} (precisa de um container wta-${req.name}).`, changes: [] };
 
     const env = describeEnvironment(found);
-    const { patch, changes } = activeEnvSettingsPatch(env, this.config.getSettings());
+    const { patch, changes } = activeEnvSettingsPatch(env, this.config.getSettings(), r.distro);
     this.config.saveSettings(patch as Partial<AppSettings>);
 
     let note: string | undefined;
