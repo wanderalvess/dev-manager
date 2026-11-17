@@ -58,6 +58,8 @@ import { createApiScenarioRouter } from './routes/apiScenarioRoutes';
 import { createScenarioHistoryRouter } from './routes/scenarioHistoryRoutes';
 import { ScenarioHistoryService } from '../main/services/ScenarioHistoryService';
 import { ApiScenarioService } from '../main/services/ApiScenarioService';
+import { TerminalSessionService } from '../main/services/TerminalSessionService';
+import { createTerminalRouter } from './terminalRouter';
 import { AuthLockoutTestService } from '../main/services/AuthLockoutTestService';
 import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { UsageMetricsService } from '../main/services/UsageMetricsService';
@@ -2468,6 +2470,7 @@ app.use('/api/azure-pipelines', createAzurePipelineRouter(new AzurePipelineServi
 app.use('/api/scenario-history', createScenarioHistoryRouter(new ScenarioHistoryService(configService)));
 app.use('/api/api-scenarios', createApiScenarioRouter(new ApiScenarioService(configService, databaseService), broadcastWs));
 app.use('/api/auth-lockout', createAuthLockoutRouter(new AuthLockoutTestService(configService), broadcastWs, usageMetricsService));
+app.use('/api/terminal', createTerminalRouter(new TerminalSessionService(), broadcastWs, configService));
 
 // Servir Frontend SPA estático se compilado
 const clientDist = path.resolve(__dirname, '../../dist');

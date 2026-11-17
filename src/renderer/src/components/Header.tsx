@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { RefreshCw, Settings, HelpCircle } from 'lucide-react';
+import { RefreshCw, Settings, HelpCircle, Terminal } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import { AppLogo } from './AppLogo';
 import { NetworkIpInfo, SystemMetrics } from '../../../shared/types';
@@ -8,6 +8,7 @@ import type { NavThemeGroup } from './header/headerNavConfig';
 import { StatusPopover } from './header/StatusPopover';
 import { QuickSearchButton } from './header/QuickSearchButton';
 import { IconButton } from './ui/IconButton';
+import { useKarafConsole } from '../hooks/karafConsole/KarafConsoleContext';
 
 interface HeaderProps {
   activeTab: string;
@@ -36,6 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [isStatusOpen, setIsStatusOpen] = useState<boolean>(false);
   const navRef = useRef<HTMLDivElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
+  const { isOpen: isConsoleOpen, toggle: toggleConsole } = useKarafConsole();
 
   useEffect(() => {
     if (window.electronAPI?.getAppInfo) {
@@ -142,8 +144,24 @@ export const Header: React.FC<HeaderProps> = ({
       {/* 3. Busca Rápida Ampla e Centralizada (Ctrl+K) */}
       <QuickSearchButton onOpenQuickLauncher={onOpenQuickLauncher} />
 
-      {/* 4. Ações da Direita: Status do Sistema, Tema, Central de Ajuda, Configurações e Atualizar */}
+      {/* 4. Ações da Direita: Console Karaf, Status do Sistema, Tema, Central de Ajuda, Configurações e Atualizar */}
       <div className="flex items-center gap-1.5 shrink-0">
+        <button
+          type="button"
+          data-tour="console-trigger"
+          onClick={toggleConsole}
+          aria-expanded={isConsoleOpen}
+          title="Abrir ou fechar o painel lateral do Console Karaf (Ctrl+`)"
+          className={`h-9 px-2 sm:px-2.5 rounded-lg border transition-all flex items-center gap-1.5 text-xs select-none cursor-pointer whitespace-nowrap shrink-0 ${
+            isConsoleOpen
+              ? 'bg-primary/10 text-primary border-primary/50 font-semibold'
+              : 'bg-card/50 hover:bg-card border-border/60 hover:border-border text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Terminal className="w-3.5 h-3.5 shrink-0" />
+          <span className="hidden xl:inline text-xs font-medium">Console</span>
+        </button>
+
         <StatusPopover
           networkIps={networkIps}
           systemMetrics={systemMetrics}

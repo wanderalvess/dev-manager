@@ -2,7 +2,18 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import type { Dispatch, SetStateAction } from 'react';
 import type { EnvironmentLog } from '../../../../shared/types';
 import { splitStreamChunk } from '../../utils/deployProfileUtils';
-import { appendConsoleEntries, capConsoleEntries, clampDockHeight, DOCK_DEFAULT_HEIGHT } from '../../utils/karafConsoleBuffer';
+import {
+  appendConsoleEntries,
+  capConsoleEntries,
+  clampDockHeight,
+  clampConsoleWidth,
+  readStoredConsoleWidth,
+  readStoredConsoleMode,
+  CONSOLE_WIDTH_STORAGE_KEY,
+  CONSOLE_MODE_STORAGE_KEY,
+  type ConsoleDisplayMode,
+  DOCK_DEFAULT_HEIGHT
+} from '../../utils/karafConsoleBuffer';
 
 export type ConsoleEntry = string | EnvironmentLog;
 
@@ -26,9 +37,15 @@ interface KarafConsoleValue {
   subscribe: (listener: (event: ConsoleEvent) => void) => () => void;
   isOpen: boolean;
   height: number;
+  width: number;
+  displayMode: ConsoleDisplayMode;
   setOpen: (open: boolean) => void;
   toggle: () => void;
+  close: () => void;
   setHeight: (height: number) => void;
+  setWidth: (width: number) => void;
+  toggleDisplayMode: () => void;
+  openWithTail: (filter?: string) => void;
 }
 
 const KarafConsoleContext = createContext<KarafConsoleValue | null>(null);
@@ -47,6 +64,8 @@ function readStored(): { open: boolean; height: number } {
 export const KarafConsoleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [logs, setLogsState] = useState<ConsoleEntry[]>([]);
   const [dock, setDock] = useState(readStored);
+  const [width, setWidthState] = useState<number>(readStoredConsoleWidth);
+  const [displayMode, setDisplayMode] = useState<ConsoleDisplayMode>(readStoredConsoleMode);
   const [request, setRequest] = useState<ConsoleRequest | null>(null);
   const streamRemainderRef = useRef('');
   const listenersRef = useRef(new Set<(event: ConsoleEvent) => void>());
@@ -128,12 +147,51 @@ export const KarafConsoleProvider: React.FC<{ children: React.ReactNode }> = ({ 
     });
   }, []);
 
+  const close = useCallback(() => {
+    setDock((prev) => {
+      const next = { ...prev, open: false };
+      persist(next);
+      return next;
+    });
+  }, []);
+
   const setHeight = useCallback((height: number) => {
     setDock((prev) => {
       const next = { ...prev, height: clampDockHeight(height, window.innerHeight) };
       persist(next);
       return next;
     });
+  }, []);
+
+  const setWidth = useCallback((w: number) => {
+    const clamped = clampConsoleWidth(w);
+    setWidthState(clamped);
+    try {
+      localStorage.setItem(CONSOLE_WIDTH_STORAGE_KEY, String(clamped));
+    } catch {
+      // ignora sem storage
+    }
+  }, []);
+
+  const toggleDisplayMode = useCallback(() => {
+    setDisplayMode((prev) => {
+      const next: ConsoleDisplayMode = prev === 'side' ? 'modal' : 'side';
+      try {
+        localStorage.setItem(CONSOLE_MODE_STORAGE_KEY, next);
+      } catch {
+        // ignora sem storage
+      }
+      return next;
+    });
+  }, []);
+
+  const openWithTail = useCallback((filter?: string) => {
+    setDock((prev) => {
+      const next = { ...prev, open: true };
+      persist(next);
+      return next;
+    });
+    setRequest({ tail: true, filter, nonce: Date.now() });
   }, []);
 
   const value = useMemo<KarafConsoleValue>(
@@ -147,11 +205,34 @@ export const KarafConsoleProvider: React.FC<{ children: React.ReactNode }> = ({ 
       subscribe,
       isOpen: dock.open,
       height: dock.height,
+      width,
+      displayMode,
       setOpen,
       toggle,
-      setHeight
+      close,
+      setHeight,
+      setWidth,
+      toggleDisplayMode,
+      openWithTail
     }),
-    [request, requestConsole, logs, setLogs, flushRemainder, subscribe, dock, setOpen, toggle, setHeight]
+    [
+      request,
+      requestConsole,
+      logs,
+      setLogs,
+      flushRemainder,
+      subscribe,
+      dock,
+      width,
+      displayMode,
+      setOpen,
+      toggle,
+      close,
+      setHeight,
+      setWidth,
+      toggleDisplayMode,
+      openWithTail
+    ]
   );
 
   return <KarafConsoleContext.Provider value={value}>{children}</KarafConsoleContext.Provider>;

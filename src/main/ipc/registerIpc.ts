@@ -28,6 +28,7 @@ import { registerAuthLockoutHandlers } from './handlers/authLockoutHandlers';
 import { registerApiScenarioHandlers } from './handlers/apiScenarioHandlers';
 import { registerScenarioHistoryHandlers } from './handlers/scenarioHistoryHandlers';
 import { registerEvidenceHandlers } from './handlers/evidenceHandlers';
+import { registerTerminalHandlers } from './handlers/terminalHandlers';
 
 export type { IpcContext } from './ipcContext';
 
@@ -63,6 +64,7 @@ export function registerIpcHandlers(ctx: IpcContext): void {
     registerApiScenarioHandlers(ctx);
     registerScenarioHistoryHandlers(ctx);
     registerEvidenceHandlers(ctx);
+    registerTerminalHandlers(ctx);
   } finally {
     restoreIpc();
   }

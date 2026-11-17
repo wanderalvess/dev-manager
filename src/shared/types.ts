@@ -2017,6 +2017,7 @@ export interface SystemMetrics {
   freeMemoryMb?: number;
   usedMemoryMb?: number;
   memoryUsagePercent?: number;
+  loadAvg?: number[];
 }
 
 export interface HttpHealthResult {

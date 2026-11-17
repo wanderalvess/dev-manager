@@ -16,6 +16,13 @@ import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../shared/infr
 import type { StartEnvResult } from '../shared/infrEnvStart';
 import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
 import type {
+  TerminalCreateRequest,
+  TerminalDataEvent,
+  TerminalExitEvent,
+  TerminalProfile,
+  TerminalSessionInfo
+} from '../shared/terminalTypes';
+import type {
   AppSettings,
   UsageDays,
   AiUsagePeriod,
@@ -174,12 +181,22 @@ export interface ElectronAPI {
   // Karaf Deployer & Console Embutido
   startEmbeddedKaraf: () => Promise<boolean>;
   sendKarafInput: (input: string) => Promise<boolean>;
+  sendKarafInterrupt?: () => Promise<boolean>;
   stopEmbeddedKaraf: () => Promise<boolean>;
   isEmbeddedKarafRunning: () => Promise<boolean>;
   isKarafRunning: (sshPort?: number) => Promise<boolean>;
   onKarafStdout: (callback: (chunk: string) => void) => () => void;
   getKarafPersistedLogs: (maxChars?: number) => Promise<{ output: string }>;
   clearKarafPersistedLogs: () => Promise<{ success: boolean }>;
+
+  // Terminal Integrado (PowerShell, CMD, Git Bash, WSL, Bash, SSH)
+  listTerminalProfiles: () => Promise<TerminalProfile[]>;
+  createTerminalSession: (req: TerminalCreateRequest) => Promise<TerminalSessionInfo>;
+  sendTerminalInput: (sessionId: string, input: string) => Promise<boolean>;
+  interruptTerminalSession: (sessionId: string) => Promise<boolean>;
+  closeTerminalSession: (sessionId: string) => Promise<boolean>;
+  onTerminalData: (callback: (event: TerminalDataEvent) => void) => () => void;
+  onTerminalExit: (callback: (event: TerminalExitEvent) => void) => () => void;
   deployKaraf: (request: KarafDeployRequest) => Promise<{ success: boolean; error?: string }>;
   buildAndDeployKaraf: (
     request: KarafDeployRequest,
@@ -191,6 +208,7 @@ export interface ElectronAPI {
     skipTests?: boolean
   ) => Promise<{ code: number; stdout: string; stderr: string }>;
   execKarafDiagnostic: (command: string) => Promise<{ code: number; stdout: string; stderr: string }>;
+  abortKarafDiagnostic?: () => Promise<boolean>;
   getKarafDeployHistory: () => Promise<KarafDeployHistoryEntry[]>;
   onKarafDeployResult: (callback: (result: { success: boolean; error?: string }) => void) => () => void;
   onKarafBuildResult: (callback: (result: { code: number; stdout: string; stderr: string }) => void) => () => void;
