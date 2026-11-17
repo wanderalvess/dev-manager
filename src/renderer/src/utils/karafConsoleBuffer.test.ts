@@ -1,20 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import {
-  DOCK_DEFAULT_WIDTH,
-  DOCK_MAX_WIDTH,
-  DOCK_MIN_WIDTH,
-  clampConsoleWidth
+  appendConsoleEntries,
+  capConsoleEntries,
+  clampDockHeight,
+  DOCK_DEFAULT_HEIGHT,
+  DOCK_MIN_HEIGHT
 } from './karafConsoleBuffer';
 
 describe('karafConsoleBuffer', () => {
-  it('clamps console panel width between min and max bounds', () => {
-    expect(clampConsoleWidth(120)).toBe(DOCK_MIN_WIDTH);
-    expect(clampConsoleWidth(1500)).toBe(DOCK_MAX_WIDTH);
-    expect(clampConsoleWidth(480.4)).toBe(480);
+  it('mantém só as entradas mais recentes', () => {
+    expect(capConsoleEntries([1, 2, 3, 4], 2)).toEqual([3, 4]);
+    expect(capConsoleEntries([1, 2], 5)).toEqual([1, 2]);
   });
 
-  it('falls back to default width for non-finite values', () => {
-    expect(clampConsoleWidth(Number.NaN)).toBe(DOCK_DEFAULT_WIDTH);
-    expect(clampConsoleWidth(Number.POSITIVE_INFINITY)).toBe(DOCK_DEFAULT_WIDTH);
+  it('acrescenta respeitando o limite', () => {
+    expect(appendConsoleEntries(['a', 'b'], ['c', 'd'], 3)).toEqual(['b', 'c', 'd']);
+  });
+
+  it('limita a altura do dock', () => {
+    expect(clampDockHeight(50, 1000)).toBe(DOCK_MIN_HEIGHT);
+    expect(clampDockHeight(900, 1000)).toBe(700);
+    expect(clampDockHeight(300, 1000)).toBe(300);
+    expect(clampDockHeight(Number.NaN, 1000)).toBe(DOCK_DEFAULT_HEIGHT);
   });
 });

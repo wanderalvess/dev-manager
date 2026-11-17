@@ -6,8 +6,7 @@ import {
   Search,
   Clock,
   Layers,
-  Trash2,
-  FolderPlus
+  Trash2
 } from 'lucide-react';
 import {
   HttpCollection,
@@ -61,6 +60,8 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
     setOpenFolders((prev) => ({ ...prev, [folderId]: !prev[folderId] }));
   };
 
+  const currentEnv = environments.find((e) => e.id === selectedEnvId) || environments[0];
+
   return (
     <div className="w-72 border-r border-border bg-card flex flex-col h-full overflow-hidden text-xs">
       {/* Seletor de Ambiente no Topo */}
@@ -101,16 +102,6 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
         >
           <Plus className="w-3 h-3" />
           <span>Requisição</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={onNewCollection}
-          className="flex items-center justify-center px-2 h-8 bg-card hover:bg-muted text-foreground border border-border rounded-lg text-[13px] font-medium transition-colors"
-          title="Nova Coleção"
-          aria-label="Nova Coleção"
-        >
-          <FolderPlus className="w-3.5 h-3.5 text-muted-foreground" />
         </button>
 
         <button
@@ -168,24 +159,15 @@ export const HttpSidebar: React.FC<HttpSidebarProps> = ({
       <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
         {activeTab === 'collections' ? (
           collections.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground text-xs px-4 space-y-2">
+            <div className="py-8 text-center text-muted-foreground text-xs px-4">
               <p>Nenhuma coleção cadastrada.</p>
-              <div className="flex flex-col items-center gap-1">
-                <button
-                  type="button"
-                  onClick={onNewCollection}
-                  className="text-primary hover:underline font-medium"
-                >
-                  Criar Nova Coleção
-                </button>
-                <button
-                  type="button"
-                  onClick={onOpenImportModal}
-                  className="text-muted-foreground hover:text-foreground hover:underline font-medium"
-                >
-                  Importar Coleção Postman
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={onOpenImportModal}
+                className="mt-2 text-primary hover:underline font-medium"
+              >
+                Importar Coleção Postman
+              </button>
             </div>
           ) : (
             collections.map((col) => (

@@ -13,6 +13,7 @@ export function createEvidenceApi() {
     evidenceSetActive: () => Promise.resolve(false),
     evidenceListSources: () => Promise.resolve([]),
     evidenceCapture: desktopOnly,
+    evidenceAddImage: desktopOnly,
     evidenceAddNote: desktopOnly,
     evidenceUpdateStep: desktopOnly,
     evidenceDeleteStep: desktopOnly,

@@ -48,7 +48,7 @@ function downloadFile(url, destPath) {
     const req = client.get(
       url,
       {
-        rejectUnauthorized: (process.env.CORP_PROXY_INSECURE || '').trim() !== '1',
+        rejectUnauthorized: false,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
         }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Modal } from '../ui/Modal';
 import { Bot, Sparkles, Copy, Check, AlertTriangle, RefreshCw } from 'lucide-react';
 import { showToast } from '../ToastHost';
@@ -25,11 +25,9 @@ export const HttpAiDiagnosticModal: React.FC<HttpAiDiagnosticModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const activeCallRef = useRef(0);
   const markdownBlocks = useMemo(() => parseMarkdownBlocks(diagnostic || ''), [diagnostic]);
 
-  const analyzeError = useCallback(async () => {
-    const callId = ++activeCallRef.current;
+  const analyzeError = async () => {
     setLoading(true);
     setError(null);
     setDiagnostic(null);
@@ -56,7 +54,6 @@ Por favor, forneça de forma concisa e estruturada em Markdown:
         messages: [{ role: 'user', content: prompt }],
         source: 'diagnostico-http'
       });
-      if (activeCallRef.current !== callId) return;
 
       if (res && res.text) {
         setDiagnostic(res.text);
@@ -64,41 +61,27 @@ Por favor, forneça de forma concisa e estruturada em Markdown:
         setError('O modelo de IA não retornou conteúdo. Verifique se o provedor de IA está configurado em Configurações.');
       }
     } catch (err: any) {
-      if (activeCallRef.current !== callId) return;
       setError(
         err?.message ||
           'Falha ao conectar com o provedor de IA. Configure uma chave de API (OpenAI, Anthropic, Ollama) em Configurações -> IA.'
       );
     } finally {
-      if (activeCallRef.current === callId) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
-  }, [request.method, request.url, response.status, response.statusText, response.error, response.body]);
+  };
 
   useEffect(() => {
-    if (!isOpen) {
-      activeCallRef.current += 1;
-      return;
+    if (isOpen) {
+      analyzeError();
     }
-    void analyzeError();
-    return () => {
-      activeCallRef.current += 1;
-    };
-  }, [isOpen, analyzeError]);
+  }, [isOpen]);
 
   const handleCopy = () => {
     if (!diagnostic) return;
-    navigator.clipboard
-      .writeText(diagnostic)
-      .then(() => {
-        setCopied(true);
-        showToast('Diagnóstico da IA copiado!', 'success');
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch(() => {
-        showToast('Não foi possível copiar para a área de transferência.', 'error');
-      });
+    navigator.clipboard.writeText(diagnostic);
+    setCopied(true);
+    showToast('Diagnóstico da IA copiado!', 'success');
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -125,7 +108,7 @@ Por favor, forneça de forma concisa e estruturada em Markdown:
         </div>
 
         {/* Conteúdo do Diagnóstico */}
-        <div className="min-h-[240px] max-h-[460px] overflow-y-auto p-4 rounded-lg bg-muted/30 border border-border">
+        <div className="min-h-[240px] max-h-[460px] overflow-y-auto p-4 rounded-lg bg-[#0d1117] border border-border">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16 space-y-3 text-muted-foreground">
               <div className="relative">
@@ -144,16 +127,14 @@ Por favor, forneça de forma concisa e estruturada em Markdown:
               <p className="text-xs leading-relaxed">{error}</p>
             </div>
           ) : diagnostic ? (
-            <div className="prose dark:prose-invert prose-xs max-w-none text-foreground leading-relaxed">
+            <div className="prose prose-invert prose-xs max-w-none text-foreground leading-relaxed">
               <MarkdownBlocks
                 blocks={markdownBlocks}
                 searchTerm=""
                 copiedCodeIndex={null}
                 onCopyCode={(code) => {
-                  navigator.clipboard
-                    .writeText(code)
-                    .then(() => showToast('Código copiado!', 'success'))
-                    .catch(() => showToast('Não foi possível copiar o código.', 'error'));
+                  navigator.clipboard.writeText(code);
+                  showToast('Código copiado!', 'success');
                 }}
               />
             </div>

@@ -1,54 +1,121 @@
-import { useMemo, useRef, useState } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { parseChangelogVersions, ChangelogVersion } from '../../utils/changelogUtils';
+import {
+  WHATS_NEW_ALL_VERSIONS,
+  filterWhatsNewVersions,
+  resolveWhatsNewDefaultVersion
+} from '../../utils/whatsNewModalUtils';
 
-export function useWhatsNewModal(params: {
+interface UseWhatsNewModalParams {
   isOpen: boolean;
   changelogContent: string;
   currentAppVersion?: string;
   initialVersion?: string;
-}) {
-  const { changelogContent, currentAppVersion, initialVersion } = params;
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [dropdownSearch, setDropdownSearch] = useState('');
+}
 
-  const parsedVersions = useMemo(() => {
-    const sections = changelogContent.split(/^##\s+/m).slice(1);
-    return sections.map((sec) => {
-      const firstLine = sec.split('\n')[0] || '';
-      const m = firstLine.match(/(\d+\.\d+\.\d+)/);
-      const version = m ? m[1] : firstLine.trim().slice(0, 16);
-      return { version, content: `## ${sec}` };
-    });
+export function useWhatsNewModal({
+  isOpen,
+  changelogContent,
+  currentAppVersion,
+  initialVersion
+}: UseWhatsNewModalParams) {
+  const parsedVersions = useMemo<ChangelogVersion[]>(() => {
+    return parseChangelogVersions(changelogContent);
   }, [changelogContent]);
 
-  const latestVersion = parsedVersions[0]?.version || currentAppVersion || '1.68.1';
-  const [selectedVersion, setSelectedVersion] = useState<string>(initialVersion || latestVersion);
+  const defaultVersion = useMemo(
+    () => resolveWhatsNewDefaultVersion(parsedVersions, initialVersion, currentAppVersion),
+    [initialVersion, currentAppVersion, parsedVersions]
+  );
 
-  const isAllVersions = selectedVersion === 'all';
-  const currentIdx = parsedVersions.findIndex((v) => v.version === selectedVersion);
-  const currentVersionItem = currentIdx >= 0 ? parsedVersions[currentIdx] : parsedVersions[0];
+  const [selectedVersion, setSelectedVersion] = useState<string>(defaultVersion);
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const [dropdownSearch, setDropdownSearch] = useState<string>('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Sincroniza versão padrão caso mude o conteúdo
+  useEffect(() => {
+    setSelectedVersion(defaultVersion);
+  }, [defaultVersion]);
+
+  // Fecha o dropdown ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isDropdownOpen]);
+
+  const currentIndex = useMemo(() => {
+    return parsedVersions.findIndex((v) => v.version === selectedVersion);
+  }, [parsedVersions, selectedVersion]);
+
+  const isAllVersions = selectedVersion === WHATS_NEW_ALL_VERSIONS;
+  const isLatestVersion = currentIndex === 0;
+  const latestVersion = parsedVersions[0]?.version;
+  const currentVersionItem = currentIndex >= 0 ? parsedVersions[currentIndex] : null;
+
+  // No array ordenado de versões (recente -> antiga):
+  // Próximo índice (+1) = versão anterior/mais antiga
+  // Índice anterior (-1) = versão seguinte/mais nova
+  const hasOlderVersion = !isAllVersions && currentIndex >= 0 && currentIndex < parsedVersions.length - 1;
+  const hasNewerVersion = !isAllVersions && currentIndex > 0;
+
+  const goToOlderVersion = useCallback(() => {
+    if (hasOlderVersion) {
+      setSelectedVersion(parsedVersions[currentIndex + 1].version);
+    }
+  }, [hasOlderVersion, parsedVersions, currentIndex]);
+
+  const goToNewerVersion = useCallback(() => {
+    if (hasNewerVersion) {
+      setSelectedVersion(parsedVersions[currentIndex - 1].version);
+    }
+  }, [hasNewerVersion, parsedVersions, currentIndex]);
+
+  // Suporte a atalhos de teclado de navegação entre releases
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToOlderVersion();
+      } else if (e.altKey && e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToNewerVersion();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, goToOlderVersion, goToNewerVersion]);
+
+  const filteredVersions = useMemo(
+    () => filterWhatsNewVersions(parsedVersions, dropdownSearch),
+    [parsedVersions, dropdownSearch]
+  );
 
   return {
-    dropdownRef,
     parsedVersions,
-    filteredVersions: parsedVersions,
+    filteredVersions,
     selectedVersion,
     setSelectedVersion,
-    latestVersion,
-    isAllVersions,
-    isLatestVersion: selectedVersion === latestVersion,
     isDropdownOpen,
     setIsDropdownOpen,
     dropdownSearch,
     setDropdownSearch,
+    dropdownRef,
+    isAllVersions,
+    isLatestVersion,
+    latestVersion,
     currentVersionItem,
-    hasOlderVersion: currentIdx >= 0 && currentIdx + 1 < parsedVersions.length,
-    hasNewerVersion: currentIdx > 0,
-    goToOlderVersion: () => {
-      if (currentIdx + 1 < parsedVersions.length) setSelectedVersion(parsedVersions[currentIdx + 1].version);
-    },
-    goToNewerVersion: () => {
-      if (currentIdx > 0) setSelectedVersion(parsedVersions[currentIdx - 1].version);
-    }
+    hasOlderVersion,
+    hasNewerVersion,
+    goToOlderVersion,
+    goToNewerVersion
   };
 }

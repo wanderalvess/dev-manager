@@ -873,12 +873,7 @@ export class ConfigService {
       if (Array.isArray(parsed.databaseConnections)) {
         merged.databaseConnections = parsed.databaseConnections.map((newConn: any) => {
           const existing = current.databaseConnections?.find(
-            (c) =>
-              c.id === newConn.id ||
-              (c.host === newConn.host &&
-                c.port === newConn.port &&
-                c.user === newConn.user &&
-                c.database === newConn.database)
+            (c) => c.id === newConn.id || (c.host === newConn.host && c.user === newConn.user && c.database === newConn.database)
           );
           return {
             ...newConn,
@@ -936,12 +931,6 @@ export class ConfigService {
         merged.integrationLayers = preserveIntegrationLayerSecrets(parsed.integrationLayers, current.integrationLayers);
       }
       if (Array.isArray(parsed.integrationFlows)) merged.integrationFlows = parsed.integrationFlows;
-      if (Array.isArray(parsed.backupConfigs)) merged.backupConfigs = parsed.backupConfigs;
-      if (Array.isArray(parsed.backupWebhooks)) merged.backupWebhooks = parsed.backupWebhooks;
-      if (Array.isArray(parsed.docSyncTargets)) merged.docSyncTargets = parsed.docSyncTargets;
-      if (Array.isArray(parsed.confluenceSources)) merged.confluenceSources = parsed.confluenceSources;
-      if (Array.isArray(parsed.jiraSources)) merged.jiraSources = parsed.jiraSources;
-      if (Array.isArray(parsed.disabledModules)) merged.disabledModules = parsed.disabledModules;
 
       const warnings = [
         ...this.collectCommandStepWarnings(merged.automationProfiles, 'Perfil de automação'),

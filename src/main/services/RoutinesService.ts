@@ -151,20 +151,16 @@ export class RoutinesService {
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 2000);
-      let res: Response;
-      try {
-        res = await fetch(`${wtaUrl.replace(/\/+$/, '')}/winthor/autenticacao/v1/login`, {
-          method: 'OPTIONS',
-          signal: controller.signal
-        }).catch(async (optionsErr) => {
-          if (isConnectionRefusedError(optionsErr)) {
-            throw optionsErr;
-          }
-          return await fetch(wtaUrl, { signal: controller.signal });
-        });
-      } finally {
-        clearTimeout(timer);
-      }
+      const res = await fetch(`${wtaUrl.replace(/\/+$/, '')}/winthor/autenticacao/v1/login`, {
+        method: 'OPTIONS',
+        signal: controller.signal
+      }).catch(async (optionsErr) => {
+        if (isConnectionRefusedError(optionsErr)) {
+          throw optionsErr;
+        }
+        return await fetch(wtaUrl, { signal: controller.signal });
+      });
+      clearTimeout(timer);
 
       // Só conta como no ar o que o WTA já atende: 404 (a API do WinThor ainda não subiu) e 5xx (iniciando) não
       const status = res?.status ?? 0;

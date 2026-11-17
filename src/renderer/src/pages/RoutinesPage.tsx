@@ -1,70 +1,163 @@
-import React, { useEffect, useState } from 'react';
-import { Grid, Star, Play } from 'lucide-react';
-import type { RoutineItem } from '../../../shared/types';
-import { showToast } from '../components/ToastHost';
+import React, { useState } from 'react';
+import { CcwRoutineModal } from '../components/CcwRoutineModal';
+import { DelphiBuildModal } from '../components/delphi/DelphiBuildModal';
+import { OnboardingTour } from '../components/onboarding/OnboardingTour';
+import { usePageTour } from '../components/onboarding/usePageTour';
+import { ROUTINES_TOUR_STEPS, ROUTINES_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/routinesTour';
+import { shouldShowKarafWarningBanner } from '../utils/routineLaunchUiUtils';
+import { CcwInitialTab, buildModuleOptions, filterRoutines, splitFavorites } from '../utils/routinesPageUtils';
+import { useKarafStatus } from '../hooks/routines/useKarafStatus';
+import { useRoutinesCatalog } from '../hooks/routines/useRoutinesCatalog';
+import { useMappedPrograms } from '../hooks/routines/useMappedPrograms';
+import { useRoutineLaunch } from '../hooks/routines/useRoutineLaunch';
+import { RoutinesHeader } from '../components/routines/RoutinesHeader';
+import { KarafWarningBanner, AppPathWarning } from '../components/routines/RoutinesAlerts';
+import { LaunchFeedbackBanner } from '../components/routines/LaunchFeedbackBanner';
+import { MappedProgramsPanel } from '../components/routines/MappedProgramsPanel';
+import { RoutinesCatalogList } from '../components/routines/RoutinesCatalogList';
 
-export const RoutinesPage: React.FC<{
-  onNavigateToSettings: () => void;
-  onNavigateToEnv: () => void;
-  settingsVersion: number;
-}> = () => {
-  const [routines, setRoutines] = useState<RoutineItem[]>([]);
-  const [search, setSearch] = useState('');
+interface RoutinesPageProps {
+  onNavigateToSettings?: () => void;
+  onNavigateToEnv?: () => void;
+  settingsVersion?: number;
+}
 
-  useEffect(() => {
-    window.electronAPI.listRoutines().then((r) => Array.isArray(r) && setRoutines(r)).catch(() => {});
-  }, []);
+export const RoutinesPage: React.FC<RoutinesPageProps> = ({
+  onNavigateToSettings,
+  onNavigateToEnv,
+  settingsVersion
+}) => {
+  const tour = usePageTour(ROUTINES_TOUR_STORAGE_KEY);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedModule, setSelectedModule] = useState<string>('TODOS');
 
-  const toggleFav = async (id: string) => {
-    const next = await fetch(`/api/routines/${id}/favorite`, { method: 'POST' }).then((r) => r.json());
-    setRoutines(next);
+  const [isDelphiBuildOpen, setIsDelphiBuildOpen] = useState<boolean>(false);
+
+  // Modal de Download & Atualização via Central de Controle (CCW)
+  const [isCcwModalOpen, setIsCcwModalOpen] = useState<boolean>(false);
+  const [ccwInitialRoutine, setCcwInitialRoutine] = useState<string>('');
+  const [ccwInitialTab, setCcwInitialTab] = useState<CcwInitialTab>('download');
+
+  const handleOpenCcwModal = (routineName?: string, tab: CcwInitialTab = 'download') => {
+    setCcwInitialRoutine(routineName || '');
+    setCcwInitialTab(tab);
+    setIsCcwModalOpen(true);
   };
 
-  const filtered = routines.filter((r) => `${r.code} ${r.name} ${r.category || ''}`.toLowerCase().includes(search.toLowerCase()));
+  const {
+    karafStatus,
+    setKarafStatus,
+    isCheckingKaraf,
+    isStartingKaraf,
+    checkKaraf,
+    handleStartEmbeddedKaraf
+  } = useKarafStatus();
+  const { routines, isLoading, loadRoutines, handleToggleFavorite } = useRoutinesCatalog(checkKaraf);
+  const {
+    mappedPrograms,
+    runningMappedId,
+    isAddingProgram,
+    appPath,
+    winthorStartActive,
+    handleAddMappedProgram,
+    handleRenameMappedProgram,
+    handleRenameMappedProgramBlur,
+    handleRemoveMappedProgram,
+    handleLaunchMappedProgram
+  } = useMappedPrograms(settingsVersion, loadRoutines);
+  const { runningId, launchFeedback, setLaunchFeedback, handleLaunchRoutine } = useRoutineLaunch(setKarafStatus);
+
+  const modules = buildModuleOptions(routines);
+  const filteredRoutines = filterRoutines(routines, searchTerm, selectedModule);
+  const { favoriteRoutines, otherRoutines } = splitFavorites(filteredRoutines);
 
   return (
-    <div className="h-full overflow-y-auto p-5 space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-lg font-extrabold text-foreground flex items-center gap-2">
-            <Grid className="w-5 h-5 text-primary" /> Catálogo de Rotinas WinThor
-          </h1>
-          <p className="text-xs text-muted-foreground">Executáveis, favoritos e verificação rápida de versão.</p>
-        </div>
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar rotina (ex: 2075, 1322)..."
-          className="px-3 py-1.5 rounded-xl border border-border bg-card text-xs w-64 focus:outline-none focus:border-primary"
-        />
-      </div>
+    <div className="h-full flex flex-col px-4 py-3 md:px-5 md:py-4 space-y-3 overflow-hidden max-w-full select-none">
+      <RoutinesHeader
+        routinesCount={routines.length}
+        filteredCount={filteredRoutines.length}
+        mappedProgramsCount={mappedPrograms.length}
+        appPath={appPath}
+        winthorStartActive={winthorStartActive}
+        karafStatus={karafStatus}
+        isCheckingKaraf={isCheckingKaraf}
+        isLoading={isLoading}
+        searchTerm={searchTerm}
+        selectedModule={selectedModule}
+        modules={modules}
+        onSearchChange={setSearchTerm}
+        onModuleChange={setSelectedModule}
+        onOpenCcwModal={handleOpenCcwModal}
+        onRefresh={loadRoutines}
+        onOpenDelphiBuild={() => setIsDelphiBuildOpen(true)}
+        onOpenTour={tour.open}
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {filtered.map((r) => (
-          <div key={r.id} className="bg-card border border-border rounded-xl p-4 space-y-2.5">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <span className="px-2 py-0.5 rounded bg-primary/15 text-primary font-mono text-xs font-bold">PC{r.code}</span>
-                <h2 className="text-sm font-bold text-foreground mt-1.5">{r.name}</h2>
-              </div>
-              <button type="button" onClick={() => void toggleFav(r.id)} className="p-1 rounded hover:bg-muted cursor-pointer">
-                <Star className={`w-4 h-4 ${r.isFavorite ? 'fill-warning text-warning' : 'text-muted-foreground'}`} />
-              </button>
-            </div>
-            <div className="text-2xs font-mono text-muted-foreground truncate">{r.fullPath}</div>
-            <div className="flex items-center justify-between pt-2 border-t border-border/60">
-              <span className="text-2xs text-muted-foreground">{r.category} • v{r.version}</span>
-              <button
-                type="button"
-                onClick={() => showToast(`Rotina ${r.code} disparada (${r.fullPath}).`, 'success')}
-                className="px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-2xs font-bold flex items-center gap-1 cursor-pointer"
-              >
-                <Play className="w-3 h-3" /> Abrir
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      {shouldShowKarafWarningBanner(karafStatus, winthorStartActive) && (
+        <KarafWarningBanner
+          karafStatus={karafStatus}
+          isStartingKaraf={isStartingKaraf}
+          isCheckingKaraf={isCheckingKaraf}
+          onNavigateToEnv={onNavigateToEnv}
+          onStartKaraf={handleStartEmbeddedKaraf}
+          onCheckKaraf={checkKaraf}
+        />
+      )}
+
+      {launchFeedback && (
+        <LaunchFeedbackBanner
+          feedback={launchFeedback}
+          isStartingKaraf={isStartingKaraf}
+          onNavigateToEnv={onNavigateToEnv}
+          onNavigateToSettings={onNavigateToSettings}
+          onStartKaraf={handleStartEmbeddedKaraf}
+          onLaunchDirect={() => handleLaunchRoutine(launchFeedback.routine, true)}
+          onClose={() => setLaunchFeedback(null)}
+        />
+      )}
+
+      {!appPath && <AppPathWarning onNavigateToSettings={onNavigateToSettings} />}
+
+      <MappedProgramsPanel
+        mappedPrograms={mappedPrograms}
+        runningMappedId={runningMappedId}
+        isAddingProgram={isAddingProgram}
+        onAdd={handleAddMappedProgram}
+        onRename={handleRenameMappedProgram}
+        onRenameBlur={handleRenameMappedProgramBlur}
+        onLaunch={handleLaunchMappedProgram}
+        onRemove={handleRemoveMappedProgram}
+      />
+
+      {/* Área rolável: catálogo de rotinas (favoritas + todas) rola independente do cabeçalho */}
+      <RoutinesCatalogList
+        routinesCount={routines.length}
+        favoriteRoutines={favoriteRoutines}
+        otherRoutines={otherRoutines}
+        runningId={runningId}
+        onNavigateToSettings={onNavigateToSettings}
+        onToggleFavorite={handleToggleFavorite}
+        onLaunch={(routine) => handleLaunchRoutine(routine)}
+        onOpenCcwModal={handleOpenCcwModal}
+      />
+
+      <CcwRoutineModal
+        isOpen={isCcwModalOpen}
+        onClose={() => setIsCcwModalOpen(false)}
+        onSuccess={loadRoutines}
+        initialRoutineName={ccwInitialRoutine}
+        initialTab={ccwInitialTab}
+        appPath={appPath}
+      />
+
+      <DelphiBuildModal open={isDelphiBuildOpen} onClose={() => setIsDelphiBuildOpen(false)} />
+
+      <OnboardingTour
+        steps={ROUTINES_TOUR_STEPS}
+        isOpen={tour.isOpen}
+        onClose={tour.close}
+        storageKey={ROUTINES_TOUR_STORAGE_KEY}
+      />
     </div>
   );
 };

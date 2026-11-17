@@ -1,58 +1,54 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type { EnvironmentLog } from '../../../../shared/types';
+import { useRef, useEffect, useState } from 'react';
+import { useCopyToClipboard } from '../useCopyToClipboard';
+import {
+  filterTerminalLogs,
+  formatTerminalLogsForCopy,
+  type TerminalFilterType,
+  type TerminalLog
+} from '../../utils/terminalViewerUtils';
 
 export function useTerminalViewer(
-  logs: (string | EnvironmentLog)[],
+  logs: TerminalLog[],
   defaultWordWrap: boolean,
-  externalSearch: { text: string; nonce: number } | null
+  externalSearch: { text: string; nonce: number } | null = null
 ) {
-  const [searchFilter, setSearchFilter] = useState('');
-  const [filterType, setFilterType] = useState('all');
-  const [wordWrap, setWordWrap] = useState(defaultWordWrap);
-  const [autoScroll, setAutoScroll] = useState(true);
-  const [copied, setCopied] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { copy: copyLogs, copiedKey } = useCopyToClipboard(2000);
+  const copied = copiedKey === 'logs';
+  const [filterType, setFilterType] = useState<TerminalFilterType>('all');
+  const [searchFilter, setSearchFilter] = useState('');
+  const [autoScroll, setAutoScroll] = useState(true);
+  const [wordWrap, setWordWrap] = useState(defaultWordWrap);
 
   useEffect(() => {
-    if (externalSearch?.text !== undefined) {
-      setSearchFilter(externalSearch.text);
-    }
+    if (externalSearch) setSearchFilter(externalSearch.text);
   }, [externalSearch]);
 
-  const filteredLogs = useMemo(() => {
-    const q = searchFilter.trim().toLowerCase();
-    if (!q) return logs;
-    return logs.filter((l) => {
-      const txt = typeof l === 'string' ? l : l.message;
-      return txt.toLowerCase().includes(q);
-    });
-  }, [logs, searchFilter]);
-
+  // Auto-rolagem para o fim a cada novo log enquanto ativa
   useEffect(() => {
     if (autoScroll && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [filteredLogs.length, autoScroll]);
+  }, [logs, autoScroll]);
 
-  const handleCopy = async () => {
-    const text = filteredLogs.map((l) => (typeof l === 'string' ? l : l.message)).join('\n');
-    await navigator.clipboard?.writeText(text).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+  const handleCopy = () => {
+    copyLogs(formatTerminalLogsForCopy(logs), 'logs');
   };
 
+  const filteredLogs = filterTerminalLogs(logs, filterType, searchFilter);
+
   return {
-    searchFilter,
-    setSearchFilter,
+    scrollRef,
+    copied,
     filterType,
     setFilterType,
-    wordWrap,
-    setWordWrap,
+    searchFilter,
+    setSearchFilter,
     autoScroll,
     setAutoScroll,
-    copied,
+    wordWrap,
+    setWordWrap,
     handleCopy,
-    filteredLogs,
-    scrollRef
+    filteredLogs
   };
 }

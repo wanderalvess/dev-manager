@@ -3,29 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; worker-src 'self' blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*; img-src 'self' data:;"
+    />
     <title>Hub Manager</title>
-    <meta name="description" content="Cockpit Integrado de Operação, Desenvolvimento e Qualidade" />
-    <meta property="og:title" content="Hub Manager" />
-    <meta property="og:description" content="Cockpit Integrado de Operação, Desenvolvimento e Qualidade" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="alternate icon" href="/favicon.ico" />
     <script>
       (function() {
         try {
           var savedTheme = localStorage.getItem('theme');
-          var theme = savedTheme || 'dark';
+          var theme = savedTheme || 'light';
           var variant = localStorage.getItem('theme-variant') || 'default';
           var root = document.documentElement;
           if (theme === 'dark') {
             root.classList.add('dark');
             root.classList.remove('light');
-            root.style.colorScheme = 'dark';
           } else {
             root.classList.remove('dark');
             root.classList.add('light');
-            root.style.colorScheme = 'light';
           }
-          ['default', 'paper', 'midnight', 'nebula', 'cyberpunk', 'nordic'].forEach(function(v) {
+          ['default', 'midnight', 'nebula', 'cyberpunk', 'nordic'].forEach(function(v) {
             root.classList.remove('theme-' + v);
           });
           root.classList.add('theme-' + variant);

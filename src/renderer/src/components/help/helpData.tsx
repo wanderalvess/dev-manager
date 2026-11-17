@@ -1781,12 +1781,11 @@ export function getKeyboardShortcuts(debugPort: number) {
     { key: 'Alt + Q', desc: 'Acessar "Qualidade & Homologação" (abas agrupadas em Automação, Validação e Entrega)', category: 'Navegação' },
     { key: 'Alt + H', desc: 'Acessar esta Central de Ajuda & Launchpad do Sistema', category: 'Navegação' },
     { key: 'Ctrl + K', desc: 'Abrir o Quick Launcher (busca aproximada de ações, projetos e Configurações)', category: 'Navegação' },
-    { key: 'Ctrl + `', desc: 'Abrir ou fechar o painel lateral do Terminal & Console (Karaf OSGi + abas PowerShell/CMD/Git Bash/WSL/Bash/SSH)', category: 'Terminal' },
+    { key: 'Ctrl + `', desc: 'Abrir ou fechar o Console do Karaf no rodapé (vale em qualquer tela; o mesmo console serve Ambiente Dev e Deploy)', category: 'Terminal' },
     { key: 'Alt + ← / →', desc: 'Navegar entre versões anterior e seguinte no modal de Novidades', category: 'Navegação' },
     { key: 'Ctrl + Enter', desc: 'Enviar requisição no API Studio / Executar SQL no Database Studio', category: 'Produtividade' },
     { key: 'Shift + F9', desc: `Depuração Remota JVM no IntelliJ IDEA (Porta :${debugPort})`, category: 'Desenvolvimento' },
-    { key: 'Enter', desc: 'Enviar comando na aba ativa do Terminal & Console integrado', category: 'Terminal' },
-    { key: 'Ctrl + L', desc: 'Limpar o buffer de saída do terminal ativo (ou digite clear / cls)', category: 'Terminal' },
+    { key: 'Enter', desc: 'Enviar comando no Terminal Integrado do Shell Karaf', category: 'Terminal' },
     { key: 'Ctrl + C / Esc', desc: 'Interromper comando ou diagnóstico em execução no terminal (ou botão Interromper)', category: 'Terminal' }
   ];
 }

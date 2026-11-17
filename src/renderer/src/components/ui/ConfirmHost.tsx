@@ -1,60 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { Modal } from './Modal';
+import { ConfirmDialog } from './ConfirmDialog';
+import { registerConfirmHandler, type ConfirmRequest } from './confirmService';
 
-interface ConfirmRequest {
-  title: string;
-  message: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  resolve: (accepted: boolean) => void;
-}
-
-const listeners = new Set<(req: ConfirmRequest) => void>();
-
-export function requestConfirm(options: { title: string; message: string; confirmLabel?: string; cancelLabel?: string }): Promise<boolean> {
-  return new Promise((resolve) => {
-    listeners.forEach((cb) => cb({ ...options, resolve }));
-  });
-}
-
+/**
+ * Monta uma vez, na raiz do app, o diálogo que atende `requestConfirm`. Pedidos simultâneos entram numa fila:
+ * o próximo só aparece depois de o atual ser respondido.
+ */
 export const ConfirmHost: React.FC = () => {
-  const [req, setReq] = useState<ConfirmRequest | null>(null);
+  const [queue, setQueue] = useState<ConfirmRequest[]>([]);
 
-  useEffect(() => {
-    const listener = (next: ConfirmRequest) => setReq(next);
-    listeners.add(listener);
-    return () => {
-      listeners.delete(listener);
-    };
-  }, []);
+  useEffect(() => registerConfirmHandler((request) => setQueue((prev) => [...prev, request])), []);
 
-  if (!req) return null;
+  const current = queue[0];
+  if (!current) return null;
 
-  const close = (result: boolean) => {
-    req.resolve(result);
-    setReq(null);
+  const answer = (confirmed: boolean) => {
+    current.resolve(confirmed);
+    setQueue((prev) => prev.slice(1));
   };
 
-  return (
-    <Modal open onClose={() => close(false)} ariaLabel={req.title} panelClassName="max-w-md w-full p-5 space-y-4">
-      <h3 className="text-sm font-bold text-foreground">{req.title}</h3>
-      <p className="text-xs text-muted-foreground leading-relaxed">{req.message}</p>
-      <div className="flex items-center justify-end gap-2 pt-2">
-        <button
-          type="button"
-          onClick={() => close(false)}
-          className="px-3 py-1.5 rounded-lg border border-border text-xs font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
-        >
-          {req.cancelLabel || 'Cancelar'}
-        </button>
-        <button
-          type="button"
-          onClick={() => close(true)}
-          className="px-3.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:opacity-90 cursor-pointer"
-        >
-          {req.confirmLabel || 'Confirmar'}
-        </button>
-      </div>
-    </Modal>
-  );
+  return <ConfirmDialog open {...current.options} onConfirm={() => answer(true)} onCancel={() => answer(false)} />;
 };

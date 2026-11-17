@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
 export type ThemeMode = 'light' | 'dark';
-export type ThemeVariant = 'default' | 'paper' | 'midnight' | 'cyberpunk' | 'nebula' | 'nordic';
+export type ThemeVariant = 'paper' | 'default' | 'midnight' | 'cyberpunk' | 'nebula' | 'nordic';
 
-interface ThemeContextValue {
+interface ThemeContextType {
   mode: ThemeMode;
   variant: ThemeVariant;
   setMode: (mode: ThemeMode) => void;
@@ -11,47 +11,99 @@ interface ThemeContextValue {
   toggleMode: () => void;
 }
 
-const ThemeContext = createContext<ThemeContextValue | null>(null);
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const VARIANTS: ThemeVariant[] = ['default', 'paper', 'midnight', 'cyberpunk', 'nebula', 'nordic'];
+const THEME_KEY = 'theme';
+const VARIANT_KEY = 'theme-variant';
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [mode, setModeState] = useState<ThemeMode>(() => {
-    try {
-      const saved = localStorage.getItem('theme');
-      return saved === 'light' || saved === 'dark' ? saved : 'dark';
-    } catch {
-      return 'dark';
+const VALID_VARIANTS: ThemeVariant[] = ['paper', 'default', 'midnight', 'cyberpunk', 'nebula', 'nordic'];
+
+const getInitialMode = (): ThemeMode => {
+  try {
+    const savedMode = localStorage.getItem(THEME_KEY) as ThemeMode | null;
+    if (savedMode === 'light' || savedMode === 'dark') {
+      return savedMode;
     }
-  });
+  } catch (e) {
+    console.error('Erro ao ler preferência de tema do localStorage:', e);
+  }
+  return 'light'; // Padrão claro na primeira instalação
+};
 
-  const [variant, setVariantState] = useState<ThemeVariant>(() => {
-    try {
-      const saved = localStorage.getItem('theme-variant') as ThemeVariant;
-      return VARIANTS.includes(saved) ? saved : 'default';
-    } catch {
-      return 'default';
+const getInitialVariant = (): ThemeVariant => {
+  try {
+    const savedVariant = localStorage.getItem(VARIANT_KEY) as ThemeVariant | null;
+    if (savedVariant && VALID_VARIANTS.includes(savedVariant)) {
+      return savedVariant;
     }
-  });
+  } catch (e) {
+    console.error('Erro ao ler preferência de variante do localStorage:', e);
+  }
+  // Instalação nova começa no Papel; quem já escolheu outro estilo continua com ele (ver o try acima).
+  return 'paper';
+};
 
-  useEffect(() => {
+interface ThemeProviderProps {
+  children: ReactNode;
+}
+
+export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+  const [mode, setModeState] = useState<ThemeMode>(getInitialMode);
+  const [variant, setVariantState] = useState<ThemeVariant>(getInitialVariant);
+
+  const applyThemeClasses = (targetMode: ThemeMode, targetVariant: ThemeVariant) => {
     const root = document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(mode);
-    root.style.colorScheme = mode;
-    for (const v of VARIANTS) root.classList.remove(`theme-${v}`);
-    root.classList.add(`theme-${variant}`);
-    try {
-      localStorage.setItem('theme', mode);
-      localStorage.setItem('theme-variant', variant);
-    } catch {
-      // ignore
+
+    // Aplica/Remove classe dark e light
+    if (targetMode === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
+      root.style.colorScheme = 'dark';
+    } else {
+      root.classList.remove('dark');
+      root.classList.add('light');
+      root.style.colorScheme = 'light';
     }
+
+    // Remove todas as variantes possíveis
+    VALID_VARIANTS.forEach((v) => {
+      root.classList.remove(`theme-${v}`);
+    });
+
+    // Adiciona a variante selecionada
+    root.classList.add(`theme-${targetVariant}`);
+  };
+
+  const setMode = (newMode: ThemeMode) => {
+    setModeState(newMode);
+    try {
+      localStorage.setItem(THEME_KEY, newMode);
+    } catch (e) {
+      console.error('Erro ao salvar tema no localStorage:', e);
+    }
+    applyThemeClasses(newMode, variant);
+  };
+
+  const setVariant = (newVariant: ThemeVariant) => {
+    setVariantState(newVariant);
+    try {
+      localStorage.setItem(VARIANT_KEY, newVariant);
+    } catch (e) {
+      console.error('Erro ao salvar variante no localStorage:', e);
+    }
+    applyThemeClasses(mode, newVariant);
+  };
+
+  const toggleMode = () => {
+    const nextMode: ThemeMode = mode === 'dark' ? 'light' : 'dark';
+    setMode(nextMode);
+  };
+
+  // Efeito inicial para garantir que o DOM esteja sincronizado
+  useEffect(() => {
+    applyThemeClasses(mode, variant);
   }, [mode, variant]);
 
-  const setMode = (next: ThemeMode) => setModeState(next);
-  const setVariant = (next: ThemeVariant) => setVariantState(next);
-  const toggleMode = () => setModeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
 
   return (
     <ThemeContext.Provider value={{ mode, variant, setMode, setVariant, toggleMode }}>
@@ -60,10 +112,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 };
 
-export function useTheme(): ThemeContextValue {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) {
-    throw new Error('useTheme must be used inside ThemeProvider');
+// eslint-disable-next-line react-refresh/only-export-components -- hook colocated with its provider on purpose
+export const useTheme = (): ThemeContextType => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme deve ser utilizado dentro de um ThemeProvider');
   }
-  return ctx;
-}
+  return context;
+};
+
+export default ThemeProvider;

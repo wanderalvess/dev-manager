@@ -1,24 +1,25 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, expect, it } from 'vitest';
 import { buildWatchCommand } from './karafWatchCommand';
 
-test('buildWatchCommand returns list command regardless of target', () => {
-  assert.equal(buildWatchCommand('list', '123'), 'bundle:watch --list');
-});
+describe('buildWatchCommand', () => {
+  it('monitora tudo quando o alvo está vazio', () => {
+    expect(buildWatchCommand('start')).toBe('bundle:watch *');
+    expect(buildWatchCommand('start', '  ')).toBe('bundle:watch *');
+  });
 
-test('buildWatchCommand defaults empty target to wildcard', () => {
-  assert.equal(buildWatchCommand('start', '   '), 'bundle:watch *');
-  assert.equal(buildWatchCommand('stop', ''), 'bundle:watch --stop *');
-});
+  it('aceita ids, nomes e URLs mvn', () => {
+    expect(buildWatchCommand('start', '12,13')).toBe('bundle:watch 12,13');
+    expect(buildWatchCommand('start', 'mvn:com.acme/app/1.0.0')).toBe('bundle:watch mvn:com.acme/app/1.0.0');
+  });
 
-test('buildWatchCommand builds start and stop commands for valid targets', () => {
-  assert.equal(buildWatchCommand('start', '42'), 'bundle:watch 42');
-  assert.equal(buildWatchCommand('stop', 'com.winthor.*'), 'bundle:watch --stop com.winthor.*');
-});
+  it('para e lista sem alvo', () => {
+    expect(buildWatchCommand('stop', 'qualquer')).toBe('bundle:watch --stop');
+    expect(buildWatchCommand('list')).toBe('bundle:watch --list');
+  });
 
-test('buildWatchCommand rejects shell metacharacters', () => {
-  assert.equal(buildWatchCommand('start', '42; rm -rf /'), null);
-  assert.equal(buildWatchCommand('start', '42 && echo hi'), null);
-  assert.equal(buildWatchCommand('stop', '$(whoami)'), null);
-  assert.equal(buildWatchCommand('start', '`ls`'), null);
+  it('recusa alvo com metacaracteres de shell', () => {
+    expect(buildWatchCommand('start', '12; la')).toBeNull();
+    expect(buildWatchCommand('start', '$(x)')).toBeNull();
+    expect(buildWatchCommand('start', 'a|b')).toBeNull();
+  });
 });

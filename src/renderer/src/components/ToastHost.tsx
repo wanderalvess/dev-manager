@@ -77,8 +77,7 @@ export const ToastHost: React.FC = () => {
           <button
             type="button"
             onClick={() => dismiss(toast.id)}
-            aria-label="Fechar notificação"
-            className="shrink-0 text-muted-foreground hover:text-foreground cursor-pointer"
+            className="shrink-0 text-muted-foreground hover:text-foreground"
           >
             <X className="w-3.5 h-3.5" />
           </button>

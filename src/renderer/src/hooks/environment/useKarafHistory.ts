@@ -1,32 +1,35 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useState, useMemo } from 'react';
+import { filterTextLines } from '../../utils/textLineFilter';
 
+/** Histórico persistido do console Karaf embedded (sobrevive a reinícios, diferente do console ao vivo). */
 export function useKarafHistory() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [output, setOutput] = useState('');
-  const [search, setSearch] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [output, setOutput] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [search, setSearch] = useState<string>('');
 
-  const open = useCallback(async () => {
+  const filtered = useMemo(() => filterTextLines(output, search), [output, search]);
+
+  const open = async () => {
     setIsOpen(true);
+    setSearch('');
+    if (!window.electronAPI?.getKarafPersistedLogs) return;
     setIsLoading(true);
     try {
-      const res = await window.electronAPI?.getKarafPersistedLogs?.();
+      const res = await window.electronAPI.getKarafPersistedLogs();
       setOutput(res?.output || '');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
 
-  const clear = useCallback(async () => {
-    await window.electronAPI?.clearKarafPersistedLogs?.();
+  const clear = async () => {
+    if (!window.electronAPI?.clearKarafPersistedLogs) return;
+    await window.electronAPI.clearKarafPersistedLogs();
     setOutput('');
-  }, []);
+  };
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return output;
-    const q = search.toLowerCase();
-    return output.split('\n').filter((l) => l.toLowerCase().includes(q)).join('\n');
-  }, [output, search]);
+  const close = () => setIsOpen(false);
 
-  return { isOpen, output, filtered, search, isLoading, setSearch, open, clear, close: () => setIsOpen(false) };
+  return { isOpen, output, filtered, isLoading, search, setSearch, open, clear, close };
 }

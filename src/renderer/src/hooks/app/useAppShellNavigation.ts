@@ -1,43 +1,43 @@
-import { useCallback, useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { TOUR_STORAGE_KEY } from '../../components/onboarding/tourSteps';
+import { WELCOME_STORAGE_KEY } from '../../components/onboarding/welcomeSteps';
+import { LAST_TAB_STORAGE_KEY, resolveInitialTab } from '../../utils/appShellNavigation';
 
-export const TAB_SHORTCUTS: Record<string, string> = {
-  '1': 'env',
-  '2': 'database',
-  '3': 'containers',
-  '4': 'deploy',
-  '5': 'git',
-  '6': 'routines',
-  '7': 'docs',
-  '8': 'logs',
-  '9': 'http-client',
-  '0': 'apm',
-  'q': 'quality',
-  'h': 'help'
+const getInitialTab = (): string => {
+  try {
+    const hasSeenOnboarding =
+      window.localStorage.getItem(TOUR_STORAGE_KEY) || window.localStorage.getItem(WELCOME_STORAGE_KEY);
+    return resolveInitialTab(!!hasSeenOnboarding, window.localStorage.getItem(LAST_TAB_STORAGE_KEY));
+  } catch {
+    return 'help';
+  }
 };
 
+// Aba ativa, abas já visitadas (montagem preguiçosa), busca da Ajuda e Quick Launcher.
 export function useAppShellNavigation() {
-  const [activeTab, setActiveTabState] = useState<string>('env');
-  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(() => new Set(['env']));
+  const [activeTab, setActiveTab] = useState<string>(getInitialTab);
+  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(() => new Set([getInitialTab()]));
   const [helpSearch, setHelpSearch] = useState<string>('');
-  const [isQuickLauncherOpen, setIsQuickLauncherOpen] = useState(false);
+  const [isQuickLauncherOpen, setIsQuickLauncherOpen] = useState<boolean>(false);
 
-  const setActiveTab = useCallback((tab: string) => {
-    setActiveTabState(tab);
+  useEffect(() => {
     setVisitedTabs((prev) => {
-      if (prev.has(tab)) return prev;
+      if (prev.has(activeTab)) return prev;
       const next = new Set(prev);
-      next.add(tab);
+      next.add(activeTab);
       return next;
     });
-  }, []);
+    try {
+      window.localStorage.setItem(LAST_TAB_STORAGE_KEY, activeTab);
+    } catch {
+      // localStorage indisponível
+    }
+  }, [activeTab]);
 
-  const navigateToHelp = useCallback(
-    (search = '') => {
-      setHelpSearch(search);
-      setActiveTab('help');
-    },
-    [setActiveTab]
-  );
+  const navigateToHelp = useCallback((search?: string) => {
+    setHelpSearch(search || '');
+    setActiveTab('help');
+  }, []);
 
   return {
     activeTab,

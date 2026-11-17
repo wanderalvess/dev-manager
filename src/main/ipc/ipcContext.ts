@@ -33,7 +33,6 @@ import type { IntegrationTraceService } from '../services/IntegrationTraceServic
 import type { AuthLockoutTestService } from '../services/AuthLockoutTestService';
 import type { ApiScenarioService } from '../services/ApiScenarioService';
 import type { ScenarioHistoryService } from '../services/ScenarioHistoryService';
-import type { TerminalSessionService } from '../services/TerminalSessionService';
 
 /** Tudo que um grupo de handlers IPC pode precisar: a janela principal e os serviços do app. */
 export interface IpcContext {
@@ -72,5 +71,4 @@ export interface IpcContext {
   authLockoutTestService: AuthLockoutTestService;
   apiScenarioService: ApiScenarioService;
   scenarioHistoryService: ScenarioHistoryService;
-  terminalSessionService: TerminalSessionService;
 }
