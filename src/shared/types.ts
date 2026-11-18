@@ -103,6 +103,8 @@ export interface PortStatus {
   label: string;
   inUse: boolean;
   pid?: string;
+  /** Porta de debug configurada que esta porta substituiu na sessão (Karaf embutido caiu para outra porta livre). */
+  replaces?: number;
 }
 
 export interface EnvironmentLog {

@@ -52,6 +52,7 @@ export { parseClauseList, parseManifestHeaders, parseCapabilitiesWiredBundles } 
 export class KarafService {
   private configService: ConfigService;
   private embeddedKarafProcess: ChildProcess | null = null;
+  private embeddedDebugPort: { port: number; replaces: number } | null = null;
   private activeClientProcess: ChildProcess | null = null;
   private readonly ctx: KarafContext;
   private readonly streams = new KarafStreamManager();
@@ -65,6 +66,8 @@ export class KarafService {
       saveSettings: (patch) => self.configService.saveSettings(patch),
       get embeddedKarafProcess() { return self.embeddedKarafProcess; },
       set embeddedKarafProcess(proc) { self.embeddedKarafProcess = proc; },
+      get embeddedDebugPort() { return self.embeddedDebugPort; },
+      set embeddedDebugPort(v) { self.embeddedDebugPort = v ?? null; },
       get activeClientProcess() { return self.activeClientProcess; },
       set activeClientProcess(proc) { self.activeClientProcess = proc; },
       parseProjectPomOrBat: (p) => self.parseProjectPomOrBat(p),
@@ -156,6 +159,11 @@ export class KarafService {
   // --- Karaf Embutido no Painel ---
   public startEmbeddedKarafDebug(onLog: (chunk: string) => void): boolean {
     return embedded.startEmbeddedKarafDebug(this.ctx, onLog);
+  }
+
+  /** Porta JDWP alternativa do Karaf embutido em execução (null quando usa a configurada ou não está rodando). */
+  public getEmbeddedDebugPort(): { port: number; replaces: number } | null {
+    return this.embeddedKarafProcess ? this.embeddedDebugPort : null;
   }
 
   public sendEmbeddedInput(input: string): boolean {

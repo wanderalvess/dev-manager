@@ -83,6 +83,7 @@ export function startEmbeddedKarafDebug(ctx: KarafContext, onLog: ChunkHandler):
       }
       onLog(`[AVISO] A porta de debug MUDOU: :${preferredPort} → :${debugPort} nesta sessão. Aponte o IntelliJ (Remote JVM Debug) para :${debugPort}.\r\n`);
     }
+    ctx.embeddedDebugPort = debugPort !== preferredPort ? { port: debugPort, replaces: preferredPort } : null;
     const childEnv = ctx.getResolvedJavaEnv(debugPort !== preferredPort ? debugPort : undefined);
     const cmdExe = childEnv.ComSpec || process.env.ComSpec || process.env.COMSPEC || 'cmd.exe';
     // A pasta do próprio script: ele pode estar em bin/, na raiz ou num caminho customizado (karafScript)
@@ -111,17 +112,20 @@ export function startEmbeddedKarafDebug(ctx: KarafContext, onLog: ChunkHandler):
     ctx.embeddedKarafProcess.on('close', (code) => {
       onLog(`\r\n[AVISO] Sessão do Karaf Debug encerrada (Código: ${code}).\r\n`);
       ctx.embeddedKarafProcess = null;
+      ctx.embeddedDebugPort = null;
     });
 
     ctx.embeddedKarafProcess.on('error', (err) => {
       onLog(`\r\n[ERRO] Falha no processo do Karaf: ${err.message}\r\n`);
       ctx.embeddedKarafProcess = null;
+      ctx.embeddedDebugPort = null;
     });
 
     return true;
   } catch (err: any) {
     onLog(`[ERRO FATAL] Não foi possível iniciar o Karaf: ${err?.message || err}\r\n`);
     ctx.embeddedKarafProcess = null;
+    ctx.embeddedDebugPort = null;
     return false;
   }
 }
@@ -156,6 +160,7 @@ export function sendEmbeddedInterrupt(ctx: KarafContext): boolean {
 
 export async function stopEmbeddedKaraf(ctx: KarafContext): Promise<boolean> {
   if (!ctx.embeddedKarafProcess) return true;
+  ctx.embeddedDebugPort = null;
 
   const settings = ctx.getSettings();
   if (isWslKaraf(settings)) {

@@ -93,7 +93,9 @@ export function resolveStepRuntimeTarget(
   }
 ): StepRuntimeTarget {
   const effectiveKarafPort = step.type === 'karaf' ? step.port || context.karafDebugPort || 5005 : undefined;
-  const targetPort = step.type === 'karaf' ? effectiveKarafPort : step.port;
+  // Karaf embutido pode ter caído para outra porta livre (substituiu a configurada): segue a porta que está de fato ativa.
+  const karafFallback = step.type === 'karaf' ? context.ports.find((p) => p.replaces === effectiveKarafPort && p.inUse) : undefined;
+  const targetPort = karafFallback?.port ?? (step.type === 'karaf' ? effectiveKarafPort : step.port);
   const portStatus = targetPort ? context.ports.find((p) => p.port === targetPort) : undefined;
   const isPortActive = portStatus?.inUse ?? false;
 
