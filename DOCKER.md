@@ -1,6 +1,6 @@
 # Guia de Execução no Docker 🐳 - Hub Manager
 
-O **Hub Manager** suporta execução nativa em contêineres **Docker**, disponibilizando um **Web Cockpit completo** acessível via navegador web (`http://localhost:3000`), sem necessidade de instalar Electron na máquina de execução.
+O **Hub Manager** suporta execução nativa em contêineres **Docker**, disponibilizando um **painel web completo** acessível via navegador web (`http://localhost:3000`), sem necessidade de instalar Electron na máquina de execução.
 
 ---
 
@@ -25,7 +25,7 @@ HOST_APP_DIR=C:/app
 docker compose up -d
 ```
 
-### 3. Acessar o Web Cockpit
+### 3. Acessar o painel web
 Abra seu navegador em:
 👉 **[http://localhost:3000](http://localhost:3000)**
 
@@ -93,7 +93,7 @@ docker run -d \
 
 | Variável | Padrão | Descrição |
 | :--- | :--- | :--- |
-| `PORT` | `3000` | Porta HTTP exposta pelo Web Cockpit |
+| `PORT` | `3000` | Porta HTTP exposta pelo painel web |
 | `HOST` | `0.0.0.0` | Endereço de escuta do servidor |
 | `PROJECTS_DIR` | `/workspace/projects` | Diretório interno onde ficam os repositórios Git |
 | `KARAF_DIR` | `/workspace/karaf` | Diretório interno da instalação do Karaf |

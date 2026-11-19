@@ -46,7 +46,7 @@ try {
 if (!exists) {
   const notes = path.join(releaseDir, 'RELEASE_NOTES.md');
   const notesArgs = fs.existsSync(notes) ? ['--notes-file', notes] : ['--generate-notes'];
-  gh(['release', 'create', tag, '--title', tag, '--latest', ...notesArgs]);
+  gh(['release', 'create', tag, '--title', `Hub Manager - ${tag}`, '--latest', ...notesArgs]);
 }
 gh(['release', 'upload', tag, ...files, '--clobber']);
 console.log(`[Publish] ${tag} publicada — apps instalados vão oferecer a atualização na próxima checagem.`);

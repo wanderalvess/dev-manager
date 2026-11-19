@@ -1,9 +1,9 @@
 # dev-manager — Spec para IA
 
-Cockpit desktop (Electron + React + TypeScript + Tailwind) que automatiza o dia a dia de
+Aplicativo desktop (Electron + React + TypeScript + Tailwind) que automatiza o dia a dia de
 desenvolvedores que trabalham com Apache Karaf/OSGi: pipeline de ambiente (parar serviços →
 matar processos → abrir IDE → subir Karaf em debug), console Karaf embutido, DB Studio
-multi-vendor (Oracle/Postgres/MySQL) com backup/restore agendado, cockpit Docker, deployer
+multi-vendor (Oracle/Postgres/MySQL) com backup/restore agendado, painel Docker, deployer
 OSGi (snapshots/diff de bundles, árvore de dependências), hub Git/Azure DevOps, catálogo de
 rotinas, busca RAG local sobre docs (Confluence/Jira) e chat LLM (BYOK). Tudo isso também é
 exposto a assistentes de IA via um servidor MCP embutido.
@@ -358,7 +358,7 @@ para copiar: o Hub nunca o executa.
 ## Consistência de Design e Design System
 
 - **Manter sempre o design visual do sistema**:
-  - Respeitar a identidade visual dark/cockpit do Hub Manager (paleta Tailwind, classes `cockpit-panel`, `bg-card`, `border-border`, tokens semânticos `primary`, `foreground`, `muted-foreground`).
+  - Respeitar a identidade visual escura do Hub Manager (paleta Tailwind, classes `cockpit-panel`, `bg-card`, `border-border`, tokens semânticos `primary`, `foreground`, `muted-foreground`).
   - Não introduzir elementos ou componentes com estilos desconexos ("AI slop", botões fora do padrão, fontes não mono onde se espera mono, ou quebras de alinhamento).
   - Manter consistência nos ícones (`lucide-react`), densidade de dados, estados de loading, tooltips e feedback sonoro/visual (toasts).
 

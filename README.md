@@ -1,8 +1,8 @@
 # Hub Manager 🚀
 
-> **Cockpit e Painel de Automação Desktop Integrado para Desenvolvedores e Apache Karaf OSGi.**
+> **Central e Painel de Automação Desktop Integrado para Desenvolvedores e Apache Karaf OSGi.**
 
-Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Hub Manager** centraliza e automatiza todas as tarefas rotineiras do dia a dia de desenvolvimento: liberação de portas e serviços conflitantes em segundo plano, inicialização de IDEs, disparo do contêiner OSGi em modo debug, deploy automatizado de features Maven no Karaf, gerenciamento de repositórios Git / Azure DevOps, catálogo de rotinas e central completa de ajuda e diagnósticos. Além do Cockpit desktop, todas essas automações também ficam disponíveis para assistentes de IA como o Claude Code via um **servidor MCP** embutido.
+Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Hub Manager** centraliza e automatiza todas as tarefas rotineiras do dia a dia de desenvolvimento: liberação de portas e serviços conflitantes em segundo plano, inicialização de IDEs, disparo do contêiner OSGi em modo debug, deploy automatizado de features Maven no Karaf, gerenciamento de repositórios Git / Azure DevOps, catálogo de rotinas e central completa de ajuda e diagnósticos. Além do app desktop, todas essas automações também ficam disponíveis para assistentes de IA como o Claude Code via um **servidor MCP** embutido.
 
 ---
 
@@ -16,7 +16,7 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Hub Manage
 ├─────────────┴──────────────┴─────────────┴─────────────────┴──────────────┴────────────┴──────────┴────────┴─────────┤
 │ • Pipeline 1-Clique (Stop Srv -> Kill -> Launch IDE -> Servidor Debug)                                           │
 │ • Database Studio Multi-Vendor (Oracle, Postgres, MySQL): Inspetor, Snippets, Statement Tracer com Binds         │
-│ • Docker Cockpit: CPU/RAM em Tempo Real (docker stats), Terminal Interativo (docker exec) e Inspeção de Logs    │
+│ • Painel Docker:  CPU/RAM em Tempo Real (docker stats), Terminal Interativo (docker exec) e Inspeção de Logs    │
 │ • Karaf OSGi Deployer: Snapshots/Diff, Diagnóstico Causal OSGi, Memória JVM (JMX) e Features/Repos Maven         │
 │ • Hub Git & Azure DevOps: Sincronização, Visualizador de Diff de Arquivos e Criação de Branch por Tarefa         │
 │ • Catálogo de Rotinas (.EXE/.PC): Download CCW, Histórico & Rollback (.bak), Versão PE Header e Lote             │
@@ -31,7 +31,7 @@ Desenvolvido em **Electron + React + TypeScript + Tailwind CSS**, o **Hub Manage
 
 ## 🌟 Funcionalidades Detalhadas
 
-### 1. ⚡ Cockpit & Preparação do Ambiente Dev
+### 1. ⚡ Preparação do Ambiente Dev
 * **Pipeline Master de 1 Clique:**
   1. **Parada de Serviços Windows:** Interrompe serviços em segundo plano para liberar portas e comunicação.
   2. **Finalização de Processos:** Encerra processos em segundo plano que causam travas de portas ou arquivos.
@@ -355,7 +355,7 @@ Para desenvolvedores que utilizam assistentes de codificação como **Claude Cod
 
 ### 10. 🤖 Servidor MCP — Automação via Assistentes de IA
 * **Model Context Protocol (MCP) via stdio:**
-  * Expõe as mesmas automações do Cockpit (Ambiente, Perfis, Karaf, Git & Azure, Rotinas, Configurações) como *tools* que um cliente MCP — como o Claude Code ou GitHub Copilot — pode chamar diretamente, sem passar pela interface gráfica.
+  * Expõe as mesmas automações do Hub (Ambiente, Perfis, Karaf, Git & Azure, Rotinas, Configurações) como *tools* que um cliente MCP — como o Claude Code ou GitHub Copilot — pode chamar diretamente, sem passar pela interface gráfica.
 * **178 Tools Organizadas por Domínio:**
   * Para detalhes e exemplos de como usar cada ferramenta, **[acesse o Catálogo Completo de Ferramentas MCP](docs/MCP_TOOLS.md)**.
   * O catálogo inclui ferramentas como: `system_*`, `env_*`, `profile_*`, `karaf_*` (gerência de bundles, diagnóstico de dependências OSGi, telemetria Heap/Metaspace JVM com alertas OOM, disparo de GC, gestão de repositórios/features Maven e Log Analyzer), `docker_*`, `git_*` (inspeção de diff, criação de branch por tarefas Azure DevOps/Jira e links de PR), `routines_*` (execução com WinThor Start, download CCW, rollback de `.bak`, versão PE Header e atualização em lote), `rag_*`, `settings_*`, `db_*` (Oracle/PostgreSQL/MySQL, backup/restore/restore drill, Statement Tracer com captura e interpolação de binds), `logs_*` (leitura pontual e limpeza de arquivos), `apm_*` (traces OTLP, waterfall analítico e top endpoints/queries lentas), `routine801_*`, `deploy_*`, `llm_*`, `network_*`, `integration_*` (pré-voo das camadas WinThor, WSH, CH e PDV e rastreio de lote até o PDV), `qa_*` (validador regressivo, teste de bloqueio de login do WinThor e validação de API) e `usage_*` (resumo local de uso).
@@ -386,14 +386,14 @@ O `npm run build:electron` gera `release/mcp/`: um bundle único do servidor (`d
 
 Para gerar só essa pasta, sem empacotar o app: `npm run build:mcp`.
 
-> ⚠️ **Nota de segurança:** o servidor MCP tem o mesmo poder que o próprio Cockpit — iniciar/parar serviços Windows, matar processos, rodar builds Maven e comandos Karaf. Ele roda localmente via stdio (sem porta de rede exposta) e é pensado para uso pelo mesmo desenvolvedor que já opera essas ações pela interface. Transporte remoto/HTTP não faz parte desta versão.
+> ⚠️ **Nota de segurança:** o servidor MCP tem o mesmo poder que o próprio Hub — iniciar/parar serviços Windows, matar processos, rodar builds Maven e comandos Karaf. Ele roda localmente via stdio (sem porta de rede exposta) e é pensado para uso pelo mesmo desenvolvedor que já opera essas ações pela interface. Transporte remoto/HTTP não faz parte desta versão.
 
 ---
 
 ### 11. 📈 APM & Traces (OpenTelemetry)
 * **Receptor OTLP/HTTP Embutido (porta 4318, configurável):**
   * Recebe traces em JSON ou Protobuf (com gzip/deflate) de qualquer aplicação instrumentada com OpenTelemetry.
-  * No Karaf iniciado pelo Cockpit, basta colocar o `opentelemetry-javaagent.jar` em `<karaf>/bin`: o agente é anexado automaticamente, exportando via `http/protobuf` para `127.0.0.1` na porta configurada.
+  * No Karaf iniciado pelo Hub, basta colocar o `opentelemetry-javaagent.jar` em `<karaf>/bin`: o agente é anexado automaticamente, exportando via `http/protobuf` para `127.0.0.1` na porta configurada.
   * A porta pode ser trocada em **APM & Traces → Como Conectar** — útil quando outro coletor (OTel Collector, Jaeger, SigNoz) já ocupa a 4318. Se a nova porta falhar, o receptor continua na atual.
 * **Dashboard & Top Lentos:**
   * Vazão (RPM), latências p50/p95/p99, taxa de erros, % do tempo gasto em banco, volume e latência dos últimos 15 minutos, endpoints mais acessados e ranking de queries lentas com atalho para o DB Studio.
@@ -500,7 +500,7 @@ A pasta de cada release traz o instalador, a versão portátil, o servidor MCP p
 
 ---
 
-## 🐳 Como Executar no Docker (Web Cockpit)
+## 🐳 Como Executar no Docker (Painel Web)
 
 Para executar o painel como um aplicativo web em contêiner Docker acessível pelo navegador em `http://localhost:3000`:
 
@@ -578,7 +578,7 @@ Esse modo **desliga a validação de TLS** durante o build (o script avisa no co
 ---
 
 ### 🛡️ Permissões (UAC):
-Os executáveis rodam com o nível do usuário (`requestedExecutionLevel: asInvoker`) e **não** pedem Administrador ao abrir. Algumas ações do Cockpit só funcionam elevadas: iniciar/parar serviços do Windows (`sc.exe`, `net.exe`) e encerrar processos de outro usuário. Para usá-las, abra o Hub Manager com "Executar como administrador"; o Cockpit avisa quando uma ação precisar disso.
+Os executáveis rodam com o nível do usuário (`requestedExecutionLevel: asInvoker`) e **não** pedem Administrador ao abrir. Algumas ações do Hub só funcionam elevadas: iniciar/parar serviços do Windows (`sc.exe`, `net.exe`) e encerrar processos de outro usuário. Para usá-las, abra o Hub Manager com "Executar como administrador"; o Hub avisa quando uma ação precisar disso.
 
 ---
 
@@ -653,5 +653,5 @@ Este projeto é distribuído sob a licença **MIT**. Veja o arquivo `LICENSE` pa
 ---
 
 <p align="center">
-  Desenvolvido por <b>Wanderson Alves</b> • Cockpit integrado para produtividade e automação no desenvolvimento de software 🚀
+  Desenvolvido por <b>Wanderson Alves</b> • Central integrada para produtividade e automação no desenvolvimento de software 🚀
 </p>

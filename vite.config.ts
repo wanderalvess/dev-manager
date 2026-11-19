@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import electron from 'vite-plugin-electron';
 import path from 'path';
@@ -92,6 +92,10 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true
+  },
+  test: {
+    // Cópias de trabalho de outras sessões (.claude/worktrees) têm os próprios testes e não fazem parte desta suíte
+    exclude: [...configDefaults.exclude, '.claude/**']
   },
   server: {
     port: 5173,

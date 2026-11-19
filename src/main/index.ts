@@ -107,14 +107,24 @@ function createWindow() {
       sandbox: true
     },
     autoHideMenuBar: true,
-    backgroundColor: '#0B0F17'
+    backgroundColor: '#0B0F17',
+    // A janela só aparece quando o primeiro quadro (a tela de carregamento do index.html) está pronto;
+    // sem isso o usuário vê um retângulo vazio enquanto o renderer carrega.
+    show: false
   });
 
   // Iniciar sempre em tela cheia (maximizada)
   mainWindow.maximize();
-  mainWindow.once('ready-to-show', () => {
-    mainWindow?.maximize();
-  });
+  let windowShown = false;
+  const showMainWindow = (): void => {
+    if (windowShown || !mainWindow || mainWindow.isDestroyed()) return;
+    windowShown = true;
+    mainWindow.maximize();
+    mainWindow.show();
+  };
+  mainWindow.once('ready-to-show', showMainWindow);
+  // Rede de segurança: se o evento nunca vier, a janela não pode ficar invisível.
+  setTimeout(showMainWindow, 5000);
 
   const configService = new ConfigService();
   const usageMetricsService = new UsageMetricsService(configService);

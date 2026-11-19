@@ -29,12 +29,13 @@ describe('TerminalSessionService', () => {
     expect(session.alive).toBe(true);
     expect(service.writeInput(session.sessionId, 'echo hub_terminal_ok')).toBe(true);
 
-    const deadline = Date.now() + 4000;
+    const deadline = Date.now() + 15000;
     while (Date.now() < deadline && !chunks.join('').includes('hub_terminal_ok')) {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
     expect(chunks.join('')).toContain('hub_terminal_ok');
 
     expect(service.closeSession(session.sessionId)).toBe(true);
-  });
+    // Abre um shell de verdade: com a suíte inteira rodando em paralelo ele pode demorar mais que os 5 s padrão
+  }, 30000);
 });

@@ -39,6 +39,35 @@ export function getStartScreenFaq(): FaqItem[] {
           </p>
         </div>
       )
+    },
+    {
+      id: 'start-screen-splash',
+      question: 'Como funciona a abertura do Hub e como faço para pulá-la?',
+      category: 'Tela de início',
+      tags: ['abertura', 'splash', 'carregamento', 'pular', 'esc', 'animação', 'tela preta', 'primeiro acesso'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Toda vez que o Hub abre, ele mostra a abertura: o logo se montando e as áreas do Hub ficando prontas, uma a uma. Ela só começa
+            depois de a janela aparecer e dura cerca de 2 segundos (um pouco mais na primeira vez). Em seguida você cai na{' '}
+            <strong className="text-foreground">tela de início</strong>.
+          </p>
+          <ul className="list-disc pl-4 space-y-1">
+            <li>
+              Para pular, aperte <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">Esc</kbd> ou clique em{' '}
+              <strong className="text-foreground">Pular abertura</strong>.
+            </li>
+            <li>
+              Na primeira vez, ela termina perguntando se você quer <strong className="text-foreground">Configurar o Hub</strong> (a configuração em
+              etapas) ou <strong className="text-foreground">Explorar sozinho</strong>.
+            </li>
+            <li>
+              Com os <strong className="text-foreground">efeitos de animação do Windows desligados</strong> (Configurações › Acessibilidade ›
+              Efeitos visuais), a abertura é pulada e o Hub vai direto para a tela de início.
+            </li>
+          </ul>
+        </div>
+      )
     }
   ];
 }
