@@ -3,14 +3,24 @@ import fs from 'fs';
 import path from 'path';
 import type { AppSettings } from '../../shared/types';
 import {
+  EVIDENCE_BLOCK_KINDS,
+  EVIDENCE_BLOCK_MAX_CHARS,
   EVIDENCE_JIRA_MAX_VIDEO_BYTES,
+  EVIDENCE_PHASES,
+  EVIDENCE_REPORT_FILE,
   buildSessionId,
   isValidEvidenceFileName,
   isValidSessionId,
   normalizeJiraKey,
+  sanitizeActions,
+  type EvidenceAction,
+  type EvidenceMarker,
+  type EvidenceBlock,
+  type EvidenceBlockInput,
   type EvidenceJiraIssue,
   type EvidenceJiraResult,
   type EvidenceReportFiles,
+  type EvidenceReportLayout,
   type EvidenceResult,
   type EvidenceSession,
   type EvidenceSessionInput,
@@ -31,8 +41,6 @@ export interface EvidenceServiceDeps {
 }
 
 const SESSION_FILE = 'session.json';
-const REPORT_HTML = 'relatorio.html';
-const REPORT_PDF = 'relatorio.pdf';
 const RESULTS: readonly EvidenceResult[] = ['pending', 'passed', 'failed'];
 
 const text = (v: unknown, max: number): string | undefined => {
@@ -40,6 +48,9 @@ const text = (v: unknown, max: number): string | undefined => {
   const t = v.trim().slice(0, max);
   return t || undefined;
 };
+
+const validMarker = (m: EvidenceMarker | undefined): EvidenceMarker | undefined =>
+  m && Number.isFinite(m.x) && Number.isFinite(m.y) && m.x >= 0 && m.x <= 1 && m.y >= 0 && m.y <= 1 ? { x: m.x, y: m.y } : undefined;
 
 /** Evidências em disco: uma pasta por sessão (`<raiz>/<tarefa>/<data-hora>`) com JSON, prints, vídeos e relatório. */
 export class EvidenceService {
@@ -71,8 +82,13 @@ export class EvidenceService {
   createSession(input: EvidenceSessionInput): EvidenceSession {
     const task = text(input.task, 120);
     if (!task) throw new Error('Informe a tarefa (ex.: WT-123).');
-    const now = this.deps.now?.() ?? new Date();
-    const id = buildSessionId(task, now);
+    let now = this.deps.now?.() ?? new Date();
+    let id = buildSessionId(task, now);
+    // Duas sessões da mesma tarefa no mesmo segundo (ex.: reexecução) não podem dividir a pasta.
+    while (fs.existsSync(this.dirOf(id))) {
+      now = new Date(now.getTime() + 1000);
+      id = buildSessionId(task, now);
+    }
     fs.mkdirSync(this.dirOf(id), { recursive: true });
     const iso = now.toISOString();
     return this.write({
@@ -123,7 +139,7 @@ export class EvidenceService {
     return items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
-  addStep(id: string, png: Buffer | null, title?: string): EvidenceSession {
+  addStep(id: string, png: Buffer | null, title?: string, extra?: { actions?: EvidenceAction[]; marker?: EvidenceMarker; expected?: string }): EvidenceSession {
     const session = this.get(id);
     const n = session.steps.length + 1;
     let screenshot: string | undefined;
@@ -136,10 +152,33 @@ export class EvidenceService {
       title: text(title, 200) ?? `Passo ${n}`,
       result: 'pending',
       screenshot,
+      expected: text(extra?.expected, 2000),
+      actions: extra?.actions?.length ? sanitizeActions(extra.actions, () => crypto.randomUUID()) : undefined,
+      marker: validMarker(extra?.marker),
       createdAt: (this.deps.now?.() ?? new Date()).toISOString()
     };
     session.steps.push(step);
     return this.write(session);
+  }
+
+  setActions(id: string, stepId: string, actions: unknown): EvidenceSession {
+    const session = this.get(id);
+    const step = this.findStep(session, stepId);
+    const clean = sanitizeActions(actions, () => crypto.randomUUID());
+    step.actions = clean.length ? clean : undefined;
+    return this.write(session);
+  }
+
+  /** Nova sessão pronta para uma reexecução: mesma tarefa e ambiente, sem passos. */
+  createReplaySession(id: string): EvidenceSession {
+    const source = this.get(id);
+    return this.createSession({
+      task: source.task,
+      title: `${source.title} (reexecução)`,
+      kind: source.kind,
+      tester: source.tester,
+      environment: source.environment
+    });
   }
 
   updateStep(id: string, stepId: string, patch: Partial<Pick<EvidenceStep, 'title' | 'expected' | 'actual' | 'result'>>): EvidenceSession {
@@ -161,6 +200,49 @@ export class EvidenceService {
     if (step.screenshot && isValidEvidenceFileName(step.screenshot)) {
       fs.rmSync(path.join(this.dirOf(id), step.screenshot), { force: true });
     }
+    return this.write(session);
+  }
+
+  private findStep(session: EvidenceSession, stepId: string): EvidenceStep {
+    const step = session.steps.find((s) => s.id === stepId);
+    if (!step) throw new Error('Passo não encontrado.');
+    return step;
+  }
+
+  addBlock(id: string, stepId: string, input: EvidenceBlockInput): EvidenceSession {
+    if (!EVIDENCE_BLOCK_KINDS.includes(input.kind)) throw new Error('Tipo de prova inválido.');
+    const session = this.get(id);
+    const step = this.findStep(session, stepId);
+    const block: EvidenceBlock = {
+      id: crypto.randomUUID(),
+      kind: input.kind,
+      phase: EVIDENCE_PHASES.includes(input.phase) ? input.phase : 'single',
+      title: text(input.title, 200),
+      request: text(input.request, EVIDENCE_BLOCK_MAX_CHARS),
+      response: text(input.response, EVIDENCE_BLOCK_MAX_CHARS),
+      meta: text(input.meta, 300),
+      createdAt: (this.deps.now?.() ?? new Date()).toISOString()
+    };
+    step.blocks = [...(step.blocks ?? []), block];
+    return this.write(session);
+  }
+
+  updateBlock(id: string, stepId: string, blockId: string, patch: Partial<EvidenceBlockInput>): EvidenceSession {
+    const session = this.get(id);
+    const block = this.findStep(session, stepId).blocks?.find((b) => b.id === blockId);
+    if (!block) throw new Error('Prova não encontrada.');
+    if (patch.phase !== undefined && EVIDENCE_PHASES.includes(patch.phase)) block.phase = patch.phase;
+    if (patch.title !== undefined) block.title = text(patch.title, 200);
+    if (patch.request !== undefined) block.request = text(patch.request, EVIDENCE_BLOCK_MAX_CHARS);
+    if (patch.response !== undefined) block.response = text(patch.response, EVIDENCE_BLOCK_MAX_CHARS);
+    if (patch.meta !== undefined) block.meta = text(patch.meta, 300);
+    return this.write(session);
+  }
+
+  deleteBlock(id: string, stepId: string, blockId: string): EvidenceSession {
+    const session = this.get(id);
+    const step = this.findStep(session, stepId);
+    step.blocks = (step.blocks ?? []).filter((b) => b.id !== blockId);
     return this.write(session);
   }
 
@@ -204,13 +286,14 @@ export class EvidenceService {
     return images;
   }
 
-  async generateReport(id: string, withPdf: boolean): Promise<EvidenceReportFiles> {
+  async generateReport(id: string, withPdf: boolean, layout: EvidenceReportLayout = 'document'): Promise<EvidenceReportFiles> {
     const session = this.get(id);
     const dir = this.dirOf(id);
-    const html = path.join(dir, REPORT_HTML);
-    fs.writeFileSync(html, buildEvidenceHtml(session, this.embedImages(session)), 'utf-8');
+    const base = EVIDENCE_REPORT_FILE[layout] ?? EVIDENCE_REPORT_FILE.document;
+    const html = path.join(dir, `${base}.html`);
+    fs.writeFileSync(html, buildEvidenceHtml(session, this.embedImages(session), layout === 'slides' ? 'slides' : 'document'), 'utf-8');
     if (!withPdf) return { html };
-    const pdf = path.join(dir, REPORT_PDF);
+    const pdf = path.join(dir, `${base}.pdf`);
     fs.writeFileSync(pdf, await this.deps.renderPdf(html));
     return { html, pdf };
   }

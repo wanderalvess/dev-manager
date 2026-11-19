@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Camera, FileText, Pencil, FolderOpen, NotebookPen, Send, Square, Trash2, Video } from 'lucide-react';
-import { EVIDENCE_HOTKEY, RESULT_LABEL, guessJiraKey, summarizeEvidence, type EvidenceJiraIssue, type EvidenceKind, type EvidenceResult } from '../../../shared/evidenceTypes';
+import { Camera, FileText, MousePointerClick, Pencil, FolderOpen, NotebookPen, Play, Presentation, Send, Square, Trash2, Video } from 'lucide-react';
+import { EVIDENCE_HOTKEY, RESULT_LABEL, guessJiraKey, summarizeEvidence, type EvidenceJiraIssue, type EvidenceKind, type EvidenceMarker, type EvidenceResult } from '../../../shared/evidenceTypes';
+import { StepActions } from '../components/evidence/StepActions';
 import { ImageAnnotator } from '../components/evidence/ImageAnnotator';
+import { StepBlocks } from '../components/evidence/StepBlocks';
 import { QualityPageShell } from '../components/quality/page/QualityPageShell';
 import { useEvidence } from '../hooks/evidence/useEvidence';
 
@@ -33,9 +35,10 @@ type StepImageProps = {
   sessionId: string;
   getImage: (name: string) => Promise<string | null>;
   saveImage: (name: string, dataUrl: string) => Promise<boolean>;
+  marker?: EvidenceMarker;
 };
 
-const StepImage: React.FC<StepImageProps> = ({ name, sessionId, getImage, saveImage }) => {
+const StepImage: React.FC<StepImageProps> = ({ name, sessionId, getImage, saveImage, marker }) => {
   const [src, setSrc] = useState<string | null>(null);
   const [large, setLarge] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -57,7 +60,15 @@ const StepImage: React.FC<StepImageProps> = ({ name, sessionId, getImage, saveIm
   return (
     <div className="space-y-1">
       <button type="button" title={large ? 'Reduzir' : 'Ampliar'} className={`block text-left ${large ? 'cursor-zoom-out' : 'cursor-zoom-in'}`} onClick={() => setLarge((v) => !v)}>
-        <img src={src} alt={name} className={`rounded-[10px] border border-border ${large ? 'w-full' : 'max-h-48'}`} />
+        <span className="relative inline-block max-w-full">
+          <img src={src} alt={name} className={`rounded-[10px] border border-border ${large ? 'w-full' : 'max-h-48'}`} />
+          {marker && (
+            <span
+              className="absolute w-7 h-7 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-red-600 bg-red-600/15 pointer-events-none"
+              style={{ left: `${marker.x * 100}%`, top: `${marker.y * 100}%` }}
+            />
+          )}
+        </span>
       </button>
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
         <span>{name}</span>
@@ -253,6 +264,15 @@ export const EvidencePage: React.FC<EvidencePageProps> = ({ isActive = true }) =
                   <button type="button" className={BTN} disabled={ev.busy} title={`Atalho global: ${EVIDENCE_HOTKEY.replace('CommandOrControl', 'Ctrl')}`} onClick={() => void Promise.resolve(ev.capture(stepTitle)).then(() => setStepTitle(''))}>
                     <Camera className="w-3.5 h-3.5" /> Print
                   </button>
+                  {ev.recordingClicks ? (
+                    <button type="button" className={`${BTN_PRIMARY} bg-red-600 hover:bg-red-600/90`} onClick={() => void ev.stopClickRecording()}>
+                      <Square className="w-3.5 h-3.5" /> Parar cliques
+                    </button>
+                  ) : (
+                    <button type="button" className={BTN} disabled={ev.busy || ev.recording} title="Cada clique fora do Hub vira um passo com print e fica no roteiro" onClick={() => void ev.startClickRecording()}>
+                      <MousePointerClick className="w-3.5 h-3.5" /> Gravar cliques
+                    </button>
+                  )}
                   <button type="button" className={BTN} disabled={ev.busy} onClick={() => void Promise.resolve(ev.addNote(stepTitle)).then(() => setStepTitle(''))}>
                     <NotebookPen className="w-3.5 h-3.5" /> Passo sem print
                   </button>
@@ -260,7 +280,29 @@ export const EvidencePage: React.FC<EvidencePageProps> = ({ isActive = true }) =
                 <p className="text-xs text-muted-foreground">
                   Atalho global <kbd className="px-1 border border-border rounded">Ctrl+Shift+E</kbd> tira um print mesmo com outra janela em foco.
                   {ev.recording && <span className="text-red-600 font-medium"> ● Gravando…</span>}
+                  {ev.recordingClicks && <span className="text-red-600 font-medium"> ● Registrando cliques… (cliques no Hub não contam)</span>}
                 </p>
+                <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
+                  <button
+                    type="button"
+                    className={BTN}
+                    disabled={ev.busy || ev.recordingClicks || !session.steps.some((s) => s.actions?.length)}
+                    title="Repete os cliques e digitações do roteiro e tira novos prints em uma nova evidência"
+                    onClick={() =>
+                      window.confirm(
+                        'O Hub vai minimizar e controlar o mouse e o teclado para repetir o roteiro, em uma nova evidência.\n\nNão mexa no computador durante a execução. Para interromper, use Ctrl+Shift+Q.\n\nContinuar?'
+                      ) && void ev.replay()
+                    }
+                  >
+                    <Play className="w-3.5 h-3.5" /> Reexecutar roteiro
+                  </button>
+                  {ev.busy && ev.replayProgress && !ev.replayProgress.finished && (
+                    <span className="text-xs text-muted-foreground">
+                      Executando passo {ev.replayProgress.done}/{ev.replayProgress.total}…
+                    </span>
+                  )}
+                  {ev.replayProgress?.error && <span className="text-xs text-red-600">{ev.replayProgress.error}</span>}
+                </div>
                 </div>
               </div>
 
@@ -293,7 +335,19 @@ export const EvidencePage: React.FC<EvidencePageProps> = ({ isActive = true }) =
                       <textarea className={TEXTAREA} rows={2} placeholder="Esperado" defaultValue={step.expected ?? ''} onBlur={(e) => e.target.value !== (step.expected ?? '') && void ev.updateStep(step.id, { expected: e.target.value })} />
                       <textarea className={TEXTAREA} rows={2} placeholder="Obtido" defaultValue={step.actual ?? ''} onBlur={(e) => e.target.value !== (step.actual ?? '') && void ev.updateStep(step.id, { actual: e.target.value })} />
                     </div>
-                    {step.screenshot && <StepImage name={step.screenshot} sessionId={session.id} getImage={ev.getImage} saveImage={ev.saveImage} />}
+                    {step.screenshot && <StepImage name={step.screenshot} sessionId={session.id} getImage={ev.getImage} saveImage={ev.saveImage} marker={step.marker} />}
+                    <StepActions actions={step.actions} onChange={(next) => void ev.setActions(step.id, next)} />
+                    <StepBlocks
+                      blocks={step.blocks}
+                      api={{
+                        addBlock: (input) => ev.addBlock(step.id, input),
+                        updateBlock: (blockId, patch) => ev.updateBlock(step.id, blockId, patch),
+                        deleteBlock: (blockId) => ev.deleteBlock(step.id, blockId),
+                        runHttp: ev.runHttp,
+                        runSql: ev.runSql,
+                        listConnections: ev.listConnections
+                      }}
+                    />
                   </li>
                 ))}
                 {session.steps.length === 0 && (
@@ -315,6 +369,12 @@ export const EvidencePage: React.FC<EvidencePageProps> = ({ isActive = true }) =
                   </button>
                   <button type="button" className={BTN} disabled={ev.busy} onClick={() => void ev.report(true)}>
                     <FileText className="w-3.5 h-3.5" /> Gerar PDF
+                  </button>
+                  <button type="button" className={BTN} disabled={ev.busy} title="Uma página paisagem por passo, pronta para apresentar" onClick={() => void ev.report(false, 'slides')}>
+                    <Presentation className="w-3.5 h-3.5" /> Slides (HTML)
+                  </button>
+                  <button type="button" className={BTN} disabled={ev.busy} onClick={() => void ev.report(true, 'slides')}>
+                    <Presentation className="w-3.5 h-3.5" /> Slides (PDF)
                   </button>
                   <button type="button" className={BTN} onClick={() => void ev.openFolder()}>
                     <FolderOpen className="w-3.5 h-3.5" /> Abrir pasta

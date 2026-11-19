@@ -1,12 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { formatHttpExchange, formatQueryTable, isReadOnlySql } from '../../../../shared/evidenceTypes';
 import type {
+  EvidenceAction,
+  EvidenceReplayProgress,
+  EvidenceBlockInput,
   EvidenceCaptureSource,
   EvidenceJiraIssue,
   EvidenceJiraResult,
+  EvidenceReportLayout,
   EvidenceSession,
   EvidenceSessionInput,
   EvidenceSessionListItem
 } from '../../../../shared/evidenceTypes';
+import type { HttpKeyValueItem, HttpMethod } from '../../../../shared/httpClientTypes';
+import type { DatabaseConnectionConfig } from '../../../../shared/types';
 import type { EvidenceStepPatch } from '../../../../preload/evidenceApi';
 
 const errorText = (err: unknown): string =>
@@ -64,6 +71,59 @@ export function useEvidence(isActive: boolean) {
   useEffect(() => {
     void api.evidenceSetActive(session?.id ?? null);
   }, [api, session?.id]);
+
+  const [recordingClicks, setRecordingClicks] = useState(false);
+  const [replayProgress, setReplayProgress] = useState<EvidenceReplayProgress | null>(null);
+
+  useEffect(
+    () =>
+      api.onEvidenceAutoStep((updated) => {
+        if (!updated) {
+          setRecordingClicks(false);
+          return fail('A gravação de cliques foi interrompida.');
+        }
+        if (updated.id === sessionRef.current?.id) setSession(updated);
+        info(`Passo ${updated.steps.length} registrado pelo clique.`);
+      }),
+    [api, fail, info]
+  );
+  useEffect(() => api.onEvidenceReplayProgress(setReplayProgress), [api]);
+
+  // Trocar de sessão ou sair da página encerra a gravação de cliques.
+  useEffect(
+    () => () => {
+      void api.evidenceRecordClicksStop();
+    },
+    [api, session?.id]
+  );
+  useEffect(() => {
+    setRecordingClicks(false);
+  }, [session?.id]);
+
+  const startClickRecording = () =>
+    session &&
+    run(async () => {
+      await api.evidenceRecordClicksStart(session.id);
+      setRecordingClicks(true);
+      info('Registrando cliques: navegue em outras janelas; cada clique vira um passo com print. Volte ao Hub para parar.');
+    });
+  const stopClickRecording = async () => {
+    await api.evidenceRecordClicksStop();
+    setRecordingClicks(false);
+  };
+
+  const setActions = (stepId: string, actions: EvidenceAction[]) =>
+    session && run(async () => setSession(await api.evidenceSetActions(session.id, stepId, actions)));
+
+  const replay = () =>
+    session &&
+    run(async () => {
+      setReplayProgress(null);
+      const result = await api.evidenceReplay(session.id);
+      await refreshList();
+      setSession(result);
+      info(`Reexecução concluída em uma nova evidência (${result.steps.length} passos).`);
+    });
 
   const run = useCallback(
     async <T,>(fn: () => Promise<T>): Promise<T | undefined> => {
@@ -158,13 +218,70 @@ export function useEvidence(isActive: boolean) {
     []
   );
 
-  const report = (withPdf: boolean) =>
+  const report = (withPdf: boolean, layout: EvidenceReportLayout = 'document') =>
     session &&
     run(async () => {
-      const files = await api.evidenceReport(session.id, withPdf);
-      info(`RelatÃ³rio gerado: ${files.pdf ?? files.html}`);
-      await api.evidenceOpenFile(session.id, withPdf ? 'pdf' : 'html');
+      const files = await api.evidenceReport(session.id, withPdf, layout);
+      info(`${layout === 'slides' ? 'Apresentação' : 'Relatório'} gerado: ${files.pdf ?? files.html}`);
+      await api.evidenceOpenFile(session.id, withPdf ? 'pdf' : 'html', layout);
     });
+
+  const addBlock = (stepId: string, input: EvidenceBlockInput) =>
+    session && run(async () => setSession(await api.evidenceAddBlock(session.id, stepId, input)));
+  const updateBlock = (stepId: string, blockId: string, patch: Partial<EvidenceBlockInput>) =>
+    session && run(async () => setSession(await api.evidenceUpdateBlock(session.id, stepId, blockId, patch)));
+  const deleteBlock = (stepId: string, blockId: string) =>
+    session && run(async () => setSession(await api.evidenceDeleteBlock(session.id, stepId, blockId)));
+
+  /** Roda a requisição pelo cliente HTTP do app e devolve os campos prontos do bloco "api". */
+  const runHttp = async (spec: { method: HttpMethod; url: string; headers: string; body: string }): Promise<Pick<EvidenceBlockInput, 'request' | 'response' | 'meta'>> => {
+    const headers: HttpKeyValueItem[] = spec.headers
+      .split(/\r?\n/)
+      .map((line) => /^\s*([^:\s][^:]*):\s*(.*)$/.exec(line))
+      .filter((m): m is RegExpExecArray => !!m)
+      .map((m, i) => ({ id: `h${i}`, key: m[1].trim(), value: m[2].trim(), enabled: true }));
+    const body = spec.body.trim();
+    const res = await api.httpExecute({
+      request: {
+        id: 'evidence',
+        name: 'Evidência',
+        method: spec.method,
+        url: spec.url.trim(),
+        params: [],
+        headers,
+        body: body ? { mode: /^[[{]/.test(body) ? 'raw-json' : 'raw-text', raw: body } : { mode: 'none' },
+        auth: { type: 'none' }
+      }
+    });
+    return formatHttpExchange({
+      method: spec.method,
+      url: spec.url.trim(),
+      headers: spec.headers,
+      body,
+      status: res.error ? undefined : res.status,
+      statusText: res.statusText,
+      durationMs: res.durationMs,
+      sizeBytes: res.sizeBytes,
+      responseBody: res.body,
+      error: res.error
+    });
+  };
+
+  const listConnections = async (): Promise<DatabaseConnectionConfig[]> => (await api.getSettings()).databaseConnections ?? [];
+
+  /** Roda uma consulta de leitura na conexão escolhida e devolve a tabela de texto do bloco "sql". */
+  const runSql = async (connectionId: string, sql: string): Promise<Pick<EvidenceBlockInput, 'request' | 'response' | 'meta'>> => {
+    if (!isReadOnlySql(sql)) throw new Error('Só consultas SELECT/WITH rodam aqui. Para outros comandos, cole a consulta e o resultado manualmente.');
+    const conn = (await listConnections()).find((c) => c.id === connectionId);
+    if (!conn) throw new Error('Conexão não encontrada. Cadastre em Banco de Dados.');
+    const res = await api.executeDbQuery(conn, sql, 200);
+    if (!res.success) throw new Error(res.error ?? 'Falha ao executar a consulta.');
+    return {
+      request: sql.trim(),
+      response: formatQueryTable(res.columns, res.rows, res.truncated),
+      meta: `${res.rowCount} linha(s) · ${res.executionTimeMs} ms · ${conn.name}`
+    };
+  };
 
   const openFolder = (all?: boolean) => run(() => api.evidenceOpenFolder(all ? undefined : session?.id));
 
@@ -212,6 +329,18 @@ export function useEvidence(isActive: boolean) {
     startRecording,
     stopRecording,
     report,
+    recordingClicks,
+    replayProgress,
+    startClickRecording,
+    stopClickRecording,
+    setActions,
+    replay,
+    addBlock,
+    updateBlock,
+    deleteBlock,
+    runHttp,
+    runSql,
+    listConnections,
     openFolder,
     publish
   };

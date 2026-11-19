@@ -28,6 +28,48 @@ describe('EvidenceService', () => {
   });
   afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
 
+  it('registra, edita e remove provas em texto do passo e gera slides em arquivo próprio', async () => {
+    const svc = make();
+    const s = svc.createSession({ task: 'WT-2', kind: 'dev' });
+    const stepId = svc.addStep(s.id, null, 'Pedido').steps[0].id;
+
+    const added = svc.addBlock(s.id, stepId, { kind: 'sql', phase: 'before', request: 'select 1 from dual', response: 'X\n-\n1' });
+    const block = added.steps[0].blocks![0];
+    expect(block).toMatchObject({ kind: 'sql', phase: 'before' });
+
+    const edited = svc.updateBlock(s.id, stepId, block.id, { phase: 'after', meta: '1 linha(s)' });
+    expect(edited.steps[0].blocks![0]).toMatchObject({ phase: 'after', meta: '1 linha(s)' });
+    expect(() => svc.addBlock(s.id, stepId, { kind: 'xml' as never, phase: 'single' })).toThrow('Tipo de prova inválido.');
+    expect(() => svc.addBlock(s.id, 'nao-existe', { kind: 'text', phase: 'single', response: 'x' })).toThrow('Passo não encontrado.');
+
+    const files = await svc.generateReport(s.id, true, 'slides');
+    expect(path.basename(files.html)).toBe('apresentacao.html');
+    expect(path.basename(files.pdf!)).toBe('apresentacao.pdf');
+    expect(fs.readFileSync(files.html, 'utf-8')).toContain('select 1 from dual');
+
+    expect(svc.deleteBlock(s.id, stepId, block.id).steps[0].blocks).toEqual([]);
+  });
+
+  it('guarda ações e marcador do passo e cria sessão de reexecução vazia', () => {
+    const svc = make();
+    const s = svc.createSession({ task: 'WT-3', title: 'Fluxo', kind: 'qa', environment: 'hml' });
+    const withStep = svc.addStep(s.id, PNG, 'Clicar em Salvar', {
+      actions: [{ id: 'a1', type: 'click', x: 100, y: 200, button: 'left' }],
+      marker: { x: 0.1, y: 2 },
+      expected: 'abre a tela'
+    });
+    const step = withStep.steps[0];
+    expect(step.actions).toHaveLength(1);
+    expect(step.marker).toBeUndefined();
+    expect(step.expected).toBe('abre a tela');
+
+    const edited = svc.setActions(s.id, step.id, [{ type: 'type', text: 'oi' }, { type: 'bogus' }]);
+    expect(edited.steps[0].actions).toMatchObject([{ type: 'type', text: 'oi' }]);
+
+    const replay = svc.createReplaySession(s.id);
+    expect(replay).toMatchObject({ title: 'Fluxo (reexecução)', task: 'WT-3', environment: 'hml', steps: [] });
+  });
+
   it('grava sessão, passos e vídeo em disco', () => {
     const svc = make();
     const s = svc.createSession({ task: 'WT-1', kind: 'qa' });

@@ -17,6 +17,9 @@ export function createEvidenceApi() {
     evidenceUpdateStep: desktopOnly,
     evidenceDeleteStep: desktopOnly,
     evidenceSaveVideo: desktopOnly,
+    evidenceAddBlock: desktopOnly,
+    evidenceUpdateBlock: desktopOnly,
+    evidenceDeleteBlock: desktopOnly,
     evidenceReport: desktopOnly,
     evidenceGetImage: () => Promise.resolve(null),
     evidenceSaveImage: () => Promise.resolve(false),
@@ -25,6 +28,12 @@ export function createEvidenceApi() {
     evidenceSetRecordingSource: desktopOnly,
     evidenceLookupIssue: desktopOnly,
     evidencePublishJira: desktopOnly,
+    evidenceRecordClicksStart: desktopOnly,
+    evidenceRecordClicksStop: () => Promise.resolve(false),
+    evidenceSetActions: desktopOnly,
+    evidenceReplay: desktopOnly,
+    onEvidenceAutoStep: () => () => undefined,
+    onEvidenceReplayProgress: () => () => undefined,
     onEvidenceHotkey: () => () => undefined
   } satisfies Partial<ElectronAPI>;
 }
