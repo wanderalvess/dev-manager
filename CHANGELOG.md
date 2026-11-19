@@ -11,6 +11,10 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 - **Sem "cockpit" no app**: os textos falam do Hub (Configurar o Hub, Entrar no Hub, Iniciando o Hub, Karaf iniciado pelo Hub). O subtítulo do topo passa a ser *Central de Desenvolvimento & Automação* e o tema padrão se chama só **Âmbar**.
 - **Tela de início**: hora ao lado do botão Entrar no Hub (antes "Entrar no cockpit"), cartões que entram em sequência e sem espaços vazios. "Continuar de onde parou" mostra as horas lançadas em destaque e o botão Abrir no Jira; o Jira do dia mostra o percentual da sprint; Ambientes mostra quais containers (ORA, WTA, WSH) estão rodando; Sua semana mostra as horas em cima de cada barra.
 
+## [1.69.1] - 2026-11-18
+### Corrigido
+- **Karaf embutido**: não falha mais ao iniciar quando a porta de debug (:5005) está reservada pelo Windows (Hyper-V/WSL2/Docker) ou já está em uso (`bind failed: Permission denied`). O Hub usa a próxima porta livre nessa sessão e avisa no console o motivo (com o processo que ocupa a porta), a porta nova e que o IntelliJ deve apontar para ela.
+
 ## [1.68.1] - 2026-11-05
 ### Corrigido
 - **Nova versão (INFR-Docker)**: o terminal que cria a versão não quebra mais com `syntax error: unexpected end of file` e `ligando: command not found` quando o container do banco está parado ou ausente. O script agora é entregue ao WSL codificado, sem passar por aspas e `;` do Windows Terminal.

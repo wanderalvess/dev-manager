@@ -6,6 +6,7 @@ import { isWslKaraf, resolveKarafWslServer, killWslKarafProcesses } from '../../
 import type { ChunkHandler, KarafContext } from './karafContext';
 import { readKarafInstallInfo } from './karafInstallInfo';
 import { serviceBlockingStart } from './karafServiceGuard';
+import { pickFreeDebugPort } from './karafDebugPort';
 
 // --- Karaf Embutido no Painel ---
 function startEmbeddedKarafWsl(ctx: KarafContext, settings: AppSettings, onLog: ChunkHandler): boolean {
@@ -70,7 +71,20 @@ export function startEmbeddedKarafDebug(ctx: KarafContext, onLog: ChunkHandler):
 
   try {
     const isWin = process.platform === 'win32';
-    const childEnv = ctx.getResolvedJavaEnv();
+    const preferredPort = settings.karafDebugPort || 5005;
+    const choice = pickFreeDebugPort(preferredPort);
+    const debugPort = choice.port;
+    if (debugPort !== preferredPort) {
+      if (choice.reason === 'in-use') {
+        const who = choice.owner ? `${choice.owner.name ?? 'processo desconhecido'} (PID ${choice.owner.pid})` : 'outro processo';
+        onLog(`[AVISO] A porta de debug :${preferredPort} já está em uso por ${who}.\r\n`);
+      } else {
+        onLog(`[AVISO] A porta de debug :${preferredPort} está reservada pelo Windows (Hyper-V/WSL2/Docker) e não pode ser usada.\r\n`);
+      }
+      onLog(`[AVISO] A porta de debug MUDOU: :${preferredPort} → :${debugPort} nesta sessão. Aponte o IntelliJ (Remote JVM Debug) para :${debugPort}.\r\n`);
+    }
+    ctx.embeddedDebugPort = debugPort !== preferredPort ? { port: debugPort, replaces: preferredPort } : null;
+    const childEnv = ctx.getResolvedJavaEnv(debugPort !== preferredPort ? debugPort : undefined);
     const cmdExe = childEnv.ComSpec || process.env.ComSpec || process.env.COMSPEC || 'cmd.exe';
     // A pasta do próprio script: ele pode estar em bin/, na raiz ou num caminho customizado (karafScript)
     const scriptDir = path.dirname(exeFile);
@@ -98,17 +112,20 @@ export function startEmbeddedKarafDebug(ctx: KarafContext, onLog: ChunkHandler):
     ctx.embeddedKarafProcess.on('close', (code) => {
       onLog(`\r\n[AVISO] Sessão do Karaf Debug encerrada (Código: ${code}).\r\n`);
       ctx.embeddedKarafProcess = null;
+      ctx.embeddedDebugPort = null;
     });
 
     ctx.embeddedKarafProcess.on('error', (err) => {
       onLog(`\r\n[ERRO] Falha no processo do Karaf: ${err.message}\r\n`);
       ctx.embeddedKarafProcess = null;
+      ctx.embeddedDebugPort = null;
     });
 
     return true;
   } catch (err: any) {
     onLog(`[ERRO FATAL] Não foi possível iniciar o Karaf: ${err?.message || err}\r\n`);
     ctx.embeddedKarafProcess = null;
+    ctx.embeddedDebugPort = null;
     return false;
   }
 }
@@ -143,6 +160,7 @@ export function sendEmbeddedInterrupt(ctx: KarafContext): boolean {
 
 export async function stopEmbeddedKaraf(ctx: KarafContext): Promise<boolean> {
   if (!ctx.embeddedKarafProcess) return true;
+  ctx.embeddedDebugPort = null;
 
   const settings = ctx.getSettings();
   if (isWslKaraf(settings)) {

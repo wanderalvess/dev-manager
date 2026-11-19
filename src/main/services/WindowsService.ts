@@ -460,6 +460,10 @@ export class WindowsService {
 
         const monitoredPorts = [...basePorts];
         const kDebugPort = settings.karafDebugPort || 5005;
+        const debugFallback = this.karafService.getEmbeddedDebugPort?.() ?? null;
+        if (debugFallback && !monitoredPorts.some((p) => p.port === debugFallback.port)) {
+          monitoredPorts.push({ port: debugFallback.port, label: `Java Debug JVM (JDWP :${debugFallback.port}, no lugar de :${debugFallback.replaces})`, enabled: true });
+        }
         if (!monitoredPorts.some((p) => p.port === kDebugPort)) {
           monitoredPorts.push({ port: kDebugPort, label: `Java Debug JVM (JDWP :${kDebugPort})`, enabled: true });
         }
@@ -477,7 +481,7 @@ export class WindowsService {
           const res = await Promise.all(
             monitoredPorts.map(async (item) => {
               const inUse = await this.checkPortSocket(item.port);
-              return { port: item.port, label: item.label, inUse, pid: undefined };
+              return { port: item.port, label: item.label, inUse, pid: undefined, ...(debugFallback?.port === item.port ? { replaces: debugFallback.replaces } : {}) };
             })
           );
           this.cachedPortsStatus = { data: res, timestamp: Date.now() };
@@ -513,7 +517,8 @@ export class WindowsService {
             port: item.port,
             label: item.label,
             inUse,
-            pid
+            pid,
+            ...(debugFallback?.port === item.port ? { replaces: debugFallback.replaces } : {})
           });
         }
 

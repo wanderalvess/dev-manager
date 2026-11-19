@@ -35,6 +35,8 @@ export interface KarafContext {
   getSettings(): AppSettings;
   saveSettings(patch: Partial<AppSettings>): AppSettings;
   embeddedKarafProcess: ChildProcess | null;
+  /** Porta JDWP usada pelo Karaf embutido quando diferente da configurada (a configurada estava bloqueada/em uso). */
+  embeddedDebugPort?: { port: number; replaces: number } | null;
   activeClientProcess?: ChildProcess | null;
   parseProjectPomOrBat(projectPath: string): PomInfo | null;
   getKarafClientExecutable(): string | null;

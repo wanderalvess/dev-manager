@@ -76,6 +76,18 @@ describe('resolveStepRuntimeTarget', () => {
     expect(resolveStepRuntimeTarget(step, { services, processes, ports }).effectiveKarafPort).toBe(5005);
   });
 
+  it('step karaf segue a porta alternativa quando o Karaf embutido substituiu a configurada', () => {
+    const step = makeStep({ type: 'karaf', port: undefined });
+    const withFallback: PortStatus[] = [
+      { port: 5005, label: 'Debug', inUse: false },
+      { port: 5006, label: 'Debug (alt)', inUse: true, replaces: 5005 }
+    ];
+    const result = resolveStepRuntimeTarget(step, { services, processes, ports: withFallback, karafDebugPort: 5005 });
+    expect(result.effectiveKarafPort).toBe(5005);
+    expect(result.targetPort).toBe(5006);
+    expect(result.isPortActive).toBe(true);
+  });
+
   it('isPortActive é falso quando a porta do step não está em uso', () => {
     const step = makeStep({ type: 'command', port: 12345 });
     const result = resolveStepRuntimeTarget(step, { services, processes, ports });

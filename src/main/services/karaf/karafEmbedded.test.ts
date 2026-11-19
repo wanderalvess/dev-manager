@@ -12,6 +12,9 @@ vi.mock('./karafServiceGuard', async (importOriginal) => {
   return { ...actual, serviceBlockingStart: (info: never) => actual.serviceBlockingStart(info, (name) => serviceState(name)) };
 });
 
+const pickPort = vi.fn();
+vi.mock('./karafDebugPort', () => ({ pickFreeDebugPort: (p: number) => pickPort(p) }));
+
 const { startEmbeddedKarafDebug } = await import('./karafEmbedded');
 const { serviceBlockingStart } = await vi.importActual<typeof import('./karafServiceGuard')>('./karafServiceGuard');
 
@@ -28,6 +31,7 @@ beforeEach(() => {
   spawn.mockReset().mockImplementation(() => Object.assign(new EventEmitter(), { stdout: new EventEmitter(), stderr: new EventEmitter() }));
   installInfo.mockReset().mockReturnValue({ root: 'C:\\pcsist\\produtos\\winthor', found: true, sshPort: 8101, service: { name: 'WinThor' } });
   serviceState.mockReset().mockReturnValue('STOPPED');
+  pickPort.mockReset().mockImplementation((p: number) => ({ port: p }));
 });
 
 describe('Karaf embutido', () => {
@@ -48,6 +52,42 @@ describe('Karaf embutido', () => {
 
     expect(spawn).not.toHaveBeenCalled();
     expect(logs.join('')).toContain('serviço Windows "WinThor" já está rodando');
+  });
+
+  it('porta de debug em uso: avisa quem ocupa, que a porta mudou, e sobe o Java na nova porta', () => {
+    pickPort.mockReturnValue({ port: 5006, reason: 'in-use', owner: { pid: 1234, name: 'java.exe' } });
+    const getEnv = vi.fn().mockReturnValue({});
+    const ctx = { ...(makeCtx(path.join('C:\\k', 'bin', 'winthor.bat')) as object), getResolvedJavaEnv: getEnv } as never as { embeddedDebugPort?: unknown };
+    const logs: string[] = [];
+
+    expect(startEmbeddedKarafDebug(ctx as never, (chunk) => logs.push(chunk))).toBe(true);
+
+    const text = logs.join('');
+    expect(text).toContain('já está em uso por java.exe (PID 1234)');
+    expect(text).toContain(':5005 → :5006');
+    expect(getEnv).toHaveBeenCalledWith(5006);
+    expect(ctx.embeddedDebugPort).toEqual({ port: 5006, replaces: 5005 });
+  });
+
+  it('porta de debug reservada pelo Windows: avisa o motivo e a nova porta', () => {
+    pickPort.mockReturnValue({ port: 5006, reason: 'reserved' });
+    const logs: string[] = [];
+
+    startEmbeddedKarafDebug(makeCtx(path.join('C:\\k', 'bin', 'winthor.bat')), (chunk) => logs.push(chunk));
+
+    expect(logs.join('')).toContain('reservada pelo Windows');
+    expect(logs.join('')).toContain(':5005 → :5006');
+  });
+
+  it('porta livre: não avisa nada e usa a configurada', () => {
+    const getEnv = vi.fn().mockReturnValue({});
+    const ctx = { ...(makeCtx(path.join('C:\\k', 'bin', 'winthor.bat')) as object), getResolvedJavaEnv: getEnv } as never;
+    const logs: string[] = [];
+
+    startEmbeddedKarafDebug(ctx, (chunk) => logs.push(chunk));
+
+    expect(logs.join('')).not.toContain('MUDOU');
+    expect(getEnv).toHaveBeenCalledWith(undefined);
   });
 
   it('a regra do serviço: só RUNNING ou START_PENDING bloqueia, e sem serviço no wrapper não consulta nada', () => {
