@@ -141,7 +141,7 @@ export function analyzeLogLine(line: string, lineIndex: number): LogExceptionMat
         'jmx:run java.lang:type=Memory gc',
         'system:gc',
         'Aumentar parâmetros de memória -Xmx e -XX:MaxMetaspaceSize no setenv.bat do Karaf.',
-        'Abrir o Monitor de Memória JVM no Cockpit para inspecionar curva de consumo.'
+        'Abrir o Monitor de Memória JVM no Hub para inspecionar curva de consumo.'
       ],
       explanation:
         'A JVM do Apache Karaf esgotou a memória disponível. Risco imediato de travamento ou instabilidade dos serviços OSGi.'
@@ -188,7 +188,7 @@ export function analyzeLogLine(line: string, lineIndex: number): LogExceptionMat
       suggestedCommands: [
         'bundle:diag',
         bundleName ? `bundle:headers ${bundleName}` : 'bundle:list -s',
-        'Verificar dependências ausentes na aba Gerenciador de Bundles do Cockpit.'
+        'Verificar dependências ausentes na aba Gerenciador de Bundles do Hub.'
       ],
       explanation:
         'O container OSGi não conseguiu resolver fiações, pacotes importados ou dependências necessárias para ativar o bundle.'

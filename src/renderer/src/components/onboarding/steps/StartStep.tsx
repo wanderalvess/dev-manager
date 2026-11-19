@@ -19,7 +19,7 @@ const BUTTON = 'h-11 px-5 rounded-xl text-sm font-bold flex items-center gap-2 c
 
 type Status = { tone: 'ok' | 'error' | 'info'; text: string } | null;
 
-/** Etapa Tela de início: ligar o Jira (a mesma fonte da Documentação) e escolher a aba aberta ao entrar no cockpit. */
+/** Etapa Tela de início: ligar o Jira (a mesma fonte da Documentação) e escolher a aba aberta ao entrar no Hub. */
 export const StartStep: React.FC<StartStepProps> = ({ settings, disabledModules, onSaved }) => {
   const [form, setForm] = useState<JiraFormInput>({ baseUrl: '', token: '', projectKey: '' });
   const [status, setStatus] = useState<Status>(null);
@@ -123,7 +123,7 @@ export const StartStep: React.FC<StartStepProps> = ({ settings, disabledModules,
       <section aria-labelledby="start-tab-title" className={`${PANEL} p-6 flex flex-wrap items-center justify-between gap-4 max-w-3xl`}>
         <div className="min-w-0">
           <h3 id="start-tab-title" className="m-0 text-lg font-extrabold">
-            <label htmlFor="onboarding-start-tab">Ao entrar no cockpit</label>
+            <label htmlFor="onboarding-start-tab">Ao entrar no Hub</label>
           </h3>
           <p className="m-0 mt-1 text-sm text-muted-foreground">Abrir numa aba fixa ou na última que você usou. Muda depois em Configurações › Aparência.</p>
         </div>

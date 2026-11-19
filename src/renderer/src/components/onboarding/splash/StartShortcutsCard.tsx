@@ -4,7 +4,7 @@ import type { StartScreenData } from './useStartScreenData';
 import { weekShortcuts } from './startHomeUtils';
 import { START_CARD, START_EYEBROW } from './startCardStyles';
 
-/** Sem Jira: os módulos mais usados na semana, cada um entrando no cockpit direto na sua aba. */
+/** Sem Jira: os módulos mais usados na semana, cada um entrando no Hub direto na sua aba. */
 export const StartShortcutsCard: React.FC<{ data: StartScreenData; onOpenTab: (tab: string) => void; className?: string }> = ({
   data,
   onOpenTab,

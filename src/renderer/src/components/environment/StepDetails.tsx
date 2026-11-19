@@ -89,7 +89,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({ step, runtime }) => {
       {/* 5. IDE */}
       {step.type === 'ide' && (
         <p className="text-muted-foreground">
-          Inicializa o editor ou IDE configurado no Cockpit
+          Inicializa o editor ou IDE configurado no Hub
         </p>
       )}
 

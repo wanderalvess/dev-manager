@@ -4,6 +4,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Alterado
+- **Abertura**: o logo se monta na tela (o quadro surge e as três faces do cubo encaixam), com fundo de pontos e uma varredura suave. O cartão de carregamento ganhou percentual grande e uma barra com um segmento por área. Dá para pular com `Esc`.
+- **Primeiro acesso**: a tela "Vamos deixar o Hub do seu jeito" diz o que a configuração faz (detecta os caminhos, qualquer etapa dá para pular, tudo muda depois) e mostra as 7 etapas numa linha do tempo. O onboarding usa o mesmo fundo da abertura, com a linha do tempo acesa até a etapa atual.
+- **Sem "cockpit" no app**: os textos falam do Hub (Configurar o Hub, Entrar no Hub, Iniciando o Hub, Karaf iniciado pelo Hub). O subtítulo do topo passa a ser *Central de Desenvolvimento & Automação* e o tema padrão se chama só **Âmbar**.
+- **Tela de início**: hora ao lado do botão Entrar no Hub (antes "Entrar no cockpit"), cartões que entram em sequência e sem espaços vazios. "Continuar de onde parou" mostra as horas lançadas em destaque e o botão Abrir no Jira; o Jira do dia mostra o percentual da sprint; Ambientes mostra quais containers (ORA, WTA, WSH) estão rodando; Sua semana mostra as horas em cima de cada barra.
+
 ## [1.68.1] - 2026-11-05
 ### Corrigido
 - **Nova versão (INFR-Docker)**: o terminal que cria a versão não quebra mais com `syntax error: unexpected end of file` e `ligando: command not found` quando o container do banco está parado ou ausente. O script agora é entregue ao WSL codificado, sem passar por aspas e `;` do Windows Terminal.

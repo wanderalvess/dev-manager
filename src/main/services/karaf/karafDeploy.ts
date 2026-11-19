@@ -204,7 +204,7 @@ export async function buildAndDeployMaven(
     const err = `O contêiner Karaf/OSGi não está em execução (porta SSH ${port} inacessível). Inicie o Karaf antes de compilar e fazer o deploy.`;
     onChunk(`\r\n==========================================\r\n`);
     onChunk(`❌ DEPLOY ABORTADO: Karaf OSGi offline (porta SSH ${port} fechada).\r\n`);
-    onChunk(`💡 [DICA] Inicie o Karaf pelo Cockpit antes de rodar o deploy.\r\n`);
+    onChunk(`💡 [DICA] Inicie o Karaf pelo Hub antes de rodar o deploy.\r\n`);
     onChunk(`==========================================\r\n`);
     const result = { success: false, error: err };
     recordDeployHistory(ctx, request, result, startedAt, Date.now() - t0, trigger, projectPath);

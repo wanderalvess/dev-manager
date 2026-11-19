@@ -48,7 +48,7 @@ export const resolveInitialTab = (hasSeenOnboarding: boolean, lastTab?: string |
 };
 
 /**
- * Aba ao clicar em Entrar no cockpit: a escolhida em Configurações (Aparência → Tela ao entrar), se ainda existir e estiver
+ * Aba ao clicar em Entrar no Hub: a escolhida em Configurações (Aparência → Tela ao entrar), se ainda existir e estiver
  * ligada; senão null, e o app fica na aba em que abriu (a última usada).
  */
 export const resolveEnterTab = (startTab: string | undefined, disabledModules: readonly string[] | undefined): string | null =>

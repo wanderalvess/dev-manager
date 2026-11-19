@@ -751,7 +751,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O Hub Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Cockpit como <strong className="text-foreground">{MCP_TOOL_COUNT} tools</strong> que assistentes de IA (GitHub Copilot no IntelliJ IDEA, Claude Code, JetBrains AI Assistant, Antigravity, VS Code, Cursor) podem chamar diretamente — sem passar pela interface gráfica.
+            O Hub Manager inclui um servidor <strong className="text-foreground">MCP (Model Context Protocol)</strong> que expõe as mesmas automações do Hub como <strong className="text-foreground">{MCP_TOOL_COUNT} tools</strong> que assistentes de IA (GitHub Copilot no IntelliJ IDEA, Claude Code, JetBrains AI Assistant, Antigravity, VS Code, Cursor) podem chamar diretamente — sem passar pela interface gráfica.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-3 shadow-xs">
             <div>
@@ -1168,7 +1168,7 @@ export function getFaqList({
             O Hub Manager traz um receptor <strong className="text-foreground">OpenTelemetry (OTLP/HTTP, JSON ou Protobuf)</strong> embutido, que escuta por padrão na porta <code className="font-mono text-primary font-semibold">4318</code>. Os spans recebidos alimentam o <strong className="text-foreground">Dashboard</strong> (vazão, latências p50/p95/p99, taxa de erros, % do tempo em banco, endpoints e queries lentas) e o <strong className="text-foreground">Traces Explorer</strong> (waterfall, atributos, SQL, stacktrace e divisão do tempo entre banco, chamadas externas e aplicação). Métricas e logs OTLP não são coletados, só traces.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
-            <span className="font-semibold text-foreground block text-xs text-primary">Karaf iniciado pelo Cockpit:</span>
+            <span className="font-semibold text-foreground block text-xs text-primary">Karaf iniciado pelo Hub:</span>
             <p>
               Coloque o <code className="font-mono text-primary font-semibold">opentelemetry-javaagent.jar</code> na pasta <code className="font-mono text-primary">bin</code> do Karaf e ative a opção <strong className="text-foreground">"Ativar Telemetria APM (OpenTelemetry Java Agent) ao iniciar o Karaf"</strong> em <strong className="text-foreground">Configurações → Apache Karaf</strong> ou em <strong className="text-foreground">APM &amp; Traces → Como Conectar</strong> — desligado por padrão, para não poluir o log do Karaf nem adicionar overhead quando você não estiver inspecionando traces. Com a opção ligada, o agente é anexado e exporta para a porta configurada a cada start pelo Hub Manager. Para scripts externos (ex.: <code className="font-mono text-primary">winthor.bat</code>), copie o comando pronto na mesma tela.
             </p>
@@ -1182,7 +1182,7 @@ export function getFaqList({
             </p>
             <span className="font-semibold text-foreground block pt-1 text-xs text-primary">Nome do serviço:</span>
             <p>
-              O campo <strong className="text-foreground">Nome do serviço</strong> em Como Conectar define o <code className="font-mono text-primary">otel.service.name</code> anexado pelo Cockpit (padrão genérico <code className="font-mono text-primary">karaf-app</code>) — use o nome real da sua aplicação para identificá-la no Dashboard e nos filtros por serviço.
+              O campo <strong className="text-foreground">Nome do serviço</strong> em Como Conectar define o <code className="font-mono text-primary">otel.service.name</code> anexado pelo Hub (padrão genérico <code className="font-mono text-primary">karaf-app</code>) — use o nome real da sua aplicação para identificá-la no Dashboard e nos filtros por serviço.
             </p>
           </div>
           {onNavigate && (
@@ -1363,7 +1363,7 @@ export function getFaqList({
             <span className="font-semibold text-foreground block text-xs text-primary">Como acessar e navegar:</span>
             <ul className="list-disc pl-4 space-y-1.5">
               <li>
-                <strong className="text-foreground">Badge no Header:</strong> Clique diretamente na etiqueta de versão (<code className="font-mono text-primary font-bold">v{appInfo?.appVersion || '1.68.1'}</code>) no topo esquerdo do cockpit para abrir o modal.
+                <strong className="text-foreground">Badge no Header:</strong> Clique diretamente na etiqueta de versão (<code className="font-mono text-primary font-bold">v{appInfo?.appVersion || '1.68.1'}</code>) no topo esquerdo do Hub para abrir o modal.
               </li>
               <li>
                 <strong className="text-foreground">Navegação entre releases:</strong> No cabeçalho do modal, utilize os botões rápidos <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">&lt;</kbd> e <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">&gt;</kbd> (ou os atalhos <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">Alt + ←</kbd> e <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border font-mono font-bold">Alt + →</kbd>) para folhear versão a versão.
@@ -1390,7 +1390,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O módulo <strong className="text-foreground">Qualidade &amp; Homologação (QA Hub)</strong> marca a expansão do Hub Manager além do desenvolvimento puro, fornecendo um cockpit dedicado para analistas de qualidade (QA) e donos de produto (PO).
+            O módulo <strong className="text-foreground">Qualidade &amp; Homologação (QA Hub)</strong> marca a expansão do Hub Manager além do desenvolvimento puro, fornecendo uma área dedicada para analistas de qualidade (QA) e donos de produto (PO).
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-semibold text-foreground block text-xs text-primary">Principais recursos da 1ª etapa:</span>
@@ -1420,7 +1420,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            As fontes externas de casos de teste, planos de homologação e defeitos são configuradas na aba <strong className="text-foreground">Qualidade &amp; QA</strong> das Configurações do Cockpit.
+            As fontes externas de casos de teste, planos de homologação e defeitos são configuradas na aba <strong className="text-foreground">Qualidade &amp; QA</strong> das Configurações do Hub.
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-semibold text-foreground block text-xs text-primary">Como configurar e conectar:</span>
@@ -1651,7 +1651,7 @@ export function getFaqList({
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
           <p>
-            O <strong className="text-foreground">API Studio (Alt+9)</strong> é o cliente HTTP completo embutido no cockpit para você testar rotinas, microsserviços e APIs do WinThor sem precisar de ferramentas externas pesadas:
+            O <strong className="text-foreground">API Studio (Alt+9)</strong> é o cliente HTTP completo embutido no Hub para você testar rotinas, microsserviços e APIs do WinThor sem precisar de ferramentas externas pesadas:
           </p>
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-semibold text-foreground block text-xs text-primary">Recursos do API Studio:</span>
@@ -1768,7 +1768,7 @@ export function getFaqList({
 
 export function getKeyboardShortcuts(debugPort: number) {
   return [
-    { key: 'Alt + 1', desc: 'Acessar "Ambiente Dev" (Cockpit de Serviços e Automação)', category: 'Navegação' },
+    { key: 'Alt + 1', desc: 'Acessar "Ambiente Dev" (serviços e automação)', category: 'Navegação' },
     { key: 'Alt + 2', desc: 'Acessar "Banco de Dados" (SQL Runner Oracle, MySQL, Postgres)', category: 'Navegação' },
     { key: 'Alt + 3', desc: 'Acessar "Containers" (Gerenciador de Containers Docker)', category: 'Navegação' },
     { key: 'Alt + 4', desc: 'Acessar "Deploy" (Perfis Karaf OSGi, Docker & Scripts)', category: 'Navegação' },

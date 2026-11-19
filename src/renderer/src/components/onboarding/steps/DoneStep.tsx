@@ -68,7 +68,7 @@ export const DoneStep: React.FC<DoneStepProps> = ({ disabledModules, checklist, 
             {env.done} de {env.total} essenciais
           </span>
           {envComplete ? (
-            <span className="text-sm text-muted-foreground">Tudo o que o cockpit precisa para começar.</span>
+            <span className="text-sm text-muted-foreground">Tudo o que o Hub precisa para começar.</span>
           ) : (
             <>
               <span className="text-sm">Faltam: {env.missing.join(', ')}.</span>

@@ -169,7 +169,7 @@ export async function executeKarafCommand(
 
   const isOnline = await ctx.isKarafRunning(sshPort);
   if (!isOnline) {
-    const errMsg = `[ERRO] O contêiner Apache Karaf/OSGi não está em execução (porta SSH ${sshPort} inacessível).\r\n💡 [DICA] Inicie o Karaf pelo Cockpit (Console Karaf ou pipeline de ambiente) antes de executar comandos ou deploys.\r\n`;
+    const errMsg = `[ERRO] O contêiner Apache Karaf/OSGi não está em execução (porta SSH ${sshPort} inacessível).\r\n💡 [DICA] Inicie o Karaf pelo Hub (Console Karaf ou pipeline de ambiente) antes de executar comandos ou deploys.\r\n`;
     onChunk(errMsg);
     return { code: 1, stdout: '', stderr: `Karaf OSGi offline: porta SSH ${sshPort} fechada` };
   }

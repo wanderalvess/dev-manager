@@ -117,7 +117,7 @@ export const HelpAboutUpdateCard: React.FC<HelpAboutUpdateCardProps> = ({
 
       {isAvailable && updateStatus.manual && (
         <p className="text-2xs text-muted-foreground">
-          Versão portátil: o instalador será aberto no navegador. Feche o cockpit e use o arquivo novo.
+          Versão portátil: o instalador será aberto no navegador. Feche o Hub e use o arquivo novo.
         </p>
       )}
 

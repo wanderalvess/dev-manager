@@ -72,7 +72,7 @@ export function registerHttpClientTools(
     'http_list_collections',
     {
       title: 'Listar coleções HTTP',
-      description: 'Lista todas as coleções, pastas e requisições salvas no cockpit do desenvolvedor.',
+      description: 'Lista todas as coleções, pastas e requisições salvas no API Studio do Hub Manager.',
       inputSchema: {}
     },
     async () => {

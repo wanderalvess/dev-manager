@@ -664,7 +664,59 @@
 .animate-splash-glow { animation: splash-glow 4s ease-in-out infinite; }
 .animate-onboarding-in { animation: splash-rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 
+/* Abertura: o cubo do logo se monta (quadro, depois as três faces) e um brilho atravessa o nome */
+@keyframes splash-tile {
+  0% { opacity: 0; transform: scale(0.2) rotate(-18deg); }
+  60% { opacity: 1; transform: scale(1.08) rotate(3deg); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes splash-face-top { from { opacity: 0; transform: translateY(-26px); } to { opacity: 1; transform: none; } }
+@keyframes splash-face-left { from { opacity: 0; transform: translate(-24px, 14px); } to { opacity: 1; transform: none; } }
+@keyframes splash-face-right { from { opacity: 0; transform: translate(24px, 14px); } to { opacity: 1; transform: none; } }
+@keyframes splash-shine {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to { transform: translateX(320%) skewX(-18deg); }
+}
+@keyframes splash-grid-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes splash-scan {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(100vh); }
+}
+@keyframes start-card-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes live-dot {
+  0% { box-shadow: 0 0 0 0 hsl(var(--success) / 0.55); }
+  100% { box-shadow: 0 0 0 7px hsl(var(--success) / 0); }
+}
+.animate-splash-tile { animation: splash-tile 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) both; transform-origin: center; transform-box: fill-box; }
+.animate-splash-face-top { animation: splash-face-top 0.55s 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.animate-splash-face-left { animation: splash-face-left 0.55s 0.58s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.animate-splash-face-right { animation: splash-face-right 0.55s 0.71s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.animate-splash-shine { animation: splash-shine 1.1s 1.15s cubic-bezier(0.5, 0, 0.3, 1) both; }
+.animate-splash-grid { animation: splash-grid-in 1.4s ease-out both; }
+.animate-splash-scan { animation: splash-scan 2.6s 0.2s cubic-bezier(0.4, 0, 0.2, 1) both; }
+.animate-start-card { animation: start-card-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.animate-live-dot { animation: live-dot 1.6s ease-out infinite; }
+
+/* Fundo da abertura e da tela de início: pontos finos que somem nas bordas */
+.splash-dot-grid {
+  background-image: radial-gradient(hsl(var(--foreground) / 0.09) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 75% 70% at 50% 40%, #000 30%, transparent 85%);
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .animate-splash-tile,
+  .animate-splash-face-top,
+  .animate-splash-face-left,
+  .animate-splash-face-right,
+  .animate-splash-shine,
+  .animate-splash-grid,
+  .animate-splash-scan,
+  .animate-start-card,
+  .animate-live-dot,
   .animate-splash-logo,
   .animate-splash-ring,
   .animate-splash-letter,

@@ -25,7 +25,7 @@ export const HelpAboutAppHeader: React.FC<HelpAboutAppHeaderProps> = ({
           </span>
         </h3>
         <p className="text-2xs text-muted-foreground">
-          Cockpit Integrado de Operação, Desenvolvimento e Qualidade
+          Central Integrada de Operação, Desenvolvimento e Qualidade
         </p>
         <p className="text-2xs text-muted-foreground/80 font-mono mt-0.5">
           Desenvolvido por <strong>Wanderson Alves</strong>

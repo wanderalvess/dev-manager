@@ -170,8 +170,14 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onFi
     >
       <OnboardingSidebar stepIndex={stepIndex} onGoTo={goTo} onFinishLater={() => finish(false)} />
 
-      <div className="flex-1 min-w-0 flex flex-col">
-        <main key={step.id} className="flex-1 min-h-0 overflow-y-auto px-6 sm:px-12 lg:px-20 pt-10 lg:pt-14 pb-8 flex flex-col gap-5 animate-onboarding-in">
+      <div className="relative flex-1 min-w-0 flex flex-col">
+        {/* O mesmo fundo da abertura (pontos e luz do tema), para o onboarding parecer continuação dela */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 splash-dot-grid" />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-64 -top-80 w-[64rem] h-[44rem] bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.14)_0%,transparent_62%)]"
+        />
+        <main key={step.id} className="relative flex-1 min-h-0 overflow-y-auto px-6 sm:px-12 lg:px-20 pt-10 lg:pt-14 pb-8 flex flex-col gap-5 animate-onboarding-in">
           {step.id === 'welcome' && (
             <WelcomeStep
               onPickGroup={(i) => {
@@ -222,7 +228,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ isOpen, onFi
           )}
         </main>
 
-        <footer className="shrink-0 h-22 px-6 sm:px-12 lg:px-20 flex items-center justify-between gap-3 border-t border-border">
+        <footer className="relative shrink-0 h-22 bg-background/70 backdrop-blur px-6 sm:px-12 lg:px-20 flex items-center justify-between gap-3 border-t border-border">
           <button
             type="button"
             onClick={() => goTo(stepIndex - 1)}

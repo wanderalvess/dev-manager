@@ -38,7 +38,7 @@ export const ModulesStep: React.FC<ModulesStepProps> = ({ disabledModules, onCha
       </div>
 
       <div className="flex flex-col lg:flex-row gap-5">
-        <div role="tablist" aria-label="Áreas do cockpit" className="lg:w-72 shrink-0 flex flex-col gap-1.5">
+        <div role="tablist" aria-label="Áreas do Hub" className="lg:w-72 shrink-0 flex flex-col gap-1.5">
           {NAV_THEME_GROUPS.map((g, i) => {
             const ids = g.items.map((item) => item.id);
             return (

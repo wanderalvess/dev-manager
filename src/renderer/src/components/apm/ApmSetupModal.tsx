@@ -80,7 +80,7 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
                 seus spans automaticamente — métricas e logs OTLP não são coletados.
               </p>
 
-              {/* Liga/desliga o anexo automático do agente Java ao iniciar o Karaf pelo Cockpit */}
+              {/* Liga/desliga o anexo automático do agente Java ao iniciar o Karaf pelo Hub */}
               <label
                 htmlFor="apm-instrumentation-toggle"
                 className="flex items-start gap-2.5 p-2.5 rounded-lg border border-border bg-muted/20 font-sans text-xs cursor-pointer"
@@ -94,7 +94,7 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
                   className="mt-0.5 w-3.5 h-3.5 accent-primary cursor-pointer disabled:cursor-wait"
                 />
                 <span className="text-muted-foreground leading-relaxed">
-                  <strong className="text-foreground">Anexar o agente automaticamente ao iniciar o Karaf pelo Cockpit.</strong>{' '}
+                  <strong className="text-foreground">Anexar o agente automaticamente ao iniciar o Karaf pelo Hub.</strong>{' '}
                   Desligado por padrão: o agente OpenTelemetry deixa o log do Karaf mais verboso, então só liga quando
                   você quiser mesmo capturar traces. Com a opção desligada, o Karaf sobe normalmente mesmo com o
                   <code className="font-mono text-primary mx-1">opentelemetry-javaagent.jar</code>presente em
@@ -140,7 +140,7 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
                 </span>
               </div>
 
-              {/* Nome de serviço (otel.service.name) do agente Java anexado automaticamente pelo Cockpit */}
+              {/* Nome de serviço (otel.service.name) do agente Java anexado automaticamente pelo Hub */}
               <div className="flex flex-wrap items-center gap-2 font-sans text-xs">
                 <label htmlFor="apm-service-name" className="text-muted-foreground font-medium">
                   Nome do serviço
@@ -204,7 +204,7 @@ export const ApmSetupModal: React.FC<ApmSetupModalProps> = ({
               {setupTab === 'karaf' && (
                 <div className="flex flex-col gap-2 mt-1">
                   <p className="text-muted-foreground font-sans text-xs">
-                    Coloque o arquivo <code className="text-foreground font-mono">opentelemetry-javaagent.jar</code> dentro da pasta <code className="text-foreground font-mono">bin</code> do seu Karaf e ligue <strong className="text-foreground">"Anexar o agente automaticamente"</strong> acima — o Hub Manager passa a anexar o agente sozinho ao iniciar pelo Cockpit. Para scripts externos (<code className="text-foreground font-mono">winthor.bat</code>), use:
+                    Coloque o arquivo <code className="text-foreground font-mono">opentelemetry-javaagent.jar</code> dentro da pasta <code className="text-foreground font-mono">bin</code> do seu Karaf e ligue <strong className="text-foreground">"Anexar o agente automaticamente"</strong> acima — o Hub Manager passa a anexar o agente sozinho ao iniciar o Karaf pelo Hub. Para scripts externos (<code className="text-foreground font-mono">winthor.bat</code>), use:
                   </p>
                   <div className="relative">
                     <pre className="p-3 rounded-lg bg-neutral-950 border border-neutral-800 text-emerald-400 text-2xs overflow-x-auto whitespace-pre-wrap leading-relaxed">

@@ -29,7 +29,7 @@ export const HelpOverviewHero: React.FC<HelpOverviewHeroProps> = ({
   <div className="cockpit-panel rounded-[14px] p-5 border border-border shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
     <div className="space-y-2.5 max-w-2xl">
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-accent text-accent-foreground">Cockpit integrado</span>
+        <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-accent text-accent-foreground">Tudo integrado</span>
         {appInfo?.isAdmin ? (
           <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 rounded-full bg-success/10 text-success">
             <ShieldCheck className="w-3 h-3" /> Modo Administrador

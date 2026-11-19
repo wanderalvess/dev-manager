@@ -65,7 +65,7 @@ export const SETTINGS_SECTIONS: Record<SettingsTab, SettingsSectionDef> = {
     description: 'WinThor › WSH › Commerce Hub › PDV. Comece pelo essencial; o resto só se você for rastrear lotes.',
     optional: true
   },
-  appearance: { id: 'appearance', label: 'Navegação & aparência', description: 'Quais páginas aparecem na barra lateral e como o cockpit se parece.' },
+  appearance: { id: 'appearance', label: 'Navegação & aparência', description: 'Quais páginas aparecem na barra lateral e como o Hub se parece.' },
   usage: {
     id: 'usage',
     label: 'Uso & privacidade',
