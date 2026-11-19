@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.70.1] - 2026-11-19
+### Corrigido
+- **Abertura do app**: a abertura não passa mais despercebida. Ela só começa depois de a tela aparecer (antes terminava durante o carregamento e a pessoa via a tela preta e logo a tela de início) e, para quem já usa o app, dura cerca de 2 s em vez de 1,2 s, o bastante para o logo terminar de se montar.
+- **Tela preta ao abrir**: enquanto o app carrega, a janela mostra o logo no lugar do preto, e a janela só aparece quando esse primeiro quadro está pronto.
+
+### Alterado
+- **Ajuda**: nova pergunta *Como funciona a abertura do Hub e como faço para pulá-la?* (Tela de início), com o `Esc`, a primeira vez e o caso das animações do Windows desligadas.
+- **Documentação**: README, DOCKER.md e AGENTS.md também deixam de usar "cockpit".
+- **Releases**: o título da release no GitHub passa a ser sempre *Hub Manager - vX.Y.Z*.
+
 ## [1.70.0] - 2026-11-19
 ### Adicionado
 - **Terminal integrado**: console com abas (PowerShell, CMD, Git Bash, WSL, Bash e SSH) que fica preso embaixo ou ao lado da tela, ou abre em janela. Os perfis de terminal da máquina são encontrados sozinhos.
