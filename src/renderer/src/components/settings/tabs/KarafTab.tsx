@@ -145,7 +145,7 @@ export const KarafTab: React.FC<KarafTabProps> = ({
                   <Activity className="w-3.5 h-3.5 text-primary" /> Ativar Telemetria APM (OpenTelemetry Java Agent) ao iniciar o Karaf
                 </span>
                 <p className="text-2xs text-muted-foreground leading-relaxed">
-                  Quando marcado, o Cockpit anexa automaticamente o agente <code className="font-mono text-foreground font-semibold">opentelemetry-javaagent.jar</code> (se presente na pasta <code className="font-mono text-foreground">{settings.karafPath ? `${settings.karafPath}\\bin` : 'bin'}</code>) para rastrear requisições HTTP, JDBC e erros na tela <strong>APM &amp; Traces</strong>.
+                  Quando marcado, o Hub anexa automaticamente o agente <code className="font-mono text-foreground font-semibold">opentelemetry-javaagent.jar</code> (se presente na pasta <code className="font-mono text-foreground">{settings.karafPath ? `${settings.karafPath}\\bin` : 'bin'}</code>) para rastrear requisições HTTP, JDBC e erros na tela <strong>APM &amp; Traces</strong>.
                 </p>
                 <p className="text-2xs text-muted-foreground/80">
                   <strong className="text-foreground">Recomendação:</strong> Deixe desmarcado quando não precisar capturar traces. O agente OpenTelemetry adiciona tempo na inicialização da JVM e gera logs adicionais de telemetria.

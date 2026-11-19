@@ -107,7 +107,7 @@ FunctionEnd
 !macro customWelcomePage
   !insertmacro skipPageIfUpdated
   !define MUI_WELCOMEPAGE_TITLE "Bem-vindo à instalação do Hub Manager"
-  !define MUI_WELCOMEPAGE_TEXT "O cockpit para o dia a dia com WinThor: ambiente, Karaf, banco de dados, deploy OSGi e qualidade num lugar só.$\r$\n$\r$\n•  Atalhos na Área de Trabalho e no Menu Iniciar$\r$\n•  Atualizações automáticas pelo próprio app$\r$\n•  Suas conexões, perfis e configurações são mantidos ao atualizar$\r$\n$\r$\nSe o Hub Manager estiver aberto, feche-o antes de continuar."
+  !define MUI_WELCOMEPAGE_TEXT "Seu dia a dia com WinThor num lugar só: ambiente, Karaf, banco de dados, deploy OSGi e qualidade.$\r$\n$\r$\n•  Atalhos na Área de Trabalho e no Menu Iniciar$\r$\n•  Atualizações automáticas pelo próprio app$\r$\n•  Suas conexões, perfis e configurações são mantidos ao atualizar$\r$\n$\r$\nSe o Hub Manager estiver aberto, feche-o antes de continuar."
   !insertmacro MUI_PAGE_WELCOME
 !macroend
 

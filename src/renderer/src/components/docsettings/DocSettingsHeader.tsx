@@ -17,7 +17,7 @@ export const DocSettingsHeader: React.FC<DocSettingsHeaderProps> = ({ onClose })
             Configurações de Documentação & IA
           </h3>
           <span className="text-2xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-mono font-bold">
-            Cockpit RAG
+            RAG
           </span>
         </div>
         <p className="text-2xs text-muted-foreground mt-0.5">

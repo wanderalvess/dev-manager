@@ -23,13 +23,20 @@ export const OnboardingSidebar: React.FC<OnboardingSidebarProps> = ({ stepIndex,
       </div>
 
       <nav aria-label="Etapas do onboarding">
-        <ol className="m-0 p-0 list-none flex flex-col gap-1">
+        <ol className="relative m-0 p-0 list-none flex flex-col gap-1">
+          {/* Fio da linha do tempo: a parte já percorrida fica na cor do tema */}
+          <span aria-hidden="true" className="absolute left-[1.75rem] top-7 bottom-7 w-px bg-border" />
+          <span
+            aria-hidden="true"
+            className="absolute left-[1.75rem] top-7 w-px bg-primary transition-[height] duration-500"
+            style={{ height: `calc((100% - 3.5rem) * ${stepIndex / (ONBOARDING_STEPS.length - 1)})` }}
+          />
           {ONBOARDING_STEPS.map((s, i) => {
             const active = i === stepIndex;
             const done = i < stepIndex;
-            let bullet = 'border border-border text-muted-foreground';
-            if (active) bullet = 'bg-primary text-primary-foreground';
-            else if (done) bullet = 'border border-primary text-primary';
+            let bullet = 'border border-border bg-card text-muted-foreground';
+            if (active) bullet = 'bg-primary text-primary-foreground shadow-md shadow-primary/30';
+            else if (done) bullet = 'border border-primary bg-card text-primary';
             return (
               <li key={s.id}>
                 <button
@@ -40,7 +47,7 @@ export const OnboardingSidebar: React.FC<OnboardingSidebarProps> = ({ stepIndex,
                     active ? 'bg-muted text-foreground' : done ? 'text-foreground hover:bg-muted/60' : 'text-muted-foreground hover:bg-muted/60'
                   }`}
                 >
-                  <span className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-mono text-xs font-bold ${bullet}`}>
+                  <span className={`relative w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-mono text-xs font-bold ${bullet}`}>
                     {done ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : i + 1}
                   </span>
                   <span className="flex flex-col">
@@ -60,7 +67,7 @@ export const OnboardingSidebar: React.FC<OnboardingSidebarProps> = ({ stepIndex,
           <span>{pct}%</span>
         </div>
         <div className="h-1.5 rounded-full bg-border overflow-hidden">
-          <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${pct}%` }} />
+          <div className="h-full rounded-full bg-gradient-to-r from-primary/70 to-primary transition-[width] duration-500" style={{ width: `${pct}%` }} />
         </div>
         {stepIndex < ONBOARDING_STEPS.length - 1 && (
           <button

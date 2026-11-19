@@ -64,7 +64,7 @@ const NAVIGATION_ACTIONS: NavigationActionSpec[] = [
   {
     id: 'act-env',
     tab: 'env',
-    title: 'Ambiente Dev (Cockpit)',
+    title: 'Ambiente Dev',
     subtitle: 'Parar serviços, matar processos e abrir IDE + Servidor Debug',
     badge: 'Alt+1',
     icon: Terminal

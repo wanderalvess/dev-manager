@@ -205,7 +205,7 @@ export function generateQualityMarkdownReport(options: {
 
   lines.push('');
   lines.push(`---`);
-  lines.push(`*Gerado automaticamente pelo Hub Manager (Cockpit de Desenvolvimento & Qualidade)*`);
+  lines.push(`*Gerado automaticamente pelo Hub Manager (Central de Desenvolvimento & Qualidade)*`);
 
   return lines.join('\n');
 }

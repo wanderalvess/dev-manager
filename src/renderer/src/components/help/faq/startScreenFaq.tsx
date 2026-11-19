@@ -15,7 +15,7 @@ export function getStartScreenFaq(): FaqItem[] {
             <strong className="text-foreground">Jira · hoje</strong>, <strong className="text-foreground">Ambientes</strong>,{' '}
             <strong className="text-foreground">Sua semana</strong>, <strong className="text-foreground">Este PC</strong> e{' '}
             <strong className="text-foreground">Clima</strong>, além da faixa de novidades da versão. A tela acompanha o tema escolhido (claro ou escuro)
-            e fica aberta até você clicar em <strong className="text-foreground">Entrar no cockpit</strong>.
+            e fica aberta até você clicar em <strong className="text-foreground">Entrar no Hub</strong>.
           </p>
           <p>
             O Jira usa a credencial cadastrada em <strong className="text-foreground">Documentação › Confluence &amp; Jira</strong> (a primeira fonte
@@ -34,7 +34,7 @@ export function getStartScreenFaq(): FaqItem[] {
             automações do Hub.
           </p>
           <p>
-            <strong className="text-foreground">Para onde o Entrar no cockpit leva:</strong> a aba escolhida em{' '}
+            <strong className="text-foreground">Para onde o Entrar no Hub leva:</strong> a aba escolhida em{' '}
             <strong className="text-foreground">Configurações › Aparência › Tela ao entrar</strong>; sem escolha, a última aba que você usou.
           </p>
         </div>

@@ -550,7 +550,7 @@ export interface AppSettings {
   apmReceiverPort?: number;
   /** Nome de serviço (`otel.service.name`) anexado pelo agente Java do APM (padrão: karaf-app) */
   apmServiceName?: string;
-  /** Anexa o agente OpenTelemetry automaticamente ao iniciar o Karaf pelo Cockpit (padrão: desligado, para não poluir o log quando a telemetria não é usada) */
+  /** Anexa o agente OpenTelemetry automaticamente ao iniciar o Karaf pelo Hub (padrão: desligado, para não poluir o log quando a telemetria não é usada) */
   apmInstrumentationEnabled?: boolean;
   /** Usuário para login automático no WTA (ex: PCADMIN) */
   wtaLogin?: string;
@@ -635,7 +635,7 @@ export interface AppSettings {
   usageMetricsEnabled?: boolean;
   /** Cidade do clima da tela de início; vazia = clima desligado (nada é consultado) */
   startCity?: string;
-  /** Aba aberta ao clicar em Entrar no cockpit; vazia = a última aba usada */
+  /** Aba aberta ao clicar em Entrar no Hub; vazia = a última aba usada */
   startTab?: string;
   /** Tempo que a pessoa levava para fazer à mão cada automação (minutos). Quem não está aqui usa o padrão. */
   usageBaselines?: UsageBaselineOverrides;
@@ -2086,7 +2086,7 @@ export function getApmReceiverPort(settings?: Pick<AppSettings, 'apmReceiverPort
 /** Nome de serviço (`otel.service.name`) usado quando o usuário não configurou um próprio. */
 export const DEFAULT_APM_SERVICE_NAME = 'karaf-app';
 
-/** Nome de serviço configurado para o agente OTel anexado pelo Cockpit, com fallback genérico. */
+/** Nome de serviço configurado para o agente OTel anexado pelo Hub, com fallback genérico. */
 export function getApmServiceName(settings?: Pick<AppSettings, 'apmServiceName'> | null): string {
   const configured = settings?.apmServiceName?.trim();
   return configured || DEFAULT_APM_SERVICE_NAME;

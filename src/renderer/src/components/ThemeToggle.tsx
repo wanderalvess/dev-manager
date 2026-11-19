@@ -67,8 +67,8 @@ export const ThemeToggle: React.FC = () => {
     },
     {
       id: 'default',
-      label: 'Cockpit Âmbar',
-      description: mode === 'light' ? 'Laranja Solar & Canvas Âmbar' : 'Laranja Solar & Slate Cockpit',
+      label: 'Âmbar',
+      description: mode === 'light' ? 'Laranja Solar & Canvas Âmbar' : 'Laranja Solar & Slate Profundo',
       icon: Flame,
       colorClass: 'text-warning',
       bgPreview: 'bg-warning'

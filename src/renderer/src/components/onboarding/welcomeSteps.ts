@@ -21,7 +21,7 @@ export const WELCOME_STEPS: WelcomeStep[] = [
     eyebrow: 'PRAZER, EU SOU',
     title: 'O seu',
     highlight: 'Hub Manager',
-    desc: 'Cockpit Integrado de Operação, Desenvolvimento e Qualidade para o ecossistema WinThor. Escolha o tema — dá pra trocar depois pelo cabeçalho — e use Ctrl+K a qualquer momento para a busca rápida.',
+    desc: 'Central integrada de Operação, Desenvolvimento e Qualidade para o ecossistema WinThor. Escolha o tema — dá pra trocar depois pelo cabeçalho — e use Ctrl+K a qualquer momento para a busca rápida.',
     icon: Sparkles
   }
 ];

@@ -8,7 +8,7 @@ interface StartTabSettingsCardProps {
   setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
 }
 
-/** Aparência → Tela ao entrar: para onde o botão Entrar no cockpit da tela de início leva. */
+/** Aparência → Tela ao entrar: para onde o botão Entrar no Hub da tela de início leva. */
 export const StartTabSettingsCard: React.FC<StartTabSettingsCardProps> = ({ settings, setSettings }) => (
   <section id="field-startTab" aria-labelledby="settings-start-tab" className="rounded-xl border border-border bg-card p-5 flex flex-wrap items-center justify-between gap-4">
     <div className="min-w-0">
@@ -16,7 +16,7 @@ export const StartTabSettingsCard: React.FC<StartTabSettingsCardProps> = ({ sett
         <label htmlFor="settings-start-tab-select">Tela ao entrar</label>
       </h3>
       <p className="text-xs text-muted-foreground">
-        Para onde o botão Entrar no cockpit da tela de início leva. Sem escolha, o Hub abre na última aba que você usou.
+        Para onde o botão Entrar no Hub da tela de início leva. Sem escolha, o Hub abre na última aba que você usou.
       </p>
     </div>
     <StartTabSelect

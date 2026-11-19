@@ -19,7 +19,7 @@ export const EnvironmentConfigWarning: React.FC<EnvironmentConfigWarningProps> =
       <div className="flex-1">
         <span className="font-semibold block">Configuração incompleta</span>
         <span className="text-[13px] text-muted-foreground block mt-0.5">
-          Não encontramos automaticamente: {missingPaths.join(', ')}. Alguns recursos do Cockpit (subir serviços, abrir a IDE, deploy) não vão funcionar até esses caminhos serem definidos.
+          Não encontramos automaticamente: {missingPaths.join(', ')}. Alguns recursos do Hub (subir serviços, abrir a IDE, deploy) não vão funcionar até esses caminhos serem definidos.
         </span>
         {onNavigateToSettings && (
           <button

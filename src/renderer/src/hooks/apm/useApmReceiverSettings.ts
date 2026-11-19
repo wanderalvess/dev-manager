@@ -58,7 +58,7 @@ export function useApmReceiverSettings({
       setInstrumentationEnabled(next);
       showToast(
         next
-          ? 'Instrumentação automática ligada. O próximo start do Karaf pelo Cockpit já anexa o agente.'
+          ? 'Instrumentação automática ligada. O próximo start do Karaf pelo Hub já anexa o agente.'
           : 'Instrumentação automática desligada. O Karaf volta a subir sem o agente OpenTelemetry.',
         'success'
       );

@@ -124,7 +124,7 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
           <p className="text-2xs text-muted-foreground font-medium hidden min-[1600px]:block leading-tight">
-            Cockpit de Desenvolvimento &amp; Automação
+            Central de Desenvolvimento &amp; Automação
           </p>
         </div>
       </div>

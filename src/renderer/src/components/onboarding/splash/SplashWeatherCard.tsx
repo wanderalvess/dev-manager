@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { Cloud, CloudDrizzle, CloudFog, CloudLightning, CloudRain, CloudSnow, CloudSun, RotateCw, Sun, type LucideIcon } from 'lucide-react';
+import {
+  Cloud,
+  CloudDrizzle,
+  CloudFog,
+  CloudLightning,
+  CloudRain,
+  CloudSnow,
+  CloudSun,
+  RotateCw,
+  Sun,
+  type LucideIcon
+} from 'lucide-react';
 import type { WeatherIcon } from '../../../../../shared/weather';
 import type { StartScreenData } from './useStartScreenData';
 import { forecastDayLabel } from './startScreenUtils';
@@ -17,7 +28,10 @@ const ICONS: Record<WeatherIcon, LucideIcon> = {
 };
 
 /** Clima da cidade escolhida. Sem cidade, um campo para informar; só o nome dela sai da máquina. */
-export const SplashWeatherCard: React.FC<{ data: StartScreenData; className?: string }> = ({ data, className = '' }) => {
+export const SplashWeatherCard: React.FC<{
+  data: StartScreenData;
+  className?: string;
+}> = ({ data, className = '' }) => {
   const CARD = `${START_CARD} ${className}`;
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(data.city);
@@ -51,12 +65,18 @@ export const SplashWeatherCard: React.FC<{ data: StartScreenData; className?: st
             placeholder="ex.: Goiânia"
             className="flex-1 min-w-0 h-8.5 px-3 rounded-lg border border-border bg-background text-xs sm:text-sm text-foreground"
           />
-          <button type="button" onClick={() => void save()} className="h-8.5 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-bold cursor-pointer">
+          <button
+            type="button"
+            onClick={() => void save()}
+            className="h-8.5 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-bold cursor-pointer"
+          >
             Salvar
           </button>
         </div>
         {error && <p className="m-0 text-xs text-danger">{error}</p>}
-        <p className="m-0 text-2xs sm:text-xs text-muted-foreground leading-relaxed">Só o nome da cidade vai para o Open-Meteo. Sem cidade, o clima fica desligado.</p>
+        <p className="m-0 text-2xs sm:text-xs text-muted-foreground leading-relaxed">
+          Só o nome da cidade vai para o Open-Meteo. Sem cidade, o clima fica desligado.
+        </p>
       </article>
     );
   }
@@ -86,10 +106,10 @@ export const SplashWeatherCard: React.FC<{ data: StartScreenData; className?: st
       {w?.success && w.current && (
         <>
           <div className="flex items-center gap-3">
-            <Icon className="w-9 h-9 shrink-0 text-primary" aria-hidden="true" />
+            <Icon className="w-12 h-12 shrink-0 text-primary" strokeWidth={1.5} aria-hidden="true" />
             <div className="min-w-0">
-              <p className="m-0 text-2xl sm:text-3xl font-extrabold leading-none">{w.current.tempC}°</p>
-              <p className="m-0 text-xs text-foreground truncate mt-0.5">
+              <p className="m-0 text-4xl sm:text-5xl font-extrabold tracking-tight leading-none tabular-nums">{w.current.tempC}°</p>
+              <p className="m-0 text-xs sm:text-sm text-foreground truncate mt-1">
                 {w.current.description} · {w.place}
               </p>
             </div>
@@ -108,13 +128,15 @@ export const SplashWeatherCard: React.FC<{ data: StartScreenData; className?: st
               {w.days.map((d) => {
                 const DayIcon = ICONS[d.icon];
                 return (
-                  <li key={d.date} className="rounded-lg bg-muted/40 px-1.5 py-1 flex flex-col items-center gap-0.5 text-2xs">
+                  <li key={d.date} className="rounded-xl bg-muted/40 px-1.5 py-2 flex flex-col items-center gap-1 text-2xs">
                     <span className="font-semibold text-foreground">{forecastDayLabel(d.date, new Date())}</span>
                     <DayIcon className="w-4 h-4 text-muted-foreground" aria-label={d.description} />
                     <span className="font-mono text-muted-foreground">
                       {d.minC}° / {d.maxC}°
                     </span>
-                    {d.rainChance !== undefined && d.rainChance >= 20 && <span className="text-info text-[10px]">chuva {d.rainChance}%</span>}
+                    {d.rainChance !== undefined && d.rainChance >= 20 && (
+                      <span className="text-info text-[10px]">chuva {d.rainChance}%</span>
+                    )}
                   </li>
                 );
               })}

@@ -7,11 +7,30 @@ import { StartContinueCard, StartJiraCard, StartJiraNotice } from './StartJiraCa
 import { StartEnvCard, StartPcCard, StartWeekCard } from './StartStatusCards';
 import { StartShortcutsCard } from './StartShortcutsCard';
 
-const NewsStrip: React.FC<{ news: { version: string; items: ChangelogHighlight[] }; onWhatsNew: () => void }> = ({ news, onWhatsNew }) => (
-  <section aria-label="Novidades desta versão" className="min-h-9 px-4 rounded-xl border border-border bg-card flex flex-wrap items-center gap-x-3 gap-y-1 py-1.5 text-xs sm:text-sm min-w-0 shadow-sm">
+// Os cartões entram um depois do outro, da esquerda para a direita e de cima para baixo
+const CARDS_IN =
+  '[&>*]:animate-start-card [&>*:nth-child(1)]:[animation-delay:80ms] [&>*:nth-child(2)]:[animation-delay:140ms] [&>*:nth-child(3)]:[animation-delay:200ms] [&>*:nth-child(4)]:[animation-delay:260ms] [&>*:nth-child(5)]:[animation-delay:320ms] [&>*:nth-child(6)]:[animation-delay:380ms]';
+
+const NewsStrip: React.FC<{
+  news: { version: string; items: ChangelogHighlight[] };
+  onWhatsNew: () => void;
+}> = ({ news, onWhatsNew }) => (
+  <section
+    aria-label="Novidades desta versão"
+    className="min-h-9 px-4 rounded-xl border border-border bg-card/80 backdrop-blur animate-start-card [animation-delay:440ms] flex flex-wrap items-center gap-x-3 gap-y-1 py-1.5 text-xs sm:text-sm min-w-0 shadow-sm"
+  >
     <span className="font-mono text-2xs font-bold tracking-[0.14em] uppercase text-primary shrink-0">Novo · v{news.version}</span>
-    <span className="flex-1 min-w-0 truncate text-muted-foreground">{news.items.slice(0, 3).map((i) => i.title).join(' · ')}</span>
-    <button type="button" onClick={onWhatsNew} className="min-h-7 shrink-0 flex items-center gap-1 text-xs font-bold text-primary cursor-pointer hover:underline">
+    <span className="flex-1 min-w-0 truncate text-muted-foreground">
+      {news.items
+        .slice(0, 3)
+        .map((i) => i.title)
+        .join(' · ')}
+    </span>
+    <button
+      type="button"
+      onClick={onWhatsNew}
+      className="min-h-7 shrink-0 flex items-center gap-1 text-xs font-bold text-primary cursor-pointer hover:underline"
+    >
       Ver todas <ArrowRight className="w-3.5 h-3.5" />
     </button>
   </section>
@@ -33,7 +52,10 @@ export const SplashStartPanel: React.FC<{
   const jiraLayout = jira === null || jira.configured;
   return (
     <div className="w-full flex-1 min-h-0 flex flex-col gap-3 sm:gap-3.5">
-      <section aria-label="Tela de início" className="grid grid-cols-1 md:grid-cols-6 xl:grid-cols-12 gap-3 sm:gap-3.5 2xl:gap-5 xl:flex-1 xl:auto-rows-[minmax(13rem,1fr)]">
+      <section
+        aria-label="Tela de início"
+        className={`grid grid-cols-1 md:grid-cols-6 xl:grid-cols-12 gap-3 sm:gap-3.5 2xl:gap-5 xl:flex-1 xl:auto-rows-[minmax(13rem,1fr)] ${CARDS_IN}`}
+      >
         {jiraLayout ? (
           <>
             {jira?.success ? (

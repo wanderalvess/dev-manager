@@ -31,7 +31,7 @@ export function getUpdateFaq(handleOpenLink: (url: string) => void): FaqItem[] {
 
           <div className="p-3 rounded-xl bg-card/80 border border-border space-y-2 shadow-xs">
             <span className="font-semibold text-foreground block text-xs text-primary">
-              1. Atualização Automática no Cockpit:
+              1. Atualização Automática no Hub:
             </span>
             <ul className="list-disc pl-4 space-y-1">
               <li>

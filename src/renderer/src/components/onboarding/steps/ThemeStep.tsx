@@ -8,7 +8,7 @@ import { selectableRow } from './stepStyles';
 const modeButton = (active: boolean): string =>
   `flex-1 min-h-10 rounded-lg text-sm cursor-pointer transition-colors ${active ? 'bg-muted text-foreground font-bold' : 'text-muted-foreground font-semibold hover:text-foreground'}`;
 
-/** Prévia do cockpit nas cores do tema ativo: o tema é aplicado ao vivo, então ela usa as variáveis do app. */
+/** Prévia do Hub nas cores do tema ativo: o tema é aplicado ao vivo, então ela usa as variáveis do app. */
 const ThemePreview: React.FC = () => (
   <figure aria-label="Prévia do tema" className="m-0 flex-1 min-w-0 min-h-80 rounded-2xl border border-border bg-background overflow-hidden flex">
     <div className="w-36 shrink-0 bg-card p-4 flex flex-col gap-2.5">
@@ -47,7 +47,7 @@ export const ThemeStep: React.FC = () => {
   return (
     <>
       <Eyebrow n={3}>TEMA</Eyebrow>
-      <StepTitle>Deixe o cockpit com a sua cara.</StepTitle>
+      <StepTitle>Deixe o Hub com a sua cara.</StepTitle>
       <StepLead>Clique num tema para ver ao vivo. Dá para trocar depois pelo cabeçalho.</StepLead>
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="lg:w-80 shrink-0 flex flex-col gap-4">

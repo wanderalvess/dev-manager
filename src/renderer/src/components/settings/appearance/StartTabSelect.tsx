@@ -11,7 +11,7 @@ interface StartTabSelectProps {
   className?: string;
 }
 
-/** Escolha da aba aberta ao clicar em Entrar no cockpit: a última usada ou um módulo ligado. Usado nas Configurações e no onboarding. */
+/** Escolha da aba aberta ao clicar em Entrar no Hub: a última usada ou um módulo ligado. Usado nas Configurações e no onboarding. */
 export const StartTabSelect: React.FC<StartTabSelectProps> = ({ id, value, onChange, disabledModules, className = '' }) => (
   <select
     id={id}
