@@ -12,6 +12,7 @@ import { QuickLinks } from '../components/environment/QuickLinks';
 import { StepCardsPanel } from '../components/environment/StepCardsPanel';
 import { NetworkInfoCard } from '../components/environment/NetworkInfoCard';
 import { DiagnosticsPanel } from '../components/environment/DiagnosticsPanel';
+import { SystemHealthDashboard } from '../components/environment/SystemHealthDashboard';
 import { useEnvironmentProfiles } from '../hooks/environment/useEnvironmentProfiles';
 import { useEnvironmentStatus } from '../hooks/environment/useEnvironmentStatus';
 import { useEnvironmentLogs } from '../hooks/environment/useEnvironmentLogs';
@@ -161,6 +162,8 @@ export const EnvironmentPage: React.FC<EnvironmentPageProps> = ({
             onBatchStop={serviceActions.handleBatchStopServices}
             onKillProcess={serviceActions.handleKillProcess}
           />
+
+          <SystemHealthDashboard isActive={Boolean(isActive)} />
         </div>
       </div>
 

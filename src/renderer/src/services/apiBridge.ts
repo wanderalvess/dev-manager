@@ -25,6 +25,7 @@ import { createAuthLockoutApi } from './webBridge/authLockout';
 import { createApiScenarioApi } from './webBridge/apiScenario';
 import { createScenarioHistoryApi } from './webBridge/scenarioHistory';
 import { createEvidenceApi } from './webBridge/evidence';
+import { createTerminalApi } from './webBridge/terminal';
 
 export function initApiBridge() {
   if (typeof window === 'undefined') return;
@@ -65,6 +66,7 @@ export function initApiBridge() {
     ...createApiScenarioApi(deps),
     ...createScenarioHistoryApi(deps),
     ...createEvidenceApi(),
+    ...createTerminalApi(deps),
     ...createRemoteControlApi()
   };
 }

@@ -3,8 +3,14 @@ import {
   appendConsoleEntries,
   capConsoleEntries,
   clampDockHeight,
+  clampConsoleWidth,
+  readStoredConsoleWidth,
+  readStoredConsoleMode,
   DOCK_DEFAULT_HEIGHT,
-  DOCK_MIN_HEIGHT
+  DOCK_MIN_HEIGHT,
+  DOCK_MIN_WIDTH,
+  DOCK_MAX_WIDTH,
+  DOCK_DEFAULT_WIDTH
 } from './karafConsoleBuffer';
 
 describe('karafConsoleBuffer', () => {
@@ -22,5 +28,14 @@ describe('karafConsoleBuffer', () => {
     expect(clampDockHeight(900, 1000)).toBe(700);
     expect(clampDockHeight(300, 1000)).toBe(300);
     expect(clampDockHeight(Number.NaN, 1000)).toBe(DOCK_DEFAULT_HEIGHT);
+  });
+
+  it('limita e recupera largura e modo do console integrado', () => {
+    expect(clampConsoleWidth(100)).toBe(DOCK_MIN_WIDTH);
+    expect(clampConsoleWidth(1200)).toBe(DOCK_MAX_WIDTH);
+    expect(clampConsoleWidth(500)).toBe(500);
+    expect(clampConsoleWidth(Number.NaN)).toBe(DOCK_DEFAULT_WIDTH);
+    expect(readStoredConsoleWidth()).toBe(DOCK_DEFAULT_WIDTH);
+    expect(readStoredConsoleMode()).toBe('side');
   });
 });

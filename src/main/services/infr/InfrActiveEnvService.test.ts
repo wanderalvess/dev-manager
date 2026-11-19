@@ -51,13 +51,15 @@ describe('InfrActiveEnvService', () => {
     expect(res.stale).toBe(true);
   });
 
-  it('escolher o ambiente aponta WTA, Rotina 801 e SSH do Karaf, e a senha do WTA continua salva', async () => {
+  it('escolher o ambiente aponta WTA, Rotina 801 e o Karaf do container, e a senha do WTA continua salva', async () => {
     config.saveSettings({ wtaUrl: 'http://localhost:8889', wtaLogin: 'PCADMIN', wtaPassword: 'segredo', wtaAuthToken: 'TOKEN-DO-OUTRO-WTA' });
     const res = await service().apply({ name: 'develop' });
     expect(res.success).toBe(true);
-    expect(res.changes.map((x) => x.label)).toEqual(['URL do WTA', 'URL da Rotina 801', 'Porta SSH do Karaf']);
+    expect(res.changes.map((x) => x.label)).toEqual(['URL do WTA', 'URL da Rotina 801', 'Porta SSH do Karaf', 'Karaf', 'Container do Karaf', 'Distro do Karaf']);
     const s = config.getSettings();
     expect(s).toMatchObject({ activeEnvironment: 'develop', wtaUrl: 'http://localhost:8087', routine801Url: 'http://localhost:8087', karafSshPort: 8187, wtaLogin: 'PCADMIN', wtaPassword: 'segredo' });
+    expect(s).toMatchObject({ karafEnvironment: 'docker', karafDockerContainer: 'wta-develop' });
+    expect(s.karafWslDistro).toBeTruthy();
     // O token era de outro WTA: não vai junto
     expect(s.wtaAuthToken ?? '').toBe('');
     expect((await service().list()).stale).toBe(false);

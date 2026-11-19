@@ -97,24 +97,53 @@ describe('activeEnvSettingsPatch', () => {
       wtaUrl: 'http://localhost:8087',
       routine801Url: 'http://localhost:8087',
       wtaPassword: 'segredo',
-      karafSshPort: 8187
+      karafSshPort: 8187,
+      karafEnvironment: 'docker',
+      karafDockerContainer: 'wta-develop'
     });
-    expect(changes.map((x) => x.label)).toEqual(['URL do WTA', 'URL da Rotina 801', 'Porta SSH do Karaf']);
+    expect(changes.map((x) => x.label)).toEqual(['URL do WTA', 'URL da Rotina 801', 'Porta SSH do Karaf', 'Karaf', 'Container do Karaf']);
     expect(changes[0]).toEqual({ label: 'URL do WTA', from: 'http://localhost:8889', to: 'http://localhost:8087' });
+    expect(changes[3]).toEqual({ label: 'Karaf', from: 'Windows', to: 'Container' });
   });
 
   it('sem mudança nenhuma, não lista nada', () => {
-    const { changes } = activeEnvSettingsPatch(describeEnvironment(develop), {
-      wtaUrl: 'http://localhost:8087',
-      routine801Url: 'http://localhost:8087',
-      karafSshPort: 8187
-    });
+    const { changes } = activeEnvSettingsPatch(
+      describeEnvironment(develop),
+      {
+        wtaUrl: 'http://localhost:8087',
+        routine801Url: 'http://localhost:8087',
+        karafSshPort: 8187,
+        karafEnvironment: 'docker',
+        karafDockerContainer: 'wta-develop',
+        karafWslDistro: 'ubuntu2604-winthor'
+      },
+      'ubuntu2604-winthor'
+    );
     expect(changes).toEqual([]);
   });
 
-  it('sem porta conhecida, só grava o nome e não mexe nas URLs', () => {
+  it('troca o container do Karaf informado à mão pelo do ambiente e grava a distro dele', () => {
+    const { patch, changes } = activeEnvSettingsPatch(
+      describeEnvironment(develop),
+      { karafEnvironment: 'wsl', karafDockerContainer: 'wta-master', karafWslDistro: 'Ubuntu' },
+      'ubuntu2604-winthor'
+    );
+    expect(patch).toMatchObject({ karafEnvironment: 'docker', karafDockerContainer: 'wta-develop', karafWslDistro: 'ubuntu2604-winthor' });
+    expect(changes.filter((x) => /Karaf/.test(x.label) && x.label !== 'Porta SSH do Karaf')).toEqual([
+      { label: 'Karaf', from: 'WSL', to: 'Container' },
+      { label: 'Container do Karaf', from: 'wta-master', to: 'wta-develop' },
+      { label: 'Distro do Karaf', from: 'Ubuntu', to: 'ubuntu2604-winthor' }
+    ]);
+  });
+
+  it('sem distro conhecida, não mexe na distro do Karaf', () => {
+    const { patch } = activeEnvSettingsPatch(describeEnvironment(develop), { karafWslDistro: 'Ubuntu' });
+    expect(patch).not.toHaveProperty('karafWslDistro');
+  });
+
+  it('sem porta conhecida, não mexe nas URLs, mas aponta o Karaf para o container', () => {
     const { patch } = activeEnvSettingsPatch(describeEnvironment({ name: 'develop', wta: c('wta-develop', 'exited') }), { wtaUrl: 'http://localhost:8889' });
-    expect(patch).toEqual({ activeEnvironment: 'develop' });
+    expect(patch).toEqual({ activeEnvironment: 'develop', karafEnvironment: 'docker', karafDockerContainer: 'wta-develop' });
   });
 
   it('não leva senha que não existe', () => {

@@ -35,6 +35,7 @@ import { IntegrationTraceService } from './services/IntegrationTraceService';
 import { AuthLockoutTestService } from './services/AuthLockoutTestService';
 import { ApiScenarioService } from './services/ApiScenarioService';
 import { ScenarioHistoryService } from './services/ScenarioHistoryService';
+import { TerminalSessionService } from './services/TerminalSessionService';
 import { HttpCollectionService } from './services/HttpCollectionService';
 import { RemoteControlService } from './services/RemoteControlService';
 import { createRemoteBackend } from './services/remoteControl/remoteBackend';
@@ -191,6 +192,7 @@ function createWindow() {
     { logWatcherService, apmTraces: apmService }
   );
   const scenarioHistoryService = new ScenarioHistoryService(configService);
+  const terminalSessionService = new TerminalSessionService();
   const authLockoutTestService = new AuthLockoutTestService(configService, scenarioHistoryService);
   const apiScenarioService = new ApiScenarioService(configService, databaseService, scenarioHistoryService);
   const remoteControlService = new RemoteControlService(
@@ -247,13 +249,15 @@ function createWindow() {
     integrationTraceService,
     authLockoutTestService,
     apiScenarioService,
-    scenarioHistoryService
+    scenarioHistoryService,
+    terminalSessionService
   });
 
   backupSchedulerService.rescheduleAll();
   // Ao sair, não deixa para trás o Karaf embutido (processo filho), os agendamentos de backup nem a porta OTLP
   app.on('before-quit', () => {
     usageMetricsService.dispose();
+    terminalSessionService.disposeAll();
     backupSchedulerService.stopAll();
     void apmService.stopReceiver().catch(() => undefined);
     void remoteControlService.stop().catch(() => undefined);

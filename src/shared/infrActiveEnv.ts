@@ -123,16 +123,24 @@ export interface ActiveEnvSettingsView {
   routine801Url?: string;
   karafSshPort?: number;
   wtaPassword?: string;
+  karafEnvironment?: 'local' | 'wsl' | 'docker';
+  karafDockerContainer?: string;
+  karafWslDistro?: string;
 }
+
+const KARAF_ENV_TEXT = { local: 'Windows', wsl: 'WSL', docker: 'Container' } as const;
 
 /**
  * O que escolher o ambiente grava nas Configurações. A URL do WTA e a da Rotina 801 passam a ser as dele
  * (o token antigo é de outro WTA e cai sozinho), e a porta SSH do Karaf também. A senha do WTA é a mesma
  * em todos os ambientes: vai de volta no patch porque o ConfigService só a leva junto quando a URL não muda.
+ * O Karaf passa a ser o do container wta-<nome> (modo docker, na distro do ambiente): sem isso o Hub seguiria
+ * procurando um Karaf no Windows enquanto a URL e a porta já são as do container.
  */
 export function activeEnvSettingsPatch(
   info: ActiveEnvInfo,
-  current: ActiveEnvSettingsView
+  current: ActiveEnvSettingsView,
+  distro?: string
 ): { patch: Record<string, string | number>; changes: ActiveEnvChange[] } {
   const patch: Record<string, string | number> = { activeEnvironment: info.name };
   const changes: ActiveEnvChange[] = [];
@@ -146,6 +154,19 @@ export function activeEnvSettingsPatch(
   if (info.ports.ssh) {
     patch.karafSshPort = info.ports.ssh;
     if (current.karafSshPort !== info.ports.ssh) changes.push({ label: 'Porta SSH do Karaf', from: current.karafSshPort ? String(current.karafSshPort) : undefined, to: String(info.ports.ssh) });
+  }
+  if (info.wta?.name) {
+    const was = current.karafEnvironment ?? 'local';
+    patch.karafEnvironment = 'docker';
+    if (was !== 'docker') changes.push({ label: 'Karaf', from: KARAF_ENV_TEXT[was], to: KARAF_ENV_TEXT.docker });
+    patch.karafDockerContainer = info.wta.name;
+    if ((current.karafDockerContainer ?? '').trim() !== info.wta.name)
+      changes.push({ label: 'Container do Karaf', from: current.karafDockerContainer?.trim() || undefined, to: info.wta.name });
+    const d = distro?.trim();
+    if (d) {
+      patch.karafWslDistro = d;
+      if ((current.karafWslDistro ?? '').trim() !== d) changes.push({ label: 'Distro do Karaf', from: current.karafWslDistro?.trim() || undefined, to: d });
+    }
   }
   return { patch, changes };
 }

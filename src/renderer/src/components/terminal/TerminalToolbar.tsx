@@ -1,27 +1,14 @@
 import React from 'react';
-import {
-  Terminal,
-  Trash2,
-  Copy,
-  Check,
-  Search,
-  ArrowDown,
-  WrapText,
-  AlignLeft,
-  Maximize2,
-  Minimize2,
-  Square
-} from 'lucide-react';
-import type { TerminalFilterType } from '../../utils/terminalViewerUtils';
+import { Copy, Check, Trash2, WrapText, ArrowDown, Square, Maximize2, Minimize2, Search } from 'lucide-react';
 
-interface TerminalToolbarProps {
+export const TerminalToolbar: React.FC<{
   title: string;
   lineCount: number;
   isRunning: boolean;
   searchFilter: string;
-  onSearchChange: (value: string) => void;
-  filterType: TerminalFilterType;
-  onFilterTypeChange: (type: TerminalFilterType) => void;
+  onSearchChange: (v: string) => void;
+  filterType: string;
+  onFilterTypeChange: (v: string) => void;
   onToggleMaximize?: () => void;
   isMaximized: boolean;
   wordWrap: boolean;
@@ -33,16 +20,13 @@ interface TerminalToolbarProps {
   onClear: () => void;
   hasLogs: boolean;
   onAbort?: () => void;
-}
-
-export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
+  showTitle?: boolean;
+}> = ({
   title,
   lineCount,
   isRunning,
   searchFilter,
   onSearchChange,
-  filterType,
-  onFilterTypeChange,
   onToggleMaximize,
   isMaximized,
   wordWrap,
@@ -53,133 +37,49 @@ export const TerminalToolbar: React.FC<TerminalToolbarProps> = ({
   onCopy,
   onClear,
   hasLogs,
-  onAbort
+  onAbort,
+  showTitle = true
 }) => (
-  <div className="flex flex-wrap items-center justify-between px-3.5 py-2 bg-[#0e1422] border-b border-[#1b283f] gap-2 shrink-0">
-    <div className="flex items-center space-x-2.5">
-      <div className="p-1 rounded-lg bg-primary/15 border border-primary/30 text-primary">
-        <Terminal className="w-3.5 h-3.5" />
-      </div>
-      <div>
-        <span className="text-xs font-bold text-white tracking-wide">{title}</span>
-        <span className="text-2xs font-mono text-slate-400 ml-2">
-          ({lineCount} {lineCount === 1 ? 'linha' : 'linhas'})
-        </span>
-      </div>
-
-      {isRunning && (
-        <span className="flex items-center space-x-1.5 text-2xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 font-semibold animate-pulse">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-          <span>Execução Ativa</span>
-        </span>
-      )}
-      {onAbort && isRunning && (
-        <button
-          type="button"
-          onClick={onAbort}
-          className="flex items-center space-x-1 text-2xs text-destructive-foreground bg-destructive hover:bg-destructive/90 px-2 py-0.5 rounded-md font-semibold transition cursor-pointer shadow-xs animate-fade-in"
-          title="Interromper execução ativa (Ctrl+C ou Esc)"
-        >
-          <Square className="w-3 h-3 fill-current" />
-          <span>Interromper</span>
-        </button>
-      )}
+  <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 bg-[#0d1320] border-b border-slate-800 text-xs text-slate-300 shrink-0 min-w-0">
+    <div className="flex items-center gap-1.5 shrink-0">
+      <span className={`w-2 h-2 rounded-full shrink-0 ${isRunning ? 'bg-emerald-400' : 'bg-slate-500'}`} />
+      {showTitle && <span className="font-semibold text-slate-100 truncate">{title}</span>}
+      <span className="text-2xs font-mono tabular-nums text-slate-400 whitespace-nowrap">
+        {showTitle ? `(${lineCount})` : `${lineCount} l.`}
+      </span>
     </div>
-
-    {/* Filtros e Busca */}
-    <div className="flex items-center space-x-2">
-      {/* Busca no log */}
-      <div className="relative">
-        <Search className="w-3 h-3 text-slate-400 absolute left-2.5 top-2" />
+    <div className="flex items-center gap-1 min-w-0 flex-1 justify-end">
+      <div className="flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-md px-2 py-0.5 min-w-0 flex-1 max-w-[150px]">
+        <Search className="w-3 h-3 text-slate-400 shrink-0" />
         <input
-          type="text"
-          placeholder="Filtrar logs..."
           value={searchFilter}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="bg-[#080d17] border border-slate-700 hover:border-slate-500 rounded-lg pl-7 pr-2 py-1 text-2xs text-slate-100 placeholder-slate-400 focus:outline-hidden focus:border-primary font-mono w-28 md:w-36 transition-colors"
+          placeholder="Filtrar..."
+          className="bg-transparent text-2xs text-slate-200 placeholder:text-slate-500 focus:outline-none w-full min-w-0"
         />
       </div>
-
-      {/* Filtros por Tipo */}
-      <div className="hidden sm:flex items-center space-x-1 bg-[#080d17] p-0.5 rounded-lg border border-slate-700">
-        <button
-          onClick={() => onFilterTypeChange('all')}
-          className={`px-2 py-0.5 rounded text-2xs font-semibold transition-colors ${
-            filterType === 'all'
-              ? 'bg-primary text-primary-foreground font-bold shadow-xs'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800'
-          }`}
-        >
-          Todos
+      {isRunning && onAbort && (
+        <button type="button" onClick={onAbort} className="px-2 py-1 rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 text-2xs flex items-center gap-1 cursor-pointer shrink-0 whitespace-nowrap">
+          <Square className="w-3 h-3" /> Parar
         </button>
-        <button
-          onClick={() => onFilterTypeChange('error')}
-          className={`px-2 py-0.5 rounded text-2xs font-semibold transition-colors ${
-            filterType === 'error'
-              ? 'bg-rose-600 text-white font-bold shadow-xs'
-              : 'text-slate-300 hover:text-rose-300 hover:bg-rose-950/40'
-          }`}
-        >
-          Erros
-        </button>
-      </div>
-
-      {/* Ações */}
+      )}
+      <button type="button" onClick={onToggleWordWrap} title="Quebra de linha" className={`p-1 rounded cursor-pointer ${wordWrap ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}>
+        <WrapText className="w-3.5 h-3.5" />
+      </button>
+      <button type="button" onClick={onToggleAutoScroll} title="Auto-scroll" className={`p-1 rounded cursor-pointer ${autoScroll ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}>
+        <ArrowDown className="w-3.5 h-3.5" />
+      </button>
+      <button type="button" onClick={onCopy} disabled={!hasLogs} title="Copiar logs" className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-40 cursor-pointer">
+        {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+      </button>
+      <button type="button" onClick={onClear} disabled={!hasLogs} title="Limpar" className="p-1 rounded text-slate-400 hover:text-red-400 disabled:opacity-40 cursor-pointer">
+        <Trash2 className="w-3.5 h-3.5" />
+      </button>
       {onToggleMaximize && (
-        <button
-          onClick={onToggleMaximize}
-          className={`p-1.5 rounded-lg border text-xs transition-colors ${
-            isMaximized
-              ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 font-bold'
-              : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300 hover:text-white'
-          }`}
-          title={isMaximized ? 'Restaurar tamanho normal do console' : 'Maximizar console (largura e altura total)'} aria-label={isMaximized ? 'Restaurar tamanho normal do console' : 'Maximizar console (largura e altura total)'}
-        >
+        <button type="button" onClick={onToggleMaximize} className="p-1 rounded text-slate-400 hover:text-white cursor-pointer">
           {isMaximized ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
         </button>
       )}
-
-      <button
-        onClick={onToggleWordWrap}
-        className={`p-1.5 rounded-lg border text-xs transition-colors ${
-          wordWrap
-            ? 'bg-primary/20 border-primary/50 text-primary font-bold'
-            : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300 hover:text-white'
-        }`}
-        title={wordWrap ? 'Quebra de Linha Ativa (clique para modo tabela / scroll horizontal)' : 'Quebra de Linha Desativada (modo colunas / tabela Karaf preservado)'} aria-label={wordWrap ? 'Quebra de Linha Ativa (clique para modo tabela / scroll horizontal)' : 'Quebra de Linha Desativada (modo colunas / tabela Karaf preservado)'}
-      >
-        {wordWrap ? <WrapText className="w-3.5 h-3.5" /> : <AlignLeft className="w-3.5 h-3.5" />}
-      </button>
-
-      <button
-        onClick={onToggleAutoScroll}
-        className={`p-1.5 rounded-lg border text-xs transition-colors ${
-          autoScroll
-            ? 'bg-primary/20 border-primary/50 text-primary font-bold'
-            : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-300 hover:text-white'
-        }`}
-        title={autoScroll ? 'Auto-rolagem Ativa' : 'Auto-rolagem Pausada'} aria-label={autoScroll ? 'Auto-rolagem Ativa' : 'Auto-rolagem Pausada'}
-      >
-        <ArrowDown className="w-3.5 h-3.5" />
-      </button>
-
-      <button
-        onClick={onCopy}
-        disabled={!hasLogs}
-        className="p-1.5 text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 active:bg-slate-900 border border-slate-700 hover:border-slate-500 rounded-lg text-xs transition-colors disabled:opacity-50 cursor-pointer"
-        title="Copiar Conteúdo do Console" aria-label="Copiar Conteúdo do Console"
-      >
-        {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-      </button>
-
-      <button
-        onClick={onClear}
-        disabled={!hasLogs}
-        className="p-1.5 text-slate-300 hover:text-rose-300 bg-slate-800 hover:bg-rose-950/40 border border-slate-700 hover:border-rose-500/50 rounded-lg text-xs transition-colors disabled:opacity-50 cursor-pointer"
-        title="Limpar Console" aria-label="Limpar Console"
-      >
-        <Trash2 className="w-3.5 h-3.5" />
-      </button>
     </div>
   </div>
 );
