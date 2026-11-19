@@ -13,7 +13,11 @@ describe('getSplashTiming', () => {
   });
 
   it('abre bem mais rápido para quem já usa o app', () => {
-    expect(bootDuration(false)).toBeLessThan(bootDuration(true) / 2);
-    expect(bootDuration(false)).toBeLessThanOrEqual(1500);
+    expect(bootDuration(false)).toBeLessThan(bootDuration(true) * 0.6);
+    expect(bootDuration(false)).toBeLessThanOrEqual(2100);
+  });
+
+  it('dura o bastante para o logo terminar de se montar (~1,3 s)', () => {
+    expect(bootDuration(false)).toBeGreaterThanOrEqual(1800);
   });
 });

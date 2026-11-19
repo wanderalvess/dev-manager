@@ -63,6 +63,9 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
 }) => {
   const [completed, setCompleted] = useState(0);
   const [done, setDone] = useState(false);
+  // O app só aparece depois de carregar: a abertura começa no primeiro quadro desenhado, não na montagem, senão o
+  // carregamento a consome por baixo da tela preta e a pessoa cai direto na tela de início.
+  const [painted, setPainted] = useState(false);
   const news = useMemo(() => extractVersionHighlights(changelogRaw, appVersion), [appVersion]);
   const start = useStartScreenData(isOpen && !isNewUser);
 
@@ -70,15 +73,29 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
     if (!isOpen) return;
     setCompleted(0);
     setDone(false);
+    setPainted(false);
     if (prefersReducedMotion()) {
       setCompleted(SPLASH_BOOT_ITEMS.length);
       setDone(true);
+      setPainted(true);
       return;
     }
     const { bootStartMs, lineMs } = getSplashTiming(isNewUser);
-    const timers = SPLASH_BOOT_ITEMS.map((_, i) => setTimeout(() => setCompleted(i + 1), bootStartMs + (i + 1) * lineMs));
-    timers.push(setTimeout(() => setDone(true), bootStartMs + SPLASH_BOOT_ITEMS.length * lineMs));
-    return () => timers.forEach(clearTimeout);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    let frame2 = 0;
+    // Dois quadros: o primeiro já foi pedido, o segundo só roda depois de a tela ter sido pintada
+    const frame1 = requestAnimationFrame(() => {
+      frame2 = requestAnimationFrame(() => {
+        setPainted(true);
+        SPLASH_BOOT_ITEMS.forEach((_, i) => timers.push(setTimeout(() => setCompleted(i + 1), bootStartMs + (i + 1) * lineMs)));
+        timers.push(setTimeout(() => setDone(true), bootStartMs + SPLASH_BOOT_ITEMS.length * lineMs));
+      });
+    });
+    return () => {
+      cancelAnimationFrame(frame1);
+      cancelAnimationFrame(frame2);
+      timers.forEach(clearTimeout);
+    };
     // isNewUser só muda quando a abertura já fechou; reiniciar o boot no meio dela seria pior que ignorar.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -86,6 +103,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
   const skip = () => {
     setCompleted(SPLASH_BOOT_ITEMS.length);
     setDone(true);
+    setPainted(true);
   };
 
   // Quem já usa o app fica na tela de início até entrar (clique em Entrar ou Enter); nada fecha sozinho
@@ -131,21 +149,23 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         </>
       )}
 
-      <header
-        className={`relative ${home ? 'h-11 sm:h-12' : 'h-16'} shrink-0 ${PAGE_X} flex items-center justify-between font-mono text-xs text-muted-foreground`}
-      >
-        <span className="flex items-center gap-2.5">
-          {home && <AppLogo size="xs" />}
-          HUB MANAGER{appVersion ? ` · v${appVersion}` : ''}
-        </span>
-        {home && (
-          <span className="hidden sm:flex items-center gap-1.5">
-            <kbd className={KBD}>Enter</kbd> entra no Hub
+      {painted && (
+        <header
+          className={`relative ${home ? 'h-11 sm:h-12' : 'h-16'} shrink-0 ${PAGE_X} flex items-center justify-between font-mono text-xs text-muted-foreground`}
+        >
+          <span className="flex items-center gap-2.5">
+            {home && <AppLogo size="xs" />}
+            HUB MANAGER{appVersion ? ` · v${appVersion}` : ''}
           </span>
-        )}
-      </header>
+          {home && (
+            <span className="hidden sm:flex items-center gap-1.5">
+              <kbd className={KBD}>Enter</kbd> entra no Hub
+            </span>
+          )}
+        </header>
+      )}
 
-      {home ? (
+      {!painted ? null : home ? (
         <main className={`relative flex-1 min-h-0 overflow-y-auto flex flex-col ${PAGE_X} 2xl:px-24 pt-1 pb-4 sm:pb-6`}>
           <StartHome data={start} news={showNews ? news : null} onEnter={onEnter} onOpenTab={onOpenTab} onWhatsNew={onWhatsNew} />
         </main>
@@ -185,7 +205,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
               <div className="flex flex-col gap-3 animate-splash-rise">
                 <span className="font-mono text-xs font-bold tracking-[0.14em] text-primary">PRIMEIRA VEZ POR AQUI?</span>
                 <h1 className="m-0 text-5xl sm:text-7xl font-extrabold tracking-tighter leading-[0.95]">
-                  Vamos deixar o Hub<br />
+                  Vamos deixar o Hub
+                  <br />
                   do <span className="text-primary">seu jeito</span>.
                 </h1>
               </div>
@@ -225,7 +246,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         </main>
       )}
 
-      {!done && (
+      {painted && !done && (
         <footer className={`relative h-20 shrink-0 ${PAGE_X} flex items-center justify-end font-mono text-xs text-muted-foreground`}>
           <button
             type="button"
