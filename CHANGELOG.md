@@ -4,14 +4,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.70.0] - 2026-11-19
+### Adicionado
+- **Terminal integrado**: console com abas (PowerShell, CMD, Git Bash, WSL, Bash e SSH) que fica preso embaixo ou ao lado da tela, ou abre em janela. Os perfis de terminal da máquina são encontrados sozinhos.
+- **Saúde do sistema**: painel com gráficos de processador e memória ao longo do tempo.
+- **Evidências com provas de API e SQL**: cada passo pode guardar uma requisição (executada pelo cliente HTTP do Hub) ou uma consulta SELECT/WITH (pelas conexões do app), com antes e depois lado a lado. As provas vão também para o comentário do Jira.
+- **Evidências em slides**: o relatório sai em slides (HTML ou PDF em paisagem).
+- **Gravação de cliques** (Windows): grava só o mouse, com print e marcador em cada clique. O roteiro de cada passo (clicar, digitar, tecla, esperar) pode ser reexecutado numa evidência nova; `Ctrl+Shift+Q` interrompe.
+- **Ambiente ativo (INFR)**: ao aplicar o ambiente, o container e a distro do Karaf ficam associados a ele.
+
 ### Alterado
 - **Abertura**: o logo se monta na tela (o quadro surge e as três faces do cubo encaixam), com fundo de pontos e uma varredura suave. O cartão de carregamento ganhou percentual grande e uma barra com um segmento por área. Dá para pular com `Esc`.
 - **Primeiro acesso**: a tela "Vamos deixar o Hub do seu jeito" diz o que a configuração faz (detecta os caminhos, qualquer etapa dá para pular, tudo muda depois) e mostra as 7 etapas numa linha do tempo. O onboarding usa o mesmo fundo da abertura, com a linha do tempo acesa até a etapa atual.
 - **Sem "cockpit" no app**: os textos falam do Hub (Configurar o Hub, Entrar no Hub, Iniciando o Hub, Karaf iniciado pelo Hub). O subtítulo do topo passa a ser *Central de Desenvolvimento & Automação* e o tema padrão se chama só **Âmbar**.
 - **Tela de início**: hora ao lado do botão Entrar no Hub (antes "Entrar no cockpit"), cartões que entram em sequência e sem espaços vazios. "Continuar de onde parou" mostra as horas lançadas em destaque e o botão Abrir no Jira; o Jira do dia mostra o percentual da sprint; Ambientes mostra quais containers (ORA, WTA, WSH) estão rodando; Sua semana mostra as horas em cima de cada barra.
 
-## [1.69.1] - 2026-11-18
 ### Corrigido
 - **Karaf embutido**: não falha mais ao iniciar quando a porta de debug (:5005) está reservada pelo Windows (Hyper-V/WSL2/Docker) ou já está em uso (`bind failed: Permission denied`). O Hub usa a próxima porta livre nessa sessão e avisa no console o motivo (com o processo que ocupa a porta), a porta nova e que o IntelliJ deve apontar para ela.
 
