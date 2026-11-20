@@ -16,6 +16,7 @@ import {
   InfrDockerScriptStatus
 } from '../../shared/types';
 import { execFileAsync, isValidIdentifier, isSafeLocalPath } from '../utils/security';
+import { execWsl } from '../utils/wslExec';
 import {
   buildNewVersionEnvCommand,
   wakeDbCommand,
@@ -122,28 +123,29 @@ export class WslService {
     const distros = await this.listDistros();
     if (distros.length === 0) return null;
 
-    // Prioriza distros que tenham 'winthor' no nome
+    // Ordem de preferência: 'winthor' no nome, a distro padrão, as demais
     const winthorDistro = distros.find((d) => d.name.toLowerCase().includes('winthor'));
-    if (winthorDistro && (await this.testDockerInDistro(winthorDistro.name))) {
-      return winthorDistro.name;
-    }
-
-    // Testa distro default
     const defaultDistro = distros.find((d) => d.isDefault);
-    if (defaultDistro && (await this.testDockerInDistro(defaultDistro.name))) {
-      return defaultDistro.name;
-    }
+    const ordered = [winthorDistro, defaultDistro, ...distros].filter((d, i, all): d is WslDistroInfo => !!d && all.indexOf(d) === i);
 
-    // Testa as demais
-    for (const d of distros) {
-      if (d.name !== winthorDistro?.name && d.name !== defaultDistro?.name) {
-        if (await this.testDockerInDistro(d.name)) {
-          return d.name;
-        }
+    // Testar o Docker numa distro parada a acorda: primeiro só as que já estão rodando, depois as paradas
+    for (const wantRunning of [true, false]) {
+      for (const d of ordered) {
+        if ((d.state === 'Running') !== wantRunning) continue;
+        if (await this.testDockerInDistro(d.name)) return d.name;
       }
     }
 
     return null;
+  }
+
+  /** Distro para uma operação: a informada, a que roda o Docker, a padrão do WSL, a primeira listada e, por último, o nome padrão do WinThor. */
+  private async resolveDistro(distroName?: string): Promise<string> {
+    if (distroName) return distroName;
+    const docker = await this.findDockerWslDistro();
+    if (docker) return docker;
+    const distros = await this.listDistros();
+    return (distros.find((d) => d.isDefault) ?? distros[0])?.name ?? 'ubuntu2604-winthor';
   }
 
   /**
@@ -255,7 +257,7 @@ export class WslService {
    * 4. Tier 2: Service wrapper (service docker start)
    * 5. Tier 3: Systemctl (systemctl start docker) — somente se systemd estiver ativo
    * 6. Tier 4: Spawn direto dockerd via nohup com ajuste de iptables-legacy
-   * 7. Ajuste de permissões do socket (chmod 666 /var/run/docker.sock)
+   * 7. Ajuste de permissões do socket (grupo docker, 660; 666 só se o usuário padrão não alcançar)
    * 8. Diagnóstico detalhado com captura de /tmp/docker-start.log
    */
   public async startDockerDaemon(distroName: string): Promise<WslActionResult> {
@@ -312,7 +314,9 @@ export class WslService {
         // Espera socket responder e aplica permissões
         'for i in 1 2 3 4 5 6; do',
         '  if [ -S /var/run/docker.sock ]; then',
-        '    chmod 666 /var/run/docker.sock',
+        // Só o grupo docker; o 666 só entra se o usuário padrão da distro não estiver nele (ver o laço abaixo)
+        '    chgrp docker /var/run/docker.sock 2>/dev/null || true',
+        '    chmod 660 /var/run/docker.sock',
         '    echo "DOCKER_STARTED_SUCCESS" >> "$LOG"',
         '    exit 0',
         '  fi',
@@ -320,18 +324,18 @@ export class WslService {
         'done',
         'echo "DOCKER_FAILED_TO_START" >> "$LOG"',
         'exit 1'
-      ].join('; ');
+      ].join('\n');
 
       try {
-        await execFileAsync('wsl.exe', ['-d', distroName, '-u', 'root', '--', 'sh', '-c', startupScript], {
-          timeout: 20000,
-          windowsHide: true
-        });
+        // Quebras de linha (join com '; ' gerava "then;" e "do;", erro de sintaxe) e base64: aspas se perdem entre wsl.exe e sh
+        const scriptB64 = Buffer.from(startupScript, 'utf-8').toString('base64');
+        await execWsl(['-d', distroName, '-u', 'root', '--', 'sh', '-c', `echo ${scriptB64} | base64 -d | sh`], { timeout: 20000 });
       } catch (scriptErr: any) {
         console.warn(`[WslService] Script de startup do Docker emitiu aviso na distro "${distroName}":`, scriptErr?.message);
       }
 
       // Aguarda até 5 segundos para confirmação através do client Docker
+      let widened = false;
       for (let i = 0; i < 5; i++) {
         await new Promise((r) => setTimeout(r, 1000));
         if (await this.testDockerInDistro(distroName)) {
@@ -339,6 +343,15 @@ export class WslService {
             success: true,
             message: `Docker daemon iniciado com sucesso na distro WSL "${distroName}".`
           };
+        }
+        if (!widened) {
+          // Socket existe mas o usuário padrão não o alcança (fora do grupo docker): libera o acesso, como os scripts do INFR-Docker esperam
+          widened = true;
+          try {
+            await execWsl(['-d', distroName, '-u', 'root', '--', 'sh', '-c', '[ -S /var/run/docker.sock ] && chmod 666 /var/run/docker.sock; true'], { timeout: 6000 });
+          } catch {
+            // segue para a próxima checagem
+          }
         }
       }
 
@@ -383,10 +396,7 @@ export class WslService {
     if (!distroName || !isValidIdentifier(distroName)) return false;
 
     try {
-      await execFileAsync('wsl.exe', ['--terminate', distroName], {
-        timeout: 10000,
-        windowsHide: true
-      });
+      await execWsl(['--terminate', distroName], { timeout: 10000 });
       // Invalida cache de distros
       this.cachedDistros = [];
       this.lastFetchTime = 0;
@@ -469,7 +479,7 @@ export class WslService {
    * Garante a existência do diretório /opt/dumps na distro WSL e o abre no Windows Explorer.
    */
   public async openDumpsFolder(distroName?: string): Promise<{ success: boolean; path: string; error?: string }> {
-    const targetDistro = distroName || (await this.findDockerWslDistro()) || 'ubuntu2604-winthor';
+    const targetDistro = await this.resolveDistro(distroName);
     if (!isValidIdentifier(targetDistro)) {
       return { success: false, path: '', error: 'Nome de distribuição WSL inválido.' };
     }
@@ -501,7 +511,7 @@ export class WslService {
    * Lista todos os arquivos .dmp presentes em /opt/dumps na distro WSL.
    */
   public async listDmpFiles(distroName?: string): Promise<WslDumpFileInfo[]> {
-    const targetDistro = distroName || (await this.findDockerWslDistro()) || 'ubuntu2604-winthor';
+    const targetDistro = await this.resolveDistro(distroName);
     if (!isValidIdentifier(targetDistro)) return [];
 
     const formatBytes = (bytes: number): string => {
@@ -604,7 +614,7 @@ export class WslService {
    * Abre a pasta /opt da distro WSL no Windows Explorer.
    */
   public async openWslOptFolder(distroName?: string): Promise<{ success: boolean; path: string; error?: string }> {
-    const targetDistro = distroName || (await this.findDockerWslDistro()) || 'ubuntu2604-winthor';
+    const targetDistro = await this.resolveDistro(distroName);
     if (!isValidIdentifier(targetDistro)) {
       return { success: false, path: '', error: 'Nome de distribuição WSL inválido.' };
     }
@@ -629,7 +639,7 @@ export class WslService {
    * Checa: Winthor.ini (ou winthor.ini), winthor-integracao-core.jar e wsh-image.tar.
    */
   public async checkWshPrerequisites(distroName?: string): Promise<WshPrerequisiteStatus[]> {
-    const targetDistro = distroName || (await this.findDockerWslDistro()) || 'ubuntu2604-winthor';
+    const targetDistro = await this.resolveDistro(distroName);
     if (!isValidIdentifier(targetDistro)) return [];
 
     const formatBytes = (bytes: number): string => {
@@ -849,15 +859,8 @@ export class WslService {
         fs.mkdirSync(installDir, { recursive: true });
       }
 
-      // 1. Desliga o WSL antes de importar para evitar bloqueios de arquivo VHD
-      await this.shutdownWsl();
-
-      // 2. Executa wsl --import com timeout estendido (15 minutos)
-      await execFileAsync(
-        'wsl.exe',
-        ['--import', distroName, installDir, tarPath],
-        { timeout: 900000, windowsHide: true }
-      );
+      // Distro nova: não há VHD para bloquear, então não derruba as outras distros nem os containers em uso
+      await execWsl(['--import', distroName, installDir, tarPath], { timeout: 900000 });
 
       this.cachedDistros = [];
       this.lastFetchTime = 0;
@@ -896,15 +899,10 @@ export class WslService {
         fs.mkdirSync(outDir, { recursive: true });
       }
 
-      // 1. Desliga o WSL antes de exportar
-      await this.shutdownWsl();
+      // Só a distro exportada para: as outras e seus containers continuam no ar
+      await this.terminateDistro(distroName);
 
-      // 2. Executa wsl --export (15 minutos)
-      await execFileAsync(
-        'wsl.exe',
-        ['--export', distroName, outputPath],
-        { timeout: 900000, windowsHide: true }
-      );
+      await execWsl(['--export', distroName, outputPath], { timeout: 900000 });
 
       return {
         success: true,
@@ -928,10 +926,7 @@ export class WslService {
     }
 
     try {
-      await execFileAsync('wsl.exe', ['--unregister', distroName], {
-        timeout: 30000,
-        windowsHide: true
-      });
+      await execWsl(['--unregister', distroName], { timeout: 30000 });
 
       // Remove ambientes associados a essa distro
       try {
@@ -1067,7 +1062,7 @@ export class WslService {
       newEnv?: Omit<NewVersionEnvInput, 'version'>;
     }
   ): Promise<{ success: boolean; output: string }> {
-    const targetDistro = options.distro || (await this.findDockerWslDistro()) || 'ubuntu2604-winthor';
+    const targetDistro = await this.resolveDistro(options.distro);
     if (!isValidIdentifier(targetDistro)) {
       return { success: false, output: 'Nome de distribuição WSL inválido.' };
     }
@@ -1115,6 +1110,15 @@ export class WslService {
       return fs.existsSync(file) ? fs.readFileSync(file, 'utf-8') : null;
     });
     if (gaps.length > 0) return { success: false, output: scriptGapsMessage(gaps, infr.windows) };
+
+    // wslpath respeita um automount root diferente de /mnt; sem ele, fica o caminho calculado
+    try {
+      const { stdout } = await execWsl(['-d', targetDistro, '--', 'wslpath', '-a', infr.windows], { timeout: 8000 });
+      const converted = stdout.trim();
+      if (converted !== wslPath && /^\/[a-zA-Z0-9_\-.:/ ]+$/.test(converted)) cmdToRun = cmdToRun.split(wslPath).join(converted);
+    } catch {
+      // distro indisponível: segue com o caminho calculado
+    }
 
     // O log do Gerar anterior sai do caminho antes do terminal novo abrir: o Verificar ambiente não pode ler o erro do build
     // antigo como se fosse deste (o tee só trunca o arquivo quando o terminal começa a rodar). Ele fica ao lado como

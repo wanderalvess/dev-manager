@@ -78,6 +78,8 @@ export async function publishedKarafSshPort(distro: string, container: string): 
   } catch {
     port = undefined;
   }
-  portCache.set(key, { port, at: Date.now() });
+  // Só guarda porta achada: container recém-subido não fica 15 s sem porta por causa de uma leitura vazia
+  if (port) portCache.set(key, { port, at: Date.now() });
+  else portCache.delete(key);
   return port;
 }
