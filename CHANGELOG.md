@@ -4,6 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.71.0] - 2026-11-19
+### Adicionado
+- **Regras de aprovação nas provas de API e SQL**: cada prova aceita regras (status, contém, linhas, tempo, json) e o passo é aprovado ou reprovado sozinho. Regra desconhecida reprova com uma explicação, para um erro de digitação nunca virar "aprovado".
+- **Ambientes do API Studio nas evidências**: as provas de API resolvem as variáveis `{{...}}` do ambiente escolhido; o texto registrado guarda o `{{...}}` original.
+
+### Alterado
+- **Gravação de cliques**: cada clique guarda a janela de origem e é refeito a partir do canto dela na reexecução, esteja onde estiver. O print é do monitor onde o clique aconteceu, inclusive monitores à esquerda ou acima do principal (coordenadas negativas).
+
 ## [1.70.1] - 2026-11-19
 ### Corrigido
 - **Abertura do app**: a abertura não passa mais despercebida. Ela só começa depois de a tela aparecer (antes terminava durante o carregamento e a pessoa via a tela preta e logo a tela de início) e, para quem já usa o app, dura cerca de 2 s em vez de 1,2 s, o bastante para o logo terminar de se montar.
