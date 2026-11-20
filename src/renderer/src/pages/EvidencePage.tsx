@@ -345,7 +345,8 @@ export const EvidencePage: React.FC<EvidencePageProps> = ({ isActive = true }) =
                         deleteBlock: (blockId) => ev.deleteBlock(step.id, blockId),
                         runHttp: ev.runHttp,
                         runSql: ev.runSql,
-                        listConnections: ev.listConnections
+                        listConnections: ev.listConnections,
+                        listEnvironments: ev.listEnvironments
                       }}
                     />
                   </li>

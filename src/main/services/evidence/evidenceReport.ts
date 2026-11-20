@@ -66,7 +66,11 @@ const renderBlock = (block: EvidenceBlock, phase: keyof typeof PHASE_LABEL): str
     block.kind === 'text'
       ? `<pre>${esc(block.response)}</pre>`
       : `${block.request ? `<div class="lbl">${requestLabel}</div><pre>${esc(block.request)}</pre>` : ''}${block.response ? `<div class="lbl">${responseLabel}</div><pre>${esc(block.response)}</pre>` : ''}`;
-  return `<div class="block"><div class="block-head"><span class="tag ${phase}">${esc(PHASE_LABEL[phase])}</span><span class="tag">${BLOCK_KIND_LABEL[block.kind]}</span>${esc(block.title)}</div>${block.meta ? `<div class="block-meta">${esc(block.meta)}</div>` : ''}${body}</div>`;
+  const meta = [block.meta, block.environment ? `ambiente ${block.environment}` : ''].filter(Boolean).join(' · ');
+  const checks = block.verdict
+    ? `<div class="lbl">Regras: ${block.verdict.passed ? 'aprovado' : 'reprovado'}</div><pre>${esc(block.verdict.results.map((r) => `${r.ok ? '[OK]' : '[FALHOU]'} ${r.rule} (${r.detail})`).join('\n'))}</pre>`
+    : '';
+  return `<div class="block"><div class="block-head"><span class="tag ${phase}">${esc(PHASE_LABEL[phase])}</span><span class="tag">${BLOCK_KIND_LABEL[block.kind]}</span>${esc(block.title)}</div>${meta ? `<div class="block-meta">${esc(meta)}</div>` : ''}${body}${checks}</div>`;
 };
 
 const renderBlocks = (blocks: EvidenceSession['steps'][number]['blocks']): string => {

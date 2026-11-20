@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Database, Globe, Play, Plus, Repeat, StickyNote, Trash2 } from 'lucide-react';
 import {
   BLOCK_KIND_LABEL,
+  EVIDENCE_CHECKS_HELP,
   EVIDENCE_HTTP_METHODS,
   PHASE_LABEL,
   groupBlocks,
@@ -12,7 +13,7 @@ import {
   type EvidenceHttpMethod,
   type EvidencePhase
 } from '../../../../shared/evidenceTypes';
-import type { HttpMethod } from '../../../../shared/httpClientTypes';
+import type { HttpEnvironment, HttpMethod } from '../../../../shared/httpClientTypes';
 import type { DatabaseConnectionConfig } from '../../../../shared/types';
 
 const BTN =
@@ -28,16 +29,30 @@ const PHASE_TAG: Record<EvidencePhase, string> = {
 };
 const KIND_ICON: Record<EvidenceBlockKind, React.ElementType> = { api: Globe, sql: Database, text: StickyNote };
 
-type BlockResult = Pick<EvidenceBlockInput, 'request' | 'response' | 'meta'>;
+type BlockResult = Pick<EvidenceBlockInput, 'request' | 'response' | 'meta' | 'environment'>;
 
 export interface StepBlocksApi {
   addBlock: (input: EvidenceBlockInput) => unknown;
   updateBlock: (blockId: string, patch: Partial<EvidenceBlockInput>) => unknown;
   deleteBlock: (blockId: string) => unknown;
-  runHttp: (spec: { method: HttpMethod; url: string; headers: string; body: string }) => Promise<BlockResult>;
+  runHttp: (spec: { method: HttpMethod; url: string; headers: string; body: string; environmentId?: string }) => Promise<BlockResult>;
   runSql: (connectionId: string, sql: string) => Promise<BlockResult>;
   listConnections: () => Promise<DatabaseConnectionConfig[]>;
+  listEnvironments: () => Promise<HttpEnvironment[]>;
 }
+
+/** Selo com o resultado das regras de aprovação da prova. */
+const VerdictBadge: React.FC<{ verdict: EvidenceBlock['verdict'] }> = ({ verdict }) =>
+  verdict ? (
+    <div className={`rounded-[8px] p-2 text-xs space-y-0.5 ${verdict.passed ? 'bg-green-600/10 text-green-700' : 'bg-red-600/10 text-red-700'}`}>
+      <p className="font-semibold">{verdict.passed ? 'Regras aprovadas' : 'Regras reprovadas'}</p>
+      {verdict.results.map((r, i) => (
+        <p key={i} className="font-mono">
+          {r.ok ? '✓' : '✗'} {r.rule} <span className="opacity-70">({r.detail})</span>
+        </p>
+      ))}
+    </div>
+  ) : null;
 
 const errorText = (err: unknown): string => (err instanceof Error ? err.message : String(err));
 
@@ -51,7 +66,7 @@ const BlockCard: React.FC<{
   const Icon = KIND_ICON[block.kind];
   const requestLabel = block.kind === 'sql' ? 'Consulta' : 'Requisição';
   const responseLabel = block.kind === 'sql' ? 'Resultado' : block.kind === 'api' ? 'Resposta' : 'Conteúdo';
-  const save = (field: 'request' | 'response' | 'meta' | 'title', current: string | undefined) => (e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+  const save = (field: 'request' | 'response' | 'meta' | 'title' | 'checks', current: string | undefined) => (e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) => {
     if (e.target.value !== (current ?? '')) void api.updateBlock(block.id, { [field]: e.target.value });
   };
   return (
@@ -87,6 +102,10 @@ const BlockCard: React.FC<{
         <textarea className={MONO} rows={3} placeholder={requestLabel} defaultValue={block.request ?? ''} onBlur={save('request', block.request)} />
       )}
       <textarea className={MONO} rows={block.kind === 'text' ? 4 : 5} placeholder={responseLabel} defaultValue={block.response ?? ''} onBlur={save('response', block.response)} />
+      {block.kind !== 'text' && (
+        <textarea className={MONO} rows={2} title={EVIDENCE_CHECKS_HELP} placeholder={`Regras de aprovação (opcional). ${EVIDENCE_CHECKS_HELP}`} defaultValue={block.checks ?? ''} onBlur={save('checks', block.checks)} />
+      )}
+      <VerdictBadge verdict={block.verdict} />
     </div>
   );
 };
@@ -104,6 +123,9 @@ const Composer: React.FC<{ api: StepBlocksApi; onClose: () => void; initialPhase
   const [text, setText] = useState('');
   const [connections, setConnections] = useState<DatabaseConnectionConfig[]>([]);
   const [connectionId, setConnectionId] = useState('');
+  const [environments, setEnvironments] = useState<HttpEnvironment[]>([]);
+  const [environmentId, setEnvironmentId] = useState('');
+  const [checks, setChecks] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -112,11 +134,15 @@ const Composer: React.FC<{ api: StepBlocksApi; onClose: () => void; initialPhase
       setConnections(list);
       setConnectionId((cur) => cur || (list.find((c) => c.isDefault) ?? list[0])?.id || '');
     });
+    void api.listEnvironments().then((list) => {
+      setEnvironments(list);
+      setEnvironmentId((cur) => cur || (list.find((e) => e.isDefault) ?? list[0])?.id || '');
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const finish = (fields: BlockResult) => {
-    void api.addBlock({ kind, phase, title: title || undefined, ...fields });
+    void api.addBlock({ kind, phase, title: title || undefined, checks: checks.trim() || undefined, ...fields });
     onClose();
   };
 
@@ -124,7 +150,7 @@ const Composer: React.FC<{ api: StepBlocksApi; onClose: () => void; initialPhase
     setBusy(true);
     setError('');
     try {
-      finish(kind === 'api' ? await api.runHttp({ method, url, headers, body }) : await api.runSql(connectionId, sql));
+      finish(kind === 'api' ? await api.runHttp({ method, url, headers, body, environmentId: environmentId || undefined }) : await api.runSql(connectionId, sql));
     } catch (err) {
       setError(errorText(err));
       setBusy(false);
@@ -164,6 +190,16 @@ const Composer: React.FC<{ api: StepBlocksApi; onClose: () => void; initialPhase
 
       {kind === 'api' && (
         <div className="space-y-2">
+          {environments.length > 0 && (
+            <select className={`${FIELD} h-8`} value={environmentId} onChange={(e) => setEnvironmentId(e.target.value)} title="Ambiente do API Studio: resolve {{variáveis}} na URL, cabeçalhos e corpo">
+              <option value="">Sem ambiente (URL completa)</option>
+              {environments.map((e) => (
+                <option key={e.id} value={e.id}>
+                  Ambiente: {e.name}
+                </option>
+              ))}
+            </select>
+          )}
           <div className="flex gap-2">
             <select className={`${FIELD} h-8 max-w-[100px]`} value={method} onChange={(e) => setMethod(e.target.value as EvidenceHttpMethod)}>
               {EVIDENCE_HTTP_METHODS.map((m) => (
@@ -190,6 +226,9 @@ const Composer: React.FC<{ api: StepBlocksApi; onClose: () => void; initialPhase
         </div>
       )}
       {kind === 'text' && <textarea className={MONO} rows={4} placeholder="Log, saída de comando, observação..." value={text} onChange={(e) => setText(e.target.value)} />}
+      {kind !== 'text' && (
+        <textarea className={MONO} rows={2} placeholder={`Regras de aprovação (opcional). ${EVIDENCE_CHECKS_HELP}`} value={checks} onChange={(e) => setChecks(e.target.value)} />
+      )}
 
       {error && <p className="text-xs text-red-600">{error}</p>}
       <div className="flex flex-wrap items-center gap-2">
@@ -223,13 +262,16 @@ export const StepBlocks: React.FC<{ blocks: EvidenceBlock[] | undefined; api: St
       if (block.kind === 'api') {
         const spec = parseHttpRequestText(block.request);
         if (!spec) throw new Error('Não consegui ler a requisição deste bloco (esperado "MÉTODO url" na primeira linha).');
-        await api.addBlock({ kind: 'api', phase: 'after', title: block.title, ...(await api.runHttp(spec)) });
+        const envs = block.environment ? await api.listEnvironments() : [];
+        const environmentId = envs.find((e) => e.name === block.environment)?.id;
+        if (block.environment && !environmentId) throw new Error(`Ambiente "${block.environment}" não existe mais no API Studio.`);
+        await api.addBlock({ kind: 'api', phase: 'after', title: block.title, checks: block.checks, ...(await api.runHttp({ ...spec, environmentId })) });
       } else {
         const connections = await api.listConnections();
         const name = block.meta?.split('·').pop()?.trim();
         const conn = connections.find((c) => c.name === name) ?? connections.find((c) => c.isDefault) ?? connections[0];
         if (!conn) throw new Error('Nenhuma conexão cadastrada em Banco de Dados.');
-        await api.addBlock({ kind: 'sql', phase: 'after', title: block.title, ...(await api.runSql(conn.id, block.request ?? '')) });
+        await api.addBlock({ kind: 'sql', phase: 'after', title: block.title, checks: block.checks, ...(await api.runSql(conn.id, block.request ?? '')) });
       }
     } catch (err) {
       setError(errorText(err));

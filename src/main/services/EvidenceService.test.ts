@@ -50,6 +50,26 @@ describe('EvidenceService', () => {
     expect(svc.deleteBlock(s.id, stepId, block.id).steps[0].blocks).toEqual([]);
   });
 
+  it('avalia as regras da prova e reprova/aprova o passo sozinho', () => {
+    const svc = make();
+    const s = svc.createSession({ task: 'WT-4', kind: 'qa' });
+    const stepId = svc.addStep(s.id, null, 'API').steps[0].id;
+
+    // "Antes" reprovado não pesa no passo: é o estado antigo que a correção deve mudar.
+    const before = svc.addBlock(s.id, stepId, { kind: 'api', phase: 'before', meta: '500 Erro · 10 ms', response: 'x', checks: 'status 200' });
+    expect(before.steps[0].blocks![0].verdict?.passed).toBe(false);
+    expect(before.steps[0].result).toBe('pending');
+
+    const failed = svc.addBlock(s.id, stepId, { kind: 'api', phase: 'after', environment: 'HML', meta: '404 Not Found · 9 ms', response: '{}', checks: 'status 200' });
+    expect(failed.steps[0].result).toBe('failed');
+    expect(failed.steps[0].blocks![1]).toMatchObject({ environment: 'HML', verdict: { passed: false } });
+
+    const afterId = failed.steps[0].blocks![1].id;
+    const fixed = svc.updateBlock(s.id, stepId, afterId, { meta: '200 OK · 9 ms' });
+    expect(fixed.steps[0].blocks![1].verdict?.passed).toBe(true);
+    expect(fixed.steps[0].result).toBe('passed');
+  });
+
   it('guarda ações e marcador do passo e cria sessão de reexecução vazia', () => {
     const svc = make();
     const s = svc.createSession({ task: 'WT-3', title: 'Fluxo', kind: 'qa', environment: 'hml' });

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   describeAction,
   escapeSendKeys,
+  evaluateChecks,
   sanitizeActions,
   formatHttpExchange,
   formatQueryTable,
@@ -105,6 +106,51 @@ describe('roteiro de ações', () => {
   it('descreve as ações para a lista do passo', () => {
     expect(describeAction({ id: '1', type: 'click', x: 5, y: 6 })).toBe('Clique em (5, 6)');
     expect(describeAction({ id: '2', type: 'wait', ms: 250 })).toBe('Esperar 250 ms');
+    expect(describeAction({ id: '3', type: 'click', x: 1, y: 2, win: { process: 'chrome', title: 't', dx: 10, dy: 20 } })).toBe('Clique em chrome (+10, +20)');
+  });
+
+  it('aceita coordenada negativa (monitor à esquerda) e guarda a janela de origem saneada', () => {
+    const [click, bad] = sanitizeActions(
+      [
+        { type: 'click', x: -1500, y: 30, win: { process: ' chrome ', title: 'Hub', dx: 12.6, dy: -4 } },
+        { type: 'click', x: 1, y: 1, win: { process: '', title: 'x', dx: 1, dy: 1 } }
+      ],
+      ids
+    );
+    expect(click).toMatchObject({ x: -1500, y: 30, win: { process: 'chrome', title: 'Hub', dx: 13, dy: -4 } });
+    expect(bad.win).toBeUndefined();
+  });
+});
+
+describe('evaluateChecks', () => {
+  const api = { meta: '200 OK · 120 ms · 1.2 KB', response: '{"data":{"status":"OK","items":[{"id":7}]}}' };
+
+  it('sem regras não há veredito', () => {
+    expect(evaluateChecks('', api)).toBeUndefined();
+    expect(evaluateChecks(undefined, api)).toBeUndefined();
+  });
+
+  it('aprova status, texto, tempo e caminho JSON', () => {
+    const v = evaluateChecks('status 200\nstatus 2xx\ncontém "status":"OK"\nnao contem erro\ntempo < 500\njson data.status = OK\njson data.items[0].id = 7', api);
+    expect(v?.passed).toBe(true);
+    expect(v?.results).toHaveLength(7);
+  });
+
+  it('reprova com detalhe do que foi obtido', () => {
+    const v = evaluateChecks('status 201\ntempo < 50\njson data.status = FALHA\ncontem sucesso', api);
+    expect(v?.passed).toBe(false);
+    expect(v?.results.map((r) => r.ok)).toEqual([false, false, false, false]);
+    expect(v?.results[0].detail).toBe('status 200');
+    expect(v?.results[2].detail).toBe('OK');
+  });
+
+  it('conta linhas do SQL e reprova regra desconhecida ou sem dado', () => {
+    const sql = { meta: '3 linha(s) · 45 ms · Homolog', response: 'ID\n--\n1' };
+    expect(evaluateChecks('linhas = 3\nlinhas >= 1', sql)?.passed).toBe(true);
+    expect(evaluateChecks('linhas > 5', sql)?.passed).toBe(false);
+    expect(evaluateChecks('banana', sql)?.results[0].detail).toMatch(/não reconhecida/);
+    expect(evaluateChecks('status 200', sql)?.results[0].detail).toMatch(/Sem status/);
+    expect(evaluateChecks('json a = 1', sql)?.results[0].detail).toMatch(/não é JSON/);
   });
 });
 

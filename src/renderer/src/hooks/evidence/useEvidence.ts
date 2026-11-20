@@ -12,7 +12,7 @@ import type {
   EvidenceSessionInput,
   EvidenceSessionListItem
 } from '../../../../shared/evidenceTypes';
-import type { HttpKeyValueItem, HttpMethod } from '../../../../shared/httpClientTypes';
+import type { HttpEnvironment, HttpKeyValueItem, HttpMethod } from '../../../../shared/httpClientTypes';
 import type { DatabaseConnectionConfig } from '../../../../shared/types';
 import type { EvidenceStepPatch } from '../../../../preload/evidenceApi';
 
@@ -234,7 +234,19 @@ export function useEvidence(isActive: boolean) {
     session && run(async () => setSession(await api.evidenceDeleteBlock(session.id, stepId, blockId)));
 
   /** Roda a requisição pelo cliente HTTP do app e devolve os campos prontos do bloco "api". */
-  const runHttp = async (spec: { method: HttpMethod; url: string; headers: string; body: string }): Promise<Pick<EvidenceBlockInput, 'request' | 'response' | 'meta'>> => {
+  const listEnvironments = (): Promise<HttpEnvironment[]> => api.httpListEnvironments().then((envs) => envs ?? []);
+
+  const runHttp = async (spec: {
+    method: HttpMethod;
+    url: string;
+    headers: string;
+    body: string;
+    environmentId?: string;
+  }): Promise<Pick<EvidenceBlockInput, 'request' | 'response' | 'meta' | 'environment'>> => {
+    // Variáveis do API Studio ({{base}}, {{TOKEN}}...) são resolvidas no main; o texto registrado guarda o {{...}} original.
+    const env = spec.environmentId ? (await listEnvironments()).find((e) => e.id === spec.environmentId) : undefined;
+    const environmentVariables: Record<string, string> = {};
+    for (const v of env?.variables ?? []) if (v.enabled) environmentVariables[v.key] = v.value;
     const headers: HttpKeyValueItem[] = spec.headers
       .split(/\r?\n/)
       .map((line) => /^\s*([^:\s][^:]*):\s*(.*)$/.exec(line))
@@ -251,20 +263,26 @@ export function useEvidence(isActive: boolean) {
         headers,
         body: body ? { mode: /^[[{]/.test(body) ? 'raw-json' : 'raw-text', raw: body } : { mode: 'none' },
         auth: { type: 'none' }
-      }
+      },
+      environmentId: env?.id,
+      environmentVariables,
+      activeToken: env?.variables.find((v) => v.enabled && v.key.toUpperCase() === 'TOKEN')?.value
     });
-    return formatHttpExchange({
-      method: spec.method,
-      url: spec.url.trim(),
-      headers: spec.headers,
-      body,
-      status: res.error ? undefined : res.status,
-      statusText: res.statusText,
-      durationMs: res.durationMs,
-      sizeBytes: res.sizeBytes,
-      responseBody: res.body,
-      error: res.error
-    });
+    return {
+      environment: env?.name,
+      ...formatHttpExchange({
+        method: spec.method,
+        url: spec.url.trim(),
+        headers: spec.headers,
+        body,
+        status: res.error ? undefined : res.status,
+        statusText: res.statusText,
+        durationMs: res.durationMs,
+        sizeBytes: res.sizeBytes,
+        responseBody: res.body,
+        error: res.error
+      })
+    };
   };
 
   const listConnections = async (): Promise<DatabaseConnectionConfig[]> => (await api.getSettings()).databaseConnections ?? [];
@@ -341,6 +359,7 @@ export function useEvidence(isActive: boolean) {
     runHttp,
     runSql,
     listConnections,
+    listEnvironments,
     openFolder,
     publish
   };

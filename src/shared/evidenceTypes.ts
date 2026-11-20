@@ -20,17 +20,47 @@ export interface EvidenceBlock {
   response?: string;
   /** Linha de resumo: "200 OK · 123 ms" ou "12 linhas · 45 ms · conexão". */
   meta?: string;
+  /** Regras de aprovação, uma por linha (ver evaluateChecks). Avaliadas a cada gravação do bloco. */
+  checks?: string;
+  /** Resultado da última avaliação das regras; ausente quando não há regras. */
+  verdict?: EvidenceBlockVerdict;
+  /** api: nome do ambiente do API Studio usado nas variáveis {{...}}. */
+  environment?: string;
   createdAt: string;
+}
+
+export interface EvidenceCheckResult {
+  rule: string;
+  ok: boolean;
+  detail: string;
+}
+export interface EvidenceBlockVerdict {
+  passed: boolean;
+  results: EvidenceCheckResult[];
 }
 
 /** Ação de entrada reproduzível: o roteiro de um passo. Não há captura de teclado: digitação só existe se o usuário escrever. */
 export type EvidenceActionType = 'click' | 'type' | 'key' | 'wait';
+
+/** Janela onde o clique foi gravado: na reexecução o clique é refeito a partir do canto dela, esteja onde estiver. */
+export interface EvidenceWindowRef {
+  /** Nome do processo (sem .exe), ex.: "chrome". */
+  process: string;
+  /** Título da janela quando gravou; a reexecução prefere a janela de mesmo título e cai na primeira do processo. */
+  title: string;
+  /** Distância em pixels físicos do canto superior esquerdo da janela. */
+  dx: number;
+  dy: number;
+}
+
 export interface EvidenceAction {
   id: string;
   type: EvidenceActionType;
-  /** click: posição em pixels físicos da tela principal. */
+  /** click: posição em pixels físicos da área de trabalho virtual (pode ser negativa em monitores à esquerda/acima). */
   x?: number;
   y?: number;
+  /** click: janela de origem; quando presente, tem prioridade sobre x/y na reexecução. */
+  win?: EvidenceWindowRef;
   button?: 'left' | 'right';
   /** type: texto digitado. */
   text?: string;
@@ -78,6 +108,14 @@ export interface EvidenceMarker {
 const clampInt = (v: unknown, min: number, max: number): number | undefined =>
   typeof v === 'number' && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.round(v))) : undefined;
 
+function sanitizeWindowRef(raw: unknown): EvidenceWindowRef | undefined {
+  const w = (raw ?? {}) as Partial<EvidenceWindowRef>;
+  const dx = clampInt(w.dx, -20000, 20000);
+  const dy = clampInt(w.dy, -20000, 20000);
+  if (typeof w.process !== 'string' || !w.process.trim() || dx === undefined || dy === undefined) return undefined;
+  return { process: w.process.trim().slice(0, 100), title: typeof w.title === 'string' ? w.title.slice(0, 200) : '', dx, dy };
+}
+
 /** Valida o que veio do renderer: descarta ação malformada e limita tamanhos. */
 export function sanitizeActions(raw: unknown, makeId: () => string): EvidenceAction[] {
   if (!Array.isArray(raw)) return [];
@@ -86,9 +124,15 @@ export function sanitizeActions(raw: unknown, makeId: () => string): EvidenceAct
     const a = (item ?? {}) as Partial<EvidenceAction>;
     const id = typeof a.id === 'string' && /^[A-Za-z0-9-]{1,64}$/.test(a.id) ? a.id : makeId();
     if (a.type === 'click') {
-      const x = clampInt(a.x, 0, 20000);
-      const y = clampInt(a.y, 0, 20000);
-      if (x !== undefined && y !== undefined) out.push({ id, type: 'click', x, y, button: a.button === 'right' ? 'right' : 'left' });
+      // Monitores à esquerda/acima do principal têm coordenadas negativas na área de trabalho virtual.
+      const x = clampInt(a.x, -20000, 20000);
+      const y = clampInt(a.y, -20000, 20000);
+      if (x !== undefined && y !== undefined) {
+        const click: EvidenceAction = { id, type: 'click', x, y, button: a.button === 'right' ? 'right' : 'left' };
+        const win = sanitizeWindowRef(a.win);
+        if (win) click.win = win;
+        out.push(click);
+      }
     } else if (a.type === 'type' && typeof a.text === 'string' && a.text) {
       out.push({ id, type: 'type', text: a.text.slice(0, 500) });
     } else if (a.type === 'key' && typeof a.key === 'string' && a.key in EVIDENCE_KEYS) {
@@ -107,7 +151,9 @@ export const escapeSendKeys = (text: string): string =>
 export function describeAction(a: EvidenceAction): string {
   switch (a.type) {
     case 'click':
-      return `${a.button === 'right' ? 'Clique direito' : 'Clique'} em (${a.x}, ${a.y})`;
+      return a.win
+        ? `${a.button === 'right' ? 'Clique direito' : 'Clique'} em ${a.win.process} (+${a.win.dx}, +${a.win.dy})`
+        : `${a.button === 'right' ? 'Clique direito' : 'Clique'} em (${a.x}, ${a.y})`;
     case 'type':
       return `Digitar "${(a.text ?? '').length > 30 ? `${(a.text ?? '').slice(0, 30)}…` : a.text}"`;
     case 'key':
@@ -117,7 +163,7 @@ export function describeAction(a: EvidenceAction): string {
   }
 }
 
-export type EvidenceBlockInput =Pick<EvidenceBlock, 'kind' | 'phase' | 'title' | 'request' | 'response' | 'meta'>;
+export type EvidenceBlockInput = Pick<EvidenceBlock, 'kind' | 'phase' | 'title' | 'request' | 'response' | 'meta' | 'checks' | 'environment'>;
 
 export interface EvidenceStep {
   id: string;
@@ -340,6 +386,97 @@ export function formatHttpExchange(x: EvidenceHttpExchange): Pick<EvidenceBlock,
     .filter(Boolean)
     .join(' · ');
   return { request, response: prettyJson(x.responseBody), meta };
+}
+
+export const EVIDENCE_CHECKS_HELP =
+  'Uma regra por linha: status 200 | status 2xx | contem texto | nao contem texto | linhas >= 1 | tempo < 500 | json data.status = OK';
+
+const stripAccents = (s: string): string => s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+const compare = (actual: number, op: string, expected: number): boolean => {
+  switch (op) {
+    case '=':
+    case '==':
+      return actual === expected;
+    case '!=':
+      return actual !== expected;
+    case '>':
+      return actual > expected;
+    case '>=':
+      return actual >= expected;
+    case '<':
+      return actual < expected;
+    default:
+      return actual <= expected;
+  }
+};
+
+const jsonPath = (root: unknown, path: string): unknown =>
+  path
+    .replace(/\[(\d+)\]/g, '.$1')
+    .split('.')
+    .filter(Boolean)
+    .reduce<unknown>((cur, key) => (cur !== null && typeof cur === 'object' ? (cur as Record<string, unknown>)[key] : undefined), root);
+
+/**
+ * Avalia as regras de aprovação de uma prova contra o que foi registrado (meta e resposta), sem rodar nada.
+ * Regra desconhecida reprova com uma explicação, para um erro de digitação nunca virar "aprovado".
+ */
+export function evaluateChecks(checks: string | undefined, data: { response?: string; meta?: string }): EvidenceBlockVerdict | undefined {
+  const rules = (checks ?? '')
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (rules.length === 0) return undefined;
+  const response = data.response ?? '';
+  const meta = data.meta ?? '';
+  let parsed: unknown;
+  let parsedOk = false;
+  try {
+    parsed = JSON.parse(response);
+    parsedOk = true;
+  } catch {
+    /* resposta não é JSON: regras "json" reprovam abaixo */
+  }
+  const results = rules.map((rule): EvidenceCheckResult => {
+    const fail = (detail: string): EvidenceCheckResult => ({ rule, ok: false, detail });
+    const pass = (detail: string): EvidenceCheckResult => ({ rule, ok: true, detail });
+    const norm = stripAccents(rule);
+
+    const status = /^status\s+(\d{3}|[1-5]xx)$/i.exec(norm);
+    if (status) {
+      const real = /^(\d{3})\b/.exec(meta)?.[1];
+      if (!real) return fail('Sem status registrado na prova.');
+      const want = status[1].toLowerCase();
+      const ok = want.endsWith('xx') ? real[0] === want[0] : real === want;
+      return ok ? pass(`status ${real}`) : fail(`status ${real}`);
+    }
+    const contains = /^(nao\s+)?contem\s+(.+)$/i.exec(norm);
+    if (contains) {
+      const needle = rule.slice(rule.search(/contém|contem/i) + 6).trim().toLowerCase();
+      const has = response.toLowerCase().includes(needle);
+      const negate = !!contains[1];
+      return has !== negate ? pass(negate ? 'ausente, como esperado' : 'encontrado') : fail(negate ? 'presente na resposta' : 'não encontrado na resposta');
+    }
+    const num = /^(linhas|tempo)\s*(>=|<=|==|!=|=|<|>)\s*(\d+)\s*(?:ms)?$/i.exec(norm);
+    if (num) {
+      const isRows = num[1].toLowerCase() === 'linhas';
+      const real = isRows ? /(\d+)\s+linha/i.exec(meta)?.[1] : /(\d+)\s*ms/i.exec(meta)?.[1];
+      if (real === undefined) return fail(`Sem ${isRows ? 'contagem de linhas' : 'tempo'} registrado na prova.`);
+      return compare(Number(real), num[2], Number(num[3])) ? pass(`${real}${isRows ? ' linha(s)' : ' ms'}`) : fail(`${real}${isRows ? ' linha(s)' : ' ms'}`);
+    }
+    const js = /^json\s+(\S+)\s*(=|!=)\s*(.+)$/i.exec(rule.replace(/^JSON/i, 'json'));
+    if (js) {
+      if (!parsedOk) return fail('A resposta não é JSON.');
+      const real = jsonPath(parsed, js[1]);
+      const shown = real === undefined ? 'inexistente' : typeof real === 'object' ? JSON.stringify(real) : String(real);
+      const want = js[3].trim().replace(/^["']|["']$/g, '');
+      const equal = shown === want;
+      return equal === (js[2] === '=') ? pass(shown) : fail(shown);
+    }
+    return fail('Regra não reconhecida. ' + EVIDENCE_CHECKS_HELP);
+  });
+  return { passed: results.every((r) => r.ok), results };
 }
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'] as const;

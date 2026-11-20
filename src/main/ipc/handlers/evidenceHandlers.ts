@@ -176,10 +176,28 @@ export function registerEvidenceHandlers(ctx: IpcContext): void {
   let replaying = false;
   let abortReplay = false;
 
-  const primaryPixels = () => {
-    const { size, scaleFactor } = screen.getPrimaryDisplay();
-    return { width: Math.round(size.width * scaleFactor), height: Math.round(size.height * scaleFactor) };
+  /** Retângulo do monitor em pixels físicos da área de trabalho virtual (a mesma escala dos cliques gravados). */
+  const displayPixels = (display: Electron.Display) => {
+    const origin = screen.dipToScreenPoint({ x: display.bounds.x, y: display.bounds.y });
+    return {
+      x: origin.x,
+      y: origin.y,
+      width: Math.round(display.bounds.width * display.scaleFactor),
+      height: Math.round(display.bounds.height * display.scaleFactor)
+    };
   };
+
+  /** Print do monitor indicado (o principal, se omitido). */
+  const captureDisplayPng = async (display: Electron.Display): Promise<Buffer> => {
+    const px = displayPixels(display);
+    const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: px.width, height: px.height } });
+    const source = sources.find((s) => s.display_id === String(display.id)) ?? sources.find((s) => s.id.startsWith('screen:'));
+    if (!source || source.thumbnail.isEmpty()) throw new Error('Não consegui capturar a tela.');
+    return source.thumbnail.toPNG();
+  };
+
+  /** Monitor que contém um ponto em pixels físicos (clique gravado). */
+  const displayAtPhysicalPoint = (x: number, y: number) => screen.getDisplayNearestPoint(screen.screenToDipPoint({ x, y }));
 
   const stopWatcher = () => {
     watcher?.stop();
@@ -191,7 +209,6 @@ export function registerEvidenceHandlers(ctx: IpcContext): void {
     if (replaying) throw new Error('Aguarde a reexecução terminar.');
     stopWatcher();
     const sessionId = id;
-    const px = primaryPixels();
     const handle = startClickWatcher(
       (click) => {
         // Cliques no próprio Hub (ex.: o botão de parar) não são passos.
@@ -199,12 +216,23 @@ export function registerEvidenceHandlers(ctx: IpcContext): void {
         queue = queue
           .then(async () => {
             await sleep(CLICK_SETTLE_MS);
-            const png = await captureScreenPng();
-            const inside = click.x < px.width && click.y < px.height;
-            const action = { id: crypto.randomUUID(), type: 'click' as const, x: click.x, y: click.y, button: click.button };
+            // O print é do monitor onde o clique aconteceu; o marcador é relativo a esse monitor.
+            const display = displayAtPhysicalPoint(click.x, click.y);
+            const px = displayPixels(display);
+            const png = await captureDisplayPng(display);
+            const fx = (click.x - px.x) / px.width;
+            const fy = (click.y - px.y) / px.height;
+            const action = {
+              id: crypto.randomUUID(),
+              type: 'click' as const,
+              x: click.x,
+              y: click.y,
+              button: click.button,
+              ...(click.win ? { win: click.win } : {})
+            };
             const updated = service.addStep(sessionId, png, undefined, {
               actions: [action],
-              marker: inside ? { x: click.x / px.width, y: click.y / px.height } : undefined
+              marker: fx >= 0 && fx <= 1 && fy >= 0 && fy <= 1 ? { x: fx, y: fy } : undefined
             });
             safeSend(mainWindow, EVIDENCE_AUTO_EVENT, updated);
           })
@@ -254,7 +282,9 @@ export function registerEvidenceHandlers(ctx: IpcContext): void {
         }
         if (abortReplay) throw new Error('Reexecução interrompida.');
         await sleep(REPLAY_SETTLE_MS);
-        service.addStep(target.id, await captureScreenPng(), step.title, { actions: step.actions, marker: step.marker, expected: step.expected });
+        // O print é do monitor onde o cursor parou (o último clique do passo), esteja a janela onde estiver.
+        const shot = await captureDisplayPng(screen.getDisplayNearestPoint(screen.getCursorScreenPoint()));
+        service.addStep(target.id, shot, step.title, { actions: step.actions, marker: step.marker, expected: step.expected });
         progress(i + 1);
       }
       progress(steps.length, { finished: true });

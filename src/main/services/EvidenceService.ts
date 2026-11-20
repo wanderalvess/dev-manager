@@ -9,6 +9,7 @@ import {
   EVIDENCE_PHASES,
   EVIDENCE_REPORT_FILE,
   buildSessionId,
+  evaluateChecks,
   isValidEvidenceFileName,
   isValidSessionId,
   normalizeJiraKey,
@@ -221,10 +222,22 @@ export class EvidenceService {
       request: text(input.request, EVIDENCE_BLOCK_MAX_CHARS),
       response: text(input.response, EVIDENCE_BLOCK_MAX_CHARS),
       meta: text(input.meta, 300),
+      checks: text(input.checks, 2000),
+      environment: text(input.environment, 100),
       createdAt: (this.deps.now?.() ?? new Date()).toISOString()
     };
+    block.verdict = evaluateChecks(block.checks, block);
     step.blocks = [...(step.blocks ?? []), block];
+    this.applyVerdicts(step);
     return this.write(session);
+  }
+
+  /** O resultado do passo acompanha as regras das provas "Depois"/"Evidência": qualquer reprovação reprova; tudo aprovado aprova. */
+  private applyVerdicts(step: EvidenceStep): void {
+    const verdicts = (step.blocks ?? []).filter((b) => b.phase !== 'before' && b.verdict).map((b) => b.verdict!);
+    if (verdicts.length === 0) return;
+    if (verdicts.some((v) => !v.passed)) step.result = 'failed';
+    else if (step.result !== 'passed') step.result = 'passed';
   }
 
   updateBlock(id: string, stepId: string, blockId: string, patch: Partial<EvidenceBlockInput>): EvidenceSession {
@@ -236,6 +249,10 @@ export class EvidenceService {
     if (patch.request !== undefined) block.request = text(patch.request, EVIDENCE_BLOCK_MAX_CHARS);
     if (patch.response !== undefined) block.response = text(patch.response, EVIDENCE_BLOCK_MAX_CHARS);
     if (patch.meta !== undefined) block.meta = text(patch.meta, 300);
+    if (patch.checks !== undefined) block.checks = text(patch.checks, 2000);
+    if (patch.environment !== undefined) block.environment = text(patch.environment, 100);
+    block.verdict = evaluateChecks(block.checks, block);
+    this.applyVerdicts(this.findStep(session, stepId));
     return this.write(session);
   }
 
