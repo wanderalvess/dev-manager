@@ -40,7 +40,7 @@ export const StartContinueCard: React.FC<{
       </div>
       <div className="relative flex flex-col gap-1.5 min-w-0">
         <span className="font-mono text-xs font-bold text-primary">{issue.key}</span>
-        <p className="m-0 text-lg sm:text-xl xl:text-2xl 2xl:text-3xl font-extrabold tracking-tight leading-snug line-clamp-3">
+        <p className="m-0 text-lg sm:text-xl xl:text-2xl 2xl:text-3xl [@media(max-height:900px)]:xl:text-xl [@media(max-height:900px)]:2xl:text-xl font-extrabold tracking-tight leading-snug line-clamp-3 [@media(max-height:900px)]:line-clamp-2">
           {issue.summary}
         </p>
       </div>
@@ -138,7 +138,7 @@ export const StartJiraCard: React.FC<{
       {rows.length === 0 ? (
         <p className="m-0 text-xs sm:text-sm text-muted-foreground">Nada em andamento nem com prazo para hoje.</p>
       ) : (
-        <ul className="m-0 p-0 list-none flex flex-col gap-1 min-w-0">
+        <ul className="m-0 p-0 list-none flex flex-col gap-1 min-w-0 [@media(max-height:900px)]:[&>li:nth-child(n+4)]:hidden">
           {rows.map((r) => (
             <IssueRow key={r.issue.key} {...r} />
           ))}

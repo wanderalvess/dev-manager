@@ -54,7 +54,7 @@ export const SplashStartPanel: React.FC<{
     <div className="w-full flex-1 min-h-0 flex flex-col gap-3 sm:gap-3.5">
       <section
         aria-label="Tela de início"
-        className={`grid grid-cols-1 md:grid-cols-6 xl:grid-cols-12 gap-3 sm:gap-3.5 2xl:gap-5 xl:flex-1 xl:auto-rows-[minmax(13rem,1fr)] ${CARDS_IN}`}
+        className={`grid grid-cols-1 md:grid-cols-6 xl:grid-cols-12 gap-3 sm:gap-3.5 2xl:gap-5 xl:flex-1 xl:auto-rows-[minmax(13rem,1fr)] [@media(max-height:900px)]:xl:auto-rows-[minmax(10rem,1fr)] [@media(max-height:900px)]:gap-2.5 ${CARDS_IN}`}
       >
         {jiraLayout ? (
           <>

@@ -124,7 +124,7 @@ export const SplashWeatherCard: React.FC<{
               .join(' · ')}
           </p>
           {!!w.days?.length && (
-            <ul className="m-0 p-0 list-none grid grid-cols-3 gap-1.5 mt-auto">
+            <ul className="m-0 p-0 list-none grid grid-cols-3 gap-1.5 mt-auto [@media(max-height:900px)]:hidden">
               {w.days.map((d) => {
                 const DayIcon = ICONS[d.icon];
                 return (
