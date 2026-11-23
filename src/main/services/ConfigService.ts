@@ -867,6 +867,7 @@ export class ConfigService {
       if (typeof parsed.karafDebugPort === 'number') merged.karafDebugPort = parsed.karafDebugPort;
       if (typeof parsed.ideName === 'string') merged.ideName = parsed.ideName;
       if (typeof parsed.karafScript === 'string') merged.karafScript = parsed.karafScript;
+      if (parsed.karafEmbeddedMode === 'window' || parsed.karafEmbeddedMode === 'pipe') merged.karafEmbeddedMode = parsed.karafEmbeddedMode;
 
       if (Array.isArray(parsed.docFolders)) merged.docFolders = parsed.docFolders;
 

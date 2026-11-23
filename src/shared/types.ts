@@ -512,6 +512,8 @@ export interface AppSettings {
   karafWslDistro?: string;
   jdkPath?: string;
   karafScript?: string;
+  /** Console do Karaf no Windows nativo: 'window' abre a janela do winthor.bat e lê o console dela (padrão); 'pipe' liga o stdin por pipe. */
+  karafEmbeddedMode?: 'window' | 'pipe';
   karafUser: string;
   karafPass: string;
   /** Indicador se a senha do Karaf já está salva de forma segura (quando karafPass trafega sanitizado). */
