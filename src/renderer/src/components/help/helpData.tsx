@@ -1646,7 +1646,7 @@ export function getFaqList({
     {
       id: 'api-studio-postman-and-winthor-auth',
       question: 'Como funciona o API Studio (Postman integrado) e a Autenticação Automática WinThor?',
-      category: 'Desenvolvimento & DevOps',
+      category: 'Desenvolvimento & Entrega',
       tags: ['api studio', 'postman', 'http', 'rest', 'winthor', 'login', 'token', 'autenticação', 'coleções', 'variáveis'],
       answer: (
         <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
