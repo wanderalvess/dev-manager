@@ -56,10 +56,17 @@ describe('parseSingleTableSelect', () => {
     expect(parseSingleTableSelect('SELECT * FROM clientes ORDER BY id; DROP TABLE x')).toBeNull();
   });
 
-  it('rejeita joins, agregações, subqueries e filtros arbitrários', () => {
+  it('aceita filtro WHERE numa tabela só', () => {
+    expect(parseSingleTableSelect('select * from pcprodut where codprod = 200268;')).toBe('pcprodut');
+    expect(parseSingleTableSelect('SELECT * FROM clientes WHERE nome = \'Ana\' ORDER BY id')).toBe('clientes');
+  });
+
+  it('rejeita joins, agregações, subqueries e filtros que misturam tabelas', () => {
     expect(parseSingleTableSelect('SELECT * FROM a JOIN b ON a.id = b.id')).toBeNull();
     expect(parseSingleTableSelect('SELECT COUNT(*) FROM clientes')).toBeNull();
-    expect(parseSingleTableSelect('SELECT * FROM clientes WHERE nome = \'Ana\'')).toBeNull();
+    expect(parseSingleTableSelect('SELECT * FROM clientes WHERE id IN (SELECT id FROM b)')).toBeNull();
+    expect(parseSingleTableSelect('SELECT * FROM clientes WHERE id = 1; DROP TABLE x')).toBeNull();
+    expect(parseSingleTableSelect('SELECT * FROM clientes WHERE id = 1 GROUP BY id')).toBeNull();
     expect(parseSingleTableSelect('SELECT id, nome FROM clientes')).toBeNull();
     expect(parseSingleTableSelect('')).toBeNull();
   });

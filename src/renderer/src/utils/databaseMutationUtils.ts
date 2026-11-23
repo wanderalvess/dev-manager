@@ -49,7 +49,16 @@ export function parseSingleTableSelect(sql: string): string | null {
   const match = clean.match(
     /^SELECT\s+\*\s+FROM\s+([A-Za-z_][A-Za-z0-9_$]*(?:\.[A-Za-z_][A-Za-z0-9_$]*)?)\s*(?:WHERE\s+ROWNUM\s*<=\s*\d+)?\s*(?:ORDER\s+BY\s+[A-Za-z_][A-Za-z0-9_$]*(?:\.[A-Za-z_][A-Za-z0-9_$]*)?(?:\s+(?:ASC|DESC))?(?:\s*,\s*[A-Za-z_][A-Za-z0-9_$]*(?:\.[A-Za-z_][A-Za-z0-9_$]*)?(?:\s+(?:ASC|DESC))?)*)?\s*(?:LIMIT\s+\d+)?\s*$/i
   );
-  return match ? match[1] : null;
+  if (match) return match[1];
+
+  // Com filtro: `SELECT * FROM t WHERE ...` continua sendo uma tabela só. Rejeita tudo que possa misturar
+  // tabelas ou linhas (subquery, JOIN, agrupamento, UNION, comentários, múltiplos comandos).
+  const filtered = clean.match(/^SELECT\s+\*\s+FROM\s+([A-Za-z_][A-Za-z0-9_$]*(?:\.[A-Za-z_][A-Za-z0-9_$]*)?)\s+WHERE\s+([\s\S]+)$/i);
+  if (!filtered) return null;
+  const body = filtered[2];
+  if (/;|--|\/\*/.test(body)) return null;
+  if (/\b(SELECT|JOIN|UNION|INTERSECT|MINUS|EXCEPT|GROUP\s+BY|HAVING|CONNECT\s+BY|START\s+WITH|FOR\s+UPDATE)\b/i.test(body)) return null;
+  return filtered[1];
 }
 
 /** Verdadeiro se o texto digitado na edição de célula representa o sigilo de NULL. */

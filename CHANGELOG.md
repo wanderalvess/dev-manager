@@ -11,9 +11,11 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 ### Alterado
 - **Menu**: *Deploy & Esteiras* passa para o grupo *Desenvolvimento & Entrega* (antes *Desenvolvimento & DevOps*), junto de Git & Azure DevOps. Ajuda e tour atualizados.
 - **Tela de início**: sem scroll em monitor pequeno e sem cabeçalho repetido.
+- **Editor SQL**: a grid de resultados agora é editável também em consultas `SELECT * FROM tabela WHERE ...` (antes só sem filtro). Duplo-clique na célula edita e *Aplicar* grava. Consultas com JOIN, subquery ou agrupamento continuam somente leitura.
 - **Git**: o destino do Pull Request nunca fica igual à branch atual; o motivo de um PR indisponível aparece uma vez, fora do botão; sem os botões duplicados *Diff* e *Commitar*; plurais corretos nos textos.
 
 ### Corrigido
+- **Editor SQL**: sessão expirada ou conexão caída sem alterações pendentes reconecta sozinha e repete a consulta, em vez de mostrar "Sessão não encontrada ou expirada".
 - **Atualização**: quando o download falha, o card mostra o motivo e oferece baixar pelo navegador em vez de sumir.
 - **Docker no WSL**: script de subida válido, erros legíveis e menos efeitos colaterais.
 

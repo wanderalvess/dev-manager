@@ -81,12 +81,23 @@ export function useDatabaseSession(activeConnection: DatabaseConnectionConfig | 
         const sid = await ensureSession();
         if (!sid) return window.electronAPI.executeDbQuery(activeConnection, sql, maxRows, binds);
 
-        const res = await window.electronAPI.executeDbSession(sid, sql, maxRows, binds);
+        let res: Awaited<ReturnType<typeof window.electronAPI.executeDbSession>>;
+        try {
+          res = await window.electronAPI.executeDbSession(sid, sql, maxRows, binds);
+        } catch (err: any) {
+          // O main lança quando a sessão não existe mais (expirada/fechada): reabre e repete uma vez.
+          if (/Sessão não encontrada/.test(err?.message ?? '')) {
+            forget(connId);
+            if (canRetry) return run(false);
+          }
+          throw err;
+        }
         remember(connId, res.session);
         if (!res.success && SESSION_LOST.test(res.error ?? '')) {
           forget(connId);
-          // Sessão expirada (nada pendente a perder): reabre e repete uma vez. Queda de conexão: só avisa.
-          if (canRetry && /Sessão não encontrada/.test(res.error ?? '')) return run(false);
+          // Sem alterações pendentes a perder: reconecta e repete uma vez. Com pendências descartadas, só avisa.
+          const lostPending = /alterações pendentes foram descartadas/.test(res.error ?? '');
+          if (canRetry && !lostPending) return run(false);
         }
         return res;
       };
