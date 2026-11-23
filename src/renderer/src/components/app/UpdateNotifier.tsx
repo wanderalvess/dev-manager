@@ -9,10 +9,13 @@ import { buildUpdateNotice, noticeKey, type UpdateNotice } from './updateNotice'
  * Também dispara a checagem ao montar: a do boot no processo main costuma acontecer antes de a janela
  * assinar o canal update:status, e o resultado se perderia.
  */
+const RELEASES_URL = 'https://github.com/wanderalvess/dev-manager/releases/latest';
+
 export const UpdateNotifier: React.FC = () => {
   const [status, setStatus] = useState<UpdateStatus | null>(null);
   const [lastVersion, setLastVersion] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [downloadRequested, setDownloadRequested] = useState(false);
 
   useEffect(() => {
     const unsubscribe = window.electronAPI?.onUpdateStatus?.((next) => {
@@ -24,6 +27,41 @@ export const UpdateNotifier: React.FC = () => {
   }, []);
 
   const notice: UpdateNotice | null = buildUpdateNotice(status, lastVersion);
+
+  // Falha depois de o usuário pedir o download: antes o card sumia sem explicação. Agora mostra o motivo
+  // e oferece baixar o instalador pela página da release.
+  if (status?.status === 'error' && downloadRequested && lastVersion) {
+    const openRelease = () => {
+      void window.electronAPI?.openExternal?.(RELEASES_URL);
+      setDownloadRequested(false);
+    };
+    return (
+      <div
+        role="alert"
+        className="fixed bottom-4 right-4 z-101 w-[min(26rem,calc(100vw-2rem))] rounded-2xl border border-border bg-card p-5 shadow-lg animate-fade-in"
+      >
+        <h2 className="m-0 text-sm font-bold text-foreground">Não foi possível baixar a versão {lastVersion}</h2>
+        <p className="mt-2 mb-0 text-xs leading-relaxed text-muted-foreground">{status.message}</p>
+        <div className="mt-4 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => setDownloadRequested(false)}
+            className="h-10 cursor-pointer rounded-xl px-4 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Fechar
+          </button>
+          <button
+            type="button"
+            onClick={openRelease}
+            className="h-10 cursor-pointer rounded-xl bg-primary px-5 text-xs font-bold text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            Baixar pelo navegador
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!notice || dismissed.has(noticeKey(notice))) return null;
 
   const dismiss = () => setDismissed((prev) => new Set(prev).add(noticeKey(notice)));
@@ -32,6 +70,7 @@ export const UpdateNotifier: React.FC = () => {
       void window.electronAPI?.installUpdate?.();
       return;
     }
+    setDownloadRequested(true);
     void window.electronAPI?.downloadUpdate?.();
     // Baixar no instalado: o card passa a mostrar o progresso. No portátil o download abre no navegador.
     if (notice.manual) dismiss();
