@@ -80,7 +80,7 @@ export function getPrSteps(input: {
       : 'branch em dia com o origin';
 
   const prStep: PrStep = blockedReason
-    ? { id: 'pr', label: 'Abrir Pull Request', hint: blockedReason, state: 'blocked' }
+    ? { id: 'pr', label: 'Abrir Pull Request', hint: 'indisponível, veja o aviso abaixo', state: 'blocked' }
     : needsPush
       ? { id: 'pr', label: 'Abrir Pull Request', hint: 'o botão publica antes de abrir', state: 'pending' }
       : { id: 'pr', label: 'Abrir Pull Request', hint: 'pronto para abrir', state: 'current' };

@@ -16,7 +16,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     target: 'nav-infra',
     title: 'Infraestrutura & Ambiente',
-    desc: 'Serviços e esteira do ambiente, containers, WinThor e WSL, catálogo de rotinas, deploy e Karaf.'
+    desc: 'O que fica rodando: serviços do ambiente, containers, WinThor e WSL, catálogo de rotinas e Karaf.'
   },
   {
     target: 'nav-obs',
@@ -30,8 +30,8 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     target: 'nav-dev',
-    title: 'Desenvolvimento & DevOps',
-    desc: 'Git e Azure DevOps, documentação semântica (RAG) e o API Studio.'
+    title: 'Desenvolvimento & Entrega',
+    desc: 'O caminho do código: task e PR no Git & Azure DevOps, build e deploy nas esteiras, API Studio e documentação semântica (RAG).'
   },
   {
     target: 'nav-qa',

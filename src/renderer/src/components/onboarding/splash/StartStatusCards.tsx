@@ -100,7 +100,7 @@ const Gauge: React.FC<{ label: string; percent: number; detail?: string }> = ({ 
       aria-valuemin={0}
       aria-valuemax={100}
     >
-      <div className="relative w-20 h-20 2xl:w-24 2xl:h-24">
+      <div className="relative w-20 h-20 2xl:w-24 2xl:h-24 [@media(max-height:900px)]:w-16 [@media(max-height:900px)]:h-16 [@media(max-height:900px)]:2xl:w-16 [@media(max-height:900px)]:2xl:h-16">
         <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90" aria-hidden="true">
           <circle cx="18" cy="18" r="15.9" fill="none" strokeWidth="2.6" className="stroke-border" />
           <circle
@@ -183,12 +183,12 @@ export const StartWeekCard: React.FC<{
         </span>
       </div>
       <div className="flex-1 min-h-0 flex items-stretch gap-5 min-w-0">
-        <div className="flex flex-col justify-end gap-4 shrink-0">
+        <div className="flex flex-col justify-end gap-4 [@media(max-height:900px)]:gap-2 shrink-0">
           {data.usageOff ? (
             <p className="m-0 max-w-44 text-xs text-muted-foreground">A contagem de uso está desligada (Configurações › Meu uso).</p>
           ) : (
             <div>
-              <p className="m-0 text-4xl font-extrabold tracking-tight leading-none tabular-nums">{data.week ? runs : '–'}</p>
+              <p className="m-0 text-4xl [@media(max-height:900px)]:text-3xl font-extrabold tracking-tight leading-none tabular-nums">{data.week ? runs : '–'}</p>
               <p className="m-0 mt-1 text-xs text-muted-foreground">
                 {runs === 1 ? 'automação' : 'automações'} em 7 dias
                 {data.week && data.week.savedMs > 0 && (
@@ -202,13 +202,13 @@ export const StartWeekCard: React.FC<{
           )}
           {jiraOn && (
             <div>
-              <p className="m-0 text-4xl font-extrabold tracking-tight leading-none tabular-nums">{formatHours(data.jira!.weekSeconds)}</p>
+              <p className="m-0 text-4xl [@media(max-height:900px)]:text-3xl font-extrabold tracking-tight leading-none tabular-nums">{formatHours(data.jira!.weekSeconds)}</p>
               <p className="m-0 mt-1 text-xs text-muted-foreground">lançadas no Jira desde segunda</p>
             </div>
           )}
         </div>
         <div
-          className="flex-1 min-h-24 grid grid-cols-7 gap-1.5 sm:gap-2 items-end min-w-0"
+          className="flex-1 min-h-24 [@media(max-height:900px)]:min-h-16 grid grid-cols-7 gap-1.5 sm:gap-2 items-end min-w-0"
           role="img"
           aria-label={unit === 'hours' ? 'Horas lançadas no Jira por dia da semana' : 'Automações por dia da semana'}
         >

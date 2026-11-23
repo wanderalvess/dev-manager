@@ -9,7 +9,7 @@ export const SPLASH_BOOT_ITEMS = [
   'Infraestrutura & Ambiente',
   'Observabilidade & Diagnóstico',
   'Banco de Dados & Backups',
-  'Desenvolvimento & DevOps',
+  'Desenvolvimento & Entrega',
   'Qualidade & Homologação',
   'Servidor MCP'
 ];

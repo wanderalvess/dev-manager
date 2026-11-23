@@ -7,6 +7,14 @@ import type { ChunkHandler, KarafContext } from './karafContext';
 import { readKarafInstallInfo } from './karafInstallInfo';
 import { serviceBlockingStart } from './karafServiceGuard';
 import { pickFreeDebugPort } from './karafDebugPort';
+import {
+  hasKarafWindowSession,
+  interruptKarafWindow,
+  sendKarafWindowInput,
+  startKarafWindow,
+  stopKarafWindow,
+  useKarafWindowMode
+} from './karafConsoleWindow';
 
 // --- Karaf Embutido no Painel ---
 function startEmbeddedKarafWsl(ctx: KarafContext, settings: AppSettings, onLog: ChunkHandler): boolean {
@@ -88,6 +96,22 @@ export function startEmbeddedKarafDebug(ctx: KarafContext, onLog: ChunkHandler):
     const cmdExe = childEnv.ComSpec || process.env.ComSpec || process.env.COMSPEC || 'cmd.exe';
     // A pasta do próprio script: ele pode estar em bin/, na raiz ou num caminho customizado (karafScript)
     const scriptDir = path.dirname(exeFile);
+
+    if (useKarafWindowMode(settings)) {
+      // Janela real do winthor.bat: o helper lê o buffer dela e digita os comandos (sem SSH, sem pipe de stdin)
+      const helper = startKarafWindow({ exeFile, scriptDir, env: childEnv, karafPath: settings.karafPath }, onLog);
+      if (!helper) {
+        ctx.embeddedDebugPort = null;
+        return false;
+      }
+      ctx.embeddedKarafProcess = helper;
+      helper.on('close', () => {
+        if (ctx.embeddedKarafProcess === helper) ctx.embeddedKarafProcess = null;
+        ctx.embeddedDebugPort = null;
+      });
+      return true;
+    }
+
     ctx.embeddedKarafProcess = isWin
       ? spawn(cmdExe, ['/c', path.basename(exeFile), 'debug'], {
           cwd: scriptDir,
@@ -131,6 +155,11 @@ export function startEmbeddedKarafDebug(ctx: KarafContext, onLog: ChunkHandler):
 }
 
 export function sendEmbeddedInput(ctx: KarafContext, input: string): boolean {
+  if (hasKarafWindowSession()) {
+    if (!input || typeof input !== 'string') return false;
+    if (input === '\x03' || input === '^C') return interruptKarafWindow();
+    return sendKarafWindowInput(input);
+  }
   if (ctx.embeddedKarafProcess && ctx.embeddedKarafProcess.stdin) {
     if (!input || typeof input !== 'string') return false;
     // Permite interrupção (Ctrl+C / ETX \x03) para cancelar comandos em execução como log:tail
@@ -147,6 +176,7 @@ export function sendEmbeddedInput(ctx: KarafContext, input: string): boolean {
 
 /** Envia sinal de interrupção (Ctrl+C / ETX \x03) para o processo do console embutido Karaf. */
 export function sendEmbeddedInterrupt(ctx: KarafContext): boolean {
+  if (hasKarafWindowSession()) return interruptKarafWindow();
   if (ctx.embeddedKarafProcess && ctx.embeddedKarafProcess.stdin) {
     try {
       ctx.embeddedKarafProcess.stdin.write('\x03');
@@ -161,6 +191,12 @@ export function sendEmbeddedInterrupt(ctx: KarafContext): boolean {
 export async function stopEmbeddedKaraf(ctx: KarafContext): Promise<boolean> {
   if (!ctx.embeddedKarafProcess) return true;
   ctx.embeddedDebugPort = null;
+
+  if (hasKarafWindowSession()) {
+    const ok = await stopKarafWindow();
+    ctx.embeddedKarafProcess = null;
+    return ok;
+  }
 
   const settings = ctx.getSettings();
   if (isWslKaraf(settings)) {

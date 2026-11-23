@@ -9,7 +9,6 @@ import {
   Clock,
   UploadCloud,
   Upload,
-  Split,
   Eye
 } from 'lucide-react';
 import type { GitProjectInfo } from '../../../../shared/types';
@@ -108,15 +107,6 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
 
     {/* Ações Rápidas de Git */}
     <div className="flex flex-wrap items-center gap-1.5">
-      <button
-        type="button"
-        onClick={onOpenDiff}
-        className={QUIET_BUTTON}
-        title="Visualizar diff e arquivos alterados"
-      >
-        <Split className="w-3.5 h-3.5" />
-        <span>Diff</span>
-      </button>
       <button
         type="button"
         onClick={onOpenHistory}

@@ -32,11 +32,11 @@ describe('GitPrSteps', () => {
     expect(html).toContain('o botão publica antes de abrir');
   });
 
-  it('mostra o motivo quando o PR está bloqueado', () => {
+  it('indica que o PR está indisponível quando bloqueado', () => {
     const html = renderToStaticMarkup(
       <GitPrSteps steps={getPrSteps({ branch: 'a1b2c3d4', localOnly: false, unpushedCommits: 0, blockedReason: 'HEAD destacado' })} />
     );
-    expect(html).toContain('HEAD destacado');
+    expect(html).toContain('indisponível, veja o aviso abaixo');
     expect(html).not.toContain('aria-current');
   });
 });

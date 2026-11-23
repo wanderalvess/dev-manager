@@ -6,7 +6,7 @@ interface TargetBranchOptionsInput {
   /** Branches do origin conhecidas localmente (vazio se o repositório nunca fez fetch). */
   remoteBranches?: string[];
   currentBranch: string;
-  /** Valor atualmente selecionado; sempre entra na lista para o <select> não exibir outra opção. */
+  /** Valor atualmente selecionado; entra na lista (exceto se for a própria branch atual, que não pode ser o destino). */
   selected: string;
   /** Branch alvo padrão definida nas configurações. */
   preferred?: string;
@@ -31,7 +31,7 @@ export function buildTargetBranchOptions({
     if (!branch || branch === currentBranch || options.includes(branch)) continue;
     options.push(branch);
   }
-  if (selected && !options.includes(selected)) {
+  if (selected && selected !== currentBranch && !options.includes(selected)) {
     options.unshift(selected);
   }
   return options;

@@ -4,6 +4,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.72.0] - 2026-11-23
+### Adicionado
+- **Console do Karaf por janela real (Windows)**: o Hub abre a janela do `winthor.bat` e lê o console dela, então o comando responde na hora e o texto vem sem sequências soltas. O modo `pipe` continua disponível nas configurações (`karafEmbeddedMode`).
+
+### Alterado
+- **Menu**: *Deploy & Esteiras* passa para o grupo *Desenvolvimento & Entrega* (antes *Desenvolvimento & DevOps*), junto de Git & Azure DevOps. Ajuda e tour atualizados.
+- **Tela de início**: sem scroll em monitor pequeno e sem cabeçalho repetido.
+- **Editor SQL**: a grid de resultados agora é editável também em consultas `SELECT * FROM tabela WHERE ...` (antes só sem filtro). Duplo-clique na célula edita e *Aplicar* grava. Consultas com JOIN, subquery ou agrupamento continuam somente leitura.
+- **Git**: o destino do Pull Request nunca fica igual à branch atual; o motivo de um PR indisponível aparece uma vez, fora do botão; sem os botões duplicados *Diff* e *Commitar*; plurais corretos nos textos.
+
+### Corrigido
+- **Editor SQL**: sessão expirada ou conexão caída sem alterações pendentes reconecta sozinha e repete a consulta, em vez de mostrar "Sessão não encontrada ou expirada".
+- **Atualização**: quando o download falha, o card mostra o motivo e oferece baixar pelo navegador em vez de sumir.
+- **Docker no WSL**: script de subida válido, erros legíveis e menos efeitos colaterais.
+
 ## [1.71.0] - 2026-11-19
 ### Adicionado
 - **Regras de aprovação nas provas de API e SQL**: cada prova aceita regras (status, contém, linhas, tempo, json) e o passo é aprovado ou reprovado sozinho. Regra desconhecida reprova com uma explicação, para um erro de digitação nunca virar "aprovado".

@@ -81,14 +81,6 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
         shortcut: 'Alt+6'
       },
       {
-        id: 'deploy',
-        label: 'Deploy & Esteiras',
-        shortLabel: 'Deploy',
-        icon: Layers,
-        description: 'Perfis de deploy, containers & esteiras de automação',
-        shortcut: 'Alt+4'
-      },
-      {
         id: 'karaf',
         label: 'Karaf & OSGi',
         shortLabel: 'Karaf',
@@ -155,26 +147,26 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
   },
   {
     id: 'dev',
-    title: 'Desenvolvimento & DevOps',
+    title: 'Desenvolvimento & Entrega',
     shortTitle: 'Desenvolvimento',
     compactTitle: 'Dev',
     icon: GitPullRequest,
     items: [
       {
         id: 'git',
-        label: 'Git & DevOps',
+        label: 'Git & Azure DevOps',
         shortLabel: 'Git',
         icon: GitPullRequest,
-        description: 'Repositórios Git, branches, commits e PRs',
+        description: 'Tasks do Azure DevOps, repositórios Git, branches, commits e PRs',
         shortcut: 'Alt+5'
       },
       {
-        id: 'docs',
-        label: 'Documentação Semântica',
-        shortLabel: 'Docs',
-        icon: FileSearch,
-        description: 'Busca semântica RAG na documentação dos projetos',
-        shortcut: 'Alt+7'
+        id: 'deploy',
+        label: 'Deploy & Esteiras',
+        shortLabel: 'Deploy',
+        icon: Layers,
+        description: 'Esteiras de build (Maven, Delphi) e publicação no Karaf e no Docker',
+        shortcut: 'Alt+4'
       },
       {
         id: 'http-client',
@@ -183,6 +175,14 @@ export const NAV_THEME_GROUPS: NavThemeGroup[] = [
         icon: Globe,
         description: 'Cliente HTTP estilo Postman: coleções, variáveis e testes de APIs REST',
         shortcut: 'Alt+9'
+      },
+      {
+        id: 'docs',
+        label: 'Documentação Semântica',
+        shortLabel: 'Docs',
+        icon: FileSearch,
+        description: 'Busca semântica RAG na documentação dos projetos',
+        shortcut: 'Alt+7'
       }
     ]
   },

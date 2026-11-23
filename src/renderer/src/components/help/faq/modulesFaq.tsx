@@ -57,7 +57,7 @@ export function getModulesFaq(onNavigate?: (tab: string) => void): FaqItem[] {
           <ul className="list-disc pl-4 space-y-1">
             <li>
               <strong className="text-foreground">Infraestrutura</strong>: Ambiente Dev, Containers, WinThor &amp; WSL, Catálogo de
-              Rotinas, Deploy &amp; Esteiras e Karaf &amp; OSGi.
+              Rotinas e Karaf &amp; OSGi.
             </li>
             <li>
               <strong className="text-foreground">Observabilidade</strong>: Logs em Tempo Real, APM &amp; Traces e Rastreio de
@@ -67,7 +67,8 @@ export function getModulesFaq(onNavigate?: (tab: string) => void): FaqItem[] {
               <strong className="text-foreground">Banco de Dados</strong>: Banco de Dados e Backups de Banco.
             </li>
             <li>
-              <strong className="text-foreground">Desenvolvimento</strong>: Git &amp; DevOps, Documentação Semântica e API Studio.
+              <strong className="text-foreground">Desenvolvimento</strong>: Git &amp; Azure DevOps, Deploy &amp; Esteiras, API Studio e Documentação
+              Semântica.
             </li>
             <li>
               <strong className="text-foreground">Qualidade</strong>: Homologação, Validador Regressivo, Test Runners, TAUT e

@@ -54,7 +54,7 @@ export const GitDiffModal: React.FC<GitDiffModalProps> = ({
             Diff de Alterações · {project.name}
           </h3>
           <span className="text-2xs text-muted-foreground font-mono">
-            {files.length} arquivo(s) modificado(s) em relação a HEAD
+            {files.length} {files.length === 1 ? 'arquivo modificado' : 'arquivos modificados'} em relação a HEAD
           </span>
         </div>
       </div>

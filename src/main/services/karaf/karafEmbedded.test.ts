@@ -21,7 +21,7 @@ const { serviceBlockingStart } = await vi.importActual<typeof import('./karafSer
 function makeCtx(exe: string) {
   return {
     embeddedKarafProcess: null,
-    getSettings: () => ({ karafPath: 'C:\\pcsist\\produtos\\winthor' }),
+    getSettings: () => ({ karafPath: 'C:\\pcsist\\produtos\\winthor', karafEmbeddedMode: 'pipe' }),
     getKarafServerExecutable: () => exe,
     getResolvedJavaEnv: () => ({})
   } as never;

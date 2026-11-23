@@ -77,6 +77,6 @@ describe('getPrSteps', () => {
 
   it('motivo de bloqueio marca o PR como bloqueado', () => {
     const steps = getPrSteps({ ...base, blockedReason: 'HEAD destacado' });
-    expect(steps[2]).toMatchObject({ state: 'blocked', hint: 'HEAD destacado' });
+    expect(steps[2]).toMatchObject({ state: 'blocked', hint: 'indisponível, veja o aviso abaixo' });
   });
 });

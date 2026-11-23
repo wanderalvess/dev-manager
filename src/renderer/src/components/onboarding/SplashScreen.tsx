@@ -149,25 +149,29 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         </>
       )}
 
-      {painted && (
+      {/* Na tela de início a barra da janela já diz "Hub Manager": sem cabeçalho repetido, a versão vai junto da data */}
+      {painted && !home && (
         <header
           className={`relative ${home ? 'h-11 sm:h-12' : 'h-16'} shrink-0 ${PAGE_X} flex items-center justify-between font-mono text-xs text-muted-foreground`}
         >
           <span className="flex items-center gap-2.5">
-            {home && <AppLogo size="xs" />}
             HUB MANAGER{appVersion ? ` · v${appVersion}` : ''}
           </span>
-          {home && (
-            <span className="hidden sm:flex items-center gap-1.5">
-              <kbd className={KBD}>Enter</kbd> entra no Hub
-            </span>
-          )}
         </header>
       )}
 
       {!painted ? null : home ? (
-        <main className={`relative flex-1 min-h-0 overflow-y-auto flex flex-col ${PAGE_X} 2xl:px-24 pt-1 pb-4 sm:pb-6`}>
-          <StartHome data={start} news={showNews ? news : null} onEnter={onEnter} onOpenTab={onOpenTab} onWhatsNew={onWhatsNew} />
+        <main
+          className={`relative flex-1 min-h-0 overflow-y-auto flex flex-col ${PAGE_X} 2xl:px-24 pt-4 pb-4 [@media(max-height:900px)]:pt-3 [@media(max-height:900px)]:pb-3`}
+        >
+          <StartHome
+            data={start}
+            news={showNews ? news : null}
+            appVersion={appVersion}
+            onEnter={onEnter}
+            onOpenTab={onOpenTab}
+            onWhatsNew={onWhatsNew}
+          />
         </main>
       ) : (
         <main
