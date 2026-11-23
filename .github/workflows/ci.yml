@@ -19,7 +19,8 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      # O onnxruntime-node tenta baixar o binário CUDA (404 no GitHub); o CI não usa GPU.
+      - run: npm ci --onnxruntime-node-install-cuda=skip
 
       - name: Informational file size report
         if: github.event_name != 'push' || github.event.before != '0000000000000000000000000000000000000000'
