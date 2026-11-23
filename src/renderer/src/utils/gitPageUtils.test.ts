@@ -35,13 +35,13 @@ describe('buildTargetBranchOptions', () => {
     expect(options).toContain('main');
   });
 
-  it('não oferece a própria branch atual como destino, exceto se já estiver selecionada', () => {
+  it('não oferece a própria branch atual como destino, nem como selecionada', () => {
     expect(buildTargetBranchOptions({ remoteBranches: ['develop', 'main'], currentBranch: 'develop', selected: 'main' })).toEqual([
       'main'
     ]);
     expect(
       buildTargetBranchOptions({ remoteBranches: ['develop', 'main'], currentBranch: 'develop', selected: 'develop' })
-    ).toEqual(['develop', 'main']);
+    ).toEqual(['main']);
   });
 });
 

@@ -113,7 +113,7 @@ export const GitCommitModal: React.FC<GitCommitModalProps> = ({
           <span>
             {isLoadingFiles
               ? 'Carregando arquivos alterados...'
-              : `${commitFiles.length} arquivo(s) serão incluídos (inclusive não rastreados).`}
+              : `${commitFiles.length} ${commitFiles.length === 1 ? 'arquivo será incluído' : 'arquivos serão incluídos'} (inclusive não rastreados).`}
           </span>
           <span
             className="text-primary font-mono font-bold"

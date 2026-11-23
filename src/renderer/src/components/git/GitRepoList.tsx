@@ -87,7 +87,7 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
               {unpushed > 0 && (
                 <span
                   className="bg-info/10 text-info px-2 rounded-full font-medium"
-                  title={`${unpushed} commit(s) local(is) que o origin ainda não tem`}
+                  title={`${unpushed} ${unpushed === 1 ? 'commit local que o origin ainda não tem' : 'commits locais que o origin ainda não tem'}`}
                 >
                   ↑ {unpushed} sem push
                 </span>
@@ -95,7 +95,7 @@ export const GitRepoList: React.FC<GitRepoListProps> = ({
               {hasChanges && (
                 <span
                   className="bg-warning/10 text-warning px-2 rounded-full font-medium"
-                  title={`${pendingCount} arquivo(s) modificado(s)`}
+                  title={`${pendingCount} ${pendingCount === 1 ? 'arquivo modificado' : 'arquivos modificados'}`}
                 >
                   {pendingCount} {pendingCount === 1 ? 'alteração' : 'alterações'}
                 </span>

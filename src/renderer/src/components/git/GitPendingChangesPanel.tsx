@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, FileEdit, UploadCloud, Check, Split, Eye, Code2 } from 'lucide-react';
+import { RefreshCw, FileEdit, Check, Split, Eye, Code2 } from 'lucide-react';
 import type { GitFileStatus } from '../../../../shared/types';
 import { fileStatusBadge } from '../../utils/gitPageUtils';
 
@@ -8,7 +8,6 @@ interface GitPendingChangesPanelProps {
   isLoading: boolean;
   ideFeedback: string | null;
   onOpenDiff: (filePath?: string) => void;
-  onOpenCommit: () => void;
   onOpenFileInIde: (filePath: string) => void;
 }
 
@@ -17,7 +16,6 @@ export const GitPendingChangesPanel: React.FC<GitPendingChangesPanelProps> = ({
   isLoading,
   ideFeedback,
   onOpenDiff,
-  onOpenCommit,
   onOpenFileInIde
 }) => (
   <div className="space-y-3 pt-4 border-t border-border">
@@ -45,16 +43,6 @@ export const GitPendingChangesPanel: React.FC<GitPendingChangesPanelProps> = ({
         >
           <Split className="w-3.5 h-3.5 text-muted-foreground" />
           <span>Ver diff geral</span>
-        </button>
-        <button
-          type="button"
-          onClick={onOpenCommit}
-          disabled={files.length === 0}
-          className="h-8 px-3 bg-card hover:bg-muted border border-border text-foreground rounded-lg text-[13px] font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
-          title="Prosseguir para commit"
-        >
-          <UploadCloud className="w-3.5 h-3.5 text-muted-foreground" />
-          <span>Commitar</span>
         </button>
       </div>
     </div>

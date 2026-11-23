@@ -91,6 +91,13 @@ export const GitPullRequestPanel: React.FC<GitPullRequestPanelProps> = ({
       </div>
     </div>
 
+    {prBlockedReason && (
+      <p role="status" className="flex items-start gap-2 text-[13px] text-foreground bg-danger/10 rounded-[10px] px-3.5 py-2.5">
+        <Info className="w-3.5 h-3.5 text-danger shrink-0 mt-0.5" />
+        <span>{prBlockedReason}.</span>
+      </p>
+    )}
+
     {isLocalOnly && !prBlockedReason && (
       <p className="flex items-start gap-2 text-[13px] text-muted-foreground bg-warning/10 rounded-[10px] px-3.5 py-2.5">
         <Info className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
@@ -121,7 +128,7 @@ export const GitPullRequestPanel: React.FC<GitPullRequestPanelProps> = ({
       ) : (
         <ExternalLink className="w-4 h-4" />
       )}
-      <span>{prBlockedReason ? prBlockedReason : isBusy ? 'Preparando Pull Request...' : getPrActionLabel(project.provider, isLocalOnly)}</span>
+      <span>{isBusy ? 'Preparando Pull Request...' : getPrActionLabel(project.provider, isLocalOnly)}</span>
     </button>
   </div>
 );

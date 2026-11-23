@@ -99,7 +99,14 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
     [currentProject, targetBranch, preferredTarget]
   );
 
-  const prBlockedReason = getPrBlockedReason(currentProject, targetBranch);
+  // Estando na branch escolhida como destino (ex.: em develop), o PR para ela mesma não faz sentido:
+  // sugere a primeira outra opção em vez de deixar o painel bloqueado.
+  const effectiveTargetBranch =
+    currentProject && targetBranch === currentProject.currentBranch
+      ? (targetBranchOptions[0] ?? targetBranch)
+      : targetBranch;
+
+  const prBlockedReason = getPrBlockedReason(currentProject, effectiveTargetBranch);
 
   const publish = useGitPublish({ currentProject, ...outputControls, refreshAfterGitChange });
   const isLocalOnly = isBranchLocalOnly(currentProject);
@@ -107,7 +114,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
   const ops = useGitOperations({
     currentProject,
     selectedPath,
-    targetBranch,
+    targetBranch: effectiveTargetBranch,
     prBlockedReason,
     ensurePublishedForPr: publish.ensurePublishedForPr,
     ...outputControls,
@@ -182,12 +189,11 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
                   isLoading={isLoadingPendingChanges}
                   ideFeedback={ops.ideFeedback}
                   onOpenDiff={diff.handleOpenDiff}
-                  onOpenCommit={commit.openCommitModal}
                   onOpenFileInIde={ops.handleOpenFileInIde}
                 />
                 <GitPullRequestPanel
                   project={currentProject}
-                  targetBranch={targetBranch}
+                  targetBranch={effectiveTargetBranch}
                   targetBranchOptions={targetBranchOptions}
                   prBlockedReason={prBlockedReason}
                   isLocalOnly={isLocalOnly}
