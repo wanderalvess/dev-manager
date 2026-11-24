@@ -145,7 +145,7 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
         onSync={ops.handleSyncRepositories}
       />
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden">
+      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
         <GitRepoList
           projects={repoFilter.visibleProjects}
           selectedPath={currentProject?.path}
@@ -160,30 +160,31 @@ export const GitAzurePage: React.FC<GitAzurePageProps> = ({
         />
 
         {/* Coluna Direita: Detalhes do Repositório e Criador de Pull Request */}
-        <div className="lg:col-span-8 flex flex-col space-y-3 overflow-y-auto pr-1">
+        <div className="lg:col-span-8 min-w-0 min-h-0 flex flex-col gap-3 overflow-y-auto overflow-x-hidden">
           {currentProject ? (
             <>
-              <div className="bg-card rounded-[14px] p-6 space-y-5 border border-border shadow-xs">
-                <GitProjectTitleBar
-                  project={currentProject}
-                  onOpenAzurePipelines={ops.handleOpenAzurePipelines}
-                  onOpenRemoteRepo={ops.handleOpenRemoteRepo}
-                  onOpenArtifacts={artifacts.canOpen ? artifacts.open : undefined}
-                />
-                <GitBranchActionsBar
-                  project={currentProject}
-                  isExecutingGit={ops.isExecutingGit || publish.isPublishing}
-                  isPublishing={publish.isPublishing}
-                  isLocalOnly={isLocalOnly}
-                  hasPendingChanges={pendingChanges.length > 0}
-                  onPublish={publish.handlePublish}
-                  onOpenBranchModal={() => branchModal.setIsBranchModalOpen(true)}
-                  onOpenTaskBranchModal={taskBranch.openTaskBranchModal}
-                  onOpenDiff={() => diff.handleOpenDiff()}
-                  onOpenHistory={history.handleOpenHistory}
-                  onOpenCommit={commit.openCommitModal}
-                  onExecGit={ops.handleExecGit}
-                />
+              <div className="bg-card rounded-xl border border-border divide-y divide-border [&>*]:px-5 [&>*]:py-4">
+                <div className="space-y-3">
+                  <GitProjectTitleBar
+                    project={currentProject}
+                    onOpenAzurePipelines={ops.handleOpenAzurePipelines}
+                    onOpenRemoteRepo={ops.handleOpenRemoteRepo}
+                    onOpenArtifacts={artifacts.canOpen ? artifacts.open : undefined}
+                  />
+                  <GitBranchActionsBar
+                    project={currentProject}
+                    isExecutingGit={ops.isExecutingGit || publish.isPublishing}
+                    isPublishing={publish.isPublishing}
+                    isLocalOnly={isLocalOnly}
+                    hasPendingChanges={pendingChanges.length > 0}
+                    onPublish={publish.handlePublish}
+                    onOpenBranchModal={() => branchModal.setIsBranchModalOpen(true)}
+                    onOpenTaskBranchModal={taskBranch.openTaskBranchModal}
+                    onOpenHistory={history.handleOpenHistory}
+                    onOpenCommit={commit.openCommitModal}
+                    onExecGit={ops.handleExecGit}
+                  />
+                </div>
                 <GitPendingChangesPanel
                   files={pendingChanges}
                   isLoading={isLoadingPendingChanges}

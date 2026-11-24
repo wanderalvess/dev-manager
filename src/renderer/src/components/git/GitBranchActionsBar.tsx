@@ -5,11 +5,11 @@ import {
   RefreshCw,
   Archive,
   ArchiveRestore,
-  FileEdit,
   Clock,
   UploadCloud,
   Upload,
-  Eye
+  ChevronDown,
+  ListTodo
 } from 'lucide-react';
 import type { GitProjectInfo } from '../../../../shared/types';
 
@@ -23,17 +23,17 @@ interface GitBranchActionsBarProps {
   onPublish: () => void;
   onOpenBranchModal: () => void;
   onOpenTaskBranchModal: () => void;
-  onOpenDiff: () => void;
   onOpenHistory: () => void;
   onOpenCommit: () => void;
   onExecGit: (command: 'fetch' | 'pull' | 'stash' | 'stash-pop') => void;
 }
 
-const ACTION_BUTTON =
-  'h-8 px-3 bg-card hover:bg-muted border border-border text-foreground rounded-lg text-[13px] font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
 const QUIET_BUTTON =
   'h-8 px-2.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg text-[13px] font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
-const PILL = 'text-[13px] bg-warning/10 text-warning px-2.5 py-0.5 rounded-full font-medium';
+const GROUP = 'flex items-stretch h-8 rounded-lg border border-border bg-card overflow-hidden divide-x divide-border';
+const GROUP_BUTTON =
+  'px-2.5 text-[13px] font-medium text-foreground hover:bg-muted flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed';
+const TAG = 'text-xs font-medium text-warning';
 
 export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
   project,
@@ -44,78 +44,115 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
   onPublish,
   onOpenBranchModal,
   onOpenTaskBranchModal,
-  onOpenDiff,
   onOpenHistory,
   onOpenCommit,
   onExecGit
 }) => (
-  <div className="bg-muted/60 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3">
-    <div className="flex flex-wrap items-center gap-3">
-      <GitBranch className="w-4 h-4 text-primary shrink-0" />
-      <div>
-        <span className="text-xs text-muted-foreground block">Branch atual</span>
-        <div className="flex flex-wrap items-center gap-2 mt-0.5" data-tour="branch-atual">
-          <span className="text-[15px] font-mono font-medium text-foreground">
-            {project.currentBranch}
-          </span>
-          {isLocalOnly && (
-            <span
-              className={PILL}
-              title="Esta branch existe só neste computador. Use Publicar para enviá-la ao origin (necessário para abrir o Pull Request)."
-            >
-              só local
-            </span>
-          )}
-          {project.detachedHead && (
-            <span className={PILL} title="O repositório está em um commit específico, fora de qualquer branch">
-              HEAD destacado
-            </span>
-          )}
-          <button
-            type="button"
-            data-tour="trocar-branch"
-            onClick={onOpenBranchModal}
-            className={ACTION_BUTTON}
-            title="Alternar branch ou criar uma nova"
-          >
-            Trocar / nova
-          </button>
-          <button
-            type="button"
-            onClick={onOpenTaskBranchModal}
-            className={ACTION_BUTTON}
-            title="Criar branch vinculada a tarefa do Azure DevOps ou Jira"
-          >
-            <span>Branch por tarefa</span>
-          </button>
-        </div>
-      </div>
-
-      {(project.uncommittedCount || 0) > 0 && (
-        <button
-          type="button"
-          onClick={onOpenDiff}
-          className="hidden sm:flex items-center gap-1.5 h-8 px-3 rounded-full bg-warning/10 hover:bg-warning/20 text-warning text-[13px] font-medium transition cursor-pointer"
-          title="Inspecionar arquivos alterados e visualizador de diff"
-        >
-          <FileEdit className="w-3.5 h-3.5" />
-          <span>{project.uncommittedCount} {project.uncommittedCount === 1 ? 'alteração' : 'alterações'}</span>
-          <Eye className="w-3 h-3 opacity-70" />
-        </button>
-      )}
-    </div>
-
-    {/* Ações Rápidas de Git */}
-    <div className="flex flex-wrap items-center gap-1.5">
+  <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+    <div className="flex items-center gap-1 min-w-0" data-tour="branch-atual">
       <button
         type="button"
-        onClick={onOpenHistory}
-        className={QUIET_BUTTON}
-        title="Ver últimos commits deste repositório"
+        data-tour="trocar-branch"
+        onClick={onOpenBranchModal}
+        className="h-8 pl-2 pr-1.5 -ml-2 rounded-lg hover:bg-muted flex items-center gap-2 min-w-0 transition-colors cursor-pointer"
+        title="Alternar branch ou criar uma nova"
+        aria-label={`Branch atual: ${project.currentBranch}. Trocar ou criar branch`}
       >
+        <GitBranch className="w-4 h-4 text-primary shrink-0" />
+        <span className="text-sm font-mono font-medium text-foreground truncate">{project.currentBranch}</span>
+        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+      </button>
+      {isLocalOnly && (
+        <span
+          className={TAG}
+          title="Esta branch existe só neste computador. Use Publicar para enviá-la ao origin (necessário para abrir o Pull Request)."
+        >
+          só local
+        </span>
+      )}
+      {project.detachedHead && (
+        <span className={TAG} title="O repositório está em um commit específico, fora de qualquer branch">
+          HEAD destacado
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={onOpenTaskBranchModal}
+        className={QUIET_BUTTON}
+        title="Criar branch vinculada a tarefa do Azure DevOps ou Jira"
+      >
+        <ListTodo className="w-3.5 h-3.5" />
+        <span>Branch por tarefa</span>
+      </button>
+      <button type="button" onClick={onOpenHistory} className={QUIET_BUTTON} title="Ver últimos commits deste repositório">
         <Clock className="w-3.5 h-3.5" />
         <span>Histórico</span>
       </button>
+    </div>
+
+    <div className="flex flex-wrap items-center gap-2">
+      <div className={GROUP} data-tour="acoes-sync">
+        <button
+          type="button"
+          onClick={() => onExecGit('fetch')}
+          disabled={isExecutingGit}
+          className={GROUP_BUTTON}
+          title="Sincronizar referências remotas (git fetch)"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 text-muted-foreground ${isExecutingGit ? 'animate-spin' : ''}`} />
+          <span>Fetch</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onExecGit('pull')}
+          disabled={isExecutingGit}
+          className={GROUP_BUTTON}
+          title="Baixar e mesclar alterações da branch remota (git pull)"
+        >
+          <Download className="w-3.5 h-3.5 text-muted-foreground" />
+          <span>Pull</span>
+        </button>
+        <button
+          type="button"
+          onClick={onPublish}
+          disabled={isExecutingGit}
+          className={`${GROUP_BUTTON} ${isLocalOnly ? 'text-warning' : ''}`}
+          title={
+            isLocalOnly
+              ? 'Publicar a branch no origin (git push --set-upstream origin). Necessário antes de abrir o Pull Request.'
+              : 'Enviar os commits locais para o origin (git push --set-upstream origin)'
+          }
+        >
+          <Upload className={`w-3.5 h-3.5 ${isLocalOnly ? '' : 'text-muted-foreground'} ${isPublishing ? 'animate-pulse' : ''}`} />
+          <span>{isPublishing ? 'Enviando...' : isLocalOnly ? 'Publicar' : 'Push'}</span>
+        </button>
+      </div>
+
+      <div className={GROUP}>
+        <button
+          type="button"
+          onClick={() => onExecGit('stash')}
+          disabled={isExecutingGit}
+          className={GROUP_BUTTON}
+          title="Guardar alterações locais temporariamente (git stash)"
+          aria-label="Guardar alterações locais (git stash)"
+        >
+          <Archive className="w-3.5 h-3.5 text-muted-foreground" />
+          <span>Stash</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onExecGit('stash-pop')}
+          disabled={isExecutingGit}
+          className={GROUP_BUTTON}
+          title="Restaurar alterações locais guardadas (git stash pop)"
+          aria-label="Restaurar alterações guardadas (git stash pop)"
+        >
+          <ArchiveRestore className="w-3.5 h-3.5 text-muted-foreground" />
+          <span>Pop</span>
+        </button>
+      </div>
+
       <button
         type="button"
         data-tour="commit-push"
@@ -130,67 +167,6 @@ export const GitBranchActionsBar: React.FC<GitBranchActionsBarProps> = ({
       >
         <UploadCloud className="w-3.5 h-3.5" />
         <span>Commit e push</span>
-      </button>
-      <button
-        type="button"
-        onClick={onPublish}
-        disabled={isExecutingGit}
-        className={
-          isLocalOnly
-            ? 'h-8 px-3 bg-warning/10 hover:bg-warning/20 text-warning rounded-lg text-[13px] font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
-            : ACTION_BUTTON
-        }
-        title={
-          isLocalOnly
-            ? 'Publicar a branch no origin (git push --set-upstream origin). Necessário antes de abrir o Pull Request.'
-            : 'Enviar os commits locais para o origin (git push --set-upstream origin)'
-        }
-      >
-        <Upload className={`w-3.5 h-3.5 ${isPublishing ? 'animate-pulse' : ''}`} />
-        <span>{isPublishing ? 'Enviando...' : isLocalOnly ? 'Publicar' : 'Push'}</span>
-      </button>
-      <button
-        type="button"
-        data-tour="acoes-sync"
-        onClick={() => onExecGit('fetch')}
-        disabled={isExecutingGit}
-        className={ACTION_BUTTON}
-        title="Sincronizar referências remotas (git fetch)"
-      >
-        <RefreshCw className={`w-3.5 h-3.5 ${isExecutingGit ? 'animate-spin' : ''}`} />
-        <span>Fetch</span>
-      </button>
-      <button
-        type="button"
-        onClick={() => onExecGit('pull')}
-        disabled={isExecutingGit}
-        className={ACTION_BUTTON}
-        title="Baixar e mesclar alterações da branch remota (git pull)"
-      >
-        <Download className="w-3.5 h-3.5" />
-        <span>Pull</span>
-      </button>
-      <button
-        type="button"
-        onClick={() => onExecGit('stash')}
-        disabled={isExecutingGit}
-        className={ACTION_BUTTON}
-        title="Guardar alterações locais temporariamente (git stash)"
-        aria-label="Guardar alterações locais (git stash)"
-      >
-        <Archive className="w-3.5 h-3.5" />
-        <span>Stash</span>
-      </button>
-      <button
-        type="button"
-        onClick={() => onExecGit('stash-pop')}
-        disabled={isExecutingGit}
-        className={ACTION_BUTTON}
-        title="Restaurar alterações locais guardadas (git stash pop)"
-        aria-label="Restaurar alterações guardadas (git stash pop)"
-      >
-        <ArchiveRestore className="w-3.5 h-3.5" />
-        <span>Pop</span>
       </button>
     </div>
   </div>

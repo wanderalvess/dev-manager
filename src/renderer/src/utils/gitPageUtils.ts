@@ -37,20 +37,20 @@ export function buildTargetBranchOptions({
   return options;
 }
 
-export function fileStatusBadge(status: GitFileStatus['status']): { label: string; className: string } {
+export function fileStatusBadge(status: GitFileStatus['status']): { label: string; className: string; textClassName: string } {
   switch (status) {
     case 'added':
-      return { label: 'A', className: 'bg-success/15 text-success border-success/30' };
+      return { label: 'A', className: 'bg-success/15 text-success border-success/30', textClassName: 'text-success' };
     case 'deleted':
-      return { label: 'D', className: 'bg-danger/15 text-danger border-danger/30' };
+      return { label: 'D', className: 'bg-danger/15 text-danger border-danger/30', textClassName: 'text-danger' };
     case 'untracked':
-      return { label: '?', className: 'bg-primary/15 text-primary border-primary/30' };
+      return { label: '?', className: 'bg-primary/15 text-primary border-primary/30', textClassName: 'text-primary' };
     case 'renamed':
-      return { label: 'R', className: 'bg-info/15 text-info border-info/30' };
+      return { label: 'R', className: 'bg-info/15 text-info border-info/30', textClassName: 'text-info' };
     case 'copied':
-      return { label: 'C', className: 'bg-info/15 text-info border-info/30' };
+      return { label: 'C', className: 'bg-info/15 text-info border-info/30', textClassName: 'text-info' };
     default:
-      return { label: 'M', className: 'bg-warning/15 text-warning border-warning/30' };
+      return { label: 'M', className: 'bg-warning/15 text-warning border-warning/30', textClassName: 'text-warning' };
   }
 }
 
