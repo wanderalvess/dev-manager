@@ -8,7 +8,9 @@ import {
   isValidSessionId,
   maskSecretHeaders,
   normalizeJiraKey,
+  normalizeLinkUrl,
   parseCurlCommand,
+  sanitizeLinks,
   slugifyTask,
   summarizeEvidence,
   type EvidenceStep
@@ -115,5 +117,30 @@ describe('parseCurlCommand', () => {
     expect(parseCurlCommand('GET http://h/a')?.url).toBe('http://h/a');
     expect(parseCurlCommand('qualquer coisa')).toBeNull();
     expect(parseCurlCommand('curl')).toBeNull();
+  });
+});
+
+describe('links da evidência', () => {
+  it('normalizeLinkUrl aceita só http(s), completa o https e protege a marcação do Jira', () => {
+    expect(normalizeLinkUrl(' https://github.com/o/r/pull/1 ')).toBe('https://github.com/o/r/pull/1');
+    expect(normalizeLinkUrl('github.com/o/r/pull/1')).toBe('https://github.com/o/r/pull/1');
+    expect(normalizeLinkUrl('http://srv:8080/a|b[1]?x=[2]')).toBe('http://srv:8080/a%7Cb%5B1%5D?x=%5B2%5D');
+    for (const bad of ['javascript:alert(1)', 'file:///c:/x', 'ftp://h/x', 'https://u:p@h/x', 'texto qualquer', '', '   ', 42]) {
+      expect(normalizeLinkUrl(bad)).toBeNull();
+    }
+  });
+
+  it('sanitizeLinks descarta inválidos, limita a quantidade e fixa o tipo', () => {
+    let n = 0;
+    const out = sanitizeLinks(
+      [{ kind: 'pr', label: ' Versão\n1 ', url: 'github.com/a/b' }, { kind: 'zzz', url: 'https://x.com' }, { kind: 'api', url: 'javascript:1' }, null],
+      () => `id${++n}`
+    );
+    expect(out).toEqual([
+      { id: 'id1', kind: 'pr', label: 'Versão 1', url: 'https://github.com/a/b' },
+      { id: 'id2', kind: 'other', url: 'https://x.com/' }
+    ]);
+    expect(sanitizeLinks(Array.from({ length: 50 }, () => ({ url: 'https://x.com' })), () => 'i')).toHaveLength(20);
+    expect(sanitizeLinks('nada', () => 'i')).toEqual([]);
   });
 });
