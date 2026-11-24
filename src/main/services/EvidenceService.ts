@@ -65,22 +65,24 @@ class JiraStepError extends Error {
     readonly step: 'attach' | 'comment',
     readonly status: number,
     readonly detail: string,
-    readonly file?: string
+    readonly file?: string,
+    readonly url?: string
   ) {
     super(`HTTP ${status}`);
   }
 
   describe(alreadyAttached: readonly string[]): string {
+    const where = this.url ? ` Endereço chamado: ${this.url}. Se o seu Jira usa um caminho extra (ex.: /jira), inclua-o na URL base.` : '';
     const why = this.detail ? ` Resposta do Jira: "${this.detail}".` : '';
     if (this.status === 401) return 'O Jira recusou o token (HTTP 401). Confira o token em Documentação › Confluence & Jira.';
     if (this.step === 'attach') {
       const cause = this.status === 403 || this.status === 404 ? ' Costuma ser anexo desativado no Jira ou falta da permissão "Criar anexos" nessa tarefa.' : '';
       const state = alreadyAttached.length ? ` Já foram enviados: ${alreadyAttached.join(', ')}.` : ' Nada foi publicado ainda; dá para publicar só o comentário.';
-      return `O Jira não aceitou o anexo${this.file ? ` ${this.file}` : ''} (HTTP ${this.status}).${cause}${why}${state}`;
+      return `O Jira não aceitou o anexo${this.file ? ` ${this.file}` : ''} (HTTP ${this.status}).${cause}${why}${where}${state}`;
     }
     const cause = this.status === 403 || this.status === 404 ? ' Costuma ser falta da permissão "Adicionar comentários" nessa tarefa.' : '';
     const sent = alreadyAttached.length ? ` Os anexos já foram enviados (${alreadyAttached.join(', ')}): ao tentar de novo, vão duplicar.` : '';
-    return `O Jira não aceitou o comentário (HTTP ${this.status}).${cause}${why}${sent}`;
+    return `O Jira não aceitou o comentário (HTTP ${this.status}).${cause}${why}${where}${sent}`;
   }
 }
 
@@ -428,17 +430,19 @@ export class EvidenceService {
         const form = new FormData();
         const name = path.basename(file);
         form.append('file', new Blob([new Uint8Array(fs.readFileSync(file))]), name);
-        const res = await this.deps.fetchImpl(`${baseUrl}/rest/api/2/issue/${issueKey}/attachments`, { method: 'POST', headers, body: form });
-        if (!res.ok) throw new JiraStepError('attach', res.status, await jiraDetail(res), name);
+        const url = `${baseUrl}/rest/api/2/issue/${issueKey}/attachments`;
+        const res = await this.deps.fetchImpl(url, { method: 'POST', headers, body: form });
+        if (!res.ok) throw new JiraStepError('attach', res.status, await jiraDetail(res), name, url);
         attached.push(name);
       }
 
-      const res = await this.deps.fetchImpl(`${baseUrl}/rest/api/2/issue/${issueKey}/comment`, {
+      const commentUrl = `${baseUrl}/rest/api/2/issue/${issueKey}/comment`;
+      const res = await this.deps.fetchImpl(commentUrl, {
         method: 'POST',
         headers: { Authorization: headers.Authorization, 'Content-Type': 'application/json' },
         body: JSON.stringify({ body: buildJiraComment(session, attached) })
       });
-      if (!res.ok) throw new JiraStepError('comment', res.status, await jiraDetail(res));
+      if (!res.ok) throw new JiraStepError('comment', res.status, await jiraDetail(res), undefined, commentUrl);
       return { success: true, issueKey, attached, skipped };
     } catch (err) {
       if (err instanceof JiraStepError) return { success: false, error: err.describe(attached), failedStep: err.step, attached };
