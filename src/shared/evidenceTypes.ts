@@ -242,6 +242,20 @@ export interface EvidenceJiraResult {
   skipped?: string[];
 }
 
+export interface EvidenceJiraPreviewAttachment {
+  name: string;
+  kind: 'report' | 'video';
+  sizeBytes?: number;
+  /** Vídeo acima do limite: não será anexado. */
+  skipped?: boolean;
+}
+
+/** O que a publicação no Jira vai enviar, calculado sem enviar nada: o comentário exato e a lista de anexos. */
+export interface EvidenceJiraPreview {
+  comment: string;
+  attachments: EvidenceJiraPreviewAttachment[];
+}
+
 export interface EvidenceJiraIssue {
   success: boolean;
   error?: string;
@@ -372,9 +386,27 @@ const prettyJson = (text: string | undefined): string => {
 
 const formatBytes = (n: number): string => (n >= 1024 ? `${(n / 1024).toFixed(1)} KB` : `${n} B`);
 
+const SECRET_HEADER = /^(\s*(?:authorization|proxy-authorization|cookie|x-api-key|x-auth-token|apikey)\s*:\s*)(.+)$/i;
+
+/**
+ * O relatório (HTML/PDF) e o anexo do Jira levam o texto da requisição: credenciais digitadas em claro não podem ir junto.
+ * Valores com {{variável}} (ex.: Bearer {{TOKEN}}) ficam como estão, pois o segredo real nunca é gravado.
+ */
+export function maskSecretHeaders(headers: string | undefined): string {
+  return (headers ?? '')
+    .split(/\r?\n/)
+    .map((line) => {
+      const m = SECRET_HEADER.exec(line);
+      if (!m || m[2].includes('{{')) return line;
+      const scheme = /^(bearer|basic|token)\s+/i.exec(m[2])?.[0] ?? '';
+      return `${m[1]}${scheme}${m[2].slice(scheme.length, scheme.length + 4)}…(oculto)`;
+    })
+    .join('\n');
+}
+
 /** Monta os campos de um bloco "api" a partir de uma chamada HTTP já executada. */
 export function formatHttpExchange(x: EvidenceHttpExchange): Pick<EvidenceBlock, 'request' | 'response' | 'meta'> {
-  const request = [`${x.method} ${x.url}`, x.headers?.trim(), x.body?.trim() ? `\n${prettyJson(x.body.trim())}` : '']
+  const request = [`${x.method} ${x.url}`, maskSecretHeaders(x.headers).trim(), x.body?.trim() ? `\n${prettyJson(x.body.trim())}` : '']
     .filter((part) => part !== undefined && part !== '')
     .join('\n');
   if (x.error) return { request, response: x.error, meta: 'Falha na requisição' };
@@ -456,6 +488,7 @@ export function evaluateChecks(checks: string | undefined, data: { response?: st
       const needle = rule.slice(rule.search(/contém|contem/i) + 6).trim().toLowerCase();
       const has = response.toLowerCase().includes(needle);
       const negate = !!contains[1];
+      if (needle === 'texto') return fail('"texto" é só um exemplo: troque pelo que deve aparecer na resposta (ex.: contem idCargaInicial).');
       return has !== negate ? pass(negate ? 'ausente, como esperado' : 'encontrado') : fail(negate ? 'presente na resposta' : 'não encontrado na resposta');
     }
     const num = /^(linhas|tempo)\s*(>=|<=|==|!=|=|<|>)\s*(\d+)\s*(?:ms)?$/i.exec(norm);
@@ -494,6 +527,98 @@ export function parseHttpRequestText(request: string | undefined): { method: Evi
   const headers = (gap === -1 ? rest : rest.slice(0, gap)).join('\n').trim();
   const body = gap === -1 ? '' : rest.slice(gap + 1).join('\n').trim();
   return { method, url: first[2].trim(), headers, body };
+}
+
+/** Quebra a linha de comando do cURL em argumentos, entendendo '...', "...", $'...' e a continuação com \ ou ^ no fim da linha. */
+function tokenizeCommand(input: string): string[] {
+  // "Copiar como cURL (cmd)" do Chrome escapa com ^ e quebra linha com ^: desfaz antes de separar os argumentos.
+  const text = /\^(["\r\n^&|<>])/.test(input) ? input.replace(/\^(\r?\n)/g, ' ').replace(/\^(.)/g, '$1') : input;
+  const tokens: string[] = [];
+  let cur = '';
+  let has = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '\\' && /[\r\n]/.test(text[i + 1] ?? '')) {
+      i += text[i + 1] === '\r' && text[i + 2] === '\n' ? 2 : 1;
+      continue;
+    }
+    if (c === "'" || (c === '$' && text[i + 1] === "'")) {
+      const ansi = c === '$';
+      i += ansi ? 2 : 1;
+      has = true;
+      while (i < text.length && text[i] !== "'") {
+        if (ansi && text[i] === '\\' && i + 1 < text.length) {
+          const n = text[++i];
+          cur += n === 'n' ? '\n' : n === 'r' ? '\r' : n === 't' ? '\t' : n;
+        } else cur += text[i];
+        i++;
+      }
+    } else if (c === '"') {
+      has = true;
+      i++;
+      while (i < text.length && text[i] !== '"') {
+        if (text[i] === '\\' && /["\\$`]/.test(text[i + 1] ?? '')) i++;
+        cur += text[i];
+        i++;
+      }
+    } else if (/\s/.test(c)) {
+      if (has) tokens.push(cur);
+      cur = '';
+      has = false;
+    } else {
+      cur += c;
+      has = true;
+    }
+  }
+  if (has) tokens.push(cur);
+  return tokens;
+}
+
+const CURL_IGNORED_WITH_VALUE = new Set(['-o', '--output', '-m', '--max-time', '--connect-timeout', '-x', '--proxy', '-A', '--user-agent', '-e', '--referer', '--cacert', '--cert', '--key', '-w', '--write-out']);
+
+/**
+ * Lê um comando cURL (ou um texto "MÉTODO url" simples) e devolve os campos do formulário da prova de API.
+ * Método ausente vira GET, ou POST quando há corpo. Retorna null se o texto não parece uma requisição.
+ */
+export function parseCurlCommand(input: string | undefined): { method: EvidenceHttpMethod; url: string; headers: string; body: string } | null {
+  const text = (input ?? '').trim();
+  if (!/^curl(\.exe)?\s/i.test(text)) return parseHttpRequestText(text);
+  const tokens = tokenizeCommand(text).slice(1);
+  let method: string | undefined;
+  let url = '';
+  const headers: string[] = [];
+  const data: string[] = [];
+  let user: string | undefined;
+  let cookie: string | undefined;
+  let forceGet = false;
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    const eq = t.startsWith('--') ? t.indexOf('=') : -1;
+    const flag = eq > 0 ? t.slice(0, eq) : t;
+    const value = (): string => (eq > 0 ? t.slice(eq + 1) : (tokens[++i] ?? ''));
+    if (flag === '-X' || flag === '--request') method = value().toUpperCase();
+    else if (flag === '-H' || flag === '--header') headers.push(value().trim());
+    else if (['-d', '--data', '--data-raw', '--data-binary', '--data-ascii', '--data-urlencode'].includes(flag)) data.push(value());
+    else if (flag === '-u' || flag === '--user') user = value();
+    else if (flag === '-b' || flag === '--cookie') cookie = value();
+    else if (flag === '--url') url = value();
+    else if (flag === '-I' || flag === '--head') method = 'HEAD';
+    else if (flag === '-G' || flag === '--get') forceGet = true;
+    else if (CURL_IGNORED_WITH_VALUE.has(flag)) value();
+    else if (!t.startsWith('-') && !url) url = t;
+  }
+  if (!url) return null;
+  if (user && !headers.some((h) => /^authorization\s*:/i.test(h))) {
+    headers.push(`Authorization: Basic ${typeof btoa === 'function' ? btoa(user) : Buffer.from(user).toString('base64')}`);
+  }
+  if (cookie && !headers.some((h) => /^cookie\s*:/i.test(h))) headers.push(`Cookie: ${cookie}`);
+  let body = data.join('&');
+  if (forceGet && body) {
+    url += (url.includes('?') ? '&' : '?') + body;
+    body = '';
+  }
+  const resolved = (method ?? (body ? 'POST' : 'GET')) as EvidenceHttpMethod;
+  return { method: HTTP_METHODS.includes(resolved) ? resolved : 'GET', url, headers: headers.join('\n'), body };
 }
 
 /** Separa os blocos em pares antes/depois (lado a lado) e blocos soltos, mantendo a ordem de registro. */

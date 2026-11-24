@@ -110,12 +110,12 @@ export function buildEvidenceHtml(session: EvidenceSession, images: ReadonlyMap<
     : '';
 
   return `<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(session.task)} - ${esc(kind)}</title><style>${CSS}</style></head>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(session.task || session.title)} - ${esc(kind)}</title><style>${CSS}</style></head>
 <body>
 <h1>${esc(session.title || session.task)}</h1>
 <div class="muted">${esc(kind)} · gerado pelo Hub Manager em ${esc(formatDate(new Date().toISOString()))}</div>
 <div class="meta">
-  <div><b>Tarefa:</b> ${esc(session.task)}</div>
+  <div><b>Tarefa:</b> ${esc(session.task) || '-'}</div>
   <div><b>Resultado:</b> <span class="verdict ${summary.verdict}">${RESULT_LABEL[summary.verdict]}</span></div>
   <div><b>Responsável:</b> ${esc(session.tester) || '-'}</div>
   <div><b>Início:</b> ${esc(formatDate(session.createdAt))}</div>
@@ -134,7 +134,7 @@ function buildSlidesHtml(session: EvidenceSession, images: ReadonlyMap<string, s
   const cover = `<section class="slide cover">
   <div class="muted">${esc(kind)}</div>
   <h1>${esc(session.title || session.task)}</h1>
-  <div class="meta"><div><b>Tarefa:</b> ${esc(session.task)}</div><div><b>Resultado:</b> <span class="verdict ${summary.verdict}">${RESULT_LABEL[summary.verdict]}</span></div>
+  <div class="meta"><div><b>Tarefa:</b> ${esc(session.task) || '-'}</div><div><b>Resultado:</b> <span class="verdict ${summary.verdict}">${RESULT_LABEL[summary.verdict]}</span></div>
   <div><b>Responsável:</b> ${esc(session.tester) || '-'}</div><div><b>Data:</b> ${esc(formatDate(session.createdAt))}</div>
   <div style="grid-column:1/-1"><b>Ambiente:</b> ${multiline(session.environment) || '-'}</div></div>
 </section>`;
@@ -160,7 +160,7 @@ function buildSlidesHtml(session: EvidenceSession, images: ReadonlyMap<string, s
 </section>`;
 
   return `<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(session.task)} - apresentação</title><style>${CSS}${SLIDES_CSS}</style></head>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(session.task || session.title)} - apresentação</title><style>${CSS}${SLIDES_CSS}</style></head>
 <body>
 ${cover}
 ${slides}

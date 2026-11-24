@@ -19,6 +19,8 @@ import {
   type EvidenceBlock,
   type EvidenceBlockInput,
   type EvidenceJiraIssue,
+  type EvidenceJiraPreview,
+  type EvidenceJiraPreviewAttachment,
   type EvidenceJiraResult,
   type EvidenceReportFiles,
   type EvidenceReportLayout,
@@ -81,8 +83,8 @@ export class EvidenceService {
   }
 
   createSession(input: EvidenceSessionInput): EvidenceSession {
-    const task = text(input.task, 120);
-    if (!task) throw new Error('Informe a tarefa (ex.: WT-123).');
+    // A tarefa é opcional: só a publicação no Jira exige uma chave. Sem ela a pasta vira "sem-tarefa/AAAAMMDD-HHMMSS".
+    const task = text(input.task, 120) ?? '';
     let now = this.deps.now?.() ?? new Date();
     let id = buildSessionId(task, now);
     // Duas sessões da mesma tarefa no mesmo segundo (ex.: reexecução) não podem dividir a pasta.
@@ -95,7 +97,7 @@ export class EvidenceService {
     return this.write({
       id,
       task,
-      title: text(input.title, 200) ?? task,
+      title: text(input.title, 200) ?? (task || `Evidência de ${now.toLocaleString('pt-BR')}`),
       kind: input.kind === 'qa' ? 'qa' : 'dev',
       tester: text(input.tester, 80),
       environment: text(input.environment, 500),
@@ -180,6 +182,20 @@ export class EvidenceService {
       tester: source.tester,
       environment: source.environment
     });
+  }
+
+  /**
+   * Edita os dados informados ao iniciar a evidência. A pasta não muda (o id guarda a tarefa e a data de
+   * criação), então corrigir a tarefa aqui não quebra os caminhos já gravados.
+   */
+  updateSession(id: string, patch: Partial<EvidenceSessionInput>): EvidenceSession {
+    const session = this.get(id);
+    if (patch.task !== undefined) session.task = text(patch.task, 120) ?? '';
+    if (patch.title !== undefined) session.title = text(patch.title, 200) ?? (session.task || 'Evidência sem título');
+    if (patch.kind !== undefined && (patch.kind === 'qa' || patch.kind === 'dev')) session.kind = patch.kind;
+    if (patch.tester !== undefined) session.tester = text(patch.tester, 80);
+    if (patch.environment !== undefined) session.environment = text(patch.environment, 500);
+    return this.write(session);
   }
 
   updateStep(id: string, stepId: string, patch: Partial<Pick<EvidenceStep, 'title' | 'expected' | 'actual' | 'result'>>): EvidenceSession {
@@ -313,6 +329,23 @@ export class EvidenceService {
     const pdf = path.join(dir, `${base}.pdf`);
     fs.writeFileSync(pdf, await this.deps.renderPdf(html));
     return { html, pdf };
+  }
+
+  /** Mostra o que a publicação enviaria (comentário e anexos) sem gerar o PDF nem falar com o Jira. */
+  previewJiraPublication(id: string, includeVideos: boolean): EvidenceJiraPreview {
+    const session = this.get(id);
+    const dir = this.dirOf(id);
+    const attachments: EvidenceJiraPreviewAttachment[] = [{ name: `${EVIDENCE_REPORT_FILE.document}.pdf`, kind: 'report' }];
+    if (includeVideos) {
+      for (const video of session.videos) {
+        const file = path.join(dir, video);
+        if (!fs.existsSync(file)) continue;
+        const sizeBytes = fs.statSync(file).size;
+        attachments.push({ name: video, kind: 'video', sizeBytes, skipped: sizeBytes > EVIDENCE_JIRA_MAX_VIDEO_BYTES });
+      }
+    }
+    const comment = buildJiraComment(session, attachments.filter((a) => !a.skipped).map((a) => a.name));
+    return { comment, attachments };
   }
 
   async publishToJira(id: string, rawKey: string, opts: { includeVideos: boolean }): Promise<EvidenceJiraResult> {

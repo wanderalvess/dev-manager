@@ -6,6 +6,7 @@ import {
   EVIDENCE_HTTP_METHODS,
   PHASE_LABEL,
   groupBlocks,
+  parseCurlCommand,
   parseHttpRequestText,
   type EvidenceBlock,
   type EvidenceBlockInput,
@@ -69,6 +70,55 @@ const VerdictBadge: React.FC<{ verdict: EvidenceBlock['verdict'] }> = ({ verdict
     </div>
   ) : null;
 
+const RULE_PRESETS: { label: string; rule: string; kinds: EvidenceBlockKind[]; title: string }[] = [
+  { label: 'Status 200', rule: 'status 200', kinds: ['api'], title: 'Aprova se a API respondeu exatamente 200' },
+  { label: 'Status 2xx', rule: 'status 2xx', kinds: ['api'], title: 'Aprova se a API respondeu qualquer sucesso (200 a 299)' },
+  { label: 'Contém texto…', rule: 'contem ', kinds: ['api', 'sql'], title: 'Aprova se a resposta tem o texto. Escreva o texto depois de "contem" (ex.: contem idCargaInicial), sem aspas' },
+  { label: 'Não contém erro', rule: 'nao contem erro', kinds: ['api', 'sql'], title: 'Aprova se a palavra "erro" não aparece na resposta' },
+  { label: 'Linhas ≥ 1', rule: 'linhas >= 1', kinds: ['sql'], title: 'Aprova se a consulta devolveu pelo menos uma linha' },
+  { label: 'Tempo < 500 ms', rule: 'tempo < 500', kinds: ['api', 'sql'], title: 'Aprova se respondeu em menos de 500 ms' },
+  { label: 'JSON campo = valor…', rule: 'json data.status = OK', kinds: ['api'], title: 'Aprova se o campo do JSON tem o valor. Ajuste o caminho e o valor' }
+];
+
+/** Regras de aprovação com explicação e atalhos: cada atalho acrescenta uma regra pronta, uma por linha. */
+const ChecksField: React.FC<{ kind: EvidenceBlockKind; value: string; onChange: (v: string) => void; onCommit?: (v: string) => void; rows?: number }> = ({
+  kind,
+  value,
+  onChange,
+  onCommit,
+  rows = 2
+}) => {
+  const add = (rule: string) => {
+    const next = value.trim() ? `${value.replace(/\s+$/, '')}\n${rule}` : rule;
+    onChange(next);
+    onCommit?.(next);
+  };
+  return (
+    <div className="space-y-1.5">
+      <div className="text-xs font-medium text-muted-foreground">Aprovar automaticamente (opcional)</div>
+      <p className="text-2xs text-muted-foreground">
+        Escreva o que a resposta precisa ter, uma regra por linha. Todas devem passar: se alguma falhar, o passo fica Reprovado; se todas passarem, Aprovado. Sem regras, você decide o resultado.
+      </p>
+      <div className="flex flex-wrap gap-1">
+        {RULE_PRESETS.filter((p) => p.kinds.includes(kind)).map((p) => (
+          <button key={p.rule} type="button" title={p.title} className="h-6 px-2 rounded-full border border-border bg-card hover:bg-muted text-2xs text-foreground cursor-pointer" onClick={() => add(p.rule)}>
+            + {p.label}
+          </button>
+        ))}
+      </div>
+      <textarea
+        className={MONO}
+        rows={rows}
+        title={EVIDENCE_CHECKS_HELP}
+        placeholder={'status 200\ncontem idCargaInicial\nlinhas >= 1'}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={(e) => onCommit?.(e.target.value)}
+      />
+    </div>
+  );
+};
+
 const errorText = (err: unknown): string => (err instanceof Error ? err.message : String(err));
 
 /** Cada bloco é editável no lugar: dá para colar a resposta do Postman ou o resultado de uma consulta feita fora do app. */
@@ -79,6 +129,7 @@ const BlockCard: React.FC<{
   rerunning?: boolean;
 }> = ({ block, api, rerun, rerunning }) => {
   const Icon = KIND_ICON[block.kind];
+  const [checksText, setChecksText] = useState(block.checks ?? '');
   const requestLabel = block.kind === 'sql' ? 'Consulta' : 'Requisição';
   const responseLabel = block.kind === 'sql' ? 'Resultado' : block.kind === 'api' ? 'Resposta' : 'Conteúdo';
   const save = (field: 'request' | 'response' | 'meta' | 'title' | 'checks', current: string | undefined) => (e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) => {
@@ -118,7 +169,12 @@ const BlockCard: React.FC<{
       )}
       <textarea className={MONO} rows={block.kind === 'text' ? 4 : 5} placeholder={responseLabel} defaultValue={block.response ?? ''} onBlur={save('response', block.response)} />
       {block.kind !== 'text' && (
-        <textarea className={MONO} rows={2} title={EVIDENCE_CHECKS_HELP} placeholder={`Regras de aprovação (opcional). ${EVIDENCE_CHECKS_HELP}`} defaultValue={block.checks ?? ''} onBlur={save('checks', block.checks)} />
+        <ChecksField
+          kind={block.kind}
+          value={checksText}
+          onChange={setChecksText}
+          onCommit={(v) => v !== (block.checks ?? '') && void api.updateBlock(block.id, { checks: v })}
+        />
       )}
       <VerdictBadge verdict={block.verdict} />
     </div>
@@ -149,6 +205,50 @@ const Composer: React.FC<{ api: StepBlocksApi; onClose: () => void; initialPhase
   const [checks, setChecks] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [importNote, setImportNote] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // Variável TOKEN do ambiente escolhido: dá para usar "Bearer {{TOKEN}}" sem o segredo ir parar na evidência.
+  const tokenVar = environments.find((e) => e.id === environmentId)?.variables.find((v) => v.enabled && v.key.toUpperCase() === 'TOKEN');
+  const tokenHeader = tokenVar ? `Authorization: Bearer {{${tokenVar.key}}}` : '';
+  const usesTokenHeader = !!tokenHeader && headers.split(/\r?\n/).some((l) => l.trim() === tokenHeader);
+  const toggleTokenHeader = () => {
+    const lines = headers.split(/\r?\n/).filter((l) => l.trim() && !/^authorization\s*:/i.test(l));
+    setHeaders((usesTokenHeader ? lines : [tokenHeader, ...lines]).join('\n'));
+  };
+
+  /** Preenche método, URL, cabeçalhos e corpo a partir de um cURL (ou "GET url"). Devolve false se o texto não for uma requisição. */
+  const importRequest = (raw: string): boolean => {
+    const spec = parseCurlCommand(raw);
+    if (!spec) return false;
+    // Token igual ao do ambiente vira {{TOKEN}}; qualquer outro segredo em claro é mascarado ao gravar a prova.
+    let importedHeaders = spec.headers;
+    let swapped = false;
+    if (tokenVar?.value) {
+      importedHeaders = importedHeaders
+        .split('\n')
+        .map((l) => {
+          const m = /^(authorization\s*:\s*bearer\s+)(.+)$/i.exec(l.trim());
+          if (!m || m[2].trim() !== tokenVar.value.trim()) return l;
+          swapped = true;
+          return tokenHeader;
+        })
+        .join('\n');
+    }
+    const hasSecret = !swapped && /^(authorization|cookie|x-api-key|x-auth-token|apikey)\s*:/im.test(importedHeaders) && !/\{\{/.test(importedHeaders);
+    setMethod(spec.method);
+    setUrl(spec.url);
+    setHeaders(importedHeaders);
+    setBody(spec.body);
+    const extras = [importedHeaders && `${importedHeaders.split('\n').length} cabeçalho(s)`, spec.body && 'corpo'].filter(Boolean).join(' e ');
+    const tokenNote = swapped ? ` O token do ambiente foi trocado por {{${tokenVar?.key}}}.` : hasSecret ? ' A credencial vai na chamada, mas aparece mascarada no registro e no relatório.' : '';
+    setImportNote({ ok: true, text: `Preenchido: ${spec.method} ${spec.url.length > 70 ? `${spec.url.slice(0, 70)}…` : spec.url}${extras ? ` com ${extras}` : ''}.${tokenNote}` });
+    return true;
+  };
+
+  const onImportPaste = (value: string) => {
+    if (!value.trim()) return;
+    if (!importRequest(value)) setImportNote({ ok: false, text: 'Não reconheci como cURL. Cole o comando inteiro, começando por "curl", ou "GET http://...".' });
+  };
 
   useEffect(() => {
     void api.listConnections().then((list) => {
@@ -217,6 +317,19 @@ const Composer: React.FC<{ api: StepBlocksApi; onClose: () => void; initialPhase
 
       {kind === 'api' && (
         <div className="space-y-2">
+          <div className="space-y-1">
+            <textarea
+              className={`${MONO} h-9 min-h-9`}
+              rows={1}
+              placeholder="Cole aqui um cURL (Copiar como cURL do navegador ou do Postman): preenche tudo abaixo"
+              onPaste={(e) => {
+                e.preventDefault();
+                onImportPaste(e.clipboardData.getData('text'));
+              }}
+              onChange={(e) => (e.target.value = '')}
+            />
+            {importNote && <p className={`text-xs ${importNote.ok ? 'text-green-700' : 'text-red-600'}`}>{importNote.text}</p>}
+          </div>
           {environments.length > 0 && (
             <select className={`${FIELD} h-8`} value={environmentId} onChange={(e) => setEnvironmentId(e.target.value)} title="Ambiente do API Studio: resolve {{variáveis}} na URL, cabeçalhos e corpo">
               <option value="">Sem ambiente (URL completa)</option>
@@ -233,9 +346,30 @@ const Composer: React.FC<{ api: StepBlocksApi; onClose: () => void; initialPhase
                 <option key={m}>{m}</option>
               ))}
             </select>
-            <input className={`${FIELD} h-8 font-mono`} placeholder="https://servidor/api/recurso" value={url} onChange={(e) => setUrl(e.target.value)} />
+            <textarea
+              className={`${MONO} min-h-8`}
+              rows={2}
+              spellCheck={false}
+              placeholder="https://servidor/api/recurso?filtro=1 (ou cole um cURL)"
+              value={url}
+              onChange={(e) => setUrl(e.target.value.replace(/[\r\n]+/g, ''))}
+              onPaste={(e) => {
+                const pasted = e.clipboardData.getData('text');
+                if (/^\s*curl(\.exe)?\s/i.test(pasted) && importRequest(pasted)) e.preventDefault();
+              }}
+            />
           </div>
           <textarea className={MONO} rows={2} placeholder={'Cabeçalhos, um por linha (Authorization: Bearer ...)'} value={headers} onChange={(e) => setHeaders(e.target.value)} />
+          {tokenVar ? (
+            <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+              <input type="checkbox" checked={usesTokenHeader} onChange={toggleTokenHeader} />
+              Autenticar com o token do ambiente (<code className="font-mono">{tokenHeader}</code>; o valor real não é gravado)
+            </label>
+          ) : (
+            <p className="text-2xs text-muted-foreground">
+              Credenciais digitadas aqui são mascaradas no registro e no relatório. Para autenticar sem expor, use um ambiente do API Studio com a variável TOKEN.
+            </p>
+          )}
           <textarea className={MONO} rows={3} placeholder="Corpo (JSON ou texto)" value={body} onChange={(e) => setBody(e.target.value)} />
         </div>
       )}
@@ -253,9 +387,7 @@ const Composer: React.FC<{ api: StepBlocksApi; onClose: () => void; initialPhase
         </div>
       )}
       {kind === 'text' && <textarea className={MONO} rows={4} placeholder="Log, saída de comando, observação..." value={text} onChange={(e) => setText(e.target.value)} />}
-      {kind !== 'text' && (
-        <textarea className={MONO} rows={2} placeholder={`Regras de aprovação (opcional). ${EVIDENCE_CHECKS_HELP}`} value={checks} onChange={(e) => setChecks(e.target.value)} />
-      )}
+      {kind !== 'text' && <ChecksField kind={kind} value={checks} onChange={setChecks} />}
 
       {error && <p className="text-xs text-red-600">{error}</p>}
       <div className="flex flex-wrap items-center gap-2">

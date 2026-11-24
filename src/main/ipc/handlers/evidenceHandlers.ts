@@ -124,6 +124,7 @@ export function registerEvidenceHandlers(ctx: IpcContext): void {
     return service.addStep(id, decodePngDataUrl(dataUrl), title);
   });
   ipcMain.handle('evidence:add-note', (_, id: string, title?: string) => service.addStep(requireId(id), null, title));
+  ipcMain.handle('evidence:update-session', (_, id: string, patch: Partial<EvidenceSessionInput>) => service.updateSession(requireId(id), patch ?? {}));
   ipcMain.handle(
     'evidence:update-step',
     (_, id: string, stepId: string, patch: Partial<Pick<EvidenceStep, 'title' | 'expected' | 'actual' | 'result'>>) =>
@@ -162,6 +163,7 @@ export function registerEvidenceHandlers(ctx: IpcContext): void {
   ipcMain.handle('evidence:get-image', (_, id: string, name: string) => service.getImageDataUrl(requireId(id), String(name ?? '')));
   ipcMain.handle('evidence:lookup-issue', (_, issueKey: string) => service.lookupIssue(String(issueKey ?? '')));
 
+  ipcMain.handle('evidence:preview-jira', (_, id: string, includeVideos: boolean) => service.previewJiraPublication(requireId(id), !!includeVideos));
   ipcMain.handle('evidence:publish-jira', (_, id: string, issueKey: string, includeVideos: boolean) =>
     service.publishToJira(requireId(id), String(issueKey ?? ''), { includeVideos: !!includeVideos })
   );

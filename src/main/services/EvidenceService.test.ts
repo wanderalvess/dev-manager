@@ -114,8 +114,20 @@ describe('EvidenceService', () => {
     expect(() => svc.deleteSession('..__20260102-030405')).toThrow();
   });
 
-  it('exige a tarefa', () => {
-    expect(() => make().createSession({ task: '  ', kind: 'dev' })).toThrow(/tarefa/i);
+  it('a tarefa é opcional: sem ela a pasta é "sem-tarefa" e o título ganha um nome', () => {
+    const s = make().createSession({ task: '  ', kind: 'dev' });
+    expect(s.task).toBe('');
+    expect(s.id.startsWith('sem-tarefa__')).toBe(true);
+    expect(s.title).toMatch(/^Evidência de /);
+  });
+
+  it('sem tarefa só a publicação no Jira é recusada', async () => {
+    const svc = make();
+    const s = svc.createSession({ task: '', kind: 'qa' });
+    const result = await svc.publishToJira(s.id, '', { includeVideos: false });
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/Chave do Jira/);
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 
   it('gera HTML e PDF', async () => {
@@ -139,6 +151,32 @@ describe('EvidenceService', () => {
       'https://jira.example.com/rest/api/2/issue/WT-1/comment'
     ]);
     expect(fetchImpl.mock.calls[0][1].headers.Authorization).toBe('Bearer S3CRET');
+  });
+
+  it('edita os dados da evidência sem mudar a pasta', () => {
+    const svc = make();
+    const s = svc.createSession({ task: 'WT-1', kind: 'qa', title: 'Antigo', tester: 'Ana', environment: 'v1' });
+    const updated = svc.updateSession(s.id, { task: 'WT-2', title: 'Novo', kind: 'dev', tester: '', environment: 'v2 / branch x' });
+    expect(updated).toMatchObject({ id: s.id, task: 'WT-2', title: 'Novo', kind: 'dev', tester: undefined, environment: 'v2 / branch x' });
+    expect(svc.get(s.id).title).toBe('Novo');
+    expect(svc.updateSession(s.id, { title: '  ' }).title).toBe('WT-2');
+    expect(svc.updateSession(s.id, { task: ' ', title: ' ' })).toMatchObject({ task: '', title: 'Evidência sem título' });
+    expect(svc.updateSession(s.id, { kind: 'xx' as never }).kind).toBe('dev');
+  });
+
+  it('prévia da publicação: mesmo comentário e anexos do envio, sem tocar no Jira', async () => {
+    const svc = make();
+    const s = svc.createSession({ task: 'WT-1', kind: 'qa', title: 'Teste da carga' });
+    svc.saveVideo(s.id, Buffer.from('abc'));
+    const preview = svc.previewJiraPublication(s.id, true);
+    expect(preview.attachments.map((a) => a.name)).toEqual(['relatorio.pdf', 'video-01.webm']);
+    expect(preview.comment).toContain('Teste da carga');
+    expect(preview.comment).toContain('[^relatorio.pdf]');
+    expect(preview.comment).toContain('[^video-01.webm]');
+    expect(svc.previewJiraPublication(s.id, false).comment).not.toContain('video-01.webm');
+    expect(fetchImpl).not.toHaveBeenCalled();
+    const sent = await svc.publishToJira(s.id, 'WT-1', { includeVideos: true });
+    expect(sent.attached).toEqual(preview.attachments.map((a) => a.name));
   });
 
   it('devolve erro amigável sem vazar o token', async () => {
