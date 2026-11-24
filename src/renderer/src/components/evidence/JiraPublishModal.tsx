@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Paperclip, Send } from 'lucide-react';
+import { Copy, Paperclip, Send } from 'lucide-react';
 import {
   RESULT_LABEL,
   guessJiraKey,
@@ -40,6 +40,8 @@ export const JiraPublishModal: React.FC<JiraPublishModalProps> = ({ session, onC
   // Anexo recusado pelo Jira (anexos desativados, sem permissão): dá para publicar só o comentário.
   const [attachFiles, setAttachFiles] = useState(true);
   const [canCommentOnly, setCanCommentOnly] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [copiedComment, setCopiedComment] = useState(false);
   const summary = summarizeEvidence(session.steps);
   const normalized = normalizeJiraKey(key);
 
@@ -154,7 +156,17 @@ export const JiraPublishModal: React.FC<JiraPublishModalProps> = ({ session, onC
         </div>
 
         <div className="space-y-1.5">
-          <div className={LABEL}>Comentário que será publicado (formato do Jira)</div>
+          <div className="flex items-center justify-between gap-2">
+            <div className={LABEL}>Comentário que será publicado (formato do Jira)</div>
+            <button
+              type="button"
+              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              disabled={!preview}
+              onClick={() => preview && void navigator.clipboard.writeText(preview.comment).then(() => { setCopiedComment(true); window.setTimeout(() => setCopiedComment(false), 1500); })}
+            >
+              <Copy className="w-3.5 h-3.5" /> {copiedComment ? 'Copiado' : 'Copiar comentário'}
+            </button>
+          </div>
           <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-[10px] border border-border bg-muted/40 p-3 text-xs font-mono text-foreground">
             {preview ? preview.comment : 'Carregando…'}
           </pre>
@@ -162,7 +174,10 @@ export const JiraPublishModal: React.FC<JiraPublishModalProps> = ({ session, onC
 
         {error && (
           <div className="space-y-2">
-            <p className="text-xs text-red-600">{error}</p>
+            <p className="text-xs text-red-600 select-text break-words">{error}</p>
+            <button type="button" className={BTN} onClick={() => void navigator.clipboard.writeText(error).then(() => { setCopied(true); window.setTimeout(() => setCopied(false), 1500); })}>
+              <Copy className="w-3.5 h-3.5" /> {copied ? 'Copiado' : 'Copiar erro'}
+            </button>
             {canCommentOnly && attachFiles && (
               <button
                 type="button"

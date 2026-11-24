@@ -4,6 +4,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.76.2] - 2026-11-24
+### Adicionado
+- **Evidências: copiar o comentário do Jira**: o modal *Publicar no Jira* ganhou *Copiar comentário*, que copia o texto exato no formato do Jira para colar na tarefa à mão. A mensagem de falha também ganhou *Copiar erro*.
+
+### Corrigido
+- O erro ao publicar no Jira agora mostra o endereço chamado (sem token), para conferir se falta um caminho extra na URL base.
+
 ## [1.76.1] - 2026-11-24
 ### Corrigido
 - **Evidências: erro ao publicar no Jira**: o aviso genérico "O Jira respondeu HTTP 404" agora diz em qual etapa falhou (anexar o relatório, o PDF, um vídeo ou postar o comentário), mostra a mensagem do próprio Jira e o motivo provável (anexo desativado, falta de permissão *Criar anexos* ou *Adicionar comentários*). O token nunca aparece na mensagem.
