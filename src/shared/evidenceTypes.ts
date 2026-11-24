@@ -188,7 +188,7 @@ export type EvidenceLinkKind = 'pr' | 'video' | 'api' | 'other';
 export interface EvidenceLink {
   id: string;
   kind: EvidenceLinkKind;
-  /** Ex.: "Versão 1.74.0" ou "Gravação do teste". */
+  /** Ex.: "Versão 2.1.0" ou "Gravação do teste". */
   label?: string;
   url: string;
 }

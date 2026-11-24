@@ -7,7 +7,7 @@ const BTN =
   'h-8 px-2.5 border border-border rounded-[10px] bg-card hover:bg-muted text-xs font-medium text-foreground flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50';
 
 const PLACEHOLDER: Record<EvidenceLinkKind, { label: string; url: string }> = {
-  pr: { label: 'Versão 1.74.0', url: 'https://github.com/org/repo/pull/123' },
+  pr: { label: 'Versão 2.1.0', url: 'https://github.com/org/repo/pull/123' },
   video: { label: 'Gravação do teste', url: 'https://...' },
   api: { label: 'Swagger / documentação', url: 'https://servidor/api' },
   other: { label: 'Descrição', url: 'https://...' }
