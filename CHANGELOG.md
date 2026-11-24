@@ -4,6 +4,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.76.1] - 2026-11-24
+### Corrigido
+- **Evidências: erro ao publicar no Jira**: o aviso genérico "O Jira respondeu HTTP 404" agora diz em qual etapa falhou (anexar o relatório, o PDF, um vídeo ou postar o comentário), mostra a mensagem do próprio Jira e o motivo provável (anexo desativado, falta de permissão *Criar anexos* ou *Adicionar comentários*). O token nunca aparece na mensagem.
+- Quando o Jira recusa o anexo e nada foi enviado, o modal oferece *Tentar só com o comentário (sem anexos)*; a prévia deixa de listar anexos nesse modo. Se o comentário falhar depois de anexar, o aviso informa que repetir duplicaria os anexos e esse atalho não aparece.
+
 ## [1.76.0] - 2026-11-24
 ### Adicionado
 - **Evidências: descrição do pull request**: o botão *Descrição do PR* abre um resumo em Markdown da evidência para colar na descrição do PR, dentro do limite de 4000 caracteres. Traz título, tarefa, resultado, responsável, ambiente, links (PR das versões, vídeos, API) e os passos com suas provas em uma linha (`API GET http://… → 200 OK · 12 ms · regras ✅`). O texto é editável, mostra o contador de caracteres e tem o botão *Copiar*.

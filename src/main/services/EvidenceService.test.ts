@@ -192,6 +192,45 @@ describe('EvidenceService', () => {
     expect(sent.attached).toEqual(preview.attachments.map((a) => a.name));
   });
 
+  const jiraError = (status: number, body: unknown) => ({ ok: false, status, text: async () => JSON.stringify(body) });
+
+  it('anexo recusado (404): diz que foi o anexo, traz o motivo do Jira e não comenta', async () => {
+    fetchImpl.mockResolvedValueOnce(jiraError(404, { errorMessages: ['Attachments are disabled'] }));
+    const svc = make();
+    const s = svc.createSession({ task: 'WT-1', kind: 'qa' });
+    const r = await svc.publishToJira(s.id, 'WT-1', { includeVideos: false });
+    expect(r).toMatchObject({ success: false, failedStep: 'attach' });
+    expect(r.error).toContain('anexo relatorio.pdf');
+    expect(r.error).toContain('HTTP 404');
+    expect(r.error).toContain('Criar anexos');
+    expect(r.error).toContain('Attachments are disabled');
+    expect(r.error).toContain('só o comentário');
+    expect(r.error).not.toContain('S3CRET');
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it('comentário recusado depois do anexo: avisa que o anexo já foi e que repetir duplica', async () => {
+    fetchImpl.mockResolvedValueOnce({ ok: true, status: 200 }).mockResolvedValueOnce(jiraError(403, { errorMessages: ['No permission'] }));
+    const svc = make();
+    const s = svc.createSession({ task: 'WT-1', kind: 'qa' });
+    const r = await svc.publishToJira(s.id, 'WT-1', { includeVideos: false });
+    expect(r).toMatchObject({ success: false, failedStep: 'comment', attached: ['relatorio.pdf'] });
+    expect(r.error).toContain('comentário');
+    expect(r.error).toContain('Adicionar comentários');
+    expect(r.error).toContain('já foram enviados (relatorio.pdf)');
+  });
+
+  it('só comentário: não gera PDF nem anexa e o comentário não lista anexos', async () => {
+    const svc = make();
+    const s = svc.createSession({ task: 'WT-1', kind: 'qa' });
+    svc.saveVideo(s.id, Buffer.from('abc'));
+    const r = await svc.publishToJira(s.id, 'WT-1', { includeVideos: true, attachFiles: false });
+    expect(r).toMatchObject({ success: true, attached: [] });
+    expect(fetchImpl.mock.calls.map((c) => c[0])).toEqual(['https://jira.example.com/rest/api/2/issue/WT-1/comment']);
+    expect(JSON.parse(String(fetchImpl.mock.calls[0][1].body)).body).not.toContain('Anexos:');
+    expect(svc.previewJiraPublication(s.id, true, false).attachments).toEqual([]);
+  });
+
   it('devolve erro amigável sem vazar o token', async () => {
     fetchImpl.mockResolvedValue({ ok: false, status: 401 });
     const s = make().createSession({ task: 'WT-1', kind: 'qa' });

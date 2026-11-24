@@ -25,8 +25,8 @@ export interface JiraPublishModalProps {
   session: EvidenceSession;
   onClose: () => void;
   lookupIssue: (key: string) => Promise<EvidenceJiraIssue>;
-  previewJira: (includeVideos: boolean) => Promise<EvidenceJiraPreview>;
-  publish: (key: string, includeVideos: boolean) => Promise<EvidenceJiraResult | undefined>;
+  previewJira: (includeVideos: boolean, attachFiles: boolean) => Promise<EvidenceJiraPreview>;
+  publish: (key: string, includeVideos: boolean, attachFiles: boolean) => Promise<EvidenceJiraResult | undefined>;
 }
 
 /** Última conferência antes de publicar: mostra o comentário e os anexos exatos e só envia ao confirmar. */
@@ -37,20 +37,23 @@ export const JiraPublishModal: React.FC<JiraPublishModalProps> = ({ session, onC
   const [issue, setIssue] = useState<{ ok: boolean; text: string } | null>(null);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
+  // Anexo recusado pelo Jira (anexos desativados, sem permissão): dá para publicar só o comentário.
+  const [attachFiles, setAttachFiles] = useState(true);
+  const [canCommentOnly, setCanCommentOnly] = useState(false);
   const summary = summarizeEvidence(session.steps);
   const normalized = normalizeJiraKey(key);
 
   useEffect(() => {
     let alive = true;
     setPreview(null);
-    previewJira(includeVideos)
+    previewJira(includeVideos, attachFiles)
       .then((p) => alive && setPreview(p))
       .catch((err) => alive && setError(err instanceof Error ? err.message : String(err)));
     return () => {
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [includeVideos, session.updatedAt, session.steps]);
+  }, [includeVideos, attachFiles, session.updatedAt, session.steps]);
 
   useEffect(() => {
     setIssue(null);
@@ -72,10 +75,12 @@ export const JiraPublishModal: React.FC<JiraPublishModalProps> = ({ session, onC
   const send = async () => {
     setSending(true);
     setError('');
-    const result = await publish(key, includeVideos);
+    const result = await publish(key, includeVideos, attachFiles);
     setSending(false);
-    if (result?.success) onClose();
-    else setError(result?.error ?? 'Falha ao publicar no Jira.');
+    if (result?.success) return onClose();
+    setError(result?.error ?? 'Falha ao publicar no Jira.');
+    // Só oferece o comentário sozinho se nada foi anexado: com anexo já enviado, repetir duplicaria.
+    setCanCommentOnly(result?.failedStep === 'attach' && !(result.attached?.length));
   };
 
   const videos = session.videos.length;
@@ -98,7 +103,7 @@ export const JiraPublishModal: React.FC<JiraPublishModalProps> = ({ session, onC
             Cancelar
           </button>
           <button type="button" className={BTN_PRIMARY} disabled={sending || !normalized || !preview} onClick={() => void send()}>
-            <Send className="w-3.5 h-3.5" /> {sending ? 'Publicando…' : `Publicar${normalized ? ` em ${normalized}` : ''}`}
+            <Send className="w-3.5 h-3.5" /> {sending ? 'Publicando…' : `${attachFiles ? 'Publicar' : 'Publicar comentário'}${normalized ? ` em ${normalized}` : ''}`}
           </button>
         </>
       }
@@ -133,7 +138,15 @@ export const JiraPublishModal: React.FC<JiraPublishModalProps> = ({ session, onC
             ))}
             {!preview && <li className="text-xs text-muted-foreground">Carregando…</li>}
           </ul>
-          {videos > 0 && (
+          {!attachFiles && (
+            <p className="text-xs text-muted-foreground">
+              Modo só comentário: nada será anexado. O relatório fica na pasta da evidência para você anexar à mão.{' '}
+              <button type="button" className="underline cursor-pointer hover:text-foreground" disabled={sending} onClick={() => { setAttachFiles(true); setCanCommentOnly(false); setError(''); }}>
+                Voltar a anexar
+              </button>
+            </p>
+          )}
+          {attachFiles && videos > 0 && (
             <label className="text-[13px] text-foreground flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={includeVideos} disabled={sending} onChange={(e) => setIncludeVideos(e.target.checked)} /> Anexar {videos === 1 ? 'o vídeo' : `os ${videos} vídeos`} (até 50 MB cada)
             </label>
@@ -147,7 +160,25 @@ export const JiraPublishModal: React.FC<JiraPublishModalProps> = ({ session, onC
           </pre>
         </div>
 
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && (
+          <div className="space-y-2">
+            <p className="text-xs text-red-600">{error}</p>
+            {canCommentOnly && attachFiles && (
+              <button
+                type="button"
+                className={BTN}
+                disabled={sending}
+                onClick={() => {
+                  setAttachFiles(false);
+                  setCanCommentOnly(false);
+                  setError('');
+                }}
+              >
+                Tentar só com o comentário (sem anexos)
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </Modal>
   );

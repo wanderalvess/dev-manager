@@ -258,8 +258,8 @@ export function useEvidence(isActive: boolean) {
       info(`Evidência salva. Relatório atualizado em ${files.html}`);
     });
 
-  const previewJira = (includeVideos: boolean): Promise<EvidenceJiraPreview> =>
-    session ? api.evidencePreviewJira(session.id, includeVideos) : Promise.reject(new Error('Nenhuma sessão aberta.'));
+  const previewJira = (includeVideos: boolean, attachFiles = true): Promise<EvidenceJiraPreview> =>
+    session ? api.evidencePreviewJira(session.id, includeVideos, attachFiles) : Promise.reject(new Error('Nenhuma sessão aberta.'));
 
   const addBlock = (stepId: string, input: EvidenceBlockInput) =>
     session && run(async () => setSession(await api.evidenceAddBlock(session.id, stepId, input)));
@@ -345,13 +345,13 @@ export function useEvidence(isActive: boolean) {
 
   const lookupIssue = (issueKey: string): Promise<EvidenceJiraIssue> => api.evidenceLookupIssue(issueKey);
 
-  const publish = (issueKey: string, includeVideos: boolean): Promise<EvidenceJiraResult | undefined> =>
+  const publish = (issueKey: string, includeVideos: boolean, attachFiles = true): Promise<EvidenceJiraResult | undefined> =>
     run(async () => {
       if (!session) throw new Error('Nenhuma sessão aberta.');
-      const result = await api.evidencePublishJira(session.id, issueKey, includeVideos);
+      const result = await api.evidencePublishJira(session.id, issueKey, includeVideos, attachFiles);
       if (result.success) {
         const skipped = result.skipped?.length ? ` (não anexados por tamanho: ${result.skipped.join(', ')})` : '';
-        info(`Publicado em ${result.issueKey}: ${result.attached?.join(', ')}${skipped}`);
+        info(`Publicado em ${result.issueKey}: ${result.attached?.length ? result.attached.join(', ') : 'só o comentário, sem anexos'}${skipped}`);
       } else {
         setMessage({ kind: 'error', text: result.error ?? 'Falha ao publicar no Jira.' });
       }

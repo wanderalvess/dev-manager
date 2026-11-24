@@ -399,8 +399,8 @@ export const EvidencePage: React.FC<EvidencePageProps> = ({ isActive = true }) =
                   onClose={() => setPublishing(false)}
                   lookupIssue={ev.lookupIssue}
                   previewJira={ev.previewJira}
-                  publish={async (key, withVideos) => {
-                    const result = await ev.publish(key, withVideos);
+                  publish={async (key, withVideos, attachFiles) => {
+                    const result = await ev.publish(key, withVideos, attachFiles);
                     // Evidência iniciada sem tarefa: guarda a chave usada para não pedir de novo.
                     if (result?.success && result.issueKey && !session.task.trim()) void ev.updateSession({ task: result.issueKey });
                     return result;
