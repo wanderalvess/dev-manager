@@ -48,6 +48,42 @@ export interface EvidenceServiceDeps {
 const SESSION_FILE = 'session.json';
 const RESULTS: readonly EvidenceResult[] = ['pending', 'passed', 'failed'];
 
+/** Mensagem do próprio Jira (errorMessages/errors) para dizer o motivo de um HTTP de erro; nunca vem o token. */
+async function jiraDetail(res: { text?: () => Promise<string> }): Promise<string> {
+  try {
+    const body = JSON.parse((await res.text?.()) ?? '') as { errorMessages?: string[]; errors?: Record<string, string>; message?: string };
+    const first = body.errorMessages?.[0] ?? Object.values(body.errors ?? {})[0] ?? body.message ?? '';
+    return String(first).replace(/\s+/g, ' ').trim().slice(0, 160);
+  } catch {
+    return '';
+  }
+}
+
+/** Falha de uma etapa da publicação: o texto diz qual foi (anexo ou comentário) e o que costuma causar. */
+class JiraStepError extends Error {
+  constructor(
+    readonly step: 'attach' | 'comment',
+    readonly status: number,
+    readonly detail: string,
+    readonly file?: string
+  ) {
+    super(`HTTP ${status}`);
+  }
+
+  describe(alreadyAttached: readonly string[]): string {
+    const why = this.detail ? ` Resposta do Jira: "${this.detail}".` : '';
+    if (this.status === 401) return 'O Jira recusou o token (HTTP 401). Confira o token em Documentação › Confluence & Jira.';
+    if (this.step === 'attach') {
+      const cause = this.status === 403 || this.status === 404 ? ' Costuma ser anexo desativado no Jira ou falta da permissão "Criar anexos" nessa tarefa.' : '';
+      const state = alreadyAttached.length ? ` Já foram enviados: ${alreadyAttached.join(', ')}.` : ' Nada foi publicado ainda; dá para publicar só o comentário.';
+      return `O Jira não aceitou o anexo${this.file ? ` ${this.file}` : ''} (HTTP ${this.status}).${cause}${why}${state}`;
+    }
+    const cause = this.status === 403 || this.status === 404 ? ' Costuma ser falta da permissão "Adicionar comentários" nessa tarefa.' : '';
+    const sent = alreadyAttached.length ? ` Os anexos já foram enviados (${alreadyAttached.join(', ')}): ao tentar de novo, vão duplicar.` : '';
+    return `O Jira não aceitou o comentário (HTTP ${this.status}).${cause}${why}${sent}`;
+  }
+}
+
 const text = (v: unknown, max: number): string | undefined => {
   if (typeof v !== 'string') return undefined;
   const t = v.trim().slice(0, max);
@@ -346,11 +382,11 @@ export class EvidenceService {
   }
 
   /** Mostra o que a publicação enviaria (comentário e anexos) sem gerar o PDF nem falar com o Jira. */
-  previewJiraPublication(id: string, includeVideos: boolean): EvidenceJiraPreview {
+  previewJiraPublication(id: string, includeVideos: boolean, attachFiles = true): EvidenceJiraPreview {
     const session = this.get(id);
     const dir = this.dirOf(id);
-    const attachments: EvidenceJiraPreviewAttachment[] = [{ name: `${EVIDENCE_REPORT_FILE.document}.pdf`, kind: 'report' }];
-    if (includeVideos) {
+    const attachments: EvidenceJiraPreviewAttachment[] = attachFiles ? [{ name: `${EVIDENCE_REPORT_FILE.document}.pdf`, kind: 'report' }] : [];
+    if (attachFiles && includeVideos) {
       for (const video of session.videos) {
         const file = path.join(dir, video);
         if (!fs.existsSync(file)) continue;
@@ -362,7 +398,7 @@ export class EvidenceService {
     return { comment, attachments };
   }
 
-  async publishToJira(id: string, rawKey: string, opts: { includeVideos: boolean }): Promise<EvidenceJiraResult> {
+  async publishToJira(id: string, rawKey: string, opts: { includeVideos: boolean; attachFiles?: boolean }): Promise<EvidenceJiraResult> {
     const issueKey = normalizeJiraKey(rawKey);
     if (!issueKey) return { success: false, error: 'Chave do Jira inválida (ex.: WT-123).' };
     const source = pickJiraSource(this.deps.getSettings().jiraSources);
@@ -370,13 +406,15 @@ export class EvidenceService {
     const baseUrl = source.baseUrl.trim().replace(/\/+$/, '');
     if (!isSafeUrl(baseUrl)) return { success: false, error: 'URL do Jira inválida.' };
 
+    const attached: string[] = [];
     try {
       const session = this.get(id);
       const dir = this.dirOf(id);
-      const report = await this.generateReport(id, true);
-      const files = [report.pdf ?? report.html];
+      const attachFiles = opts.attachFiles !== false;
+      const report = attachFiles ? await this.generateReport(id, true) : null;
+      const files = report ? [report.pdf ?? report.html] : [];
       const skipped: string[] = [];
-      if (opts.includeVideos) {
+      if (attachFiles && opts.includeVideos) {
         for (const video of session.videos) {
           const file = path.join(dir, video);
           if (!fs.existsSync(file)) continue;
@@ -386,13 +424,12 @@ export class EvidenceService {
       }
 
       const headers = { Authorization: `Bearer ${source.authToken}`, 'X-Atlassian-Token': 'no-check' };
-      const attached: string[] = [];
       for (const file of files) {
         const form = new FormData();
         const name = path.basename(file);
         form.append('file', new Blob([new Uint8Array(fs.readFileSync(file))]), name);
         const res = await this.deps.fetchImpl(`${baseUrl}/rest/api/2/issue/${issueKey}/attachments`, { method: 'POST', headers, body: form });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw new JiraStepError('attach', res.status, await jiraDetail(res), name);
         attached.push(name);
       }
 
@@ -401,9 +438,10 @@ export class EvidenceService {
         headers: { Authorization: headers.Authorization, 'Content-Type': 'application/json' },
         body: JSON.stringify({ body: buildJiraComment(session, attached) })
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw new JiraStepError('comment', res.status, await jiraDetail(res));
       return { success: true, issueKey, attached, skipped };
     } catch (err) {
+      if (err instanceof JiraStepError) return { success: false, error: err.describe(attached), failedStep: err.step, attached };
       return { success: false, error: describeJiraError(err) };
     }
   }

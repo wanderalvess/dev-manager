@@ -54,9 +54,10 @@ export const evidenceApi = {
     ipcRenderer.invoke('evidence:open-file', id, kind, layout),
   evidenceSetRecordingSource: (sourceId: string | null): Promise<boolean> => ipcRenderer.invoke('evidence:set-recording-source', sourceId),
   evidenceLookupIssue: (issueKey: string): Promise<EvidenceJiraIssue> => ipcRenderer.invoke('evidence:lookup-issue', issueKey),
-  evidencePreviewJira: (id: string, includeVideos: boolean): Promise<EvidenceJiraPreview> => ipcRenderer.invoke('evidence:preview-jira', id, includeVideos),
-  evidencePublishJira: (id: string, issueKey: string, includeVideos: boolean): Promise<EvidenceJiraResult> =>
-    ipcRenderer.invoke('evidence:publish-jira', id, issueKey, includeVideos),
+  evidencePreviewJira: (id: string, includeVideos: boolean, attachFiles?: boolean): Promise<EvidenceJiraPreview> =>
+    ipcRenderer.invoke('evidence:preview-jira', id, includeVideos, attachFiles),
+  evidencePublishJira: (id: string, issueKey: string, includeVideos: boolean, attachFiles?: boolean): Promise<EvidenceJiraResult> =>
+    ipcRenderer.invoke('evidence:publish-jira', id, issueKey, includeVideos, attachFiles),
   evidenceRecordClicksStart: (id: string): Promise<boolean> => ipcRenderer.invoke('evidence:record-clicks-start', id),
   evidenceRecordClicksStop: (): Promise<boolean> => ipcRenderer.invoke('evidence:record-clicks-stop'),
   evidenceSetActions: (id: string, stepId: string, actions: EvidenceAction[]): Promise<EvidenceSession> =>

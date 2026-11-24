@@ -163,9 +163,11 @@ export function registerEvidenceHandlers(ctx: IpcContext): void {
   ipcMain.handle('evidence:get-image', (_, id: string, name: string) => service.getImageDataUrl(requireId(id), String(name ?? '')));
   ipcMain.handle('evidence:lookup-issue', (_, issueKey: string) => service.lookupIssue(String(issueKey ?? '')));
 
-  ipcMain.handle('evidence:preview-jira', (_, id: string, includeVideos: boolean) => service.previewJiraPublication(requireId(id), !!includeVideos));
-  ipcMain.handle('evidence:publish-jira', (_, id: string, issueKey: string, includeVideos: boolean) =>
-    service.publishToJira(requireId(id), String(issueKey ?? ''), { includeVideos: !!includeVideos })
+  ipcMain.handle('evidence:preview-jira', (_, id: string, includeVideos: boolean, attachFiles?: boolean) =>
+    service.previewJiraPublication(requireId(id), !!includeVideos, attachFiles !== false)
+  );
+  ipcMain.handle('evidence:publish-jira', (_, id: string, issueKey: string, includeVideos: boolean, attachFiles?: boolean) =>
+    service.publishToJira(requireId(id), String(issueKey ?? ''), { includeVideos: !!includeVideos, attachFiles: attachFiles !== false })
   );
 
   // ---- Gravação de cliques e reexecução do roteiro (Windows) ----

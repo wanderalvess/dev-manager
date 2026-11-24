@@ -1,6 +1,6 @@
 {
   "name": "hub-manager",
-  "version": "1.76.0",
+  "version": "1.76.1",
   "type": "module",
   "description": "Central Integrada de Operação, Desenvolvimento e Qualidade",
   "main": "dist-electron/main/index.js",

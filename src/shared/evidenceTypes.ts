@@ -294,6 +294,8 @@ export interface EvidenceJiraResult {
   issueKey?: string;
   attached?: string[];
   skipped?: string[];
+  /** Etapa que falhou: com 'attach' dá para tentar de novo publicando só o comentário. */
+  failedStep?: 'attach' | 'comment';
 }
 
 export interface EvidenceJiraPreviewAttachment {
