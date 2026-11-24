@@ -4,6 +4,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.75.0] - 2026-11-24
+### Adicionado
+- **Evidências: links opcionais**: em *Dados da evidência*, cadastre o PR de cada versão, vídeos hospedados fora do Hub, a URL da API ou outros links, cada um com tipo, rótulo e URL. Eles saem na capa do relatório (HTML, PDF e slides) como links clicáveis e no comentário do Jira (`[rótulo|url]`), e a prévia da publicação já os mostra. Na reexecução os links vão para a nova evidência.
+
+### Segurança
+- **Evidências**: só `http://` e `https://` são aceitos nos links, sem usuário e senha na URL, e o relatório revalida o que lê do disco, para que o HTML gerado nunca tenha um link `javascript:` ou `file:`.
+
 ## [1.74.0] - 2026-11-24
 ### Adicionado
 - **Evidências: colar cURL na prova de API**: *Copiar como cURL* do navegador ou do Postman (ou `GET http://...`) preenche método, URL, cabeçalhos e corpo de uma vez. A URL agora quebra em linhas para dar para conferir a query string.

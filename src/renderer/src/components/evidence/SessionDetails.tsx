@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { EvidenceKind, EvidenceSession, EvidenceSessionInput } from '../../../../shared/evidenceTypes';
+import { LinksEditor } from './LinksEditor';
 
 const INPUT = 'h-10 px-3 border border-input rounded-[10px] bg-card text-sm text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring w-full';
 const TEXTAREA = 'px-3 py-2 border border-input rounded-[10px] bg-card text-sm text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring w-full resize-y';
@@ -14,7 +15,10 @@ export const SessionDetails: React.FC<{ session: EvidenceSession; onUpdate: (pat
   const commit = (field: 'task' | 'title' | 'tester' | 'environment', current: string | undefined) => (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (e.target.value.trim() !== (current ?? '')) onUpdate({ [field]: e.target.value });
   };
-  const summary = [session.task, session.kind === 'qa' ? 'Teste (QA)' : 'Desenvolvimento', session.tester, session.environment?.split('\n')[0]].filter(Boolean).join(' · ');
+  const linkCount = session.links?.length ?? 0;
+  const summary = [session.task, session.kind === 'qa' ? 'Teste (QA)' : 'Desenvolvimento', session.tester, session.environment?.split('\n')[0], linkCount > 0 && `${linkCount} ${linkCount === 1 ? 'link' : 'links'}`]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <details className="group rounded-[10px] border border-border/70 bg-muted/20">
@@ -47,6 +51,10 @@ export const SessionDetails: React.FC<{ session: EvidenceSession; onUpdate: (pat
         <div className="space-y-1.5 md:col-span-2">
           <label className={LABEL}>Ambiente</label>
           <textarea className={TEXTAREA} rows={2} defaultValue={session.environment ?? ''} placeholder="Versão / branch / banco" onBlur={commit('environment', session.environment)} />
+        </div>
+        <div className="space-y-1.5 md:col-span-2">
+          <label className={LABEL}>Links (opcional): PR das versões, vídeos, URL da API</label>
+          <LinksEditor links={session.links} onChange={(links) => onUpdate({ links })} />
         </div>
       </div>
     </details>

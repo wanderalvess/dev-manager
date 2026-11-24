@@ -14,11 +14,13 @@ import {
   isValidSessionId,
   normalizeJiraKey,
   sanitizeActions,
+  sanitizeLinks,
   type EvidenceAction,
   type EvidenceMarker,
   type EvidenceBlock,
   type EvidenceBlockInput,
   type EvidenceJiraIssue,
+  type EvidenceLink,
   type EvidenceJiraPreview,
   type EvidenceJiraPreviewAttachment,
   type EvidenceJiraResult,
@@ -82,6 +84,11 @@ export class EvidenceService {
     return session;
   }
 
+  private linksField(raw: unknown): { links?: EvidenceLink[] } {
+    const links = sanitizeLinks(raw, () => crypto.randomUUID());
+    return links.length ? { links } : {};
+  }
+
   createSession(input: EvidenceSessionInput): EvidenceSession {
     // A tarefa é opcional: só a publicação no Jira exige uma chave. Sem ela a pasta vira "sem-tarefa/AAAAMMDD-HHMMSS".
     const task = text(input.task, 120) ?? '';
@@ -101,6 +108,7 @@ export class EvidenceService {
       kind: input.kind === 'qa' ? 'qa' : 'dev',
       tester: text(input.tester, 80),
       environment: text(input.environment, 500),
+      ...this.linksField(input.links),
       steps: [],
       videos: [],
       createdAt: iso,
@@ -180,7 +188,8 @@ export class EvidenceService {
       title: `${source.title} (reexecução)`,
       kind: source.kind,
       tester: source.tester,
-      environment: source.environment
+      environment: source.environment,
+      links: source.links
     });
   }
 
@@ -195,6 +204,11 @@ export class EvidenceService {
     if (patch.kind !== undefined && (patch.kind === 'qa' || patch.kind === 'dev')) session.kind = patch.kind;
     if (patch.tester !== undefined) session.tester = text(patch.tester, 80);
     if (patch.environment !== undefined) session.environment = text(patch.environment, 500);
+    if (patch.links !== undefined) {
+      const links = sanitizeLinks(patch.links, () => crypto.randomUUID());
+      if (links.length) session.links = links;
+      else delete session.links;
+    }
     return this.write(session);
   }
 

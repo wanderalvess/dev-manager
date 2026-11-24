@@ -182,6 +182,57 @@ export interface EvidenceStep {
   createdAt: string;
 }
 
+export type EvidenceLinkKind = 'pr' | 'video' | 'api' | 'other';
+
+/** Link opcional da evidência: PR de uma versão, vídeo hospedado fora do Hub, URL da API, documentação etc. */
+export interface EvidenceLink {
+  id: string;
+  kind: EvidenceLinkKind;
+  /** Ex.: "Versão 2.1.0" ou "Gravação do teste". */
+  label?: string;
+  url: string;
+}
+
+export const EVIDENCE_LINK_KINDS: readonly EvidenceLinkKind[] = ['pr', 'video', 'api', 'other'];
+export const LINK_KIND_LABEL: Record<EvidenceLinkKind, string> = { pr: 'Pull request', video: 'Vídeo', api: 'API', other: 'Link' };
+export const EVIDENCE_MAX_LINKS = 20;
+
+/**
+ * Aceita só http(s) (o relatório vira HTML clicável: nada de javascript: ou file:), sem usuário/senha na URL.
+ * "github.com/x/pull/1" ganha https://. Colchetes e barra vertical no caminho são codificados para não quebrarem
+ * o link do Jira. Devolve null quando não dá para usar.
+ */
+export function normalizeLinkUrl(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  let text = raw.trim();
+  if (!text || text.length > 800) return null;
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(text) && /^[\w-]+(\.[\w-]+)+(:\d+)?([/?#]|$)/.test(text)) text = `https://${text}`;
+  let url: URL;
+  try {
+    url = new URL(text);
+  } catch {
+    return null;
+  }
+  if ((url.protocol !== 'http:' && url.protocol !== 'https:') || url.username || url.password) return null;
+  const rest = `${url.pathname}${url.search}${url.hash}`.replace(/\[/g, '%5B').replace(/\]/g, '%5D').replace(/\|/g, '%7C');
+  return `${url.origin}${rest}`;
+}
+
+/** Valida os links vindos do renderer ou do disco: descarta URL inválida e limita tamanhos. */
+export function sanitizeLinks(raw: unknown, makeId: () => string): EvidenceLink[] {
+  if (!Array.isArray(raw)) return [];
+  const out: EvidenceLink[] = [];
+  for (const item of raw.slice(0, EVIDENCE_MAX_LINKS)) {
+    const l = (item ?? {}) as Partial<EvidenceLink>;
+    const url = normalizeLinkUrl(l.url);
+    if (!url) continue;
+    const label = typeof l.label === 'string' ? l.label.replace(/[\r\n]+/g, ' ').trim().slice(0, 100) : '';
+    const id = typeof l.id === 'string' && /^[A-Za-z0-9-]{1,64}$/.test(l.id) ? l.id : makeId();
+    out.push({ id, kind: EVIDENCE_LINK_KINDS.includes(l.kind as EvidenceLinkKind) ? (l.kind as EvidenceLinkKind) : 'other', ...(label ? { label } : {}), url });
+  }
+  return out;
+}
+
 export interface EvidenceSession {
   /** `<tarefa>__AAAAMMDD-HHMMSS`; também é o caminho relativo da pasta (`tarefa/AAAAMMDD-HHMMSS`). */
   id: string;
@@ -191,6 +242,8 @@ export interface EvidenceSession {
   tester?: string;
   /** Texto livre: versão da rotina, branch, ambiente de homologação etc. */
   environment?: string;
+  /** Links opcionais (PRs das versões, vídeos externos, URL da API): vão para o relatório e para o comentário do Jira. */
+  links?: EvidenceLink[];
   steps: EvidenceStep[];
   /** Nomes dos vídeos .webm dentro da pasta da sessão. */
   videos: string[];
@@ -215,6 +268,7 @@ export interface EvidenceSessionInput {
   kind: EvidenceKind;
   tester?: string;
   environment?: string;
+  links?: EvidenceLink[];
 }
 
 export interface EvidenceCaptureSource {

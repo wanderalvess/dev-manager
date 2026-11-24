@@ -164,6 +164,19 @@ describe('EvidenceService', () => {
     expect(svc.updateSession(s.id, { kind: 'xx' as never }).kind).toBe('dev');
   });
 
+  it('links: grava só os válidos, remove ao limpar e leva para a reexecução', () => {
+    const svc = make();
+    const s = svc.createSession({ task: 'WT-1', kind: 'qa', links: [{ id: 'a', kind: 'pr', label: 'v1', url: 'github.com/o/r/pull/1' }, { id: 'b', kind: 'api', url: 'javascript:1' }] });
+    expect(s.links).toEqual([{ id: 'a', kind: 'pr', label: 'v1', url: 'https://github.com/o/r/pull/1' }]);
+    expect(svc.createReplaySession(s.id).links?.[0].url).toBe('https://github.com/o/r/pull/1');
+    const withMore = svc.updateSession(s.id, { links: [...(s.links ?? []), { id: 'c', kind: 'video', url: 'https://v.example.com/x' }] });
+    expect(withMore.links).toHaveLength(2);
+    expect(svc.get(s.id).links).toHaveLength(2);
+    expect(svc.updateSession(s.id, { title: 'Outro' }).links).toHaveLength(2);
+    expect('links' in svc.updateSession(s.id, { links: [] })).toBe(false);
+    expect(svc.createSession({ task: 'WT-2', kind: 'dev' }).links).toBeUndefined();
+  });
+
   it('prévia da publicação: mesmo comentário e anexos do envio, sem tocar no Jira', async () => {
     const svc = make();
     const s = svc.createSession({ task: 'WT-1', kind: 'qa', title: 'Teste da carga' });

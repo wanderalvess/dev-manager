@@ -1,10 +1,13 @@
 import {
   BLOCK_KIND_LABEL,
+  LINK_KIND_LABEL,
   PHASE_LABEL,
   RESULT_LABEL,
   groupBlocks,
+  normalizeLinkUrl,
   summarizeEvidence,
   type EvidenceBlock,
+  type EvidenceLink,
   type EvidenceMarker,
   type EvidenceReportLayout,
   type EvidenceSession
@@ -14,6 +17,22 @@ const esc = (value: string | undefined): string =>
   (value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const multiline = (value: string | undefined): string => esc(value).replace(/\r?\n/g, '<br>');
+
+/** Links da evidência já revalidados (o session.json pode ter sido editado à mão): só http(s) vira link clicável. */
+const validLinks = (session: EvidenceSession): EvidenceLink[] =>
+  (session.links ?? []).flatMap((l) => {
+    const url = normalizeLinkUrl(l.url);
+    return url ? [{ ...l, url }] : [];
+  });
+
+const renderLinks = (session: EvidenceSession): string => {
+  const links = validLinks(session);
+  if (links.length === 0) return '';
+  const items = links
+    .map((l) => `<li><b>${esc(LINK_KIND_LABEL[l.kind] ?? LINK_KIND_LABEL.other)}${l.label ? `: ${esc(l.label)}` : ''}</b> <a href="${esc(l.url)}" rel="noopener noreferrer">${esc(l.url)}</a></li>`)
+    .join('');
+  return `<div style="grid-column:1/-1"><b>Links:</b><ul style="margin:2px 0 0;padding-left:18px">${items}</ul></div>`;
+};
 
 const formatDate = (iso: string): string => {
   const d = new Date(iso);
@@ -120,6 +139,7 @@ export function buildEvidenceHtml(session: EvidenceSession, images: ReadonlyMap<
   <div><b>Responsável:</b> ${esc(session.tester) || '-'}</div>
   <div><b>Início:</b> ${esc(formatDate(session.createdAt))}</div>
   <div style="grid-column:1/-1"><b>Ambiente:</b> ${multiline(session.environment) || '-'}</div>
+  ${renderLinks(session)}
 </div>
 <table class="summary"><tr><td>Passos: <b>${summary.total}</b></td><td>Aprovados: <b>${summary.passed}</b></td><td>Reprovados: <b>${summary.failed}</b></td><td>Pendentes: <b>${summary.pending}</b></td></tr></table>
 ${steps || '<p class="muted">Nenhum passo registrado.</p>'}
@@ -136,7 +156,8 @@ function buildSlidesHtml(session: EvidenceSession, images: ReadonlyMap<string, s
   <h1>${esc(session.title || session.task)}</h1>
   <div class="meta"><div><b>Tarefa:</b> ${esc(session.task) || '-'}</div><div><b>Resultado:</b> <span class="verdict ${summary.verdict}">${RESULT_LABEL[summary.verdict]}</span></div>
   <div><b>Responsável:</b> ${esc(session.tester) || '-'}</div><div><b>Data:</b> ${esc(formatDate(session.createdAt))}</div>
-  <div style="grid-column:1/-1"><b>Ambiente:</b> ${multiline(session.environment) || '-'}</div></div>
+  <div style="grid-column:1/-1"><b>Ambiente:</b> ${multiline(session.environment) || '-'}</div>
+  ${renderLinks(session)}</div>
 </section>`;
 
   const slides = session.steps
@@ -188,6 +209,16 @@ export function buildJiraComment(session: EvidenceSession, attached: readonly st
     `Resultado: *${RESULT_LABEL[summary.verdict]}* (${summary.passed} aprovados, ${summary.failed} reprovados, ${summary.pending} pendentes de ${summary.total} passos)`
   ];
   if (session.environment) lines.push(`Ambiente: ${clean(session.environment)}`);
+  const links = validLinks(session);
+  if (links.length) {
+    lines.push('Links:');
+    for (const l of links) {
+      // [rótulo|url] é o link do Jira; colchetes e barra no rótulo quebrariam a marcação.
+      const label = (l.label ?? '').replace(/[[\]|]/g, ' ').replace(/\s+/g, ' ').trim();
+      lines.push(`* ${LINK_KIND_LABEL[l.kind] ?? LINK_KIND_LABEL.other}: ${label ? `[${label}|${l.url}]` : `[${l.url}]`}`);
+    }
+    lines.push(''); // separa a lista de links da lista numerada dos passos
+  }
   session.steps.forEach((step, i) => {
     lines.push(`# ${clean(step.title) || `Passo ${i + 1}`} - ${RESULT_LABEL[step.result]}`);
   });

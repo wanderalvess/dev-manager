@@ -84,3 +84,28 @@ describe('buildJiraComment', () => {
     expect(text).toContain('[^relatorio.pdf]');
   });
 });
+
+describe('links da evidência', () => {
+  const links: EvidenceSession['links'] = [
+    { id: 'l1', kind: 'pr', label: 'Versão 1.2 [rc|1]', url: 'https://github.com/o/r/pull/7' },
+    { id: 'l2', kind: 'video', url: 'https://videos.example.com/a?b=1&c=2' },
+    { id: 'l3', kind: 'other', label: 'Malicioso', url: 'javascript:alert(1)' }
+  ];
+
+  it('relatório lista os links, escapa o HTML e descarta o que não é http(s)', () => {
+    const html = buildEvidenceHtml(makeSession({ links }), new Map());
+    expect(html).toContain('<a href="https://github.com/o/r/pull/7" rel="noopener noreferrer">');
+    expect(html).toContain('Pull request: Versão 1.2 [rc|1]');
+    expect(html).toContain('href="https://videos.example.com/a?b=1&amp;c=2"');
+    expect(html).not.toContain('javascript:');
+    expect(buildEvidenceHtml(makeSession({ links }), new Map(), 'slides')).toContain('Pull request');
+    expect(buildEvidenceHtml(makeSession(), new Map())).not.toContain('<b>Links:</b>');
+  });
+
+  it('comentário do Jira usa [rótulo|url] sem deixar colchetes quebrarem a marcação', () => {
+    const text = buildJiraComment(makeSession({ links }), []);
+    expect(text).toContain('Links:\n* Pull request: [Versão 1.2 rc 1|https://github.com/o/r/pull/7]\n* Vídeo: [https://videos.example.com/a?b=1&c=2]');
+    expect(text).not.toContain('javascript:');
+    expect(text.indexOf('* Vídeo')).toBeLessThan(text.indexOf('# Abrir tela'));
+  });
+});
