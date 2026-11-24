@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { ArrowRight, Settings2, SkipForward, Wand2 } from 'lucide-react';
 import { AppLogo } from '../AppLogo';
 import { Modal } from '../ui/Modal';
 import { SPLASH_BOOT_ITEMS } from './onboardingContent';
-import { getSplashTiming } from './splashTiming';
+import { useSplashClock } from './splash/useSplashClock';
 import { SplashBootPanel, SplashStepsPanel } from './splash/SplashPanels';
 import { SplashLogoAssemble } from './splash/SplashLogoAssemble';
 import { StartHome } from './splash/StartHome';
@@ -23,14 +23,6 @@ interface SplashScreenProps {
   onOpenTab: (tab: string) => void;
   onWhatsNew: () => void;
 }
-
-const prefersReducedMotion = (): boolean => {
-  try {
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  } catch {
-    return false;
-  }
-};
 
 const TITLE_WORDS = [
   { word: 'Hub', accent: false },
@@ -61,50 +53,9 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
   onOpenTab,
   onWhatsNew
 }) => {
-  const [completed, setCompleted] = useState(0);
-  const [done, setDone] = useState(false);
-  // O app só aparece depois de carregar: a abertura começa no primeiro quadro desenhado, não na montagem, senão o
-  // carregamento a consome por baixo da tela preta e a pessoa cai direto na tela de início.
-  const [painted, setPainted] = useState(false);
+  const { painted, completed, done, skip } = useSplashClock(isOpen, isNewUser, SPLASH_BOOT_ITEMS.length);
   const news = useMemo(() => extractVersionHighlights(changelogRaw, appVersion), [appVersion]);
   const start = useStartScreenData(isOpen && !isNewUser);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    setCompleted(0);
-    setDone(false);
-    setPainted(false);
-    if (prefersReducedMotion()) {
-      setCompleted(SPLASH_BOOT_ITEMS.length);
-      setDone(true);
-      setPainted(true);
-      return;
-    }
-    const { bootStartMs, lineMs } = getSplashTiming(isNewUser);
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    let frame2 = 0;
-    // Dois quadros: o primeiro já foi pedido, o segundo só roda depois de a tela ter sido pintada
-    const frame1 = requestAnimationFrame(() => {
-      frame2 = requestAnimationFrame(() => {
-        setPainted(true);
-        SPLASH_BOOT_ITEMS.forEach((_, i) => timers.push(setTimeout(() => setCompleted(i + 1), bootStartMs + (i + 1) * lineMs)));
-        timers.push(setTimeout(() => setDone(true), bootStartMs + SPLASH_BOOT_ITEMS.length * lineMs));
-      });
-    });
-    return () => {
-      cancelAnimationFrame(frame1);
-      cancelAnimationFrame(frame2);
-      timers.forEach(clearTimeout);
-    };
-    // isNewUser só muda quando a abertura já fechou; reiniciar o boot no meio dela seria pior que ignorar.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
-
-  const skip = () => {
-    setCompleted(SPLASH_BOOT_ITEMS.length);
-    setDone(true);
-    setPainted(true);
-  };
 
   // Quem já usa o app fica na tela de início até entrar (clique em Entrar ou Enter); nada fecha sozinho
   const home = done && !isNewUser;
