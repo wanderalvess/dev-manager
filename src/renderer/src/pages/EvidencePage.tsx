@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Camera, FileText, MousePointerClick, FolderOpen, NotebookPen, Play, Presentation, Save, Send, Square, Trash2, Video } from 'lucide-react';
+import { Camera, ClipboardList, FileText, MousePointerClick, FolderOpen, NotebookPen, Play, Presentation, Save, Send, Square, Trash2, Video } from 'lucide-react';
 import { EVIDENCE_HOTKEY, RESULT_LABEL, guessJiraKey, parseHttpRequestText, summarizeEvidence, type EvidenceJiraIssue, type EvidenceKind, type EvidenceResult, type EvidenceSession } from '../../../shared/evidenceTypes';
 import type { ApiSuggestion } from '../components/evidence/StepBlocks';
 import { JiraPublishModal } from '../components/evidence/JiraPublishModal';
+import { PrDescriptionModal } from '../components/evidence/PrDescriptionModal';
 import { SessionDetails } from '../components/evidence/SessionDetails';
 import { StepCard, type AfterCaptureMode } from '../components/evidence/StepCard';
 
@@ -127,6 +128,7 @@ export const EvidencePage: React.FC<EvidencePageProps> = ({ isActive = true }) =
   const ev = useEvidence(isActive);
   const { session } = ev;
   const [publishing, setPublishing] = useState(false);
+  const [prDescription, setPrDescription] = useState(false);
   const [stepTitle, setStepTitle] = useState('');
   // Mesma preferência de Configurações > Qualidade: lida ao abrir a tela e gravada ao mudar aqui.
   const [afterCapture, setAfterCapture] = useState<AfterCaptureMode>('ask');
@@ -147,6 +149,7 @@ export const EvidencePage: React.FC<EvidencePageProps> = ({ isActive = true }) =
 
   useEffect(() => {
     setPublishing(false);
+    setPrDescription(false);
   }, [session?.id]);
 
   const summary = session ? summarizeEvidence(session.steps) : null;
@@ -361,6 +364,9 @@ export const EvidencePage: React.FC<EvidencePageProps> = ({ isActive = true }) =
                   <button type="button" className={BTN} disabled={ev.busy || session.steps.length === 0} title="Abre uma conferência do comentário e dos anexos; nada é enviado antes de confirmar" onClick={() => setPublishing(true)}>
                     <Send className="w-3.5 h-3.5" /> Publicar no Jira…
                   </button>
+                  <button type="button" className={BTN} disabled={ev.busy} title="Resumo em Markdown (até 4000 caracteres) para colar na descrição do pull request" onClick={() => setPrDescription(true)}>
+                    <ClipboardList className="w-3.5 h-3.5" /> Descrição do PR
+                  </button>
                   <span className="text-xs text-muted-foreground">Passos e provas já são gravados a cada alteração.</span>
                 </div>
                 <details className="text-xs">
@@ -384,6 +390,8 @@ export const EvidencePage: React.FC<EvidencePageProps> = ({ isActive = true }) =
                   </div>
                 </details>
               </div>
+
+              {prDescription && <PrDescriptionModal session={session} onClose={() => setPrDescription(false)} />}
 
               {publishing && (
                 <JiraPublishModal

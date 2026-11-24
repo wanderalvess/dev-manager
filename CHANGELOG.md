@@ -4,6 +4,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.76.0] - 2026-11-24
+### Adicionado
+- **Evidências: descrição do pull request**: o botão *Descrição do PR* abre um resumo em Markdown da evidência para colar na descrição do PR, dentro do limite de 4000 caracteres. Traz título, tarefa, resultado, responsável, ambiente, links (PR das versões, vídeos, API) e os passos com suas provas em uma linha (`API GET http://… → 200 OK · 12 ms · regras ✅`). O texto é editável, mostra o contador de caracteres e tem o botão *Copiar*.
+- Quando o resumo passa do limite, ele tira o esperado/obtido dos passos aprovados, depois as provas, e por fim corta passos do fim avisando quantos ficaram de fora. Cabeçalhos das chamadas (token) e corpos de resposta nunca entram; prints, vídeos e respostas completas ficam no relatório anexo.
+
 ## [1.75.0] - 2026-11-24
 ### Adicionado
 - **Evidências: links opcionais**: em *Dados da evidência*, cadastre o PR de cada versão, vídeos hospedados fora do Hub, a URL da API ou outros links, cada um com tipo, rótulo e URL. Eles saem na capa do relatório (HTML, PDF e slides) como links clicáveis e no comentário do Jira (`[rótulo|url]`), e a prévia da publicação já os mostra. Na reexecução os links vão para a nova evidência.
