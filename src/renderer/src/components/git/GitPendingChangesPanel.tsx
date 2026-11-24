@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, FileEdit, Check, Split, Eye, Code2 } from 'lucide-react';
+import { RefreshCw, Check, Split, Code2 } from 'lucide-react';
 import type { GitFileStatus } from '../../../../shared/types';
 import { fileStatusBadge } from '../../utils/gitPageUtils';
 
@@ -11,6 +11,12 @@ interface GitPendingChangesPanelProps {
   onOpenFileInIde: (filePath: string) => void;
 }
 
+/** Separa pasta e nome: o nome do arquivo é o que se procura, a pasta só situa. */
+function splitPath(filePath: string): { dir: string; name: string } {
+  const index = filePath.lastIndexOf('/');
+  return index < 0 ? { dir: '', name: filePath } : { dir: filePath.slice(0, index + 1), name: filePath.slice(index + 1) };
+}
+
 export const GitPendingChangesPanel: React.FC<GitPendingChangesPanelProps> = ({
   files,
   isLoading,
@@ -18,99 +24,84 @@ export const GitPendingChangesPanel: React.FC<GitPendingChangesPanelProps> = ({
   onOpenDiff,
   onOpenFileInIde
 }) => (
-  <div className="space-y-3 pt-4 border-t border-border">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <FileEdit className="w-4 h-4 text-muted-foreground" />
-        <h3 className="text-base font-semibold text-foreground">Alterações pendentes</h3>
-        <span className="text-[13px] bg-muted text-muted-foreground px-2.5 py-0.5 rounded-full font-medium">
+  <section className="space-y-2" aria-labelledby="git-pending-title">
+    <div className="flex items-center justify-between gap-2 min-h-8">
+      <div className="flex items-baseline gap-2">
+        <h3 id="git-pending-title" className="text-sm font-semibold text-foreground">
+          Alterações pendentes
+        </h3>
+        <span className="text-[13px] text-muted-foreground tabular-nums">
           {files.length} {files.length === 1 ? 'arquivo' : 'arquivos'}
         </span>
         {ideFeedback && (
-          <span className="text-2xs text-success font-medium flex items-center gap-1">
+          <span className="text-xs text-success font-medium flex items-center gap-1 self-center">
             <Check className="w-3.5 h-3.5" /> Aberto na IDE ({ideFeedback})
           </span>
         )}
       </div>
 
-      <div className="flex items-center space-x-1.5">
+      {files.length > 0 && (
         <button
           type="button"
           onClick={() => onOpenDiff()}
-          disabled={files.length === 0}
-          className="h-8 px-3 bg-card hover:bg-muted border border-border text-foreground rounded-lg text-[13px] font-medium flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
+          className="h-8 px-2.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg text-[13px] font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
           title="Abrir visualizador de diff completo"
         >
-          <Split className="w-3.5 h-3.5 text-muted-foreground" />
+          <Split className="w-3.5 h-3.5" />
           <span>Ver diff geral</span>
         </button>
-      </div>
+      )}
     </div>
 
     {isLoading ? (
-      <div className="py-6 flex items-center justify-center text-xs text-muted-foreground gap-2 font-mono">
-        <RefreshCw className="w-4 h-4 animate-spin text-primary" />
+      <div className="py-6 flex items-center justify-center text-[13px] text-muted-foreground gap-2">
+        <RefreshCw className="w-3.5 h-3.5 animate-spin text-primary" />
         <span>Verificando status dos arquivos...</span>
       </div>
     ) : files.length === 0 ? (
-      <div className="py-3 px-4 bg-success/10 rounded-[10px] flex items-center justify-between text-[13px] text-foreground">
-        <div className="flex items-center gap-2">
-          <Check className="w-4 h-4 text-success" />
-          <span>Árvore de trabalho limpa. Nenhuma modificação pendente neste repositório.</span>
-        </div>
-        <span className="text-xs font-mono text-muted-foreground">git status limpo</span>
-      </div>
+      <p className="py-2 flex items-center gap-2 text-[13px] text-muted-foreground">
+        <Check className="w-4 h-4 text-success" />
+        Nada pendente: a árvore de trabalho está limpa.
+      </p>
     ) : (
-      <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
+      <ul className="max-h-64 overflow-y-auto rounded-lg border border-border divide-y divide-border">
         {files.map((file) => {
           const badge = fileStatusBadge(file.status);
+          const { dir, name } = splitPath(file.path);
           return (
-            <div
-              key={file.path}
-              className="group flex items-center justify-between p-1.5 px-2 rounded-lg bg-muted/20 hover:bg-muted/50 border border-border/50 hover:border-border transition-colors"
-            >
+            <li key={file.path} className="group flex items-center hover:bg-muted/60 transition-colors">
               <button
                 type="button"
                 onClick={() => onOpenDiff(file.path)}
-                className="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer"
-                title={`Clique para ver o diff de ${file.path}`}
+                className="flex items-center gap-2.5 min-w-0 flex-1 h-8 pl-2.5 pr-2 text-left cursor-pointer"
+                title={`Ver o diff de ${file.path}`}
               >
-                <span className={`px-1.5 py-0.2 rounded text-2xs font-mono font-bold border shrink-0 ${badge.className}`}>
+                <span
+                  className={`w-4 text-center text-xs font-mono font-semibold shrink-0 ${badge.textClassName}`}
+                >
                   {badge.label}
                 </span>
-                <span className="font-mono text-xs text-foreground truncate group-hover:text-primary transition-colors">
-                  {file.path}
+                <span className="font-mono text-xs truncate min-w-0">
+                  <span className="text-muted-foreground">{dir}</span>
+                  <span className="text-foreground">{name}</span>
+                  {file.originalPath && <span className="text-muted-foreground"> (de {file.originalPath})</span>}
                 </span>
-                {file.originalPath && (
-                  <span className="text-2xs text-muted-foreground font-mono truncate">
-                    (de {file.originalPath})
-                  </span>
-                )}
               </button>
 
-              <div className="flex items-center space-x-1 shrink-0 ml-2">
-                <button
-                  type="button"
-                  onClick={() => onOpenFileInIde(file.path)}
-                  className="px-2 py-0.5 bg-card hover:bg-muted border border-border/70 text-muted-foreground hover:text-foreground rounded-md text-2xs font-medium flex items-center gap-1 transition-colors cursor-pointer"
-                  title="Abrir na IDE / Editor"
-                >
-                  <Code2 className="w-3.5 h-3.5 text-primary" />
-                  <span className="hidden sm:inline">Abrir na IDE</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onOpenDiff(file.path)}
-                  className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors cursor-pointer"
-                  title="Visualizar diff deste arquivo" aria-label="Visualizar diff deste arquivo"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
+              <button
+                type="button"
+                onClick={() => onOpenFileInIde(file.path)}
+                className="mr-1 h-6 px-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-card flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition cursor-pointer"
+                title="Abrir na IDE / Editor"
+                aria-label={`Abrir ${file.path} na IDE`}
+              >
+                <Code2 className="w-3.5 h-3.5" />
+                <span>IDE</span>
+              </button>
+            </li>
           );
         })}
-      </div>
+      </ul>
     )}
-  </div>
+  </section>
 );

@@ -80,7 +80,9 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ activeTab, setActiveTab,
         collapsed ? 'w-[60px]' : 'w-56'
       }`}
     >
-      <div className={`flex items-center gap-2.5 h-14 shrink-0 ${collapsed ? 'justify-center px-0' : 'px-4'}`}>
+      <div
+        className={`flex items-center gap-2.5 h-14 shrink-0 border-b border-border/80 ${collapsed ? 'justify-center px-0' : 'px-4'}`}
+      >
         <AppLogo size="sm" showStatusDot />
         {!collapsed && (
           <div className="flex flex-col min-w-0">
@@ -100,7 +102,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({ activeTab, setActiveTab,
       </div>
 
       {/* Só a lista de módulos rola: em monitor baixo, o logo e o botão de recolher continuam sempre à vista */}
-      <nav className="flex-1 min-h-0 overflow-y-auto px-2.5 pb-3 space-y-3">
+      <nav className="flex-1 min-h-0 overflow-y-auto px-2.5 py-3 space-y-3">
         {navGroups.map((group) => (
           <div key={group.id} data-tour={`nav-${group.id}`} className="space-y-0.5">
             {collapsed ? (
