@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Camera, FileText, MousePointerClick, Pencil, FolderOpen, NotebookPen, Play, Presentation, Send, Square, Trash2, Video } from 'lucide-react';
-import { EVIDENCE_HOTKEY, RESULT_LABEL, guessJiraKey, summarizeEvidence, type EvidenceJiraIssue, type EvidenceKind, type EvidenceMarker, type EvidenceResult } from '../../../shared/evidenceTypes';
-import { StepActions } from '../components/evidence/StepActions';
-import { ImageAnnotator } from '../components/evidence/ImageAnnotator';
-import { StepBlocks } from '../components/evidence/StepBlocks';
+import { Camera, FileText, MousePointerClick, FolderOpen, NotebookPen, Play, Presentation, Send, Square, Trash2, Video } from 'lucide-react';
+import { EVIDENCE_HOTKEY, RESULT_LABEL, guessJiraKey, parseHttpRequestText, summarizeEvidence, type EvidenceJiraIssue, type EvidenceKind, type EvidenceResult, type EvidenceSession } from '../../../shared/evidenceTypes';
+import type { ApiSuggestion } from '../components/evidence/StepBlocks';
+import { StepCard, type AfterCaptureMode } from '../components/evidence/StepCard';
+
+const AFTER_CAPTURE_OPTIONS: { value: AfterCaptureMode; label: string }[] = [
+  { value: 'ask', label: 'Perguntar se quero provar com API/SQL' },
+  { value: 'api', label: 'Abrir direto a prova de API' },
+  { value: 'off', label: 'Não sugerir nada' }
+];
 import { QualityPageShell } from '../components/quality/page/QualityPageShell';
 import { useEvidence } from '../hooks/evidence/useEvidence';
 
@@ -19,66 +24,24 @@ const INPUT = 'h-10 px-3 border border-input rounded-[10px] bg-card text-sm text
 const TEXTAREA = 'px-3 py-2 border border-input rounded-[10px] bg-card text-sm text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring w-full resize-y';
 const CARD = 'border border-border rounded-[14px] bg-card p-4 shadow-xs';
 const LABEL = 'text-xs font-medium text-muted-foreground';
-const STEP_BORDER: Record<EvidenceResult, string> = {
-  pending: 'border-l-border',
-  passed: 'border-l-green-600',
-  failed: 'border-l-red-600'
-};
+/** Última requisição de API da sessão, para o próximo passo já vir preenchido. */
+function lastApiSuggestion(session: EvidenceSession): ApiSuggestion | undefined {
+  for (const step of [...session.steps].reverse()) {
+    for (const block of [...(step.blocks ?? [])].reverse()) {
+      if (block.kind !== 'api') continue;
+      const spec = parseHttpRequestText(block.request);
+      if (spec) return { ...spec, environment: block.environment };
+    }
+  }
+  return undefined;
+}
+
+const FLOW = ['Capture o passo', 'Complemente com API ou SQL', 'Gere o relatório'];
+
 const RESULT_STYLE: Record<EvidenceResult, string> = {
   pending: 'bg-muted text-muted-foreground',
   passed: 'bg-green-600 text-white',
   failed: 'bg-red-600 text-white'
-};
-
-type StepImageProps = {
-  name: string;
-  sessionId: string;
-  getImage: (name: string) => Promise<string | null>;
-  saveImage: (name: string, dataUrl: string) => Promise<boolean>;
-  marker?: EvidenceMarker;
-};
-
-const StepImage: React.FC<StepImageProps> = ({ name, sessionId, getImage, saveImage, marker }) => {
-  const [src, setSrc] = useState<string | null>(null);
-  const [large, setLarge] = useState(false);
-  const [editing, setEditing] = useState(false);
-
-  useEffect(() => {
-    let alive = true;
-    void getImage(name).then((url) => alive && setSrc(url));
-    return () => {
-      alive = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, name]);
-
-  const handleSave = async (dataUrl: string): Promise<void> => {
-    if (await saveImage(name, dataUrl)) setSrc(dataUrl);
-  };
-
-  if (!src) return <p className="text-xs text-muted-foreground">{name}</p>;
-  return (
-    <div className="space-y-1">
-      <button type="button" title={large ? 'Reduzir' : 'Ampliar'} className={`block text-left ${large ? 'cursor-zoom-out' : 'cursor-zoom-in'}`} onClick={() => setLarge((v) => !v)}>
-        <span className="relative inline-block max-w-full">
-          <img src={src} alt={name} className={`rounded-[10px] border border-border ${large ? 'w-full' : 'max-h-48'}`} />
-          {marker && (
-            <span
-              className="absolute w-7 h-7 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-red-600 bg-red-600/15 pointer-events-none"
-              style={{ left: `${marker.x * 100}%`, top: `${marker.y * 100}%` }}
-            />
-          )}
-        </span>
-      </button>
-      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span>{name}</span>
-        <button type="button" className="inline-flex items-center gap-1 hover:text-foreground cursor-pointer" onClick={() => setEditing(true)}>
-          <Pencil className="w-3.5 h-3.5" /> Anotar
-        </button>
-      </div>
-      {editing && <ImageAnnotator src={src} onSave={handleSave} onClose={() => setEditing(false)} />}
-    </div>
-  );
 };
 
 const NewSessionForm: React.FC<{ busy: boolean; lookupIssue: (key: string) => Promise<EvidenceJiraIssue>; onCreate: (input: { task: string; title: string; kind: EvidenceKind; tester: string; environment: string }) => void }> = ({
@@ -164,6 +127,22 @@ export const EvidencePage: React.FC<EvidencePageProps> = ({ isActive = true }) =
   const [jiraKey, setJiraKey] = useState('');
   const [includeVideos, setIncludeVideos] = useState(true);
   const [stepTitle, setStepTitle] = useState('');
+  // Mesma preferência de Configurações > Qualidade: lida ao abrir a tela e gravada ao mudar aqui.
+  const [afterCapture, setAfterCapture] = useState<AfterCaptureMode>('ask');
+
+  useEffect(() => {
+    if (!isActive) return;
+    let alive = true;
+    void window.electronAPI.getSettings().then((s) => alive && setAfterCapture(s.evidenceAfterCapture ?? 'ask'));
+    return () => {
+      alive = false;
+    };
+  }, [isActive]);
+
+  const changeAfterCapture = (mode: AfterCaptureMode) => {
+    setAfterCapture(mode);
+    void window.electronAPI.saveSettings({ evidenceAfterCapture: mode });
+  };
 
   useEffect(() => {
     if (session) setJiraKey(guessJiraKey(session.task));
@@ -171,6 +150,7 @@ export const EvidencePage: React.FC<EvidencePageProps> = ({ isActive = true }) =
   }, [session?.id, session?.task]);
 
   const summary = session ? summarizeEvidence(session.steps) : null;
+  const suggestion = session ? lastApiSuggestion(session) : undefined;
 
   return (
     <QualityPageShell icon={Camera} title="Evidências" description="Grave tela, tire prints e registre passos de teste ou desenvolvimento em relatório HTML/PDF.">
@@ -241,115 +221,124 @@ export const EvidencePage: React.FC<EvidencePageProps> = ({ isActive = true }) =
                 </div>
 
                 <div className="border-t border-border pt-4 space-y-3">
-                <div className={LABEL}>Captura</div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <select className={`${INPUT} max-w-xs`} value={ev.sourceId} onChange={(e) => ev.setSourceId(e.target.value)} onFocus={() => void ev.refreshSources()}>
-                    {ev.sources.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.isScreen ? 'Tela: ' : 'Janela: '}
-                        {s.name}
-                      </option>
+                  <ol className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                    {FLOW.map((label, i) => (
+                      <li key={label} className="flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-muted text-foreground font-semibold flex items-center justify-center">{i + 1}</span>
+                        <span>{label}</span>
+                        {i < FLOW.length - 1 && <span aria-hidden="true">→</span>}
+                      </li>
                     ))}
-                  </select>
-                  {ev.recording ? (
-                    <button type="button" className={`${BTN_PRIMARY} bg-red-600 hover:bg-red-600/90`} onClick={ev.stopRecording}>
-                      <Square className="w-3.5 h-3.5" /> Parar gravação
+                  </ol>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select aria-label="Capturar de" className={`${INPUT} max-w-[220px]`} value={ev.sourceId} onChange={(e) => ev.setSourceId(e.target.value)} onFocus={() => void ev.refreshSources()}>
+                      {ev.sources.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.isScreen ? 'Tela: ' : 'Janela: '}
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                    <input className={`${INPUT} max-w-[240px]`} placeholder="Título do passo (opcional)" value={stepTitle} onChange={(e) => setStepTitle(e.target.value)} />
+                    <button type="button" className={BTN_PRIMARY} disabled={ev.busy} title={`Atalho global: ${EVIDENCE_HOTKEY.replace('CommandOrControl', 'Ctrl')}`} onClick={() => void Promise.resolve(ev.capture(stepTitle)).then(() => setStepTitle(''))}>
+                      <Camera className="w-4 h-4" /> Tirar print
                     </button>
-                  ) : (
-                    <button type="button" className={BTN} disabled={!ev.sourceId || ev.busy} onClick={() => void ev.startRecording()}>
-                      <Video className="w-3.5 h-3.5" /> Gravar tela
+                    <button type="button" className={BTN} disabled={ev.busy} title="Registra um passo só com texto e provas, sem imagem" onClick={() => void Promise.resolve(ev.addNote(stepTitle)).then(() => setStepTitle(''))}>
+                      <NotebookPen className="w-3.5 h-3.5" /> Passo sem print
                     </button>
-                  )}
-                  <input className={`${INPUT} max-w-[220px]`} placeholder="Título do passo (opcional)" value={stepTitle} onChange={(e) => setStepTitle(e.target.value)} />
-                  <button type="button" className={BTN} disabled={ev.busy} title={`Atalho global: ${EVIDENCE_HOTKEY.replace('CommandOrControl', 'Ctrl')}`} onClick={() => void Promise.resolve(ev.capture(stepTitle)).then(() => setStepTitle(''))}>
-                    <Camera className="w-3.5 h-3.5" /> Print
-                  </button>
-                  {ev.recordingClicks ? (
-                    <button type="button" className={`${BTN_PRIMARY} bg-red-600 hover:bg-red-600/90`} onClick={() => void ev.stopClickRecording()}>
-                      <Square className="w-3.5 h-3.5" /> Parar cliques
-                    </button>
-                  ) : (
-                    <button type="button" className={BTN} disabled={ev.busy || ev.recording} title="Cada clique fora do Hub vira um passo com print e fica no roteiro" onClick={() => void ev.startClickRecording()}>
-                      <MousePointerClick className="w-3.5 h-3.5" /> Gravar cliques
-                    </button>
-                  )}
-                  <button type="button" className={BTN} disabled={ev.busy} onClick={() => void Promise.resolve(ev.addNote(stepTitle)).then(() => setStepTitle(''))}>
-                    <NotebookPen className="w-3.5 h-3.5" /> Passo sem print
-                  </button>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={LABEL}>Automático:</span>
+                    {ev.recordingClicks ? (
+                      <button type="button" className={`${BTN_PRIMARY} bg-red-600 hover:bg-red-600/90`} onClick={() => void ev.stopClickRecording()}>
+                        <Square className="w-3.5 h-3.5" /> Parar cliques
+                      </button>
+                    ) : (
+                      <button type="button" className={BTN} disabled={ev.busy || ev.recording} title="Cada clique fora do Hub vira um passo com print e fica no roteiro" onClick={() => void ev.startClickRecording()}>
+                        <MousePointerClick className="w-3.5 h-3.5" /> Gravar cliques
+                      </button>
+                    )}
+                    {ev.recording ? (
+                      <button type="button" className={`${BTN_PRIMARY} bg-red-600 hover:bg-red-600/90`} onClick={ev.stopRecording}>
+                        <Square className="w-3.5 h-3.5" /> Parar gravação
+                      </button>
+                    ) : (
+                      <button type="button" className={BTN} disabled={!ev.sourceId || ev.busy} onClick={() => void ev.startRecording()}>
+                        <Video className="w-3.5 h-3.5" /> Gravar vídeo da tela
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className={LABEL} htmlFor="evidence-after-capture">
+                      Depois do print:
+                    </label>
+                    <select id="evidence-after-capture" className={`${INPUT} max-w-[320px]`} value={afterCapture} onChange={(e) => changeAfterCapture(e.target.value as AfterCaptureMode)}>
+                      {AFTER_CAPTURE_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Atalho global <kbd className="px-1 border border-border rounded">Ctrl+Shift+E</kbd> tira um print mesmo com outra janela em foco.
+                    {ev.recording && <span className="text-red-600 font-medium"> ● Gravando…</span>}
+                    {ev.recordingClicks && <span className="text-red-600 font-medium"> ● Registrando cliques… (cliques no Hub não contam)</span>}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Atalho global <kbd className="px-1 border border-border rounded">Ctrl+Shift+E</kbd> tira um print mesmo com outra janela em foco.
-                  {ev.recording && <span className="text-red-600 font-medium"> ● Gravando…</span>}
-                  {ev.recordingClicks && <span className="text-red-600 font-medium"> ● Registrando cliques… (cliques no Hub não contam)</span>}
-                </p>
-                <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
-                  <button
-                    type="button"
-                    className={BTN}
-                    disabled={ev.busy || ev.recordingClicks || !session.steps.some((s) => s.actions?.length)}
-                    title="Repete os cliques e digitações do roteiro e tira novos prints em uma nova evidência"
-                    onClick={() =>
-                      window.confirm(
-                        'O Hub vai minimizar e controlar o mouse e o teclado para repetir o roteiro, em uma nova evidência.\n\nNão mexa no computador durante a execução. Para interromper, use Ctrl+Shift+Q.\n\nContinuar?'
-                      ) && void ev.replay()
-                    }
-                  >
-                    <Play className="w-3.5 h-3.5" /> Reexecutar roteiro
-                  </button>
-                  {ev.busy && ev.replayProgress && !ev.replayProgress.finished && (
-                    <span className="text-xs text-muted-foreground">
-                      Executando passo {ev.replayProgress.done}/{ev.replayProgress.total}…
-                    </span>
-                  )}
-                  {ev.replayProgress?.error && <span className="text-xs text-red-600">{ev.replayProgress.error}</span>}
-                </div>
-                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base font-semibold text-foreground mr-auto">
+                  Passos <span className="text-muted-foreground font-normal">({session.steps.length})</span>
+                </h2>
+                {ev.busy && ev.replayProgress && !ev.replayProgress.finished && (
+                  <span className="text-xs text-muted-foreground">
+                    Executando passo {ev.replayProgress.done}/{ev.replayProgress.total}…
+                  </span>
+                )}
+                {ev.replayProgress?.error && <span className="text-xs text-red-600">{ev.replayProgress.error}</span>}
+                <button
+                  type="button"
+                  className={BTN}
+                  disabled={ev.busy || ev.recordingClicks || !session.steps.some((s) => s.actions?.length)}
+                  title="Repete os cliques e digitações do roteiro e tira novos prints em uma nova evidência"
+                  onClick={() =>
+                    window.confirm(
+                      'O Hub vai minimizar e controlar o mouse e o teclado para repetir o roteiro, em uma nova evidência.\n\nNão mexa no computador durante a execução. Para interromper, use Ctrl+Shift+Q.\n\nContinuar?'
+                    ) && void ev.replay()
+                  }
+                >
+                  <Play className="w-3.5 h-3.5" /> Reexecutar roteiro
+                </button>
               </div>
 
               <ol className="space-y-3">
                 {session.steps.map((step, i) => (
-                  <li key={step.id} className={`${CARD} border-l-4 ${STEP_BORDER[step.result]} space-y-3`}>
-                    <div className="flex items-center gap-2">
-                      <span className="shrink-0 w-7 h-7 rounded-full bg-muted text-xs font-semibold text-foreground flex items-center justify-center">{i + 1}</span>
-                      <input
-                        className={INPUT}
-                        defaultValue={step.title}
-                        onBlur={(e) => e.target.value !== step.title && void ev.updateStep(step.id, { title: e.target.value })}
-                      />
-                      <select
-                        className={`${INPUT} max-w-[150px]`}
-                        value={step.result}
-                        onChange={(e) => void ev.updateStep(step.id, { result: e.target.value as EvidenceResult })}
-                      >
-                        {(Object.keys(RESULT_LABEL) as EvidenceResult[]).map((r) => (
-                          <option key={r} value={r}>
-                            {RESULT_LABEL[r]}
-                          </option>
-                        ))}
-                      </select>
-                      <button type="button" title="Excluir passo" className="p-2 rounded-[10px] text-muted-foreground hover:text-red-600 hover:bg-muted cursor-pointer" onClick={() => void ev.deleteStep(step.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="grid gap-2 md:grid-cols-2">
-                      <textarea className={TEXTAREA} rows={2} placeholder="Esperado" defaultValue={step.expected ?? ''} onBlur={(e) => e.target.value !== (step.expected ?? '') && void ev.updateStep(step.id, { expected: e.target.value })} />
-                      <textarea className={TEXTAREA} rows={2} placeholder="Obtido" defaultValue={step.actual ?? ''} onBlur={(e) => e.target.value !== (step.actual ?? '') && void ev.updateStep(step.id, { actual: e.target.value })} />
-                    </div>
-                    {step.screenshot && <StepImage name={step.screenshot} sessionId={session.id} getImage={ev.getImage} saveImage={ev.saveImage} marker={step.marker} />}
-                    <StepActions actions={step.actions} onChange={(next) => void ev.setActions(step.id, next)} />
-                    <StepBlocks
-                      blocks={step.blocks}
-                      api={{
-                        addBlock: (input) => ev.addBlock(step.id, input),
-                        updateBlock: (blockId, patch) => ev.updateBlock(step.id, blockId, patch),
-                        deleteBlock: (blockId) => ev.deleteBlock(step.id, blockId),
-                        runHttp: ev.runHttp,
-                        runSql: ev.runSql,
-                        listConnections: ev.listConnections,
-                        listEnvironments: ev.listEnvironments
-                      }}
-                    />
-                  </li>
+                  <StepCard
+                    key={step.id}
+                    step={step}
+                    index={i}
+                    sessionId={session.id}
+                    afterCapture={afterCapture}
+                    fresh={ev.freshStepId === step.id}
+                    suppressPrompt={ev.recordingClicks}
+                    suggestion={suggestion}
+                    image={{ getImage: ev.getImage, saveImage: ev.saveImage }}
+                    onDismissFresh={ev.dismissFresh}
+                    onUpdate={(patch) => void ev.updateStep(step.id, patch)}
+                    onDelete={() => void ev.deleteStep(step.id)}
+                    onSetActions={(next) => void ev.setActions(step.id, next)}
+                    blocksApi={{
+                      addBlock: (input) => ev.addBlock(step.id, input),
+                      updateBlock: (blockId, patch) => ev.updateBlock(step.id, blockId, patch),
+                      deleteBlock: (blockId) => ev.deleteBlock(step.id, blockId),
+                      runHttp: ev.runHttp,
+                      runSql: ev.runSql,
+                      listConnections: ev.listConnections,
+                      listEnvironments: ev.listEnvironments
+                    }}
+                  />
                 ))}
                 {session.steps.length === 0 && (
                   <li className="border border-dashed border-border rounded-[14px] p-6 text-center text-[13px] text-muted-foreground">Nenhum passo ainda: tire um print ou adicione um passo.</li>

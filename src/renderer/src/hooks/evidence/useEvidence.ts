@@ -75,6 +75,22 @@ export function useEvidence(isActive: boolean) {
   const [recordingClicks, setRecordingClicks] = useState(false);
   const [replayProgress, setReplayProgress] = useState<EvidenceReplayProgress | null>(null);
 
+  // Passo recém-criado (print, atalho, clique ou nota): a tela o abre e oferece complementar com API/SQL.
+  const [freshStepId, setFreshStepId] = useState<string | null>(null);
+  const knownStepsRef = useRef<{ sessionId: string; ids: Set<string> } | null>(null);
+  useEffect(() => {
+    if (!session) {
+      knownStepsRef.current = null;
+      setFreshStepId(null);
+      return;
+    }
+    const known = knownStepsRef.current;
+    const added = known?.sessionId === session.id ? session.steps.filter((s) => !known.ids.has(s.id)) : [];
+    if (added.length) setFreshStepId(added[added.length - 1].id);
+    else if (known?.sessionId !== session.id) setFreshStepId(null);
+    knownStepsRef.current = { sessionId: session.id, ids: new Set(session.steps.map((s) => s.id)) };
+  }, [session]);
+
   useEffect(
     () =>
       api.onEvidenceAutoStep((updated) => {
@@ -172,7 +188,7 @@ export function useEvidence(isActive: boolean) {
     session && run(async () => setSession(await api.evidenceUpdateStep(session.id, stepId, patch)));
   const deleteStep = (stepId: string) => session && run(async () => setSession(await api.evidenceDeleteStep(session.id, stepId)));
 
-  // A fonte Ã© informada antes do clique: getDisplayMedia exige ativaÃ§Ã£o do usuÃ¡rio e nÃ£o pode esperar por IPC.
+  // A fonte é informada antes do clique: getDisplayMedia exige ativação do usuário e não pode esperar por IPC.
   useEffect(() => {
     if (sourceId) void api.evidenceSetRecordingSource(sourceId);
   }, [api, sourceId]);
@@ -193,7 +209,7 @@ export function useEvidence(isActive: boolean) {
         void run(async () => {
           const updated = await api.evidenceSaveVideo(sessionId, await new Blob(chunks, { type: 'video/webm' }).arrayBuffer());
           if (sessionRef.current?.id === sessionId) setSession(updated);
-          info('GravaÃ§Ã£o salva na pasta da evidÃªncia.');
+          info('Gravação salva na pasta da evidência.');
           await refreshList();
         });
       };
@@ -312,10 +328,10 @@ export function useEvidence(isActive: boolean) {
 
   const publish = (issueKey: string, includeVideos: boolean): Promise<EvidenceJiraResult | undefined> =>
     run(async () => {
-      if (!session) throw new Error('Nenhuma sessÃ£o aberta.');
+      if (!session) throw new Error('Nenhuma sessão aberta.');
       const result = await api.evidencePublishJira(session.id, issueKey, includeVideos);
       if (result.success) {
-        const skipped = result.skipped?.length ? ` (nÃ£o anexados por tamanho: ${result.skipped.join(', ')})` : '';
+        const skipped = result.skipped?.length ? ` (não anexados por tamanho: ${result.skipped.join(', ')})` : '';
         info(`Publicado em ${result.issueKey}: ${result.attached?.join(', ')}${skipped}`);
       } else {
         setMessage({ kind: 'error', text: result.error ?? 'Falha ao publicar no Jira.' });
@@ -340,6 +356,8 @@ export function useEvidence(isActive: boolean) {
     open,
     remove,
     close: () => setSession(null),
+    freshStepId,
+    dismissFresh: () => setFreshStepId(null),
     capture,
     addNote,
     updateStep,

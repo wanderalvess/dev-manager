@@ -35,6 +35,7 @@ export const SETTINGS_SEARCH_INDEX: SettingsSearchEntry[] = [
   { id: 'field-backup', tab: 'backup', label: 'Backup e Restore de Bancos de Dados', keywords: 'backup restore banco dados expdp impdp pg_dump agendamento webhook' },
   { id: 'field-oracleTnsnames', tab: 'backup', label: 'Arquivo tnsnames.ora (Oracle)', keywords: 'tnsnames tnsnames.ora tns oracle rede listener conexao banco' },
   { id: 'field-ai', tab: 'ai', label: 'Chaves de API dos Provedores LLM (BYOK)', keywords: 'ia llm api key chave openai anthropic ollama chat' },
+  { id: 'field-evidenceAfterCapture', tab: 'quality', label: 'Evidências: o que fazer depois de um print (convite de prova API/SQL)', keywords: 'evidencia evidencias print captura convite prova api sql passo sugerir perguntar qa' },
   { id: 'field-quality', tab: 'quality', label: 'Integrações de Testes (Zephyr, Jira, Azure)', keywords: 'qualidade qa zephyr scale squad jira test plans testes homologacao cenarios token api' },
   { id: 'field-integrationLayers', tab: 'integration', label: 'Camadas da integração (WinThor, WSH, CH, PDV)', keywords: 'integracao ponta a ponta rastreio camada winthor wsh smart hub commerce hub ch pdv url health porta servico log conexao oracle postgres' },
   { id: 'field-integrationFlows', tab: 'integration', label: 'Fluxos do WSH (tipo de lote, disparo, evidência no PDV)', keywords: 'integracao fluxo wsh lote ch venda disparo evidencia pdv postgres jolt rastreio' },

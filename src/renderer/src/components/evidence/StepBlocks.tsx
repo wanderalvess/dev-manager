@@ -29,6 +29,21 @@ const PHASE_TAG: Record<EvidencePhase, string> = {
 };
 const KIND_ICON: Record<EvidenceBlockKind, React.ElementType> = { api: Globe, sql: Database, text: StickyNote };
 
+/** Última chamada de API da sessão: o próximo passo costuma repetir a mesma requisição, então ela já vem preenchida. */
+export interface ApiSuggestion {
+  method: EvidenceHttpMethod;
+  url: string;
+  headers: string;
+  body: string;
+  environment?: string;
+}
+
+/** Pedido para abrir o compositor já no tipo escolhido (n muda a cada pedido, para reabrir mesmo no mesmo tipo). */
+export interface ComposeRequest {
+  kind: EvidenceBlockKind;
+  n: number;
+}
+
 type BlockResult = Pick<EvidenceBlockInput, 'request' | 'response' | 'meta' | 'environment'>;
 
 export interface StepBlocksApi {
@@ -111,14 +126,20 @@ const BlockCard: React.FC<{
 };
 
 /** Formulário para registrar uma prova nova: executa pelo app (API/SQL) ou cria em branco para colar do Postman/SQL externo. */
-const Composer: React.FC<{ api: StepBlocksApi; onClose: () => void; initialPhase: EvidencePhase }> = ({ api, onClose, initialPhase }) => {
-  const [kind, setKind] = useState<EvidenceBlockKind>('api');
+const Composer: React.FC<{ api: StepBlocksApi; onClose: () => void; initialPhase: EvidencePhase; initialKind: EvidenceBlockKind; suggestion?: ApiSuggestion }> = ({
+  api,
+  onClose,
+  initialPhase,
+  initialKind,
+  suggestion
+}) => {
+  const [kind, setKind] = useState<EvidenceBlockKind>(initialKind);
   const [phase, setPhase] = useState<EvidencePhase>(initialPhase);
   const [title, setTitle] = useState('');
-  const [method, setMethod] = useState<EvidenceHttpMethod>('GET');
-  const [url, setUrl] = useState('');
-  const [headers, setHeaders] = useState('');
-  const [body, setBody] = useState('');
+  const [method, setMethod] = useState<EvidenceHttpMethod>(suggestion?.method ?? 'GET');
+  const [url, setUrl] = useState(suggestion?.url ?? '');
+  const [headers, setHeaders] = useState(suggestion?.headers ?? '');
+  const [body, setBody] = useState(suggestion?.body ?? '');
   const [sql, setSql] = useState('');
   const [text, setText] = useState('');
   const [connections, setConnections] = useState<DatabaseConnectionConfig[]>([]);
@@ -136,7 +157,8 @@ const Composer: React.FC<{ api: StepBlocksApi; onClose: () => void; initialPhase
     });
     void api.listEnvironments().then((list) => {
       setEnvironments(list);
-      setEnvironmentId((cur) => cur || (list.find((e) => e.isDefault) ?? list[0])?.id || '');
+      const reused = suggestion?.environment ? list.find((e) => e.name === suggestion.environment) : undefined;
+      setEnvironmentId((cur) => cur || (reused ?? list.find((e) => e.isDefault) ?? list[0])?.id || '');
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -178,7 +200,12 @@ const Composer: React.FC<{ api: StepBlocksApi; onClose: () => void; initialPhase
             </button>
           );
         })}
-        <select className={`${FIELD} h-8 max-w-[120px]`} value={phase} onChange={(e) => setPhase(e.target.value as EvidencePhase)}>
+        <select
+          className={`${FIELD} h-8 max-w-[120px]`}
+          value={phase}
+          title="Evidência: prova única. Antes/Depois: comparar o resultado antes e depois da correção, lado a lado."
+          onChange={(e) => setPhase(e.target.value as EvidencePhase)}
+        >
           {(Object.keys(PHASE_LABEL) as EvidencePhase[]).map((p) => (
             <option key={p} value={p}>
               {PHASE_LABEL[p]}
@@ -234,11 +261,11 @@ const Composer: React.FC<{ api: StepBlocksApi; onClose: () => void; initialPhase
       <div className="flex flex-wrap items-center gap-2">
         {kind !== 'text' && (
           <button type="button" className={BTN_PRIMARY} disabled={busy || !canRun} onClick={() => void execute()}>
-            <Play className="w-3.5 h-3.5" /> {busy ? 'Executando…' : 'Executar e registrar'}
+            <Play className="w-3.5 h-3.5" /> {busy ? 'Executando…' : kind === 'api' ? 'Chamar API e anexar ao passo' : 'Executar consulta e anexar ao passo'}
           </button>
         )}
         <button type="button" className={BTN} disabled={busy || !canRegister} onClick={registerOnly}>
-          <Plus className="w-3.5 h-3.5" /> {kind === 'text' ? 'Adicionar' : 'Registrar sem executar (colar resultado)'}
+          <Plus className="w-3.5 h-3.5" /> {kind === 'text' ? 'Anexar ao passo' : 'Só anexar (vou colar o resultado)'}
         </button>
         <button type="button" className={BTN} onClick={onClose}>
           Cancelar
@@ -248,8 +275,23 @@ const Composer: React.FC<{ api: StepBlocksApi; onClose: () => void; initialPhase
   );
 };
 
-export const StepBlocks: React.FC<{ blocks: EvidenceBlock[] | undefined; api: StepBlocksApi }> = ({ blocks, api }) => {
+export const StepBlocks: React.FC<{ blocks: EvidenceBlock[] | undefined; api: StepBlocksApi; openRequest?: ComposeRequest | null; suggestion?: ApiSuggestion }> = ({
+  blocks,
+  api,
+  openRequest,
+  suggestion
+}) => {
   const [composing, setComposing] = useState(false);
+  const [composeKind, setComposeKind] = useState<EvidenceBlockKind>('api');
+  const [composeKey, setComposeKey] = useState(0);
+
+  useEffect(() => {
+    if (!openRequest) return;
+    setComposeKind(openRequest.kind);
+    setComposeKey(openRequest.n);
+    setComposing(true);
+  }, [openRequest]);
+
   const [rerunId, setRerunId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const rows = groupBlocks(blocks);
@@ -300,11 +342,27 @@ export const StepBlocks: React.FC<{ blocks: EvidenceBlock[] | undefined; api: St
       })}
       {error && <p className="text-xs text-red-600">{error}</p>}
       {composing ? (
-        <Composer api={api} initialPhase={hasBefore ? 'after' : 'single'} onClose={() => setComposing(false)} />
+        <Composer key={composeKey} api={api} initialPhase={hasBefore ? 'after' : 'single'} initialKind={composeKind} suggestion={suggestion} onClose={() => setComposing(false)} />
       ) : (
-        <button type="button" className={BTN} onClick={() => setComposing(true)}>
-          <Plus className="w-3.5 h-3.5" /> Prova: API, SQL ou texto
-        </button>
+        <div className="flex flex-wrap gap-1.5">
+          {(Object.keys(BLOCK_KIND_LABEL) as EvidenceBlockKind[]).map((k) => {
+            const Icon = KIND_ICON[k];
+            return (
+              <button
+                key={k}
+                type="button"
+                className={BTN}
+                onClick={() => {
+                  setComposeKind(k);
+                  setComposeKey((n) => n + 1);
+                  setComposing(true);
+                }}
+              >
+                <Icon className="w-3.5 h-3.5" /> {k === 'text' ? 'Anotação' : k === 'api' ? 'Prova de API' : 'Prova de SQL'}
+              </button>
+            );
+          })}
+        </div>
       )}
     </div>
   );
