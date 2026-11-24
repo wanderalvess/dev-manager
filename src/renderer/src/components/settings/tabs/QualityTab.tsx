@@ -6,6 +6,7 @@ import {
 } from '../../../../../shared/types';
 import { createNewQualitySourceDraft, findActiveQualitySource } from '../../../utils/qualityTabUtils';
 import { QualityTautPanel } from '../quality/QualityTautPanel';
+import { QualityEvidencePanel } from '../quality/QualityEvidencePanel';
 import { QualityTabHeader } from '../quality/QualityTabHeader';
 import { QualityTemplateGrid } from '../quality/QualityTemplateGrid';
 import { QualitySourceForm } from '../quality/QualitySourceForm';
@@ -63,6 +64,8 @@ export const QualityTab: React.FC<QualityTabProps> = ({
           validateSinglePath={validateSinglePath}
           handleBrowseDirectory={handleBrowseDirectory}
         />
+
+        <QualityEvidencePanel settings={settings} setSettings={setSettings} />
 
         <div className="cockpit-panel rounded-xl p-5 space-y-4 border border-border bg-card">
           <QualityTabHeader

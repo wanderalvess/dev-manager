@@ -604,6 +604,8 @@ export interface AppSettings {
   backupWebhooks?: BackupWebhookConfig[];
   /** Perfis de conexão com bancos de dados (Oracle, MySQL, PostgreSQL) */
   databaseConnections?: DatabaseConnectionConfig[];
+  /** Evidências: o que fazer logo depois de um print. 'ask' mostra o convite de prova (API/SQL/texto), 'api' abre direto a prova de API, 'off' não sugere nada. Padrão: 'ask' */
+  evidenceAfterCapture?: 'ask' | 'api' | 'off';
   /** Pastas locais dedicadas de documentação indexadas pelo RAG */
   docFolders?: DocFolderConfig[];
   /** Se verdadeiro, também vasculha e indexa os projetos Git da pasta de projetos. Padrão: false */

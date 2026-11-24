@@ -4,6 +4,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.73.0] - 2026-11-24
+### Adicionado
+- **Evidências: convite de prova depois do print**: ao tirar um print (botão, atalho ou clique gravado), o passo novo abre expandido e pergunta se você quer provar também com um dado: chamar uma API, consultar o banco, colar texto ou seguir só com o print. A prova de API já vem preenchida com a última requisição da evidência (método, URL, cabeçalhos, corpo e ambiente).
+- **Configuração do convite** em *Configurações → Qualidade → Evidências*: perguntar (padrão), abrir direto a prova de API ou não sugerir nada. O mesmo seletor aparece na tela de Evidências.
+
+### Alterado
+- **Evidências**: a barra de captura mostra o fluxo (capturar, complementar, gerar o relatório) com *Tirar print* como ação principal, e gravar cliques e vídeo ficam num grupo *Automático*.
+- **Evidências**: cada passo é um cartão recolhível, com o resultado em três botões (Pendente, Aprovado, Reprovado) e, por dentro, print, provas, resultado do teste e roteiro. O roteiro de reexecução fica fechado até haver ações, e *Reexecutar roteiro* passou para o cabeçalho da lista de passos.
+- **Evidências**: as ações de prova dizem o que fazem (*Chamar API e anexar ao passo*, *Só anexar (vou colar o resultado)*).
+
+### Corrigido
+- **Evidências**: mensagens com acento corrompido (gravação salva, sessão não aberta, anexos não enviados por tamanho).
+
 ## [1.72.0] - 2026-11-23
 ### Adicionado
 - **Console do Karaf por janela real (Windows)**: o Hub abre a janela do `winthor.bat` e lê o console dela, então o comando responde na hora e o texto vem sem sequências soltas. O modo `pipe` continua disponível nas configurações (`karafEmbeddedMode`).
