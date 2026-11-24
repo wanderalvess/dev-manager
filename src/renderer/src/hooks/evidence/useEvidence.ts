@@ -6,6 +6,7 @@ import type {
   EvidenceBlockInput,
   EvidenceCaptureSource,
   EvidenceJiraIssue,
+  EvidenceJiraPreview,
   EvidenceJiraResult,
   EvidenceReportLayout,
   EvidenceSession,
@@ -183,6 +184,13 @@ export function useEvidence(isActive: boolean) {
       void refreshList();
     });
 
+  const updateSession = (patch: Partial<EvidenceSessionInput>) =>
+    session &&
+    run(async () => {
+      setSession(await api.evidenceUpdateSession(session.id, patch));
+      await refreshList();
+    });
+
   const addNote = (title?: string) => session && run(async () => setSession(await api.evidenceAddNote(session.id, title)));
   const updateStep = (stepId: string, patch: EvidenceStepPatch) =>
     session && run(async () => setSession(await api.evidenceUpdateStep(session.id, stepId, patch)));
@@ -241,6 +249,17 @@ export function useEvidence(isActive: boolean) {
       info(`${layout === 'slides' ? 'Apresentação' : 'Relatório'} gerado: ${files.pdf ?? files.html}`);
       await api.evidenceOpenFile(session.id, withPdf ? 'pdf' : 'html', layout);
     });
+
+  /** Os passos e provas já são gravados a cada alteração; "Salvar" atualiza o relatório HTML na pasta, sem abrir nada. */
+  const save = () =>
+    session &&
+    run(async () => {
+      const files = await api.evidenceReport(session.id, false, 'document');
+      info(`Evidência salva. Relatório atualizado em ${files.html}`);
+    });
+
+  const previewJira = (includeVideos: boolean): Promise<EvidenceJiraPreview> =>
+    session ? api.evidencePreviewJira(session.id, includeVideos) : Promise.reject(new Error('Nenhuma sessão aberta.'));
 
   const addBlock = (stepId: string, input: EvidenceBlockInput) =>
     session && run(async () => setSession(await api.evidenceAddBlock(session.id, stepId, input)));
@@ -360,11 +379,14 @@ export function useEvidence(isActive: boolean) {
     dismissFresh: () => setFreshStepId(null),
     capture,
     addNote,
+    updateSession,
     updateStep,
     deleteStep,
     startRecording,
     stopRecording,
     report,
+    save,
+    previewJira,
     recordingClicks,
     replayProgress,
     startClickRecording,

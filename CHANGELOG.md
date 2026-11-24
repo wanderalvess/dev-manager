@@ -4,6 +4,25 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.74.0] - 2026-11-24
+### Adicionado
+- **Evidências: colar cURL na prova de API**: *Copiar como cURL* do navegador ou do Postman (ou `GET http://...`) preenche método, URL, cabeçalhos e corpo de uma vez. A URL agora quebra em linhas para dar para conferir a query string.
+- **Evidências: token do ambiente**: a caixa *Autenticar com o token do ambiente* usa `Bearer {{TOKEN}}` do ambiente do API Studio sem gravar o valor real. Ao importar um cURL com o mesmo token do ambiente, ele é trocado por `{{TOKEN}}`.
+- **Evidências: dados editáveis**: tarefa, título, tipo, responsável e ambiente podem ser alterados depois de iniciar, em *Dados da evidência*.
+- **Evidências: publicação com conferência**: *Publicar no Jira…* abre um modal com a tarefa (e seu título e status), os anexos e o comentário exato que será postado. Nada é enviado antes de confirmar. Vem preenchido e avisa se há passos pendentes.
+- **Evidências: regras de aprovação com atalhos**: o campo explica como funciona (todas as regras precisam passar) e tem atalhos como *+ Status 200*, *+ Linhas ≥ 1* e *+ Tempo < 500 ms*.
+
+### Alterado
+- **Evidências**: o rodapé tem *Salvar* como ação principal. *Publicar no Jira…* fica ao lado, em destaque menor, e os outros formatos (PDF, slides, pasta) ficam recolhidos.
+- **Evidências: tarefa opcional**: dá para evidenciar sem tarefa. Só a publicação no Jira exige a chave, que fica guardada na evidência depois de publicar. O relatório mostra "Tarefa: -" quando não há.
+
+### Corrigido
+- **Evidências e API Studio**: a falha de conexão deixou de aparecer como "Falha ao executar requisição HTTP" sem explicação. Agora diz o que houve (conexão recusada em `host:porta`, host não encontrado, rede/VPN) e avisa de variável `{{...}}` sem valor antes de chamar.
+- **Evidências**: a regra `contem texto` deixada com o texto de exemplo explica que é preciso trocar pelo que deve aparecer.
+
+### Segurança
+- **Evidências**: credenciais digitadas em claro nos cabeçalhos (`Authorization`, `Cookie`, `X-Api-Key` e similares) são mascaradas no registro da prova, no relatório e no anexo do Jira. A chamada continua usando o valor completo; valores com `{{variável}}` ficam como estão.
+
 ## [1.73.0] - 2026-11-24
 ### Adicionado
 - **Evidências: convite de prova depois do print**: ao tirar um print (botão, atalho ou clique gravado), o passo novo abre expandido e pergunta se você quer provar também com um dado: chamar uma API, consultar o banco, colar texto ou seguir só com o print. A prova de API já vem preenchida com a última requisição da evidência (método, URL, cabeçalhos, corpo e ambiente).

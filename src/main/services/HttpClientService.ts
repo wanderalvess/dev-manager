@@ -18,6 +18,26 @@ function generateId(): string {
   return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11);
 }
 
+/**
+ * Com `autoSelectFamily` (localhost em IPv4 e IPv6) o Node devolve um AggregateError de `message` vazio:
+ * sem olhar o código das tentativas a tela só mostrava "Falha ao executar requisição HTTP".
+ */
+export function describeRequestError(err: any, url: string): string {
+  const leaf = Array.isArray(err?.errors) && err.errors.length > 0 ? err.errors[0] : err;
+  const code: string | undefined = leaf?.code ?? err?.code;
+  let host = url;
+  try {
+    host = new URL(url).host;
+  } catch {
+    /* URL inválida: mantém o texto original */
+  }
+  if (code === 'ECONNREFUSED') return `Conexão recusada em ${host}: nada está escutando nessa porta. Confira se o serviço está no ar e se o host e a porta do ambiente estão certos.`;
+  if (code === 'ENOTFOUND' || code === 'EAI_AGAIN') return `Host não encontrado: ${host}. Confira o endereço (e a VPN, se for um servidor interno).`;
+  if (code === 'ETIMEDOUT' || code === 'EHOSTUNREACH' || code === 'ENETUNREACH') return `Sem resposta de ${host} (${code}). Confira a rede/VPN e se o servidor está no ar.`;
+  if (code === 'ECONNRESET') return `A conexão com ${host} foi encerrada pelo servidor (ECONNRESET).`;
+  return err?.message || leaf?.message || (code ? `Erro de rede (${code})` : 'Falha ao executar requisição HTTP');
+}
+
 export class HttpClientService {
   private history: HttpResponseData[] = [];
   private maxHistorySize = 50;
@@ -105,6 +125,12 @@ export class HttpClientService {
     }
 
     try {
+      const unresolved = [...new Set(finalUrl.match(/\{\{\s*[a-zA-Z0-9_$-]+\s*\}\}/g) ?? [])];
+      if (unresolved.length) {
+        throw new Error(
+          `Variável sem valor na URL: ${unresolved.join(', ')}. Escolha um ambiente do API Studio que defina ${unresolved.length > 1 ? 'essas variáveis' : 'essa variável'} (ou use a URL completa).`
+        );
+      }
       const response = await httpRequest(finalUrl, {
         method: request.method,
         headers,
@@ -164,7 +190,7 @@ export class HttpClientService {
       return responseItem;
     } catch (err: any) {
       const durationMs = Date.now() - start;
-      const errorMsg = err?.message || 'Falha ao executar requisição HTTP';
+      const errorMsg = describeRequestError(err, finalUrl);
 
       const errorResponse: HttpResponseData = {
         id: generateId(),

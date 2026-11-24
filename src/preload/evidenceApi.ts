@@ -8,6 +8,7 @@ import {
   type EvidenceBlockInput,
   type EvidenceCaptureSource,
   type EvidenceJiraIssue,
+  type EvidenceJiraPreview,
   type EvidenceJiraResult,
   type EvidenceReportFiles,
   type EvidenceReportLayout,
@@ -33,6 +34,7 @@ export const evidenceApi = {
   evidenceAddImage: (id: string, dataUrl: string, title?: string): Promise<EvidenceSession> =>
     ipcRenderer.invoke('evidence:add-image', id, dataUrl, title),
   evidenceAddNote: (id: string, title?: string): Promise<EvidenceSession> => ipcRenderer.invoke('evidence:add-note', id, title),
+  evidenceUpdateSession: (id: string, patch: Partial<EvidenceSessionInput>): Promise<EvidenceSession> => ipcRenderer.invoke('evidence:update-session', id, patch),
   evidenceUpdateStep: (id: string, stepId: string, patch: EvidenceStepPatch): Promise<EvidenceSession> =>
     ipcRenderer.invoke('evidence:update-step', id, stepId, patch),
   evidenceDeleteStep: (id: string, stepId: string): Promise<EvidenceSession> => ipcRenderer.invoke('evidence:delete-step', id, stepId),
@@ -52,6 +54,7 @@ export const evidenceApi = {
     ipcRenderer.invoke('evidence:open-file', id, kind, layout),
   evidenceSetRecordingSource: (sourceId: string | null): Promise<boolean> => ipcRenderer.invoke('evidence:set-recording-source', sourceId),
   evidenceLookupIssue: (issueKey: string): Promise<EvidenceJiraIssue> => ipcRenderer.invoke('evidence:lookup-issue', issueKey),
+  evidencePreviewJira: (id: string, includeVideos: boolean): Promise<EvidenceJiraPreview> => ipcRenderer.invoke('evidence:preview-jira', id, includeVideos),
   evidencePublishJira: (id: string, issueKey: string, includeVideos: boolean): Promise<EvidenceJiraResult> =>
     ipcRenderer.invoke('evidence:publish-jira', id, issueKey, includeVideos),
   evidenceRecordClicksStart: (id: string): Promise<boolean> => ipcRenderer.invoke('evidence:record-clicks-start', id),

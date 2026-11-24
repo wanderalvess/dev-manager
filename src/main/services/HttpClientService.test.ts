@@ -33,3 +33,26 @@ describe('HttpClientService.loginWinThor', () => {
     expect(body.senha).toBe('900150983CD24FB0D6963F7D28E17F72');
   });
 });
+
+describe('HttpClientService.executeRequest: erros legíveis', () => {
+  const service = new HttpClientService({ getEnvironments: () => [], updateEnvironmentToken: vi.fn() } as never);
+  const req = (url: string) => ({
+    request: { id: 'r', name: 'r', method: 'GET' as const, url, params: [], headers: [], body: { mode: 'none' as const }, auth: { type: 'none' as const } }
+  });
+
+  beforeEach(() => vi.mocked(httpRequest).mockReset());
+
+  it('traduz o AggregateError de message vazio (localhost em IPv4 e IPv6)', async () => {
+    const err = Object.assign(new Error(''), { errors: [Object.assign(new Error(''), { code: 'ECONNREFUSED' })] });
+    vi.mocked(httpRequest).mockRejectedValueOnce(err);
+    const res = await service.executeRequest(req('http://localhost:8889/api'));
+    expect(res.error).toContain('Conexão recusada em localhost:8889');
+  });
+
+  it('avisa da variável sem valor em vez de tentar uma URL inválida', async () => {
+    const res = await service.executeRequest(req('http://{{host}}:{{port}}/a'));
+    expect(res.error).toContain('{{host}}');
+    expect(res.error).toContain('{{port}}');
+    expect(httpRequest).not.toHaveBeenCalled();
+  });
+});
