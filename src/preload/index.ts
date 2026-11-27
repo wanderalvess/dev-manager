@@ -9,6 +9,7 @@ import { apiScenarioApi } from './apiScenarioApi';
 import { scenarioHistoryApi } from './scenarioHistoryApi';
 import { evidenceApi } from './evidenceApi';
 import { terminalApi } from './terminalApi';
+import { wshUpdateApi } from './wshUpdateApi';
 import type { DeployQueueProject } from '../shared/deployQueue';
 import type {
   InfrEnvSaveRequest,
@@ -387,6 +388,7 @@ const electronAPI = {
   ...scenarioHistoryApi,
   ...evidenceApi,
   ...terminalApi,
+  ...wshUpdateApi,
 
   // Perfis de Deploy (Karaf / Docker / Comando Genérico)
   runDeployProfile: (

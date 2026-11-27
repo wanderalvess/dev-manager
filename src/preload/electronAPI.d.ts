@@ -14,6 +14,14 @@ import type { InfrOriginCheck } from '../shared/infrOriginCheck';
 import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../shared/infrFirstSteps';
 import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../shared/infrActiveEnv';
 import type { StartEnvResult } from '../shared/infrEnvStart';
+import type {
+  WshUpdateApplyResult,
+  WshUpdateInspectResult,
+  WshUpdatePrepareResult,
+  WshUpdateProbeResult,
+  WshUpdateProgress,
+  WshUpdateRequest
+} from '../shared/wshUpdate';
 import type { InfrEnvironmentsResult } from '../shared/infrWinthorVersion';
 import type {
   TerminalCreateRequest,
@@ -408,6 +416,12 @@ export interface ElectronAPI {
   listWslDmpFiles?: (distro?: string) => Promise<WslDumpFileInfo[]>;
   generateMd5?: (text: string) => Promise<{ lower: string; upper: string }>;
   checkWshPrerequisites?: (distro?: string) => Promise<WshPrerequisiteStatus[]>;
+  inspectWshUpdate?: (req: WshUpdateRequest) => Promise<WshUpdateInspectResult>;
+  probeWshInstaller?: (version: string) => Promise<WshUpdateProbeResult>;
+  prepareWshUpdate?: (req: WshUpdateRequest) => Promise<WshUpdatePrepareResult>;
+  applyWshUpdate?: (req: WshUpdateRequest) => Promise<WshUpdateApplyResult>;
+  rollbackWshUpdate?: (req: WshUpdateRequest & { backup?: string }) => Promise<WshUpdateApplyResult>;
+  onWshUpdateProgress?: (callback: (progress: WshUpdateProgress) => void) => () => void;
   openWslOptFolder?: (distro?: string) => Promise<{ success: boolean; path: string; error?: string }>;
   getWslSnapshotsDir?: () => Promise<string>;
   setWslSnapshotsDir?: (dir: string) => Promise<boolean>;
