@@ -43,7 +43,10 @@ const DESTRUCTIVE_TOOLS = new Set([
   'qa_delete_api_scenario',
   'deploy_run_profile',
   'delphi_build',
-  'delphi_run_pipeline'
+  'delphi_run_pipeline',
+  // Trocam o jar montado no container e o reiniciam
+  'wsh_apply_update',
+  'wsh_rollback_jar'
 ]);
 
 /** Parecem leitura pelo nome, mas têm efeito (rede externa, envio de webhook, execução de testes). */

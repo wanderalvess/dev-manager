@@ -4,9 +4,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.77.0] - 2026-11-27
 ### Adicionado
 - **WSH: atualizar o jar do container**: nos utilitários do WSH, a aba *Atualizar WSH* mostra a versão do jar em uso, consulta se a TOTVS publicou a versão nova, baixa o instalador oficial (conferindo o MD5) e tira o `winthor-integracao-core.jar` de dentro dele, sem executar nada no Windows. Antes de trocar, confere o que o jar exige do WTA (`dependencies.json`) contra as features instaladas no Karaf; o *Atualizar container* guarda o jar anterior ao lado, grava o novo, reinicia o container e espera o log confirmar a subida. *Voltar a este jar* restaura o backup. Só no aplicativo desktop.
+- **MCP: atualizar o WSH**: 5 tools `wsh_*` (183 no total) fazem o mesmo pelo assistente: `wsh_get_jar_info` (versão e exigências do jar em uso), `wsh_check_installer` (a TOTVS publicou a versão?), `wsh_prepare_update` (baixa, extrai e confere o WTA sem mexer no container), `wsh_apply_update` e `wsh_rollback_jar` (trocam o jar e reiniciam; marcadas como destrutivas, então o modo `HUB_MCP_MODE=readonly` não as registra).
+
+### Alterado
+- Nova dependência `7z-wasm` (7-Zip em WebAssembly) para abrir o instalador do WSH, empacotada fora do `app.asar`.
 
 ## [1.76.2] - 2026-11-24
 ### Adicionado
