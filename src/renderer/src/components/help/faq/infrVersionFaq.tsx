@@ -6,6 +6,40 @@ const C = 'font-mono text-primary font-semibold';
 export function getInfrVersionFaq(): FaqItem[] {
   return [
     {
+      id: 'wsh-update-jar',
+      question: 'Como atualizo o WSH de um container para uma versão nova?',
+      category: 'Containers & Docker',
+      tags: ['wsh', 'atualizar', 'jar', 'winthor-integracao-core', 'instalador', 'exe', 'versão', 'rollback', 'backup'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Na tela de containers, abra os utilitários do WSH e vá em <strong className="text-foreground">Atualizar WSH</strong>. A aba mostra a versão do jar em uso, lida do
+            container. Digite a versão nova (por exemplo <code className={C}>1.39.22.31</code>), use <strong className="text-foreground">Consultar</strong> para confirmar que a TOTVS
+            publicou o instalador e depois <strong className="text-foreground">Baixar e conferir</strong>.
+          </p>
+          <ul className="list-disc pl-4 space-y-1.5">
+            <li>
+              O Hub baixa o instalador oficial (cerca de 96 MB), confere o MD5 do servidor e tira o <code className={C}>winthor-integracao-core.jar</code> de dentro dele. Nada do
+              instalador é executado no Windows. O arquivo fica numa pasta temporária e o próximo preparo da mesma versão não baixa de novo.
+            </li>
+            <li>
+              Ele lê o que o jar novo exige do WTA (<code className={C}>dependencies.json</code>) e compara com as features instaladas no Karaf do WTA do ambiente. Se faltar alguma, o
+              WSH encerra ao subir: atualize o WTA antes. A tela avisa, e o botão de confirmação fica em tom de perigo.
+            </li>
+            <li>
+              <strong className="text-foreground">Atualizar container</strong> guarda o jar atual ao lado (<code className={C}>winthor-integracao-core.jar.bak-&lt;versão&gt;</code>),
+              grava o novo no mesmo caminho montado no container e reinicia. O Hub espera o log mostrar <code className={C}>Started WinthorSmartHubeApplication</code> por até 3 minutos.
+              Se o WSH não subir, use <strong className="text-foreground">Voltar a este jar</strong>.
+            </li>
+            <li>
+              Funciona só no aplicativo desktop (não no modo Web/Docker) e só em containers criados pelo <code className={C}>wsh_setup.sh</code>, que montam o jar de{' '}
+              <code className={C}>/opt</code>.
+            </li>
+          </ul>
+        </div>
+      )
+    },
+    {
       id: 'infr-winthor-version',
       question: 'Como subir o WTA e o WSH numa versão específica do WinThor (38, 39, 40) pelo INFR-Docker?',
       category: 'Containers & Docker',

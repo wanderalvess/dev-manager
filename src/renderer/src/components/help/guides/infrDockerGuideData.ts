@@ -88,7 +88,12 @@ export const GUIDE_HUB_TASKS: GuideHubTask[] = [
   { task: 'Subir tudo na ordem', manual: 'três comandos, esperando cada um', hub: 'Botão Subir WinThor' },
   { task: 'Banco: saúde, SQL*Plus, Data Pump, TNS', manual: 'sqlplus, expdp/impdp', hub: 'Ferramentas do Oracle e Copiar TNS' },
   { task: 'Guardar ou trocar a distro', manual: 'wsl --export / wsl --import', hub: 'Snapshots do WSL' },
-  { task: 'Senha MD5 do WSH e rotina 2650', manual: 'calcular à mão', hub: 'Gerador MD5 e Rotina 2650' }
+  { task: 'Senha MD5 do WSH e rotina 2650', manual: 'calcular à mão', hub: 'Gerador MD5 e Rotina 2650' },
+  {
+    task: 'Atualizar o jar do WSH',
+    manual: 'baixar o .exe, extrair o jar, copiar para /opt, conferir o WTA, docker restart',
+    hub: 'Utilitários do WSH → Atualizar WSH (baixa, confere as features do WTA, troca o jar com backup e reinicia)'
+  }
 ];
 
 export interface GuideProblem {

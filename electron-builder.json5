@@ -17,7 +17,8 @@
   ],
   "asarUnpack": [
     "node_modules/onnxruntime-node/**/*",
-    "node_modules/@anush008/tokenizers-*/**/*"
+    "node_modules/@anush008/tokenizers-*/**/*",
+    "node_modules/7z-wasm/**/*"
   ],
   "win": {
     "target": [

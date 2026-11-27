@@ -8,6 +8,7 @@ import { WshUtilsFooter } from '../wsh/WshUtilsFooter';
 import { WshMd5Tab } from '../wsh/WshMd5Tab';
 import { WshFilesTab } from '../wsh/WshFilesTab';
 import { WshRotina2650Tab } from '../wsh/WshRotina2650Tab';
+import { WshUpdateTab } from '../wsh/WshUpdateTab';
 import { Modal } from '../../ui/Modal';
 
 export interface WshUtilsModalProps {
@@ -70,6 +71,10 @@ export const WshUtilsModal: React.FC<WshUtilsModalProps> = ({
             onLoadPrereqs={onLoadWshPrereqs}
             onOpenOptFolder={onOpenOptFolder}
           />
+        )}
+
+        {state.activeTab === 'update' && (
+          <WshUpdateTab container={wshUtilsModalCleanName(container.names)} active />
         )}
 
         {state.activeTab === 'rotina2650' && (

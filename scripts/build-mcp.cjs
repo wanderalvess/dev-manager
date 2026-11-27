@@ -17,7 +17,9 @@ const rootNodeModules = path.join(repoRoot, 'node_modules');
 
 // Mesmo critério do `external` do vite.config.ts: binários nativos (.node) e drivers com
 // require() dinâmico de binário por plataforma quebram quando inlineados pelo bundler.
-const NATIVE_EXTERNALS = ['oracledb', 'fastembed', 'onnxruntime-node'];
+// O `7z-wasm` não é nativo, mas o WshUpdateService o resolve em runtime (require.resolve) e o roda num processo filho:
+// precisa existir como pasta ao lado do bundle, não dentro dele.
+const NATIVE_EXTERNALS = ['oracledb', 'fastembed', 'onnxruntime-node', '7z-wasm'];
 
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf-8'));
