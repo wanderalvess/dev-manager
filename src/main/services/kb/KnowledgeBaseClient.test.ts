@@ -37,6 +37,14 @@ describe('KnowledgeBaseClient', () => {
     expect(() => client.ingest([])).toThrow(/1 a 50/);
   });
 
+  it('explica que a base está inacessível em vez de só "fetch failed"', async () => {
+    const cause = Object.assign(new Error('connect'), { code: 'ECONNREFUSED' });
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(Object.assign(new TypeError('fetch failed'), { cause })));
+    const client = new KnowledgeBaseClient({ baseUrl: 'http://127.0.0.1:9', apiKey: 'k' });
+    const err = await client.search({ query: 'x' }).catch((e: Error) => e);
+    expect((err as Error).message).toMatch(/Não consegui falar com a Base de Conhecimento em 127\.0\.0\.1:9 \(ECONNREFUSED\)/);
+  });
+
   it('explica a falta de escopo em 401/403 sem vazar a chave', async () => {
     mockFetch(403, {});
     const client = new KnowledgeBaseClient({ baseUrl: 'http://localhost:8080', apiKey: 'segredo' });

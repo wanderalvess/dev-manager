@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import type { KbSearchRequest } from '../../../shared/knowledgeBaseTypes';
+import type { KbChatRequest, KbSearchRequest } from '../../../shared/knowledgeBaseTypes';
 import type { KbAskParams } from '../../services/kb/KnowledgeBaseClient';
 import { safeSend } from '../../utils/ipcSend';
 import type { IpcContext } from '../ipcContext';
@@ -11,6 +11,7 @@ export function registerKnowledgeBaseHandlers(ctx: IpcContext): void {
   ipcMain.handle('kb:status', () => knowledgeBaseService.getStatus());
   ipcMain.handle('kb:search', (_, request: KbSearchRequest) => knowledgeBaseService.search(request));
   ipcMain.handle('kb:ask', (_, params: KbAskParams) => knowledgeBaseService.ask(params));
+  ipcMain.handle('kb:chat', (_, request: KbChatRequest) => knowledgeBaseService.chat(request));
   ipcMain.handle('kb:divergences', (_, module?: string, limit?: number) =>
     knowledgeBaseService.divergences(module, limit)
   );

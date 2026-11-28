@@ -2512,7 +2512,7 @@ registerDelphiTools(server, { delphiBuildService, ok, fail });
 registerIntegrationTools(server, { integrationTraceService, ok, fail });
 
 // --- Base de Conhecimento compartilhada (Agile Space): busca, contexto, divergências e importação ---
-registerKnowledgeBaseTools(server, { knowledgeBaseService: new KnowledgeBaseService(configService), ok, fail });
+registerKnowledgeBaseTools(server, { knowledgeBaseService: new KnowledgeBaseService(configService, llmService), ok, fail });
 
 // --- Atualização do jar do WSH de um container (estado só em arquivo/tmp: não disputa recurso com o app) ---
 registerWshTools(server, { wshUpdateService: new WshUpdateService(async () => (await wslService.findDockerWslDistro()) || undefined), ok, fail });

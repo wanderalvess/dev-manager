@@ -2472,7 +2472,7 @@ app.use('/api/azure-pipelines', createAzurePipelineRouter(new AzurePipelineServi
 app.use('/api/scenario-history', createScenarioHistoryRouter(new ScenarioHistoryService(configService)));
 app.use('/api/api-scenarios', createApiScenarioRouter(new ApiScenarioService(configService, databaseService), broadcastWs));
 app.use('/api/auth-lockout', createAuthLockoutRouter(new AuthLockoutTestService(configService), broadcastWs, usageMetricsService));
-app.use('/api/knowledge-base', createKnowledgeBaseRouter(new KnowledgeBaseService(configService), broadcastWs));
+app.use('/api/knowledge-base', createKnowledgeBaseRouter(new KnowledgeBaseService(configService, llmService), broadcastWs));
 app.use('/api/terminal', createTerminalRouter(new TerminalSessionService(), broadcastWs, configService));
 
 // Servir Frontend SPA estático se compilado

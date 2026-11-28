@@ -1,8 +1,12 @@
 import path from 'path';
 import type { ConfigService } from '../ConfigService';
+import type { LlmService } from '../LlmService';
+import { buildChatMessages, KB_NOT_FOUND_ANSWER } from '../../../shared/knowledgeBaseChat';
 import { isSafeLocalPath } from '../../utils/security';
 import type {
   KbAskResponse,
+  KbChatRequest,
+  KbChatResponse,
   KbDivergenceReport,
   KbSearchRequest,
   KbSearchResponse
@@ -34,7 +38,10 @@ export type KbEmbeddingsProgress =
 export class KnowledgeBaseService {
   private embedder: KnowledgeBaseEmbedder | null = null;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly llmService?: Pick<LlmService, 'chat'>
+  ) {}
 
   private getEmbedder(): KnowledgeBaseEmbedder {
     this.embedder ??= new KnowledgeBaseEmbedder(
@@ -81,6 +88,40 @@ export class KnowledgeBaseService {
   async ask(params: KbAskParams): Promise<KbAskResponse> {
     const client = this.client();
     return client.ask({ ...params, embedding: await this.queryEmbedding(params.question, params.embedding) });
+  }
+
+  /**
+   * Responde com o LLM ativo do Hub a partir dos trechos recuperados (o servidor da base não chama LLM). Sem trechos,
+   * devolve o aviso de "não encontrei" sem gastar tokens.
+   */
+  async chat(req: KbChatRequest): Promise<KbChatResponse> {
+    const question = req.question?.trim() ?? '';
+    if (!question) throw new Error('A pergunta não pode estar vazia.');
+    if (!this.llmService) throw new Error('O motor de IA não está disponível neste modo.');
+
+    const ask = await this.ask({
+      question,
+      k: req.k,
+      docType: req.docType,
+      source: req.source,
+      module: req.module
+    });
+    const base = { mixedSources: ask.mixedSources, citations: ask.citations, mode: ask.mode };
+    if (!ask.answerable) return { ...base, answer: KB_NOT_FOUND_ANSWER, answerable: false };
+
+    const reply = await this.llmService.chat({
+      messages: buildChatMessages(ask, req.history),
+      temperature: 0.2,
+      source: 'kb-chat'
+    });
+    return {
+      ...base,
+      answer: reply.text,
+      answerable: true,
+      provider: reply.provider,
+      model: reply.model,
+      usageWarning: reply.usageWarning
+    };
   }
 
   divergences(module?: string, limit?: number): Promise<KbDivergenceReport> {

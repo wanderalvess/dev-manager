@@ -205,7 +205,7 @@ function createWindow() {
   const scenarioHistoryService = new ScenarioHistoryService(configService);
   const terminalSessionService = new TerminalSessionService();
   const authLockoutTestService = new AuthLockoutTestService(configService, scenarioHistoryService);
-  const knowledgeBaseService = new KnowledgeBaseService(configService);
+  const knowledgeBaseService = new KnowledgeBaseService(configService, llmService);
   const apiScenarioService = new ApiScenarioService(configService, databaseService, scenarioHistoryService);
   const remoteControlService = new RemoteControlService(
     createRemoteBackend({

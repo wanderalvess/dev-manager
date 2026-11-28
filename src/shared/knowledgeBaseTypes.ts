@@ -155,3 +155,31 @@ export interface KnowledgeBaseSettings {
   /** Pasta local do prompt-hub (clone) usada pelo importador. */
   sourcePath?: string;
 }
+
+/** Uma mensagem anterior da conversa, enviada ao chat para manter o contexto. */
+export interface KbChatTurn {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface KbChatRequest {
+  question: string;
+  history?: KbChatTurn[];
+  k?: number;
+  docType?: KbDocType;
+  source?: KbSource;
+  module?: string;
+}
+
+export interface KbChatResponse {
+  answer: string;
+  /** false quando a base não trouxe nada: a resposta diz isso em vez de inventar. */
+  answerable: boolean;
+  mixedSources: boolean;
+  citations: KbCitation[];
+  /** hybrid (texto + significado), text ou vector, conforme o que foi possível usar. */
+  mode: string;
+  provider?: string;
+  model?: string;
+  usageWarning?: string;
+}

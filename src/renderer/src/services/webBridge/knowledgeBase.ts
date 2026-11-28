@@ -1,5 +1,7 @@
 import type {
   KbAskResponse,
+  KbChatRequest,
+  KbChatResponse,
   KbDivergenceReport,
   KbSearchRequest,
   KbSearchResponse
@@ -18,6 +20,7 @@ export function createKnowledgeBaseApi({ apiFetch, wsManager }: BridgeDeps) {
     kbStatus: () => apiFetch<KbStatus>('/api/knowledge-base/status'),
     kbSearch: (request: KbSearchRequest) => post<KbSearchResponse>('/api/knowledge-base/search', request),
     kbAsk: (params: KbAskParams) => post<KbAskResponse>('/api/knowledge-base/ask', params),
+    kbChat: (request: KbChatRequest) => post<KbChatResponse>('/api/knowledge-base/chat', request),
     kbDivergences: (module?: string, limit?: number) => {
       const q = new URLSearchParams();
       if (module) q.set('module', module);

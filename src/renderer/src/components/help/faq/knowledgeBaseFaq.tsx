@@ -26,6 +26,12 @@ export function getKnowledgeBaseFaq(): FaqItem[] {
             o que o código faz com o que o TDN diz. Se a chave for recusada, confira os escopos; se trocar a URL, digite a chave de novo.
           </p>
           <p>
+            Para conversar com a base dentro do Hub, abra <strong className="text-foreground">Documentação → Base compartilhada (APIs Java + TDN)</strong>.
+            A resposta é escrita pelo motor de IA ativo (Configurações → IA &amp; LLM), cita as fontes <code className="font-mono text-primary font-bold">[n]</code> e
+            avisa quando código e TDN divergem. Citar o nome da rota na pergunta (por exemplo <code className="font-mono text-primary font-bold">PUT /embalagem/salvar</code>)
+            ajuda a busca a acertar. Se a chave do motor de IA estiver inválida, o chat mostra o erro do provedor.
+          </p>
+          <p>
             <strong className="text-foreground">Gerar embeddings</strong> deixa a busca mais esperta (entende sinônimos, como &quot;gravar&quot; e
             &quot;salvar&quot;). Na primeira vez o Hub pergunta e baixa o modelo multilíngue (cerca de 135 MB, do huggingface.co);
             depois ele roda offline. Clique de novo sempre que importar documentos novos.

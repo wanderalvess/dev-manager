@@ -41,16 +41,23 @@ export class KnowledgeBaseClient {
   }
 
   private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
-    const res = await fetch(`${this.base}${path}`, {
-      method,
-      headers: {
-        'X-Api-Key': this.config.apiKey,
-        Accept: 'application/json',
-        ...(body === undefined ? {} : { 'Content-Type': 'application/json' })
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-      signal: AbortSignal.timeout(this.config.timeoutMs ?? 60_000)
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.base}${path}`, {
+        method,
+        headers: {
+          'X-Api-Key': this.config.apiKey,
+          Accept: 'application/json',
+          ...(body === undefined ? {} : { 'Content-Type': 'application/json' })
+        },
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: AbortSignal.timeout(this.config.timeoutMs ?? 60_000)
+      });
+    } catch (err) {
+      // O erro cru do fetch é só "fetch failed"; a causa (ECONNREFUSED, ENOTFOUND, timeout) diz o que fazer.
+      const cause = (err as { cause?: { code?: string } }).cause?.code ?? (err as Error).name;
+      throw new Error(`Não consegui falar com a Base de Conhecimento em ${new URL(this.base).host} (${cause}). Confira a URL e se o servidor está no ar.`);
+    }
     if (!res.ok) {
       const detail = (await res.text().catch(() => '')).slice(0, 300);
       if (res.status === 401 || res.status === 403) {

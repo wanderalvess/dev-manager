@@ -1,6 +1,8 @@
 import { ipcRenderer } from 'electron';
 import type {
   KbAskResponse,
+  KbChatRequest,
+  KbChatResponse,
   KbDivergenceReport,
   KbSearchRequest,
   KbSearchResponse
@@ -15,6 +17,7 @@ export const knowledgeBaseApi = {
   kbStatus: (): Promise<KbStatus> => ipcRenderer.invoke('kb:status'),
   kbSearch: (request: KbSearchRequest): Promise<KbSearchResponse> => ipcRenderer.invoke('kb:search', request),
   kbAsk: (params: KbAskParams): Promise<KbAskResponse> => ipcRenderer.invoke('kb:ask', params),
+  kbChat: (request: KbChatRequest): Promise<KbChatResponse> => ipcRenderer.invoke('kb:chat', request),
   kbDivergences: (module?: string, limit?: number): Promise<KbDivergenceReport> =>
     ipcRenderer.invoke('kb:divergences', module, limit),
   kbImport: (version?: string): Promise<KbImportSummary> => ipcRenderer.invoke('kb:import', version),
