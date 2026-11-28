@@ -42,6 +42,8 @@ const DESTRUCTIVE_TOOLS = new Set([
   'qa_run_auth_lockout_test',
   'qa_delete_api_scenario',
   'deploy_run_profile',
+  // Publica documentação de código/TDN num servidor externo ao Hub
+  'kb_import_folder',
   'delphi_build',
   'delphi_run_pipeline',
   // Trocam o jar montado no container e o reiniciam

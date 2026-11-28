@@ -22,6 +22,7 @@ import { createHttpClientApi } from './webBridge/httpClient';
 import { createRemoteControlApi } from './webBridge/remoteControl';
 import { createIntegrationApi } from './webBridge/integration';
 import { createAuthLockoutApi } from './webBridge/authLockout';
+import { createKnowledgeBaseApi } from './webBridge/knowledgeBase';
 import { createApiScenarioApi } from './webBridge/apiScenario';
 import { createScenarioHistoryApi } from './webBridge/scenarioHistory';
 import { createEvidenceApi } from './webBridge/evidence';
@@ -64,6 +65,7 @@ export function initApiBridge() {
     ...createHttpClientApi(deps),
     ...createIntegrationApi(deps),
     ...createAuthLockoutApi(deps),
+    ...createKnowledgeBaseApi(deps),
     ...createApiScenarioApi(deps),
     ...createScenarioHistoryApi(deps),
     ...createEvidenceApi(),

@@ -9,6 +9,7 @@ import { AiTabHeader } from '../ai/AiTabHeader';
 import { AiPresetGrid } from '../ai/AiPresetGrid';
 import { AiProviderList } from '../ai/AiProviderList';
 import { AiProviderForm } from '../ai/AiProviderForm';
+import { KnowledgeBaseCard } from '../ai/KnowledgeBaseCard';
 
 interface AiTabProps {
   settings: AppSettings;
@@ -29,6 +30,7 @@ interface AiTabProps {
 
 export const AiTab: React.FC<AiTabProps> = ({
   settings,
+  setSettings,
   editingLlmProvider,
   setEditingLlmProvider,
   isTestingLlmId,
@@ -74,6 +76,8 @@ export const AiTab: React.FC<AiTabProps> = ({
             />
           )}
         </div>
+
+        <KnowledgeBaseCard settings={settings} setSettings={setSettings} />
       </div>
     </div>
   );

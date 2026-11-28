@@ -15,9 +15,9 @@ const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   if (typeof __DEV_MANAGER_VERSION__ === 'string') return __DEV_MANAGER_VERSION__;
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.77.0';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.78.0';
   } catch {
-    return '1.77.0';
+    return '1.78.0';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -63,6 +63,8 @@ import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { UsageMetricsService } from '../main/services/UsageMetricsService';
 import { mcpUsageInfo } from './usageTracking';
 import { registerHttpClientTools } from './tools/httpClientTools';
+import { registerKnowledgeBaseTools } from './tools/knowledgeBaseTools';
+import { KnowledgeBaseService } from '../main/services/kb/KnowledgeBaseService';
 import { registerTracerAnalysisTools } from './tools/tracerAnalysisTools';
 import { generateMarkdownEvidence } from '../main/utils/qaRegressionUtils';
 import { buildCompactTraceDetails } from '../main/utils/apmUtils';
@@ -2508,6 +2510,9 @@ registerDelphiTools(server, { delphiBuildService, ok, fail });
 
 // --- Rastreio de Integração ponta a ponta: WinThor → WSH → CH → PDV ---
 registerIntegrationTools(server, { integrationTraceService, ok, fail });
+
+// --- Base de Conhecimento compartilhada (Agile Space): busca, contexto, divergências e importação ---
+registerKnowledgeBaseTools(server, { knowledgeBaseService: new KnowledgeBaseService(configService, llmService), ok, fail });
 
 // --- Atualização do jar do WSH de um container (estado só em arquivo/tmp: não disputa recurso com o app) ---
 registerWshTools(server, { wshUpdateService: new WshUpdateService(async () => (await wslService.findDockerWslDistro()) || undefined), ok, fail });

@@ -33,6 +33,7 @@ import { TautAutomationService } from './services/TautAutomationService';
 import { HttpClientService } from './services/HttpClientService';
 import { IntegrationTraceService } from './services/IntegrationTraceService';
 import { AuthLockoutTestService } from './services/AuthLockoutTestService';
+import { KnowledgeBaseService } from './services/kb/KnowledgeBaseService';
 import { ApiScenarioService } from './services/ApiScenarioService';
 import { ScenarioHistoryService } from './services/ScenarioHistoryService';
 import { TerminalSessionService } from './services/TerminalSessionService';
@@ -204,6 +205,7 @@ function createWindow() {
   const scenarioHistoryService = new ScenarioHistoryService(configService);
   const terminalSessionService = new TerminalSessionService();
   const authLockoutTestService = new AuthLockoutTestService(configService, scenarioHistoryService);
+  const knowledgeBaseService = new KnowledgeBaseService(configService, llmService);
   const apiScenarioService = new ApiScenarioService(configService, databaseService, scenarioHistoryService);
   const remoteControlService = new RemoteControlService(
     createRemoteBackend({
@@ -258,6 +260,7 @@ function createWindow() {
     remoteControlService,
     integrationTraceService,
     authLockoutTestService,
+    knowledgeBaseService,
     apiScenarioService,
     scenarioHistoryService,
     terminalSessionService

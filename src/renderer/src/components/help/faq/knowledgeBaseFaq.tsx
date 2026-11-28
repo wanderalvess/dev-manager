@@ -1,0 +1,47 @@
+import React from 'react';
+import type { FaqItem } from '../helpData';
+
+export function getKnowledgeBaseFaq(): FaqItem[] {
+  return [
+    {
+      id: 'kb-shared-base',
+      question: 'Como conecto o Hub à Base de Conhecimento compartilhada e importo o prompt-hub?',
+      category: 'IA & Documentação',
+      tags: ['base de conhecimento', 'agile space', 'prompt-hub', 'tdn', 'mcp', 'kb', 'chave de api', 'importar', 'divergências'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            A base reúne a documentação das APIs Java (mapeadas do código), as páginas do TDN, prompts e skills no servidor do
+            Agile Space. Em <strong className="text-foreground">Configurações → IA &amp; LLM → Base de Conhecimento (Agile Space)</strong>:
+          </p>
+          <ol className="list-decimal pl-4 space-y-1.5">
+            <li>Marque <strong className="text-foreground">Usar a Base de Conhecimento</strong>, informe a <strong className="text-foreground">URL do servidor</strong> e a <strong className="text-foreground">Chave de API</strong>. A chave precisa dos escopos <code className="font-mono text-primary font-bold">KNOWLEDGE_READ</code> e <code className="font-mono text-primary font-bold">KNOWLEDGE_WRITE</code> e é criada por um administrador do Agile Space.</li>
+            <li>Informe a pasta onde o repositório <strong className="text-foreground">prompt-hub</strong> está clonado e salve as configurações.</li>
+            <li><strong className="text-foreground">Testar conexão</strong> confere a URL e a chave; <strong className="text-foreground">Importar prompt-hub</strong> envia os documentos em lotes, e o servidor só grava o que mudou.</li>
+          </ol>
+          <p>
+            Depois disso, as tools MCP <code className="font-mono text-primary font-bold">kb_search</code>,{' '}
+            <code className="font-mono text-primary font-bold">kb_ask_context</code> e{' '}
+            <code className="font-mono text-primary font-bold">kb_list_divergences</code> deixam a sua IA consultar a base e comparar
+            o que o código faz com o que o TDN diz. Se a chave for recusada, confira os escopos; se trocar a URL, digite a chave de novo.
+          </p>
+          <p>
+            Para conversar com a base dentro do Hub, abra <strong className="text-foreground">Documentação → Base compartilhada (APIs Java + TDN)</strong>.
+            A resposta é escrita pelo motor de IA ativo (Configurações → IA &amp; LLM), cita as fontes <code className="font-mono text-primary font-bold">[n]</code> e
+            avisa quando código e TDN divergem. Citar o nome da rota na pergunta (por exemplo <code className="font-mono text-primary font-bold">PUT /embalagem/salvar</code>)
+            ajuda a busca a acertar. Se a chave do motor de IA estiver inválida, o chat mostra o erro do provedor.
+          </p>
+          <p>
+            <strong className="text-foreground">Gerar embeddings</strong> deixa a busca mais esperta (entende sinônimos, como &quot;gravar&quot; e
+            &quot;salvar&quot;). Na primeira vez o Hub pergunta e baixa o modelo multilíngue (cerca de 135 MB, do huggingface.co);
+            depois ele roda offline. Clique de novo sempre que importar documentos novos.
+          </p>
+          <p>
+            A importação envia documentação de código e do TDN para o servidor configurado. Confirme que o destino está autorizado
+            para esse conteúdo antes de importar.
+          </p>
+        </div>
+      )
+    }
+  ];
+}

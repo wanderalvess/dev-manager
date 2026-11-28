@@ -6,6 +6,8 @@ import { OnboardingTour } from '../components/onboarding/OnboardingTour';
 import { usePageTour } from '../components/onboarding/usePageTour';
 import { DOCS_TOUR_STEPS, DOCS_TOUR_STORAGE_KEY } from '../components/onboarding/pageTours/docsTour';
 import { DocsHeaderPanel } from '../components/docs/DocsHeaderPanel';
+import { DocsModeSwitch, type DocsMode } from '../components/docs/DocsModeSwitch';
+import { KbChatPanel } from '../components/docs/KbChatPanel';
 import { DocsSearchBar } from '../components/docs/DocsSearchBar';
 import { DocsEmptyIndex } from '../components/docs/DocsEmptyIndex';
 import { DocsSearchResults } from '../components/docs/DocsSearchResults';
@@ -29,6 +31,7 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings, settin
   const [showModelHelp, setShowModelHelp] = useState<boolean>(false);
   const [showDocSettingsModal, setShowDocSettingsModal] = useState<boolean>(false);
   const [fileFilter, setFileFilter] = useState<string>('');
+  const [mode, setMode] = useState<DocsMode>('local');
 
   const index = useDocsIndex();
   const settings = useDocsSettings();
@@ -60,8 +63,18 @@ export const DocsPage: React.FC<DocsPageProps> = ({ onNavigateToSettings, settin
   const filteredFiles = filterDocFiles(status?.files || [], search.sourceFilter, fileFilter);
   const openModelHelp = () => setShowModelHelp(true);
 
+  if (mode === 'shared') {
+    return (
+      <div className="h-full flex flex-col px-4 py-3 md:px-5 md:py-4 space-y-3 overflow-hidden">
+        <DocsModeSwitch mode={mode} onChange={setMode} />
+        <KbChatPanel onNavigateToSettings={onNavigateToSettings && (() => onNavigateToSettings('ai'))} />
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col px-4 py-3 md:px-5 md:py-4 space-y-3 overflow-hidden">
+      <DocsModeSwitch mode={mode} onChange={setMode} />
       <DocsHeaderPanel
         status={status}
         hasIndex={hasIndex}

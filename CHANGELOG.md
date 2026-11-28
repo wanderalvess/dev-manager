@@ -4,6 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [1.78.0] - 2026-11-28
+### Adicionado
+- **Base de Conhecimento compartilhada (Agile Space)**: em *Configurações → IA & LLM* informe a URL e a chave de API do servidor e a pasta do clone do prompt-hub. *Testar conexão* confere o acesso e *Importar prompt-hub* envia a documentação das APIs Java, as páginas do TDN, os prompts e as skills em lotes; o servidor só grava o que mudou.
+- **Chat com a Base de Conhecimento**: na página *Documentação*, a aba *Base compartilhada (APIs Java + TDN)* responde perguntas com o motor de IA ativo do Hub, a partir dos trechos recuperados. A resposta cita as fontes `[n]` (com módulo, origem e link do TDN), mantém o contexto da conversa e, quando código e TDN dizem coisas diferentes, mostra as duas versões. Dá para limitar a *Só código* ou *Só TDN*. Sem trechos na base, avisa que não encontrou em vez de inventar.
+- **Busca híbrida com embeddings locais**: o botão *Gerar embeddings* baixa uma vez o modelo multilíngue (paraphrase-multilingual-MiniLM-L12-v2, cerca de 135 MB, do huggingface.co) e calcula, neste computador, os vetores dos trechos que o servidor ainda não tem. Depois disso, `kb_search` e `kb_ask_context` passam a combinar texto e significado, e a pergunta também é vetorizada aqui.
+- **Tools MCP `kb_*`**: `kb_search`, `kb_ask_context` (fontes numeradas e prompt pronto, sem LLM no servidor), `kb_list_divergences` (código x TDN), `kb_sync_embeddings` e `kb_import_folder`. Total de 190 tools.
+- **Importação mais fiel**: documentos gerados inteiros indentados (que o Markdown tratava como bloco de código) são normalizados, e mapeamentos que começam com `1. Definição do Endpoint` passam a ter o título `Mapeamento da API: MÉTODO /url`.
+
+### Segurança
+- A chave de API da base fica criptografada em repouso como as demais credenciais e nunca volta para a tela; a importação lê só a pasta definida nas configurações, nunca um caminho enviado pela IA.
+
 ## [1.77.0] - 2026-11-27
 ### Adicionado
 - **WinThor & WSL: painel "o que fazer agora"**: logo abaixo do cabeçalho, uma faixa diz em uma frase o estado do ambiente e oferece a próxima ação (*Usar a distro do WinThor*, *Ligar o Docker*, *Criar o ambiente*, *Subir WinThor*, *Abrir o portal do WTA* ou *Atualizar o WSH*), com as quatro etapas (Docker ligado, containers criados, ambiente no ar, WSH rodando) e a atual em destaque. Quando o Runtime está no Docker do Windows e a distro do WinThor existe, a faixa avisa e troca com um clique, em vez de mostrar tudo como inexistente.
