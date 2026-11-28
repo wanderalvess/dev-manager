@@ -1,6 +1,7 @@
 import type { UsageBaselineOverrides } from './usageBaselines';
 import type { OracleStatementMetrics } from './oracleTracerAnalysis';
 import type { IntegrationFlowDefinition, IntegrationLayerConfig } from './integrationTypes';
+import type { KnowledgeBaseSettings } from './knowledgeBaseTypes';
 export type ServiceState = 'RUNNING' | 'STOPPED' | 'START_PENDING' | 'STOP_PENDING' | 'UNKNOWN' | 'NOT_INSTALLED';
 
 export interface ServiceStatus {
@@ -614,6 +615,10 @@ export interface AppSettings {
   autoReindexOnChange?: boolean;
   /** Destinos de API configurados para sincronização agnóstica de documentações vetorizadas */
   docSyncTargets?: DocSyncTargetConfig[];
+  /** Base de Conhecimento compartilhada (Agile Space): URL, chave de API e pasta do prompt-hub. */
+  knowledgeBase?: KnowledgeBaseSettings;
+  /** Calculado no sanitize: indica chave salva sem expô-la ao renderer. */
+  hasKnowledgeBaseKey?: boolean;
   /** Espaços do Confluence indexados como fonte adicional de documentação do RAG */
   confluenceSources?: ConfluenceSourceConfig[];
   /** Projetos/JQLs do Jira indexados como fonte adicional de documentação do RAG */

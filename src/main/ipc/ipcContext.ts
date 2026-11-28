@@ -31,6 +31,7 @@ import type { DelphiBuildService } from '../services/DelphiBuildService';
 import type { RemoteControlService } from '../services/RemoteControlService';
 import type { IntegrationTraceService } from '../services/IntegrationTraceService';
 import type { AuthLockoutTestService } from '../services/AuthLockoutTestService';
+import type { KnowledgeBaseService } from '../services/kb/KnowledgeBaseService';
 import type { ApiScenarioService } from '../services/ApiScenarioService';
 import type { ScenarioHistoryService } from '../services/ScenarioHistoryService';
 import type { TerminalSessionService } from '../services/TerminalSessionService';
@@ -70,6 +71,7 @@ export interface IpcContext {
   remoteControlService: RemoteControlService;
   integrationTraceService: IntegrationTraceService;
   authLockoutTestService: AuthLockoutTestService;
+  knowledgeBaseService: KnowledgeBaseService;
   apiScenarioService: ApiScenarioService;
   scenarioHistoryService: ScenarioHistoryService;
   terminalSessionService: TerminalSessionService;

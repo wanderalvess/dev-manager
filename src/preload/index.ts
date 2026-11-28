@@ -5,6 +5,7 @@ import { karafInstallApi } from './karafInstallApi';
 import { remoteControlApi } from './remoteControlApi';
 import { integrationApi } from './integrationApi';
 import { authLockoutApi } from './authLockoutApi';
+import { knowledgeBaseApi } from './knowledgeBaseApi';
 import { apiScenarioApi } from './apiScenarioApi';
 import { scenarioHistoryApi } from './scenarioHistoryApi';
 import { evidenceApi } from './evidenceApi';
@@ -383,6 +384,7 @@ const electronAPI = {
   ...remoteControlApi,
   ...integrationApi,
   ...authLockoutApi,
+  ...knowledgeBaseApi,
   ...apiScenarioApi,
   ...scenarioHistoryApi,
   ...evidenceApi,

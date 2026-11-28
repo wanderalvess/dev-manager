@@ -4,6 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
+## [Não lançado]
+### Adicionado
+- **Base de Conhecimento compartilhada (Agile Space)**: em *Configurações → IA & LLM* informe a URL e a chave de API do servidor e a pasta do clone do prompt-hub. *Testar conexão* confere o acesso e *Importar prompt-hub* envia a documentação das APIs Java, as páginas do TDN, os prompts e as skills em lotes; o servidor só grava o que mudou.
+- **Tools MCP `kb_*`**: `kb_search`, `kb_ask_context` (fontes numeradas e prompt pronto, sem LLM no servidor), `kb_list_divergences` (código x TDN) e `kb_import_folder`. Total de 182 tools.
+
+### Segurança
+- A chave de API da base fica criptografada em repouso como as demais credenciais e nunca volta para a tela; a importação lê só a pasta definida nas configurações, nunca um caminho enviado pela IA.
+
 ## [1.76.2] - 2026-11-24
 ### Adicionado
 - **Evidências: copiar o comentário do Jira**: o modal *Publicar no Jira* ganhou *Copiar comentário*, que copia o texto exato no formato do Jira para colar na tarefa à mão. A mensagem de falha também ganhou *Copiar erro*.

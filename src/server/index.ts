@@ -54,6 +54,8 @@ import { HttpClientService } from '../main/services/HttpClientService';
 import { IntegrationTraceService } from '../main/services/IntegrationTraceService';
 import { createIntegrationRouter } from './routes/integrationRoutes';
 import { createAuthLockoutRouter } from './routes/authLockoutRoutes';
+import { createKnowledgeBaseRouter } from './routes/knowledgeBaseRoutes';
+import { KnowledgeBaseService } from '../main/services/kb/KnowledgeBaseService';
 import { createApiScenarioRouter } from './routes/apiScenarioRoutes';
 import { createScenarioHistoryRouter } from './routes/scenarioHistoryRoutes';
 import { ScenarioHistoryService } from '../main/services/ScenarioHistoryService';
@@ -2470,6 +2472,7 @@ app.use('/api/azure-pipelines', createAzurePipelineRouter(new AzurePipelineServi
 app.use('/api/scenario-history', createScenarioHistoryRouter(new ScenarioHistoryService(configService)));
 app.use('/api/api-scenarios', createApiScenarioRouter(new ApiScenarioService(configService, databaseService), broadcastWs));
 app.use('/api/auth-lockout', createAuthLockoutRouter(new AuthLockoutTestService(configService), broadcastWs, usageMetricsService));
+app.use('/api/knowledge-base', createKnowledgeBaseRouter(new KnowledgeBaseService(configService), broadcastWs));
 app.use('/api/terminal', createTerminalRouter(new TerminalSessionService(), broadcastWs, configService));
 
 // Servir Frontend SPA estático se compilado

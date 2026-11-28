@@ -60,6 +60,8 @@ import { HttpCollectionService } from '../main/services/HttpCollectionService';
 import { UsageMetricsService } from '../main/services/UsageMetricsService';
 import { mcpUsageInfo } from './usageTracking';
 import { registerHttpClientTools } from './tools/httpClientTools';
+import { registerKnowledgeBaseTools } from './tools/knowledgeBaseTools';
+import { KnowledgeBaseService } from '../main/services/kb/KnowledgeBaseService';
 import { registerTracerAnalysisTools } from './tools/tracerAnalysisTools';
 import { generateMarkdownEvidence } from '../main/utils/qaRegressionUtils';
 import { buildCompactTraceDetails } from '../main/utils/apmUtils';
@@ -2505,6 +2507,9 @@ registerDelphiTools(server, { delphiBuildService, ok, fail });
 
 // --- Rastreio de Integração ponta a ponta: WinThor → WSH → CH → PDV ---
 registerIntegrationTools(server, { integrationTraceService, ok, fail });
+
+// --- Base de Conhecimento compartilhada (Agile Space): busca, contexto, divergências e importação ---
+registerKnowledgeBaseTools(server, { knowledgeBaseService: new KnowledgeBaseService(configService), ok, fail });
 
 // --- Teste de bloqueio de login do WinThor (homologação) ---
 registerAuthLockoutTools(server, { authLockoutTestService: new AuthLockoutTestService(configService), ok, fail });

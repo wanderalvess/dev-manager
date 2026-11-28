@@ -427,6 +427,7 @@ export class ConfigService {
     settings.backupWebhooks?.forEach((w) => {
       if (w.authValue) w.authValue = decryptSecret(w.authValue, dir)!;
     });
+    if (settings.knowledgeBase?.apiKey) settings.knowledgeBase.apiKey = decryptSecret(settings.knowledgeBase.apiKey, dir)!;
     if (settings.ccwAuthCookie) settings.ccwAuthCookie = decryptSecret(settings.ccwAuthCookie, dir)!;
     if (settings.wtaPassword) settings.wtaPassword = decryptSecret(settings.wtaPassword, dir)!;
     if (settings.wtaAuthToken) settings.wtaAuthToken = decryptSecret(settings.wtaAuthToken, dir)!;
@@ -463,6 +464,7 @@ export class ConfigService {
     clone.backupWebhooks = clone.backupWebhooks?.map((w) =>
       w.authValue ? { ...w, authValue: encryptSecret(w.authValue, dir)! } : w
     );
+    if (clone.knowledgeBase?.apiKey) clone.knowledgeBase.apiKey = encryptSecret(clone.knowledgeBase.apiKey, dir)!;
     if (clone.ccwAuthCookie) clone.ccwAuthCookie = encryptSecret(clone.ccwAuthCookie, dir)!;
     if (clone.wtaPassword) clone.wtaPassword = encryptSecret(clone.wtaPassword, dir)!;
     if (clone.wtaAuthToken) clone.wtaAuthToken = encryptSecret(clone.wtaAuthToken, dir)!;
@@ -635,6 +637,14 @@ export class ConfigService {
         return { ...w, authValue: w.authValue || (destinationChanged ? '' : existing?.authValue || '') };
       });
     }
+    if (merged.knowledgeBase && !merged.knowledgeBase.apiKey && current.knowledgeBase?.apiKey) {
+      const destinationChanged =
+        !!merged.knowledgeBase.baseUrl && merged.knowledgeBase.baseUrl !== current.knowledgeBase.baseUrl;
+      merged.knowledgeBase = {
+        ...merged.knowledgeBase,
+        apiKey: destinationChanged ? '' : current.knowledgeBase.apiKey
+      };
+    }
     if (!merged.ccwAuthCookie && current.ccwAuthCookie) {
       const destinationChanged = !!merged.ccwBaseUrl && !!current.ccwBaseUrl && merged.ccwBaseUrl !== current.ccwBaseUrl;
       merged.ccwAuthCookie = destinationChanged ? '' : current.ccwAuthCookie;
@@ -768,6 +778,10 @@ export class ConfigService {
         ...w,
         authValue: ''
       }));
+    }
+    if (sanitized.knowledgeBase) {
+      sanitized.hasKnowledgeBaseKey = Boolean(settings.knowledgeBase?.apiKey);
+      sanitized.knowledgeBase = { ...sanitized.knowledgeBase, apiKey: '' };
     }
     sanitized.hasCcwAuthCookie = Boolean(settings.ccwAuthCookie && settings.ccwAuthCookie.trim().length > 0);
     if (sanitized.ccwAuthCookie) {

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { getModulesFaq } from './faq/modulesFaq';
 import { getLogsFaq } from './faq/logsFaq';
+import { getKnowledgeBaseFaq } from './faq/knowledgeBaseFaq';
 import { getIntegrationTraceFaq } from './faq/integrationTraceFaq';
 import { getAuthLockoutFaq } from './faq/authLockoutFaq';
 import { getApiScenarioFaq } from './faq/apiScenarioFaq';
@@ -1756,6 +1757,7 @@ export function getFaqList({
     ...getModulesFaq(onNavigate),
     ...getRemoteControlFaq(onNavigate),
     ...getLogsFaq(onNavigate),
+    ...getKnowledgeBaseFaq(),
     ...getIntegrationTraceFaq(onNavigate),
     ...getAuthLockoutFaq(),
     ...getApiScenarioFaq(),
