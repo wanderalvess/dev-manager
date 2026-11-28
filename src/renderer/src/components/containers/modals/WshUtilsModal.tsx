@@ -1,17 +1,20 @@
 import React from 'react';
 import type { DockerContainerInfo, WshPrerequisiteStatus } from '../../../../../shared/types';
 import { useWshUtilsModalState } from '../../../hooks/containers/useWshUtilsModalState';
-import { wshUtilsModalCleanName } from '../../../utils/wshUtilsModalUtils';
+import { wshUtilsModalCleanName, type WshUtilsTab } from '../../../utils/wshUtilsModalUtils';
 import { WshUtilsHeader } from '../wsh/WshUtilsHeader';
 import { WshUtilsTabs } from '../wsh/WshUtilsTabs';
 import { WshUtilsFooter } from '../wsh/WshUtilsFooter';
 import { WshMd5Tab } from '../wsh/WshMd5Tab';
 import { WshFilesTab } from '../wsh/WshFilesTab';
 import { WshRotina2650Tab } from '../wsh/WshRotina2650Tab';
+import { WshUpdateTab } from '../wsh/WshUpdateTab';
 import { Modal } from '../../ui/Modal';
 
 export interface WshUtilsModalProps {
   container: DockerContainerInfo | null;
+  /** Aba em que o modal abre; sem ela, o Gerador de Senha MD5 */
+  initialTab?: WshUtilsTab;
   wshPrereqs: WshPrerequisiteStatus[];
   isLoadingWshPrereqs: boolean;
   isOpeningOptFolder: boolean;
@@ -22,6 +25,7 @@ export interface WshUtilsModalProps {
 
 export const WshUtilsModal: React.FC<WshUtilsModalProps> = ({
   container,
+  initialTab,
   wshPrereqs,
   isLoadingWshPrereqs,
   isOpeningOptFolder,
@@ -29,7 +33,7 @@ export const WshUtilsModal: React.FC<WshUtilsModalProps> = ({
   onOpenOptFolder,
   onClose
 }) => {
-  const state = useWshUtilsModalState(onLoadWshPrereqs);
+  const state = useWshUtilsModalState(onLoadWshPrereqs, !!container, initialTab);
 
   if (!container) return null;
 
@@ -70,6 +74,10 @@ export const WshUtilsModal: React.FC<WshUtilsModalProps> = ({
             onLoadPrereqs={onLoadWshPrereqs}
             onOpenOptFolder={onOpenOptFolder}
           />
+        )}
+
+        {state.activeTab === 'update' && (
+          <WshUpdateTab container={wshUtilsModalCleanName(container.names)} active />
         )}
 
         {state.activeTab === 'rotina2650' && (

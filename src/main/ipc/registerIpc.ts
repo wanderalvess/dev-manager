@@ -15,6 +15,7 @@ import { registerLlmHandlers } from './handlers/llmHandlers';
 import { registerSettingsHandlers } from './handlers/settingsHandlers';
 import { registerDatabaseHandlers } from './handlers/databaseHandlers';
 import { registerWslHandlers } from './handlers/wslHandlers';
+import { registerWshUpdateHandlers } from './handlers/wshUpdateHandlers';
 import { registerContainerHandlers } from './handlers/containersHandlers';
 import { registerNetworkHandlers } from './handlers/networkHandlers';
 import { registerLogsHandlers } from './handlers/logsHandlers';
@@ -51,6 +52,7 @@ export function registerIpcHandlers(ctx: IpcContext): void {
     registerSettingsHandlers(ctx);
     registerDatabaseHandlers(ctx);
     registerWslHandlers(ctx);
+    registerWshUpdateHandlers(ctx);
     registerContainerHandlers(ctx);
     registerNetworkHandlers(ctx);
     registerLogsHandlers(ctx);

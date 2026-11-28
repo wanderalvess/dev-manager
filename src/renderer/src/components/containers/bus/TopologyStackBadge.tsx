@@ -7,7 +7,7 @@ export const TopologyStackBadge: React.FC<{ state: TopologyBusStackState }> = ({
     return (
       <span className="px-2.5 py-0.5 rounded-full bg-success/10 text-success text-[13px] font-medium flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full bg-success" />
-        STACK TOTALMENTE OPERACIONAL
+        AMBIENTE NO AR
       </span>
     );
   }
@@ -15,14 +15,22 @@ export const TopologyStackBadge: React.FC<{ state: TopologyBusStackState }> = ({
     return (
       <span className="px-2.5 py-0.5 rounded-full bg-danger/10 text-danger text-[13px] font-medium flex items-center gap-1.5">
         <AlertCircle className="w-3 h-3 text-danger" />
-        ALERTA: ORACLE OFFLINE COM SERVIÇOS ATIVOS
+        BANCO PARADO COM SERVIÇOS LIGADOS
+      </span>
+    );
+  }
+  if (state === 'stopped' || state === 'absent') {
+    return (
+      <span className="px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground text-[13px] font-medium flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
+        {state === 'stopped' ? 'AMBIENTE PARADO' : 'AMBIENTE NÃO CRIADO'}
       </span>
     );
   }
   return (
     <span className="px-2.5 py-0.5 rounded-full bg-warning/10 text-warning text-[13px] font-medium flex items-center gap-1.5">
       <Clock className="w-3 h-3 text-warning" />
-      STACK PARCIALMENTE ATIVA
+      PARCIALMENTE NO AR
     </span>
   );
 };

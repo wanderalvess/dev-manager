@@ -27,6 +27,7 @@ import { createApiScenarioApi } from './webBridge/apiScenario';
 import { createScenarioHistoryApi } from './webBridge/scenarioHistory';
 import { createEvidenceApi } from './webBridge/evidence';
 import { createTerminalApi } from './webBridge/terminal';
+import { createWshUpdateApi } from './webBridge/wshUpdate';
 
 export function initApiBridge() {
   if (typeof window === 'undefined') return;
@@ -69,6 +70,7 @@ export function initApiBridge() {
     ...createScenarioHistoryApi(deps),
     ...createEvidenceApi(),
     ...createTerminalApi(deps),
+    ...createWshUpdateApi(),
     ...createRemoteControlApi()
   };
 }

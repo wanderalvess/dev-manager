@@ -15,9 +15,9 @@ const mcpRepoRoot = path.resolve(__mcpDirname, '../..');
 const appVersion = (() => {
   if (typeof __DEV_MANAGER_VERSION__ === 'string') return __DEV_MANAGER_VERSION__;
   try {
-    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.76.2';
+    return JSON.parse(fs.readFileSync(path.join(mcpRepoRoot, 'package.json'), 'utf-8')).version || '1.77.0';
   } catch {
-    return '1.76.2';
+    return '1.77.0';
   }
 })();
 import { ConfigService } from '../main/services/ConfigService';
@@ -50,6 +50,9 @@ import { TautAutomationService } from '../main/services/TautAutomationService';
 import { HttpClientService } from '../main/services/HttpClientService';
 import { IntegrationTraceService } from '../main/services/IntegrationTraceService';
 import { registerIntegrationTools } from './tools/integrationTools';
+import { registerWshTools } from './tools/wshTools';
+import { WshUpdateService } from '../main/services/wsh/WshUpdateService';
+import { wslService } from '../main/services/WslService';
 import { registerAuthLockoutTools } from './tools/authLockoutTools';
 import { registerApiScenarioTools } from './tools/apiScenarioTools';
 import { registerScenarioHistoryTools } from './tools/scenarioHistoryTools';
@@ -2510,6 +2513,9 @@ registerIntegrationTools(server, { integrationTraceService, ok, fail });
 
 // --- Base de Conhecimento compartilhada (Agile Space): busca, contexto, divergências e importação ---
 registerKnowledgeBaseTools(server, { knowledgeBaseService: new KnowledgeBaseService(configService), ok, fail });
+
+// --- Atualização do jar do WSH de um container (estado só em arquivo/tmp: não disputa recurso com o app) ---
+registerWshTools(server, { wshUpdateService: new WshUpdateService(async () => (await wslService.findDockerWslDistro()) || undefined), ok, fail });
 
 // --- Teste de bloqueio de login do WinThor (homologação) ---
 registerAuthLockoutTools(server, { authLockoutTestService: new AuthLockoutTestService(configService), ok, fail });

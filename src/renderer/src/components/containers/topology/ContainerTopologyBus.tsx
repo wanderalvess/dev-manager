@@ -6,6 +6,7 @@ import type {
 } from '../../../../../shared/types';
 import { computeStackTopology } from '../../../utils/dockerContainerUtils';
 import { topologyBusStackState } from '../../../utils/topologyBusState';
+import type { WshUtilsTab } from '../../../utils/wshUtilsModalUtils';
 import { TopologyStackBadge } from '../bus/TopologyStackBadge';
 import { TopologyHostNode } from '../bus/TopologyHostNode';
 import { TopologyOracleNode } from '../bus/TopologyOracleNode';
@@ -21,7 +22,7 @@ export interface ContainerTopologyBusProps {
   onOpenWslTerminal: () => void;
   onOpenOracleTools: (container: DockerContainerInfo) => void;
   onOpenWtaTools: (container: DockerContainerInfo) => void;
-  onOpenWshTools: (container: DockerContainerInfo | null, tab?: 'md5' | 'files' | 'rotina2650') => void;
+  onOpenWshTools: (container: DockerContainerInfo | null, tab?: WshUtilsTab) => void;
   copyFeedback: string | null;
   onCopyText: (text: string, key: string) => void;
   containers: DockerContainerInfo[];

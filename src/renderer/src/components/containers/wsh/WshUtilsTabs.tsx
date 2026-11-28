@@ -1,10 +1,10 @@
 import React from 'react';
-import { Activity, FolderOpen, Key } from 'lucide-react';
+import { Activity, Download, FolderOpen, Key } from 'lucide-react';
 import { wshUtilsModalTabClass, type WshUtilsTab } from '../../../utils/wshUtilsModalUtils';
 
 interface WshUtilsTabsProps {
   activeTab: WshUtilsTab;
-  onSelect: (tab: 'md5' | 'rotina2650') => void;
+  onSelect: (tab: 'md5' | 'rotina2650' | 'update') => void;
   onOpenFiles: () => void;
 }
 
@@ -18,6 +18,11 @@ export const WshUtilsTabs: React.FC<WshUtilsTabsProps> = ({ activeTab, onSelect,
     <button onClick={onOpenFiles} className={wshUtilsModalTabClass(activeTab === 'files')}>
       <FolderOpen className="w-3.5 h-3.5" />
       <span>Arquivos em /opt WSL</span>
+    </button>
+
+    <button onClick={() => onSelect('update')} className={wshUtilsModalTabClass(activeTab === 'update')}>
+      <Download className="w-3.5 h-3.5" />
+      <span>Atualizar WSH</span>
     </button>
 
     <button onClick={() => onSelect('rotina2650')} className={wshUtilsModalTabClass(activeTab === 'rotina2650')}>

@@ -73,6 +73,10 @@ export const ContainersPage: React.FC<ContainersPageProps> = ({ isActive, settin
         wslIpFeedback={wsl.wslIpFeedback}
       />
 
+      <p className="mx-7 mb-1 text-xs text-muted-foreground" data-tour="containers-scope">
+        Aqui aparecem os containers do Docker escolhido em <strong className="text-foreground">Runtime</strong> (o do Windows ou o de uma distro do WSL). Para ligar, criar e atualizar o ambiente WinThor (banco Oracle, WTA e WSH), use a tela <strong className="text-foreground">WinThor &amp; WSL</strong>.
+      </p>
+
       <ContainersMainArea
         data={data}
         envs={envs}

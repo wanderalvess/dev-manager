@@ -168,7 +168,7 @@ export function computeStackTopology(containers: DockerContainerInfo[], activeEn
       container: wsh || null,
       name: wsh ? wsh.names.replace(/^\//, '') : 'wsh-winthor',
       running: wshRunning,
-      port: String(firstHostPort(wsh?.ports) ?? 8080),
+      port: String(firstHostPort(wsh?.ports) ?? ''),
       exists: Boolean(wsh)
     },
     isStackComplete,

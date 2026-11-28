@@ -1,4 +1,4 @@
-export type WshUtilsTab = 'md5' | 'files' | 'rotina2650';
+export type WshUtilsTab = 'md5' | 'files' | 'rotina2650' | 'update';
 
 export const WSH_DEFAULT_PLAIN_PASS = 'pcinfo';
 export const WSH_ROTINA_2650_URL = 'http://localhost:8080/';

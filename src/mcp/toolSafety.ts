@@ -45,7 +45,10 @@ const DESTRUCTIVE_TOOLS = new Set([
   // Publica documentação de código/TDN num servidor externo ao Hub
   'kb_import_folder',
   'delphi_build',
-  'delphi_run_pipeline'
+  'delphi_run_pipeline',
+  // Trocam o jar montado no container e o reiniciam
+  'wsh_apply_update',
+  'wsh_rollback_jar'
 ]);
 
 /** Parecem leitura pelo nome, mas têm efeito (rede externa, envio de webhook, execução de testes). */

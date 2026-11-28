@@ -6,6 +6,7 @@ import type {
 } from '../../../../shared/types';
 import type { DockerDataState } from './useDockerData';
 import type { ContainerErrorsState } from './useContainerErrors';
+import type { WshUtilsTab } from '../../utils/wshUtilsModalUtils';
 
 /** Modais utilitários por stack: Oracle (dumps), WSH (/opt) e WTA (Karaf). */
 export function useContainerToolModals(data: DockerDataState, errors: ContainerErrorsState) {
@@ -18,6 +19,7 @@ export function useContainerToolModals(data: DockerDataState, errors: ContainerE
   const [isOpeningDumpsFolder, setIsOpeningDumpsFolder] = useState<boolean>(false);
 
   const [wshModalContainer, setWshModalContainer] = useState<DockerContainerInfo | null>(null);
+  const [wshModalTab, setWshModalTab] = useState<WshUtilsTab | undefined>(undefined);
   const [wshPrereqs, setWshPrereqs] = useState<WshPrerequisiteStatus[]>([]);
   const [isLoadingWshPrereqs, setIsLoadingWshPrereqs] = useState<boolean>(false);
   const [isOpeningOptFolder, setIsOpeningOptFolder] = useState<boolean>(false);
@@ -108,8 +110,9 @@ export function useContainerToolModals(data: DockerDataState, errors: ContainerE
   const openWtaTools = (container: DockerContainerInfo) => setWtaModalContainer(container);
 
   // Sem container do WSH rodando, o modal abre no primeiro da lista (comportamento do barramento).
-  const openWshTools = (container?: DockerContainerInfo | null) => {
+  const openWshTools = (container?: DockerContainerInfo | null, tab?: WshUtilsTab) => {
     setWshModalContainer(container || containers[0] || null);
+    setWshModalTab(tab);
     loadWshPrereqs();
   };
 
@@ -122,6 +125,7 @@ export function useContainerToolModals(data: DockerDataState, errors: ContainerE
     loadAvailableDumps,
     handleOpenDumpsFolder,
     wshModalContainer,
+    wshModalTab,
     closeWshModal: () => setWshModalContainer(null),
     wshPrereqs,
     isLoadingWshPrereqs,

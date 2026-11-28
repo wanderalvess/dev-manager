@@ -6,6 +6,81 @@ const C = 'font-mono text-primary font-semibold';
 export function getInfrVersionFaq(): FaqItem[] {
   return [
     {
+      id: 'winthor-como-usar',
+      question: 'Como inicio, uso e atualizo o ambiente WinThor (banco Oracle, WTA e WSH)?',
+      category: 'Containers & Docker',
+      tags: ['winthor', 'iniciar', 'subir', 'parado', 'não criado', 'runtime', 'wsl', 'docker', 'ligar', 'passo a passo', 'painel', 'próximo passo'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Abra <strong className="text-foreground">WinThor &amp; WSL</strong>. O painel colorido no alto da tela diz em uma frase o estado do ambiente e oferece <strong className="text-foreground">uma</strong> ação,
+            sempre na ordem <em>Docker ligado → containers criados → ambiente no ar → WSH rodando</em> (as quatro etapas aparecem embaixo dele; a atual fica em destaque).
+          </p>
+          <ul className="list-disc pl-4 space-y-1.5">
+            <li>
+              <strong className="text-foreground">Você está olhando o Docker do Windows:</strong> o ambiente fica dentro de uma distro do WSL, não no Docker do Windows. O botão <em>Usar &lt;distro&gt;</em> troca o{' '}
+              <strong className="text-foreground">Runtime</strong> (no topo) para ela.
+            </li>
+            <li>
+              <strong className="text-foreground">O Docker desta distro está desligado:</strong> <em>Ligar o Docker</em>.
+            </li>
+            <li>
+              <strong className="text-foreground">Os containers ainda não foram criados</strong> (ou falta o banco ou o WTA): <em>Criar o ambiente</em> abre o Assistente INFR, que cria tudo passo a passo. A primeira vez leva de 40 minutos a 1 hora, quase tudo esperando downloads.
+            </li>
+            <li>
+              <strong className="text-foreground">O ambiente está parado:</strong> <em>Subir WinThor</em> liga o banco, espera ficar pronto, liga o WTA e por fim o WSH, sempre nessa ordem (de 1 a 3 minutos). Ligar um por um fora dessa ordem faz o WTA e o WSH falharem.
+            </li>
+            <li>
+              <strong className="text-foreground">Ambiente no ar:</strong> <em>Abrir o portal do WTA</em>. Para trocar o WSH por uma versão nova, use <em>Atualizar o WSH</em> (ou veja a pergunta sobre atualizar o WSH). Sem WSH, o painel oferece <em>Criar o WSH</em>.
+            </li>
+          </ul>
+          <p>
+            Em cada cartão da topologia, o selo diz <strong className="text-foreground">NO AR</strong> (com a porta), <strong className="text-foreground">PARADO</strong> (o container existe, mas está desligado) ou{' '}
+            <strong className="text-foreground">NÃO CRIADO</strong>. A tela <strong className="text-foreground">Containers</strong> é a lista geral do Docker escolhido em Runtime (com Iniciar, Parar e Logs de cada um); ela não sabe a ordem do WinThor, por isso o certo é subir por aqui.
+          </p>
+        </div>
+      )
+    },
+    {
+      id: 'wsh-update-jar',
+      question: 'Como atualizo o WSH de um container para uma versão nova?',
+      category: 'Containers & Docker',
+      tags: ['wsh', 'atualizar', 'jar', 'winthor-integracao-core', 'instalador', 'exe', 'versão', 'rollback', 'backup'],
+      answer: (
+        <div className="space-y-2 text-xs leading-relaxed text-muted-foreground">
+          <p>
+            Há três atalhos, todos na tela de containers: o botão verde <strong className="text-foreground">Atualizar WSH</strong> no cartão do container do WSH, o botão de mesmo nome
+            no nó WSH da topologia e a aba <strong className="text-foreground">Atualizar WSH</strong> dentro de <strong className="text-foreground">Utilitários WSH</strong>. A aba mostra a versão do jar em uso,
+            lida do container, e segue três passos: <strong className="text-foreground">1 · Escolha a versão</strong>, <strong className="text-foreground">2 · Conferência</strong> e <strong className="text-foreground">3 · Atualizar</strong>.
+          </p>
+          <ul className="list-disc pl-4 space-y-1.5">
+            <li>
+              <strong className="text-foreground">Escolher a versão:</strong> clique numa das versões publicadas pela TOTVS (a lista mostra data e tamanho, marca a que está em uso e a mais recente), ou digite
+              uma, como <code className={C}>1.39.22.31</code>, e use <strong className="text-foreground">Consultar</strong> para confirmar que ela existe. Sem acesso ao servidor da TOTVS, use{' '}
+              <strong className="text-foreground">Usar arquivo do computador…</strong> e escolha o instalador (<code className={C}>.exe</code>) ou o <code className={C}>winthor-integracao-core.jar</code> que você já tem; o botão vira <em>Conferir arquivo</em> e a versão vem do próprio jar.
+            </li>
+            <li>
+              O Hub baixa o instalador oficial (cerca de 96 MB), confere o MD5 do servidor e tira o <code className={C}>winthor-integracao-core.jar</code> de dentro dele. Nada do
+              instalador é executado no Windows. O arquivo fica numa pasta temporária e o próximo preparo da mesma versão não baixa de novo; <strong className="text-foreground">Apagar os instaladores baixados</strong>, no pé da aba, libera esse espaço (o jar em uso e os backups ficam).
+            </li>
+            <li>
+              Ele lê o que o jar novo exige do WTA (<code className={C}>dependencies.json</code>) e compara com as features instaladas no Karaf do WTA do ambiente. Se faltar alguma, o
+              WSH encerra ao subir: atualize o WTA antes. A tela avisa, e o botão de confirmação fica em tom de perigo.
+            </li>
+            <li>
+              <strong className="text-foreground">Atualizar container</strong> guarda o jar atual ao lado (<code className={C}>winthor-integracao-core.jar.bak-&lt;versão&gt;</code>),
+              grava o novo no mesmo caminho montado no container e reinicia. O Hub espera o log mostrar <code className={C}>Started WinthorSmartHubeApplication</code> por até 3 minutos.
+              Se o WSH não subir, use <strong className="text-foreground">Voltar a este jar</strong>.
+            </li>
+            <li>
+              Funciona só no aplicativo desktop (não no modo Web/Docker) e só em containers criados pelo <code className={C}>wsh_setup.sh</code>, que montam o jar de{' '}
+              <code className={C}>/opt</code>.
+            </li>
+          </ul>
+        </div>
+      )
+    },
+    {
       id: 'infr-winthor-version',
       question: 'Como subir o WTA e o WSH numa versão específica do WinThor (38, 39, 40) pelo INFR-Docker?',
       category: 'Containers & Docker',
