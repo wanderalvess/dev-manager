@@ -3,7 +3,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { downloadInstaller, md5FromGoogHash, probeInstaller } from './wshInstallerDownload';
+import { downloadInstaller, listPublishedInstallers, md5FromGoogHash, probeInstaller } from './wshInstallerDownload';
 
 const body = Buffer.from('conteudo falso do instalador');
 const md5Hex = crypto.createHash('md5').update(body).digest('hex');
@@ -53,6 +53,26 @@ describe('wshInstallerDownload', () => {
     ).rejects.toThrow(/MD5/);
     expect(fs.existsSync(target)).toBe(false);
     expect(fs.existsSync(`${target}.part`)).toBe(false);
+  });
+
+  it('lista as versões publicadas seguindo as páginas da listagem', async () => {
+    const page1 = { items: [{ name: 'WSH/winthor-integracao-core-1.38.14.57.exe', size: '96837968' }, { name: 'WSH/WSH_setup.jar' }], nextPageToken: 'p2' };
+    const page2 = { items: [{ name: 'WSH/winthor-integracao-core-1.39.22.31.exe', size: '100734968' }] };
+    const urls: string[] = [];
+    const fake = (async (url: string) => {
+      urls.push(url);
+      return new Response(JSON.stringify(url.includes('pageToken=p2') ? page2 : page1), { status: 200 });
+    }) as unknown as typeof fetch;
+    const r = await listPublishedInstallers(fake);
+    expect(r.success).toBe(true);
+    expect(r.installers?.map((i) => i.version)).toEqual(['1.39.22.31', '1.38.14.57']);
+    expect(urls).toHaveLength(2);
+  });
+
+  it('explica a falha da listagem (erro do servidor, rede fora do ar, lista vazia)', async () => {
+    expect((await listPublishedInstallers(reply(503))).error).toMatch(/503/);
+    expect((await listPublishedInstallers((async () => { throw new Error('ETIMEDOUT'); }) as unknown as typeof fetch)).error).toMatch(/ETIMEDOUT/);
+    expect((await listPublishedInstallers((async () => new Response('{}', { status: 200 })) as unknown as typeof fetch)).error).toMatch(/Nenhuma versão/);
   });
 
   it('recusa resposta de erro do servidor', async () => {

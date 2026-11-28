@@ -2,6 +2,7 @@ import React from 'react';
 import { Globe, ExternalLink } from 'lucide-react';
 import type { DockerContainerInfo } from '../../../../../shared/types';
 import type { StackTopologyNode } from '../../../utils/dockerContainerUtils';
+import { TopologyNodeBadge } from './TopologyNodeBadge';
 
 interface TopologyWtaNodeProps {
   node: StackTopologyNode;
@@ -29,15 +30,7 @@ export const TopologyWtaNode: React.FC<TopologyWtaNodeProps> = ({ node, onOpenWt
           <div className="text-sm font-semibold text-foreground font-mono truncate max-w-[120px]">{node.name}</div>
         </div>
       </div>
-      <span
-        className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-          node.running
-            ? 'bg-success/10 text-success'
-            : 'bg-muted text-muted-foreground'
-        }`}
-      >
-        {node.running ? `:${node.port}` : 'OFF'}
-      </span>
+      <TopologyNodeBadge node={node} runningLabel={`:${node.port}`} />
     </div>
 
     <div className="pt-1 flex items-center justify-between gap-1 text-[13px]">
@@ -51,7 +44,7 @@ export const TopologyWtaNode: React.FC<TopologyWtaNodeProps> = ({ node, onOpenWt
           <ExternalLink className="w-3 h-3" />
         </button>
       ) : (
-        <span className="text-muted-foreground text-[13px]">Porta 8080</span>
+        <span className="text-muted-foreground text-[13px]">{node.exists ? 'Sobe com Subir WinThor' : 'Ainda não criado'}</span>
       )}
       {node.container && (
         <button

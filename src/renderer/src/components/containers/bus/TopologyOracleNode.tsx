@@ -2,6 +2,7 @@ import React from 'react';
 import { Database } from 'lucide-react';
 import type { DockerContainerInfo } from '../../../../../shared/types';
 import { getOracleTnsConfig, type StackTopologyNode } from '../../../utils/dockerContainerUtils';
+import { TopologyNodeBadge } from './TopologyNodeBadge';
 
 interface TopologyOracleNodeProps {
   node: StackTopologyNode;
@@ -10,7 +11,7 @@ interface TopologyOracleNodeProps {
   onOpenOracleTools: (container: DockerContainerInfo) => void;
 }
 
-/** Nó 2: Oracle XE 11g. */
+/** Nó 2: banco Oracle. */
 export const TopologyOracleNode: React.FC<TopologyOracleNodeProps> = ({
   node,
   copyFeedback,
@@ -31,20 +32,12 @@ export const TopologyOracleNode: React.FC<TopologyOracleNodeProps> = ({
         </div>
         <div>
           <div className="text-[13px] text-muted-foreground">
-            Oracle XE 11g
+            Banco Oracle
           </div>
           <div className="text-sm font-semibold text-foreground font-mono truncate max-w-[120px]">{node.name}</div>
         </div>
       </div>
-      <span
-        className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-          node.running
-            ? 'bg-success/10 text-success'
-            : 'bg-muted text-muted-foreground'
-        }`}
-      >
-        {node.running ? `:${node.port}` : 'OFF'}
-      </span>
+      <TopologyNodeBadge node={node} runningLabel={`:${node.port}`} />
     </div>
 
     <div className="pt-1 flex items-center justify-between gap-1 text-[13px]">

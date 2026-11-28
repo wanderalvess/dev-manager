@@ -15,6 +15,8 @@ import type { InfrFirstStepsActionRequest, InfrFirstStepsResult } from '../share
 import type { InfrActiveEnvApplyResult, InfrActiveEnvList } from '../shared/infrActiveEnv';
 import type { StartEnvResult } from '../shared/infrEnvStart';
 import type {
+  WshClearCacheResult,
+  WshInstallerListResult,
   WshUpdateApplyResult,
   WshUpdateInspectResult,
   WshUpdatePrepareResult,
@@ -418,6 +420,8 @@ export interface ElectronAPI {
   checkWshPrerequisites?: (distro?: string) => Promise<WshPrerequisiteStatus[]>;
   inspectWshUpdate?: (req: WshUpdateRequest) => Promise<WshUpdateInspectResult>;
   probeWshInstaller?: (version: string) => Promise<WshUpdateProbeResult>;
+  listWshInstallers?: () => Promise<WshInstallerListResult>;
+  clearWshUpdateCache?: () => Promise<WshClearCacheResult>;
   prepareWshUpdate?: (req: WshUpdateRequest) => Promise<WshUpdatePrepareResult>;
   applyWshUpdate?: (req: WshUpdateRequest) => Promise<WshUpdateApplyResult>;
   rollbackWshUpdate?: (req: WshUpdateRequest & { backup?: string }) => Promise<WshUpdateApplyResult>;

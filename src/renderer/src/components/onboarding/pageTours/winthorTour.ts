@@ -6,11 +6,11 @@ export const WINTHOR_TOUR_STEPS: TourStep[] = [
   {
     target: 'winthor-header',
     title: 'WinThor & WSL',
-    desc: 'Aqui ficam a stack WinThor (Oracle XE, WTA e WSH) e as distros WSL2. A lista de containers, grupos e o Compose continuam na tela Containers.'
+    desc: 'Aqui fica o ambiente WinThor: banco Oracle, WTA e WSH em containers no WSL. O painel logo abaixo diz o que fazer agora (ligar o Docker, criar, subir ou abrir o portal). A lista geral de containers, grupos e o Compose ficam na tela Containers.'
   },
   {
     target: 'winthor-actions',
     title: 'Subir, Snapshots e INFR',
-    desc: 'Subir WinThor inicia Oracle → WTA → WSH em sequência; Snapshots WSL importa/exporta distros; o Assistente INFR faz o bootstrap da stack.'
+    desc: 'Subir WinThor liga o banco, o WTA e o WSH em sequência. Snapshots WSL é o backup da distro (.tar). O Assistente INFR cria ou conserta o ambiente passo a passo.'
   }
 ];

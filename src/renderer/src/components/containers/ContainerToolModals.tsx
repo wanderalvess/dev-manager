@@ -26,6 +26,7 @@ export const ContainerToolModals: React.FC<ContainerToolModalsProps> = ({ tools,
 
     <WshUtilsModal
       container={tools.wshModalContainer}
+      initialTab={tools.wshModalTab}
       wshPrereqs={tools.wshPrereqs}
       isLoadingWshPrereqs={tools.isLoadingWshPrereqs}
       isOpeningOptFolder={tools.isOpeningOptFolder}

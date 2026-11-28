@@ -2,6 +2,7 @@ import React from 'react';
 import { RefreshCw } from 'lucide-react';
 import { activeEnvStatusText } from '../../../../shared/infrActiveEnv';
 import type { ActiveEnvironmentState } from '../../hooks/containers/useActiveEnvironment';
+import { friendlyEnvListError } from '../../utils/winthorGuide';
 
 /**
  * Seletor do ambiente ativo: qual ambiente (oracle-, wta-, wsh-<nome>) o Hub usa. Escolher aponta Subir WinThor, a
@@ -42,7 +43,7 @@ export const WinthorActiveEnv: React.FC<{ env: ActiveEnvironmentState }> = ({ en
           </button>
         )}
       </label>
-      {!list.success && <span className="text-2xs text-danger break-words max-w-[24rem]">{list.error}</span>}
+      {!list.success && <span className="text-2xs text-danger break-words max-w-[24rem]" title={list.error}>{friendlyEnvListError(list.error)}</span>}
       {message && (
         <span role="status" className="text-2xs text-muted-foreground max-w-[28rem] break-words" title={message}>
           {message}

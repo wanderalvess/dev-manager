@@ -1,3 +1,6 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const execWsl = vi.fn();
@@ -48,6 +51,29 @@ describe('WshUpdateService', () => {
     expect(r.success).toBe(false);
     expect(r.error).toMatch(/Baixar e conferir/);
     expect(execWsl).not.toHaveBeenCalled();
+  });
+
+  it('recusa arquivo local que não é .exe/.jar de disco antes de qualquer comando', async () => {
+    const s = service();
+    for (const localFile of ['a.exe', 'C:/x/a.txt', '/opt/a.jar', '//rede/a.exe']) {
+      const r = await s.prepare({ container: 'wsh-40', localFile });
+      expect(r.success).toBe(false);
+      expect(r.error).toMatch(/Arquivo inválido/);
+    }
+    const missing = await s.prepare({ container: 'wsh-40', localFile: 'C:/nao/existe/winthor.exe' });
+    expect(missing.error).toMatch(/Arquivo inválido/);
+    expect(execWsl).not.toHaveBeenCalled();
+  });
+
+  it('apaga a pasta dos instaladores baixados e diz quanto liberou', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wsh-cache-test-'));
+    fs.mkdirSync(path.join(root, '1.39.22.31'));
+    fs.writeFileSync(path.join(root, '1.39.22.31', 'installer.exe'), Buffer.alloc(1000));
+    fs.writeFileSync(path.join(root, 'x.bin'), Buffer.alloc(24));
+    const r = new WshUpdateService(async () => 'ubuntu-test', root).clearCache();
+    expect(r).toEqual({ success: true, freedBytes: 1024 });
+    expect(fs.existsSync(root)).toBe(false);
+    expect(new WshUpdateService(async () => 'ubuntu-test', root).clearCache()).toEqual({ success: true, freedBytes: 0 });
   });
 
   it('só restaura backup que existe ao lado do jar', async () => {

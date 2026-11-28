@@ -7,6 +7,8 @@ export function createWshUpdateApi() {
   return {
     inspectWshUpdate: async () => ({ success: false, error: DESKTOP_ONLY }),
     probeWshInstaller: async () => ({ success: false, error: DESKTOP_ONLY }),
+    listWshInstallers: async () => ({ success: false, error: DESKTOP_ONLY }),
+    clearWshUpdateCache: async () => ({ success: false, freedBytes: 0, error: DESKTOP_ONLY }),
     prepareWshUpdate: async () => ({ success: false, error: DESKTOP_ONLY }),
     applyWshUpdate: async () => ({ success: false, error: DESKTOP_ONLY }),
     rollbackWshUpdate: async () => ({ success: false, error: DESKTOP_ONLY }),
