@@ -4,7 +4,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` até aqui — tags criadas retroativamente sobre o histórico já existente (sem reescrever nenhum commit).
 
-## [Não lançado]
+## [1.78.0] - 2026-11-28
 ### Adicionado
 - **Base de Conhecimento compartilhada (Agile Space)**: em *Configurações → IA & LLM* informe a URL e a chave de API do servidor e a pasta do clone do prompt-hub. *Testar conexão* confere o acesso e *Importar prompt-hub* envia a documentação das APIs Java, as páginas do TDN, os prompts e as skills em lotes; o servidor só grava o que mudou.
 - **Chat com a Base de Conhecimento**: na página *Documentação*, a aba *Base compartilhada (APIs Java + TDN)* responde perguntas com o motor de IA ativo do Hub, a partir dos trechos recuperados. A resposta cita as fontes `[n]` (com módulo, origem e link do TDN), mantém o contexto da conversa e, quando código e TDN dizem coisas diferentes, mostra as duas versões. Dá para limitar a *Só código* ou *Só TDN*. Sem trechos na base, avisa que não encontrou em vez de inventar.
