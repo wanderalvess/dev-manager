@@ -8,6 +8,7 @@ export function formatImportSummary(s: KbImportSummary): string {
     `${s.unchanged} sem mudança`
   ];
   if (s.skipped > 0) parts.push(`${s.skipped} ignorado(s)`);
+  if (s.linked > 0) parts.push(`${s.linked} ligado(s) ao TDN`);
   if (s.errors > 0) parts.push(`${s.errors} com erro`);
   return parts.join(' · ');
 }

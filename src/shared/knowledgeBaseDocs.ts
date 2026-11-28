@@ -127,6 +127,26 @@ function asList(value: string | string[] | undefined): string[] | undefined {
   return Array.isArray(value) ? value : [value];
 }
 
+const HTML_ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+
+/**
+ * Algumas páginas do TDN exportadas trazem HTML bruto (`<div>`, `<h1>`, `<table>`...). Troca quebras de bloco por
+ * nova linha, remove as demais tags e decodifica as entidades comuns; texto sem tags passa intacto.
+ */
+export function stripHtml(text: string): string {
+  if (!/<\/?[a-z][a-z0-9]*[\s>/]/i.test(text)) return text;
+  return text
+    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
+    .replace(/<\/(p|div|h[1-6]|li|tr|table|ul|ol)>|<br\s*\/?>/gi, '\n')
+    .replace(/<\/(td|th)>/gi, ' | ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&(#\d+|[a-z]+);/gi, (m, e: string) =>
+      e.startsWith('#') ? String.fromCharCode(Number(e.slice(1))) : (HTML_ENTITIES[e.toLowerCase()] ?? m)
+    )
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n');
+}
+
 /** Monta o item de ingestão de um arquivo; `null` se o caminho não é um documento da base. */
 export function buildIngestItem(
   relPath: string,
@@ -137,7 +157,7 @@ export function buildIngestItem(
   if (!classification) return null;
 
   const { data, body: rawBody } = parseFrontmatter(rawContent);
-  const body = dedentIndentedMarkdown(rawBody);
+  const body = classification.docType === 'tdn_page' ? stripHtml(rawBody) : dedentIndentedMarkdown(rawBody);
   const fileName = relPath.replace(/\\/g, '/').split('/').pop() ?? relPath;
   const str = (k: string) => (typeof data[k] === 'string' ? (data[k] as string) : undefined);
 

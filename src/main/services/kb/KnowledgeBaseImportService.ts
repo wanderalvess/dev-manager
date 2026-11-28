@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { buildIngestItem, chunkBatches } from '../../../shared/knowledgeBaseDocs';
+import { applyRelatedMap, parseRelatedMap, RELATED_MAP_FILE } from '../../../shared/knowledgeBaseRelated';
 import type { KbIngestItem, KbIngestItemResult } from '../../../shared/knowledgeBaseTypes';
 import type { KnowledgeBaseClient } from './KnowledgeBaseClient';
 
@@ -18,6 +19,8 @@ export interface KbImportSummary {
   errors: number;
   failures: KbIngestItemResult[];
   warnings: string[];
+  /** Docs de código ligados a páginas do TDN pelo mapa revisado (docs/related-map.yml). */
+  linked: number;
 }
 
 const IGNORED_DIRS = new Set(['.git', 'node_modules']);
@@ -42,7 +45,7 @@ export function listDocFiles(root: string): string[] {
 export class KnowledgeBaseImportService {
   constructor(private readonly client: KnowledgeBaseClient) {}
 
-  collect(root: string, version?: string): { items: KbIngestItem[]; skipped: number } {
+  collect(root: string, version?: string): { items: KbIngestItem[]; skipped: number; linked: number; missing: string[] } {
     if (!root || !fs.existsSync(root) || !fs.statSync(root).isDirectory()) {
       throw new Error('Pasta do prompt-hub não encontrada. Configure o caminho nas configurações.');
     }
@@ -54,14 +57,18 @@ export class KnowledgeBaseImportService {
       if (item && item.content) items.push(item);
       else skipped += 1;
     }
-    return { items, skipped };
+    const mapPath = path.join(root, RELATED_MAP_FILE);
+    const { linked, missing } = fs.existsSync(mapPath)
+      ? applyRelatedMap(items, parseRelatedMap(fs.readFileSync(mapPath, 'utf-8')))
+      : { linked: 0, missing: [] };
+    return { items, skipped, linked, missing };
   }
 
   async importFolder(
     root: string,
     options: { version?: string; onProgress?: (p: KbImportProgress) => void } = {}
   ): Promise<KbImportSummary> {
-    const { items, skipped } = this.collect(root, options.version);
+    const { items, skipped, linked, missing } = this.collect(root, options.version);
     const summary: KbImportSummary = {
       scanned: items.length + skipped,
       skipped,
@@ -70,7 +77,8 @@ export class KnowledgeBaseImportService {
       unchanged: 0,
       errors: 0,
       failures: [],
-      warnings: []
+      warnings: missing.map((m) => `related-map.yml: página do TDN não encontrada (${m})`),
+      linked
     };
 
     let sent = 0;

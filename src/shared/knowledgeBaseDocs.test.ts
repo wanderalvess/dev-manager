@@ -6,7 +6,8 @@ import {
   classifyDocPath,
   dedentIndentedMarkdown,
   deriveTitle,
-  parseFrontmatter
+  parseFrontmatter,
+  stripHtml
 } from './knowledgeBaseDocs';
 
 describe('parseFrontmatter', () => {
@@ -104,6 +105,25 @@ describe('deriveTitle', () => {
       'Mapeamento da API: precos-fixos'
     );
     expect(deriveTitle('sem titulo', 'TDN API - Pedido.txt')).toBe('TDN API - Pedido');
+  });
+});
+
+describe('stripHtml', () => {
+  it('remove tags, converte quebras de bloco e decodifica entidades', () => {
+    const html = '<h1>Título</h1><div>a &amp; b&nbsp;c</div><table><tr><td>x</td><td>y</td></tr></table><script>var z=1</script>';
+    expect(stripHtml(html)).toBe('Título\na & b c\nx | y |\n\n');
+  });
+
+  it('não mexe em texto sem tags nem em comparações como a < b', () => {
+    const plain = 'Preço < 10 e idade > 5\nsegunda linha';
+    expect(stripHtml(plain)).toBe(plain);
+  });
+
+  it('só é aplicado em páginas do TDN', () => {
+    const tdn = buildIngestItem('docs/Documentações TDN/TDN X.txt', '<div>oi</div>', 'v1');
+    const prompt = buildIngestItem('prompts/p.md', '<div>oi</div>', 'v1');
+    expect(tdn?.content).toBe('oi');
+    expect(prompt?.content).toBe('<div>oi</div>');
   });
 });
 
