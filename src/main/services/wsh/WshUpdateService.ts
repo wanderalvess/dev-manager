@@ -11,11 +11,14 @@ import {
   compareWshVersions,
   envValue,
   isSafeWshJarPath,
+  isSupportedLocalWshFile,
   isValidWshVersion,
   mountedJarSource,
   parseJarManifest,
   wshJarBackupPath,
   WSH_STARTED_MARKER,
+  type WshClearCacheResult,
+  type WshInstallerListResult,
   type WshRequiredFeature,
   type WshUpdateApplyResult,
   type WshUpdateInspectResult,
@@ -24,9 +27,8 @@ import {
   type WshUpdatePrepareResult,
   type WshUpdateRequest
 } from '../../../shared/wshUpdate';
-import { downloadInstaller, probeInstaller } from './wshInstallerDownload';
-import { extractFromArchive } from './sevenZipExtract';
-import { rebuildJarFromPack } from './wshInstallerPack';
+import { downloadInstaller, listPublishedInstallers, probeInstaller } from './wshInstallerDownload';
+import { jarFromInstaller } from './wshInstallerStage';
 
 type Progress = (p: WshUpdateProgress) => void;
 
@@ -34,6 +36,15 @@ const JAR_NAME = 'winthor-integracao-core.jar';
 /** Lê, de dentro do jar, o manifest, as dependências e os backups ao lado dele (uma linha: vai como argumento de bash -c). */
 const READ_JAR_PY =
   "import zipfile,sys,glob,os,json;j=sys.argv[1];z=zipfile.ZipFile(j);n=z.namelist();r=lambda x:z.read(x).decode('utf8','replace') if x in n else '';print(json.dumps({'m':r('META-INF/MANIFEST.MF'),'d':r('BOOT-INF/classes/dependencies.json'),'b':[os.path.basename(p) for p in sorted(glob.glob(j+'.bak-*'),key=os.path.getmtime,reverse=True)]}))";
+
+/** Tamanho total dos arquivos de uma pasta (0 se não existir). */
+function dirSize(dir: string): number {
+  if (!fs.existsSync(dir)) return 0;
+  return fs.readdirSync(dir, { withFileTypes: true }).reduce((sum, e) => {
+    const full = path.join(dir, e.name);
+    return sum + (e.isDirectory() ? dirSize(full) : fs.statSync(full).size);
+  }, 0);
+}
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -77,7 +88,7 @@ export class WshUpdateService {
       const mounts = (info?.Mounts || []).map((m: any) => `${m.Source}|${m.Destination}`).join('\n');
       const jarPath = mountedJarSource(mounts);
       if (!jarPath) return { success: false, error: 'Este container não monta o jar do WSH (esperado em /opt/winthor-integracao-core). Ele foi criado pelo wsh_setup.sh?', distro, container: req.container };
-      const read = JSON.parse((await this.wsl(distro, ['bash', '-c', `python3 -I -c "${READ_JAR_PY}" '${jarPath}'`], 30000)).trim());
+      const read = await this.readJarInfo(distro, jarPath);
       const requires = parseWshDependencies(read.d || '[]').map(({ service, version }) => ({ service, version }));
       return {
         success: true,
@@ -101,51 +112,96 @@ export class WshUpdateService {
     return parseInstalledFeaturesOutput(out).map((f) => ({ name: f.name, version: f.version }));
   }
 
-  /** Baixa o instalador, extrai o jar, confere a versão e o que ele exige do WTA. Nada no container muda aqui. */
-  public async prepare(req: WshUpdateRequest, onProgress: Progress = () => {}): Promise<WshUpdatePrepareResult> {
-    const version = req.version?.trim() ?? '';
-    if (!isValidWshVersion(version)) return { success: false, error: 'Versão inválida. Use o formato 1.39.22.31.' };
-    const current = await this.inspect(req);
-    if (!current.success) return { success: false, error: current.error };
-    const dir = this.stageDir(version);
+  /** Caminho de um arquivo do Windows como o WSL o enxerga (/mnt/...). */
+  private async toWslPath(distro: string, winPath: string): Promise<string> {
+    const out = (await this.wsl(distro, ['wslpath', '-a', '-u', winPath], 20000)).trim();
+    if (!/^\/[^\n']+$/.test(out)) throw new Error('Não consegui converter o caminho do arquivo para o WSL.');
+    return out;
+  }
+
+  /** Manifest, dependências e backups de um jar que está no WSL. */
+  private async readJarInfo(distro: string, jarPath: string): Promise<{ m: string; d: string; b: string[] }> {
+    return JSON.parse((await this.wsl(distro, ['bash', '-c', `python3 -I -c "${READ_JAR_PY}" '${jarPath}'`], 30000)).trim());
+  }
+
+  /** Versões que a TOTVS publicou, da mais nova para a mais antiga. */
+  public listInstallers(): Promise<WshInstallerListResult> {
+    return listPublishedInstallers();
+  }
+
+  /** Apaga os instaladores e jars baixados (a pasta temporária do Hub); o jar em uso e os backups não são tocados. */
+  public clearCache(): WshClearCacheResult {
     try {
-      fs.mkdirSync(dir, { recursive: true });
-      const exe = path.join(dir, 'installer.exe');
-      const size = fs.existsSync(exe) ? fs.statSync(exe).size : 0;
-      if (!size) {
-        onProgress({ step: 'download', message: `Baixando o instalador ${version}…`, percent: 0 });
-        await downloadInstaller(version, exe, (percent, done) =>
-          onProgress({ step: 'download', message: `Baixando o instalador… ${(done / 1048576).toFixed(0)} MB`, percent })
-        );
+      const freedBytes = dirSize(this.stageRoot);
+      fs.rmSync(this.stageRoot, { recursive: true, force: true });
+      return { success: true, freedBytes };
+    } catch (err: any) {
+      return { success: false, freedBytes: 0, error: `Não foi possível apagar ${this.stageRoot}: ${err?.message || err}` };
+    }
+  }
+
+  /**
+   * Prepara o jar novo (nada no container muda): baixa o instalador da versão pedida, ou abre o .exe/.jar escolhido no
+   * computador; confere que é o jar do WSH e a versão; compara o que ele exige do WTA com as features instaladas.
+   */
+  public async prepare(req: WshUpdateRequest, onProgress: Progress = () => {}): Promise<WshUpdatePrepareResult> {
+    const local = req.localFile?.trim();
+    const typed = req.version?.trim() ?? '';
+    if (local) {
+      if (!isSupportedLocalWshFile(local) || !fs.existsSync(local)) return { success: false, error: 'Arquivo inválido: escolha o instalador (.exe) ou o jar (.jar) em um disco deste computador.' };
+    } else if (!isValidWshVersion(typed)) {
+      return { success: false, error: 'Versão inválida. Use o formato 1.39.22.31.' };
+    }
+    const current = await this.inspect(req);
+    if (!current.success || !current.distro) return { success: false, error: current.error };
+    const work = local ? path.join(this.stageRoot, '_local') : this.stageDir(typed);
+    try {
+      fs.mkdirSync(work, { recursive: true });
+      const stagedJar = path.join(work, JAR_NAME);
+      let manifestText = '';
+      let depsText = '[]';
+      if (local && /\.jar$/i.test(local)) {
+        onProgress({ step: 'extract', message: 'Lendo o jar escolhido…' });
+        fs.copyFileSync(local, stagedJar);
+        const info = await this.readJarInfo(current.distro, await this.toWslPath(current.distro, stagedJar));
+        manifestText = info.m;
+        depsText = info.d || '[]';
+      } else {
+        let installer = local;
+        if (!installer) {
+          installer = path.join(work, 'installer.exe');
+          if (!fs.existsSync(installer) || !fs.statSync(installer).size) {
+            onProgress({ step: 'download', message: `Baixando o instalador ${typed}…`, percent: 0 });
+            await downloadInstaller(typed, installer, (percent, done) => onProgress({ step: 'download', message: `Baixando o instalador… ${(done / 1048576).toFixed(0)} MB`, percent }));
+          }
+        }
+        onProgress({ step: 'extract', message: 'Abrindo o instalador (alguns segundos)…' });
+        const rebuilt = await jarFromInstaller(installer, work);
+        fs.writeFileSync(stagedJar, rebuilt.jar);
+        manifestText = rebuilt.files['META-INF/MANIFEST.MF']?.toString('utf8') || '';
+        depsText = rebuilt.files['BOOT-INF/classes/dependencies.json']?.toString('utf8') || '[]';
       }
 
-      onProgress({ step: 'extract', message: 'Abrindo o instalador (alguns segundos)…' });
-      const packDir = path.join(dir, 'packs');
-      fs.rmSync(packDir, { recursive: true, force: true });
-      fs.mkdirSync(packDir, { recursive: true });
-      await extractFromArchive(exe, dir, ['WSH-setup-*.jar']);
-      const izpack = fs.readdirSync(dir).find((f) => /^WSH-setup-.*\.jar$/.test(f));
-      if (!izpack) throw new Error('O instalador não tem o pacote esperado (WSH-setup-*.jar).');
-      await extractFromArchive(path.join(dir, izpack), packDir, ['resources/packs/pack-*']);
-      // O pack do WSH é o maior; os outros guardam só arquivos de configuração
-      const packs = fs.readdirSync(packDir).map((f) => ({ f, size: fs.statSync(path.join(packDir, f)).size })).sort((a, b) => b.size - a.size);
-      if (!packs.length) throw new Error('O instalador não traz o pacote do WSH.');
-      const rebuilt = rebuildJarFromPack(fs.readFileSync(path.join(packDir, packs[0].f)));
-      fs.rmSync(path.join(dir, izpack), { force: true });
-      fs.rmSync(packDir, { recursive: true, force: true });
+      const manifest = parseJarManifest(manifestText);
+      if (!manifest.startClass?.includes('WinthorSmartHubeApplication')) throw new Error('O arquivo não é o jar do WSH (winthor-integracao-core).');
+      if (!manifest.version || !isValidWshVersion(manifest.version)) throw new Error('O jar não informa a versão (Implementation-Version).');
+      if (!local && manifest.version !== typed) throw new Error(`O instalador traz a versão ${manifest.version}, não a ${typed}.`);
+      const version = manifest.version;
+      if (local) {
+        // Com arquivo local a versão só se sabe agora: o jar passa para a pasta da versão, como no download
+        fs.mkdirSync(this.stageDir(version), { recursive: true });
+        fs.renameSync(stagedJar, path.join(this.stageDir(version), JAR_NAME));
+      }
 
-      const manifest = parseJarManifest(rebuilt.files['META-INF/MANIFEST.MF']?.toString('utf8') || '');
-      if (manifest.version !== version) throw new Error(`O instalador traz a versão ${manifest.version ?? 'desconhecida'}, não a ${version}.`);
-      fs.writeFileSync(path.join(dir, JAR_NAME), rebuilt.jar);
-
-      const requires: WshRequiredFeature[] = parseWshDependencies(rebuilt.files['BOOT-INF/classes/dependencies.json']?.toString('utf8') || '[]').map(({ service, version: v }) => ({ service, version: v }));
-      const result: WshUpdatePrepareResult = { success: true, version, verdict: compareWshVersions(current.version, version), sizeBytes: rebuilt.jar.length, requires };
+      const requires: WshRequiredFeature[] = parseWshDependencies(depsText).map(({ service, version: v }) => ({ service, version: v }));
+      const size = fs.statSync(path.join(this.stageDir(version), JAR_NAME)).size;
+      const result: WshUpdatePrepareResult = { success: true, version, verdict: compareWshVersions(current.version, version), sizeBytes: size, requires, source: local ? 'local' : 'download' };
       onProgress({ step: 'check', message: 'Conferindo as features do WTA…' });
       if (!current.wtaContainer || !isValidIdentifier(current.wtaContainer)) {
         result.checksError = 'Não achei o container do WTA (variável WTA_CONTAINER do WSH).';
       } else {
         try {
-          result.checks = checkRequiredFeatures(requires, await this.wtaFeatures(current.distro!, current.wtaContainer));
+          result.checks = checkRequiredFeatures(requires, await this.wtaFeatures(current.distro, current.wtaContainer));
         } catch (err: any) {
           result.checksError = `Não consegui ler as features de ${current.wtaContainer}: ${String(err?.stderr || err?.message || err).trim().slice(0, 200)}`;
         }
@@ -184,8 +240,7 @@ export class WshUpdateService {
     const { distro, jarPath } = current;
     try {
       onProgress({ step: 'apply', message: 'Guardando o jar atual e gravando o novo…' });
-      const src = (await this.wsl(distro, ['wslpath', '-a', '-u', staged], 20000)).trim();
-      if (!/^\/[^\n'\\]+$/.test(src)) throw new Error('Não consegui converter o caminho do jar preparado para o WSL.');
+      const src = await this.toWslPath(distro, staged);
       const backup = wshJarBackupPath(jarPath, current.version);
       await execWsl(['-d', distro, '-u', 'root', '--', 'bash', '-c', `set -e; cp -p '${jarPath}' '${backup}'; cp '${src}' '${jarPath}.new'; chmod 644 '${jarPath}.new'; mv -f '${jarPath}.new' '${jarPath}'`], { timeout: 120000 });
       const { started, logTail } = await this.restartAndWait(distro, req.container, onProgress);

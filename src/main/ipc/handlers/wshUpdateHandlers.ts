@@ -13,6 +13,8 @@ export function registerWshUpdateHandlers(ctx: IpcContext): void {
 
   ipcMain.handle('wsh-update:inspect', async (_, req: WshUpdateRequest) => service.inspect(req));
   ipcMain.handle('wsh-update:probe', async (_, version: string) => service.probe(version));
+  ipcMain.handle('wsh-update:list-installers', async () => service.listInstallers());
+  ipcMain.handle('wsh-update:clear-cache', async () => service.clearCache());
   ipcMain.handle('wsh-update:prepare', async (_, req: WshUpdateRequest) => service.prepare(req, progress));
   ipcMain.handle('wsh-update:apply', async (_, req: WshUpdateRequest) => service.apply(req, progress));
   ipcMain.handle('wsh-update:rollback', async (_, req: WshUpdateRequest & { backup?: string }) => service.rollback(req, progress));

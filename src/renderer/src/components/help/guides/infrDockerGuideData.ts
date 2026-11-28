@@ -92,7 +92,7 @@ export const GUIDE_HUB_TASKS: GuideHubTask[] = [
   {
     task: 'Atualizar o jar do WSH',
     manual: 'baixar o .exe, extrair o jar, copiar para /opt, conferir o WTA, docker restart',
-    hub: 'Utilitários do WSH → Atualizar WSH (baixa, confere as features do WTA, troca o jar com backup e reinicia)'
+    hub: 'Botão Atualizar WSH no cartão do WSH ou na topologia (lista de versões ou arquivo local, confere o WTA, troca o jar com backup e reinicia)'
   }
 ];
 

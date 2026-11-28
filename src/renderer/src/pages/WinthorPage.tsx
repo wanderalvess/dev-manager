@@ -6,6 +6,8 @@ import { computeStackTopology } from '../utils/dockerContainerUtils';
 import { WinthorHeader } from '../components/winthor/WinthorHeader';
 import { WinthorModals } from '../components/winthor/WinthorModals';
 import { WinthorEmptyState } from '../components/winthor/WinthorEmptyState';
+import { WinthorGuide } from '../components/winthor/WinthorGuide';
+import { computeWinthorGuide, type GuideActionId } from '../utils/winthorGuide';
 import { onInfrFirstStepsRequested, takePendingInfrFirstSteps } from '../utils/infrDeepLink';
 import { ContainerTopologyBus } from '../components/containers/topology/ContainerTopologyBus';
 import { useDockerData } from '../hooks/containers/useDockerData';
@@ -51,6 +53,27 @@ export const WinthorPage: React.FC<WinthorPageProps> = ({ isActive }) => {
   const noWinthorDistro =
     !data.isLoading && data.containers.length === 0 && !data.availableDistros.some((d) => d.name.toLowerCase().includes('winthor'));
 
+  const startStack = async () => {
+    const res = await envs.handleStartWinThorSequence(activeEnv.group);
+    if (res?.success && res.notes.length) activeEnv.notify(res.notes.join(' '));
+  };
+
+  const winthorDistro = useMemo(() => data.availableDistros.find((d) => d.name.toLowerCase().includes('winthor'))?.name, [data.availableDistros]);
+
+  const guide = useMemo(
+    () => computeWinthorGuide({ daemonRunning: data.daemonStatus ? data.daemonStatus.running : null, sequenceRunning: sequence.sequenceProgress.running, selectedDistro: data.selectedDistro, winthorDistro, topology: stackTopology }),
+    [data.daemonStatus, sequence.sequenceProgress.running, data.selectedDistro, winthorDistro, stackTopology]
+  );
+
+  const onGuideAction = (id: GuideActionId, value?: string) => {
+    if (id === 'use-distro' && value) void wsl.handleSelectDistro(value);
+    else if (id === 'start-docker') void wsl.handleStartDockerDaemon();
+    else if (id === 'start-stack') void startStack();
+    else if (id === 'create') infr.openInfrModal();
+    else if (id === 'open-portal') window.electronAPI?.openExternal?.(`http://localhost:${stackTopology.wta.port}/wta/`);
+    else if (id === 'update-wsh') tools.openWshTools(stackTopology.wsh.container, 'update');
+  };
+
   return (
     <div className="flex flex-col h-full w-full bg-background overflow-hidden select-none">
       <WinthorHeader
@@ -67,10 +90,7 @@ export const WinthorPage: React.FC<WinthorPageProps> = ({ isActive }) => {
         isStartingDaemon={wsl.isStartingDaemon}
         sequenceProgress={sequence.sequenceProgress}
         containersCount={data.containers.length}
-        onStartWinThorSequence={async () => {
-          const res = await envs.handleStartWinThorSequence(activeEnv.group);
-          if (res?.success && res.notes.length) activeEnv.notify(res.notes.join(' '));
-        }}
+        onStartWinThorSequence={startStack}
         activeEnv={activeEnv}
         onOpenSnapshotsModal={snapshots.openSnapshotsModal}
         onOpenInfrModal={() => infr.openInfrModal()}
@@ -89,6 +109,12 @@ export const WinthorPage: React.FC<WinthorPageProps> = ({ isActive }) => {
             onOpenSnapshots={snapshots.openSnapshotsModal}
           />
         ) : (
+          <>
+          {data.isLoading ? (
+            <p className="mx-7 mt-3 text-xs text-muted-foreground" role="status">Lendo o estado do Docker e dos containers… (pode levar alguns segundos)</p>
+          ) : (
+            <WinthorGuide guide={guide} onAction={onGuideAction} />
+          )}
           <ContainerTopologyBus
             stackTopology={stackTopology}
             selectedDistro={data.selectedDistro}
@@ -96,11 +122,12 @@ export const WinthorPage: React.FC<WinthorPageProps> = ({ isActive }) => {
             onOpenWslTerminal={() => wsl.handleOpenWslTerminal()}
             onOpenOracleTools={tools.openOracleTools}
             onOpenWtaTools={tools.openWtaTools}
-            onOpenWshTools={(c) => tools.openWshTools(c)}
+            onOpenWshTools={(c, tab) => tools.openWshTools(c, tab)}
             copyFeedback={logs.copyFeedback}
             onCopyText={(text, key) => logs.copyToClipboard(text, key)}
             containers={data.containers}
           />
+          </>
         )}
       </div>
 

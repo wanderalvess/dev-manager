@@ -4,8 +4,10 @@ import {
   compareWshVersions,
   envValue,
   isSafeWshJarPath,
+  isSupportedLocalWshFile,
   isValidWshVersion,
   mountedJarSource,
+  parseInstallerListing,
   parseJarManifest,
   wshInstallerUrl,
   wshJarBackupPath,
@@ -66,5 +68,35 @@ describe('wshUpdate', () => {
     expect(wshJarBackupPath('/opt/wsh/winthor-integracao-core.jar', '1.38.14.57')).toBe('/opt/wsh/winthor-integracao-core.jar.bak-1.38.14.57');
     expect(wshJarBackupPath('/opt/a.jar', undefined)).toBe('/opt/a.jar.bak-anterior');
     expect(wshJarBackupPath('/opt/a.jar', "1.0'; rm -rf /")).not.toContain("'");
+  });
+});
+
+describe('wshUpdate: lista de versões e arquivo local', () => {
+  it('lista só os instaladores versionados, da versão mais nova para a mais antiga', () => {
+    const json = {
+      items: [
+        { name: 'WSH/', size: '0' },
+        { name: 'WSH/WSH_setup.jar', size: '68692969' },
+        { name: 'WSH/winthor-integracao-core-1.38.14.57.exe', size: '96837968', updated: '2026-10-29T00:00:00Z' },
+        { name: 'WSH/winthor-integracao-core-1.39.22.31.exe', size: '100734968', updated: '2026-11-26T20:27:29Z' },
+        { name: 'WSH/winthor-integracao-core-1.39.0.0.exe', size: '0' },
+        { name: 'WSH/winthor-integracao-core-1.39.22.31.exe.bak', size: '1' }
+      ]
+    };
+    const list = parseInstallerListing(json);
+    expect(list.map((i) => i.version)).toEqual(['1.39.22.31', '1.39.0.0', '1.38.14.57']);
+    expect(list[0]).toEqual({ version: '1.39.22.31', sizeBytes: 100734968, updated: '2026-11-26T20:27:29Z' });
+    expect(list[1].sizeBytes).toBeUndefined();
+    expect(parseInstallerListing({})).toEqual([]);
+    expect(parseInstallerListing(null)).toEqual([]);
+  });
+
+  it('só aceita .exe ou .jar com caminho absoluto de disco do Windows', () => {
+    const BS = String.fromCharCode(92);
+    expect(isSupportedLocalWshFile(`C:${BS}Downloads${BS}winthor-integracao-core-1.39.22.31.exe`)).toBe(true);
+    expect(isSupportedLocalWshFile('D:/wsh/winthor-integracao-core.jar')).toBe(true);
+    const unc = `${BS}${BS}servidor${BS}share${BS}a.exe`;
+    for (const bad of [unc, '//servidor/a.exe', 'a.exe', `C:${BS}a.txt`, `C:${BS}a.exe${BS}x`, '/opt/a.jar', '', undefined]) expect(isSupportedLocalWshFile(bad)).toBe(false);
+    expect(isSupportedLocalWshFile(`C:${BS}a${String.fromCharCode(0)}.exe`)).toBe(false);
   });
 });

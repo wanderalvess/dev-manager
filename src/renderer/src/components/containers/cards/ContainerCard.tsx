@@ -4,6 +4,7 @@ import type {
   DockerContainerStats
 } from '../../../../../shared/types';
 import { containerCardKinds } from '../../../utils/containerCardKind';
+import type { WshUtilsTab } from '../../../utils/wshUtilsModalUtils';
 import { ContainerCardTitleRow } from '../card/ContainerCardTitleRow';
 import { ContainerCardMetrics } from '../card/ContainerCardMetrics';
 import { ContainerCardActions } from '../card/ContainerCardActions';
@@ -19,7 +20,7 @@ export interface ContainerCardProps {
   onCopyText: (text: string, key: string) => void;
   onOpenOracleTools: (container: DockerContainerInfo) => void;
   onOpenWtaTools: (container: DockerContainerInfo) => void;
-  onOpenWshTools: (container: DockerContainerInfo) => void;
+  onOpenWshTools: (container: DockerContainerInfo, tab?: WshUtilsTab) => void;
   onInspectContainer: (container: DockerContainerInfo) => void;
   onContainerAction: (container: DockerContainerInfo, action: 'start' | 'stop' | 'restart' | 'remove') => void;
   onTogglePause: (container: DockerContainerInfo) => void;

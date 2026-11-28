@@ -134,6 +134,8 @@ export interface WshUpdatePrepareResult {
   version?: string;
   verdict?: WshUpdateVerdict;
   sizeBytes?: number;
+  /** De onde veio o jar: baixado da TOTVS ou de um arquivo escolhido no computador */
+  source?: 'download' | 'local';
   requires?: WshRequiredFeature[];
   /** Conferência contra o WTA; vazia quando não deu para ler as features do WTA */
   checks?: WshFeatureCheck[];
@@ -153,6 +155,30 @@ export interface WshUpdateRequest {
   distro?: string;
   container: string;
   version?: string;
+  /** Instalador (.exe) ou jar já baixado, no Windows: usado no lugar do download (ex.: sem acesso ao servidor da TOTVS) */
+  localFile?: string;
+}
+
+/** Uma versão do WSH publicada pela TOTVS. */
+export interface WshInstallerInfo {
+  version: string;
+  sizeBytes?: number;
+  /** Data de publicação (ISO) */
+  updated?: string;
+}
+
+export interface WshInstallerListResult {
+  success: boolean;
+  error?: string;
+  /** Da mais nova para a mais antiga */
+  installers?: WshInstallerInfo[];
+}
+
+export interface WshClearCacheResult {
+  success: boolean;
+  /** Bytes liberados na pasta temporária dos instaladores baixados */
+  freedBytes: number;
+  error?: string;
 }
 
 export interface WshUpdateProgress {
@@ -160,4 +186,31 @@ export interface WshUpdateProgress {
   message: string;
   /** 0 a 100 quando o passo mede o andamento */
   percent?: number;
+}
+
+const INSTALLER_NAME_RE = /^WSH\/winthor-integracao-core-(\d{1,3}(?:\.\d{1,4}){2,4})\.exe$/;
+
+/** Endereço da listagem pública (JSON) da pasta de instaladores do WSH no bucket da TOTVS. */
+export const WSH_INSTALLER_LISTING_URL = 'https://storage.googleapis.com/storage/v1/b/artefatos-winthor/o?prefix=WSH/&fields=items(name,size,updated),nextPageToken&maxResults=1000';
+
+/** Versões publicadas a partir da resposta da listagem; ignora o que não é o instalador versionado (WSH_setup.jar etc.). */
+export function parseInstallerListing(json: unknown): WshInstallerInfo[] {
+  const items = (json as { items?: unknown })?.items;
+  if (!Array.isArray(items)) return [];
+  const found: WshInstallerInfo[] = [];
+  for (const item of items) {
+    const m = typeof item?.name === 'string' ? INSTALLER_NAME_RE.exec(item.name) : null;
+    if (!m) continue;
+    const size = Number(item.size);
+    found.push({ version: m[1], sizeBytes: Number.isFinite(size) && size > 0 ? size : undefined, updated: typeof item.updated === 'string' ? item.updated : undefined });
+  }
+  return found.sort((a, b) => compareVersions(b.version, a.version));
+}
+
+/** Instalador ou jar escolhido no computador: caminho absoluto do Windows, só .exe ou .jar, sem rede (UNC). */
+export function isSupportedLocalWshFile(file: unknown): file is string {
+  if (typeof file !== 'string' || file.includes(String.fromCharCode(0))) return false;
+  const f = file.trim();
+  if (f.startsWith('\\') || f.startsWith('//')) return false;
+  return /^[A-Za-z]:[/\x5c]/.test(f) && /\.(exe|jar)$/i.test(f);
 }

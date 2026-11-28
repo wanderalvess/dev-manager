@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import { Readable, Transform } from 'stream';
 import { pipeline } from 'stream/promises';
-import { wshInstallerUrl, type WshUpdateProbeResult } from '../../../shared/wshUpdate';
+import { parseInstallerListing, wshInstallerUrl, WSH_INSTALLER_LISTING_URL, type WshInstallerListResult, type WshUpdateProbeResult } from '../../../shared/wshUpdate';
 
 /** MD5 que o Google Cloud Storage informa no cabeçalho `x-goog-hash` (base64), em hexadecimal. */
 export function md5FromGoogHash(header: string | null): string | undefined {
@@ -11,6 +11,26 @@ export function md5FromGoogHash(header: string | null): string | undefined {
 }
 
 type FetchLike = typeof fetch;
+
+/** Versões do instalador publicadas no bucket da TOTVS (listagem pública, em páginas), da mais nova para a mais antiga. */
+export async function listPublishedInstallers(fetchImpl: FetchLike = fetch): Promise<WshInstallerListResult> {
+  try {
+    const items: unknown[] = [];
+    let token = '';
+    for (let page = 0; page < 10; page++) {
+      const res = await fetchImpl(`${WSH_INSTALLER_LISTING_URL}${token ? `&pageToken=${encodeURIComponent(token)}` : ''}`, { signal: AbortSignal.timeout(20000) });
+      if (!res.ok) return { success: false, error: `O servidor respondeu ${res.status} ao listar as versões.` };
+      const json = (await res.json()) as { items?: unknown[]; nextPageToken?: string };
+      items.push(...(json.items ?? []));
+      token = json.nextPageToken ?? '';
+      if (!token) break;
+    }
+    const installers = parseInstallerListing({ items });
+    return installers.length ? { success: true, installers } : { success: false, error: 'Nenhuma versão do WSH encontrada na listagem da TOTVS.' };
+  } catch (err: any) {
+    return { success: false, error: `Não foi possível listar as versões: ${err?.message || err}` };
+  }
+}
 
 /** Só cabeçalhos: confirma que a versão existe e diz o tamanho, sem baixar nada. */
 export async function probeInstaller(version: string, fetchImpl: FetchLike = fetch): Promise<WshUpdateProbeResult> {

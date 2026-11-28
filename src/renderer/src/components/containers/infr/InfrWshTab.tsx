@@ -30,6 +30,11 @@ export const InfrWshTab: React.FC<InfrWshTabProps> = ({ version, isExecuting, on
         </div>
       </div>
 
+      <div className="bg-info/5 border border-info/20 rounded-xl p-3 text-xs leading-relaxed text-muted-foreground">
+        <strong className="text-foreground font-semibold block mb-0.5">Já tem um WSH e quer só trocar o jar por uma versão nova?</strong>
+        Não precisa recriar o container. Na tela de containers, use <strong className="text-foreground">Atualizar WSH</strong> no cartão (ou no nó WSH da topologia): o Hub baixa o instalador da TOTVS, confere o WTA, guarda o jar atual e reinicia.
+      </div>
+
       <div className="p-4 bg-card border border-border/80 rounded-xl space-y-3">
         <div className="p-3 bg-[#090D14] rounded-lg border border-border/60 text-xs font-mono text-emerald-400">
           {buildWshSetupCommand(version)}

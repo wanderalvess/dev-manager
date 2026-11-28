@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type {
+  WshInstallerListResult,
   WshUpdateApplyResult,
   WshUpdateInspectResult,
   WshUpdatePrepareResult,
@@ -9,14 +10,16 @@ import type {
 import { isValidWshVersion } from '../../../../shared/wshUpdate';
 import { requestConfirm } from '../../components/ui/confirmService';
 import { showToast } from '../../components/ToastHost';
-import { applyConfirmation, canApplyUpdate } from '../../utils/wshUpdateView';
+import { applyConfirmation, canApplyUpdate, formatMegabytes } from '../../utils/wshUpdateView';
 
 export type WshUpdateBusy = 'idle' | 'probing' | 'preparing' | 'applying' | 'rollingBack';
 
-/** Estado da aba "Atualizar WSH": container em uso, versão nova, conferência e troca do jar. */
+/** Estado da aba "Atualizar WSH": container em uso, versão (da lista, digitada ou de um arquivo), conferência e troca do jar. */
 export function useWshUpdate(container: string, active: boolean) {
   const [info, setInfo] = useState<WshUpdateInspectResult | null>(null);
+  const [installers, setInstallers] = useState<WshInstallerListResult | null>(null);
   const [version, setVersionState] = useState('');
+  const [localFile, setLocalFile] = useState('');
   const [probe, setProbe] = useState<WshUpdateProbeResult | null>(null);
   const [prepared, setPrepared] = useState<WshUpdatePrepareResult | null>(null);
   const [result, setResult] = useState<WshUpdateApplyResult | null>(null);
@@ -30,18 +33,44 @@ export function useWshUpdate(container: string, active: boolean) {
     setInfo(await api.inspectWshUpdate({ container }));
   }, [api, container]);
 
+  const loadInstallers = useCallback(async () => {
+    if (!api?.listWshInstallers) return;
+    setInstallers(null);
+    setInstallers(await api.listWshInstallers());
+  }, [api]);
+
   useEffect(() => {
-    if (active) void load();
-  }, [active, load]);
+    if (!active) return;
+    void load();
+    void loadInstallers();
+  }, [active, load, loadInstallers]);
 
   useEffect(() => api?.onWshUpdateProgress?.(setProgress), [api]);
 
-  // Mudar a versão digitada invalida a consulta e a preparação anteriores
-  const setVersion = (value: string) => {
-    setVersionState(value);
+  // Mudar a escolha (versão ou arquivo) descarta a consulta e o jar preparados antes
+  const resetChoice = () => {
     setProbe(null);
     setPrepared(null);
     setResult(null);
+  };
+
+  const setVersion = (value: string) => {
+    setVersionState(value);
+    setLocalFile('');
+    resetChoice();
+  };
+
+  const pickFile = async () => {
+    const file = await api?.selectFile?.({ filters: [{ name: 'Instalador ou jar do WSH', extensions: ['exe', 'jar'] }] });
+    if (!file) return;
+    setLocalFile(file);
+    setVersionState('');
+    resetChoice();
+  };
+
+  const clearFile = () => {
+    setLocalFile('');
+    resetChoice();
   };
 
   const check = async () => {
@@ -56,17 +85,17 @@ export function useWshUpdate(container: string, active: boolean) {
     setBusy('preparing');
     setResult(null);
     setProgress(null);
-    setPrepared(await api.prepareWshUpdate({ container, version: version.trim() }));
+    setPrepared(await api.prepareWshUpdate({ container, version: version.trim(), localFile: localFile || undefined }));
     setBusy('idle');
   };
 
   const apply = async () => {
-    if (!api?.applyWshUpdate || !prepared || !canApplyUpdate(prepared, version, false)) return;
+    if (!api?.applyWshUpdate || !prepared?.version || !canApplyUpdate(prepared, false)) return;
     const { message, tone } = applyConfirmation(prepared, container, info?.version);
     if (!(await requestConfirm({ title: 'Atualizar o WSH?', message, tone, confirmLabel: 'Atualizar e reiniciar' }))) return;
     setBusy('applying');
     setProgress(null);
-    const res = await api.applyWshUpdate({ container, version: version.trim() });
+    const res = await api.applyWshUpdate({ container, version: prepared.version });
     setResult(res);
     setBusy('idle');
     showToast(res.success && res.started ? 'WSH atualizado e no ar.' : res.success ? 'Jar trocado, mas o WSH não confirmou a subida.' : res.error || 'Falha ao atualizar.', res.success && res.started ? 'success' : 'error');
@@ -86,5 +115,16 @@ export function useWshUpdate(container: string, active: boolean) {
     await load();
   };
 
-  return { available, info, version, setVersion, probe, prepared, result, progress, busy, load, check, prepare, apply, rollback };
+  const clearCache = async () => {
+    if (!api?.clearWshUpdateCache) return;
+    const res = await api.clearWshUpdateCache();
+    if (res.success) {
+      setPrepared(null);
+      showToast(res.freedBytes ? `${formatMegabytes(res.freedBytes)} liberados (instaladores baixados).` : 'Não havia arquivos baixados.', 'success');
+    } else {
+      showToast(res.error || 'Não foi possível apagar os arquivos baixados.', 'error');
+    }
+  };
+
+  return { available, info, installers, loadInstallers, version, setVersion, localFile, pickFile, clearFile, probe, prepared, result, progress, busy, load, check, prepare, apply, rollback, clearCache };
 }

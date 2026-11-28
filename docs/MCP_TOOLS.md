@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Hub Manager expõe **183 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Hub Manager expõe **185 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -366,10 +366,14 @@ Mesma lógica da aba **Atualizar WSH** do Hub: baixa o instalador oficial da TOT
 
 *   **`wsh_get_jar_info`**: Lê o container do WSH e devolve o jar montado (em `/opt` do WSL), a versão em uso, o que esse jar exige do WTA, o container do WTA e os backups guardados. Só lê.
     > "Que versão do WSH está rodando no wsh-40 e o que ela exige do WTA?"
+*   **`wsh_list_installers`**: Lista as versões do instalador publicadas pela TOTVS (da mais nova para a mais antiga), com data e tamanho. Só lê.
+    > "Quais versões do WSH a TOTVS publicou?"
 *   **`wsh_check_installer`**: Consulta só os cabeçalhos do instalador de uma versão (endereço, tamanho, data). Não baixa nada.
     > "A TOTVS já publicou o WSH 1.39.22.31?"
-*   **`wsh_prepare_update`**: Baixa o instalador (cerca de 96 MB, MD5 conferido), extrai o jar, confere a versão do manifest e compara as exigências do jar com as features do Karaf do WTA. Grava numa pasta temporária; não altera o container.
+*   **`wsh_prepare_update`**: Baixa o instalador (cerca de 96 MB, MD5 conferido) ou usa o `.exe`/`.jar` que a pessoa já tem (`localFile`), extrai o jar, confere a versão do manifest e compara as exigências do jar com as features do Karaf do WTA. Grava numa pasta temporária; não altera o container.
     > "Prepare o WSH 1.39.22.31 para o wsh-40 e me diga se o WTA tem as features que ele exige."
+*   **`wsh_clear_downloads`**: Apaga os instaladores e jars baixados na pasta temporária do Hub; o jar em uso e os backups ficam.
+    > "Apague os instaladores do WSH que você baixou."
 *   **`wsh_apply_update`** (destrutiva): Troca o jar do container pelo preparado (guarda o atual como `.bak-<versão>`) e reinicia, esperando até 3 minutos o log confirmar a subida. Só depois de `wsh_prepare_update` e de revisar a conferência das features.
     > "Atualize o wsh-40 para o WSH 1.39.22.31 que você preparou."
 *   **`wsh_rollback_jar`** (destrutiva): Restaura o backup mais recente (ou o informado) e reinicia o container.
@@ -382,8 +386,8 @@ Mesma lógica da aba **Atualizar WSH** do Hub: baixa o instalador oficial da TOT
 O servidor MCP roda via stdio com o mesmo poder do Cockpit na sua máquina, então ele ajuda o cliente a pedir confirmação antes do que é perigoso:
 
 *   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `db_run_restore_drill`, `db_save_backup_config`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `docker_remove_container`, `delphi_build`, `delphi_run_pipeline`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
-*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (97 das 183) são registradas. As demais nem aparecem para o cliente. No Claude Code: `claude mcp add dev-manager --scope user -e HUB_MCP_MODE=readonly -- cmd /c C:\DevManager\mcp\dev-manager-mcp.cmd`. Nos arquivos JSON, use o campo `env`.
-*   **Contagem por risco**: das 183 tools, 97 são de leitura, 55 de escrita e 31 destrutivas. Os números ficam em `src/shared/mcpCatalog.ts`, e um teste falha se divergirem das tools registradas.
+*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (98 das 185) são registradas. As demais nem aparecem para o cliente. No Claude Code: `claude mcp add dev-manager --scope user -e HUB_MCP_MODE=readonly -- cmd /c C:\DevManager\mcp\dev-manager-mcp.cmd`. Nos arquivos JSON, use o campo `env`.
+*   **Contagem por risco**: das 185 tools, 98 são de leitura, 56 de escrita e 31 destrutivas. Os números ficam em `src/shared/mcpCatalog.ts`, e um teste falha se divergirem das tools registradas.
 *   **Produção protegida**: `db_execute_query` recusa qualquer comando que não seja de leitura (`SELECT`, `EXPLAIN`, `SHOW`, `DESCRIBE`) em conexão marcada como **produção** no Database Studio, inclusive quando a conexão é informada inline e aponta para o mesmo destino de uma conexão de produção salva.
 *   **Arquivos de log**: `logs_clear_file` só zera arquivos com extensão de log (`.log`, `.out`, `.err`, `.txt`, `.trace`), e nenhuma tool de log lê a pasta de dados do app (onde ficam o `config.json` e a chave de criptografia).
 

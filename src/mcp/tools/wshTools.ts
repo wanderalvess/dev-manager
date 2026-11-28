@@ -11,6 +11,8 @@ interface WshToolDeps {
 const container = z.string().describe('Nome do container do WSH (ex.: "wsh-40"), o mesmo do `docker ps`');
 const distro = z.string().optional().describe('Distro WSL do Docker; sem ele o Hub procura a que tem o Docker');
 const version = z.string().describe('Versão do WSH no formato 1.39.22.31 (a do instalador publicado pela TOTVS)');
+const optionalVersion = z.string().optional().describe('Versão do WSH no formato 1.39.22.31; ignorada quando localFile é informado (vale a do jar)');
+const localFile = z.string().optional().describe('Caminho no Windows de um instalador (.exe) ou jar (.jar) já baixado, usado no lugar do download (ex.: sem acesso ao servidor da TOTVS)');
 
 /** Atualização do jar do WSH (winthor-integracao-core) de um container: mesma lógica da aba "Atualizar WSH". */
 export function registerWshTools(server: McpServer, { wshUpdateService, ok, fail }: WshToolDeps): void {
@@ -45,16 +47,40 @@ export function registerWshTools(server: McpServer, { wshUpdateService, ok, fail
   );
 
   server.registerTool(
+    'wsh_list_installers',
+    {
+      title: 'Listar as versões do WSH publicadas pela TOTVS',
+      description: 'Lista as versões do instalador do WSH publicadas no bucket da TOTVS (da mais nova para a mais antiga), com data de publicação e tamanho. Só lê. Use antes de wsh_prepare_update para escolher a versão.'
+    },
+    async () => {
+      const r = await wshUpdateService.listInstallers();
+      return r.success ? reply(r) : error(r.error || 'Não foi possível listar as versões.');
+    }
+  );
+
+  server.registerTool(
     'wsh_prepare_update',
     {
       title: 'Baixar o instalador do WSH e preparar o jar novo',
       description:
-        'Baixa o instalador oficial da versão (cerca de 96 MB, MD5 conferido contra o servidor), tira o winthor-integracao-core.jar de dentro dele sem executar nada, confere a versão do manifest e compara o que o jar exige do WTA (dependencies.json) com as features instaladas no Karaf do WTA do ambiente. Grava o jar numa pasta temporária; não altera o container. Devolve o veredito (newer, same, older), as exigências e a conferência (checks[].ok = false significa que o WSH encerraria ao subir). Leva alguns segundos a minutos.',
-      inputSchema: { container, version, distro }
+        'Baixa o instalador oficial da versão (cerca de 96 MB, MD5 conferido contra o servidor) ou, com localFile, abre o instalador (.exe) ou o jar (.jar) que a pessoa já tem, e tira o winthor-integracao-core.jar de dentro dele sem executar nada, confere a versão do manifest e compara o que o jar exige do WTA (dependencies.json) com as features instaladas no Karaf do WTA do ambiente. Grava o jar numa pasta temporária; não altera o container. Devolve o veredito (newer, same, older), as exigências e a conferência (checks[].ok = false significa que o WSH encerraria ao subir). Leva alguns segundos a minutos.',
+      inputSchema: { container, version: optionalVersion, localFile, distro }
     },
-    async ({ container: name, version: v, distro: d }) => {
-      const r = await wshUpdateService.prepare({ container: name, version: v, distro: d });
+    async ({ container: name, version: v, localFile: file, distro: d }) => {
+      const r = await wshUpdateService.prepare({ container: name, version: v, localFile: file, distro: d });
       return r.success ? reply(r) : error(r.error || 'Falha ao preparar o jar.');
+    }
+  );
+
+  server.registerTool(
+    'wsh_clear_downloads',
+    {
+      title: 'Apagar os instaladores do WSH baixados',
+      description: 'Apaga a pasta temporária do Hub com os instaladores e jars baixados por wsh_prepare_update (cerca de 170 MB por versão) e devolve quanto liberou. O jar em uso nos containers e os backups ao lado dele não são tocados.'
+    },
+    async () => {
+      const r = wshUpdateService.clearCache();
+      return r.success ? reply(r) : error(r.error || 'Não foi possível apagar os arquivos baixados.');
     }
   );
 

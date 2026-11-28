@@ -56,7 +56,7 @@ export const WinthorHeader: React.FC<WinthorHeaderProps> = (p) => (
         copyWslIp={p.copyWslIp}
         wslIpFeedback={p.wslIpFeedback}
         title="WinThor & WSL"
-        subtitle="Stack WinThor (Oracle XE, WTA, WSH), distros WSL2, snapshots e bootstrap INFR"
+        subtitle="Banco Oracle, WTA e WSH rodando em containers no WSL: veja o estado, ligue e atualize aqui"
       />
 
       <div className="flex flex-wrap items-center gap-3">
@@ -83,7 +83,7 @@ export const WinthorHeader: React.FC<WinthorHeaderProps> = (p) => (
           <button
             onClick={p.onStartWinThorSequence}
             disabled={p.sequenceProgress.running || p.containersCount === 0}
-            title="Inicia sequencialmente Oracle XE -> WTA -> WSH"
+            title={p.containersCount === 0 ? 'Ainda não há containers: crie o ambiente primeiro (Assistente INFR)' : 'Liga o banco Oracle, espera ficar pronto, liga o WTA e por fim o WSH, nessa ordem'}
             className="flex items-center space-x-1.5 px-4 h-10 bg-primary hover:bg-primary/90 text-primary-foreground rounded-[10px] text-sm font-medium transition-colors disabled:opacity-50 cursor-pointer"
           >
             {p.sequenceProgress.running ? (
@@ -96,7 +96,7 @@ export const WinthorHeader: React.FC<WinthorHeaderProps> = (p) => (
 
           <button
             onClick={p.onOpenSnapshotsModal}
-            title="Gerenciamento de Snapshots .tar do WSL (Importar / Exportar / Remover)"
+            title="Backup da distro do WSL em arquivo .tar: exportar, importar ou remover (para guardar ou levar o ambiente para outra máquina)"
             className={SECONDARY_BTN}
           >
             <Archive className="w-4 h-4 text-muted-foreground" />
@@ -105,7 +105,7 @@ export const WinthorHeader: React.FC<WinthorHeaderProps> = (p) => (
 
           <button
             onClick={p.onOpenInfrModal}
-            title="Assistente de Bootstrap INFR-Docker (Setup Oracle XE, WTA, WSH)"
+            title="Cria ou conserta o ambiente passo a passo: banco Oracle, WTA e WSH (também troca de versão do WinThor)"
             className={SECONDARY_BTN}
           >
             <Sliders className="w-4 h-4 text-muted-foreground" />

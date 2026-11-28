@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Download,
   Database,
   Globe,
   Key,
@@ -15,6 +16,7 @@ import {
 import type { DockerContainerInfo } from '../../../../../shared/types';
 import { extractOraclePort, getOracleTnsConfig } from '../../../utils/dockerContainerUtils';
 import type { ContainerCardKinds } from '../../../utils/containerCardKind';
+import type { WshUtilsTab } from '../../../utils/wshUtilsModalUtils';
 
 interface ContainerCardActionsProps extends ContainerCardKinds {
   container: DockerContainerInfo;
@@ -26,7 +28,7 @@ interface ContainerCardActionsProps extends ContainerCardKinds {
   onCopyText: (text: string, key: string) => void;
   onOpenOracleTools: (container: DockerContainerInfo) => void;
   onOpenWtaTools: (container: DockerContainerInfo) => void;
-  onOpenWshTools: (container: DockerContainerInfo) => void;
+  onOpenWshTools: (container: DockerContainerInfo, tab?: WshUtilsTab) => void;
   onInspectContainer: (container: DockerContainerInfo) => void;
   onContainerAction: (container: DockerContainerInfo, action: 'start' | 'stop' | 'restart' | 'remove') => void;
   onTogglePause: (container: DockerContainerInfo) => void;
@@ -98,11 +100,22 @@ export const ContainerCardActions: React.FC<ContainerCardActionsProps> = ({
       {isWsh && (
         <button
           onClick={() => onOpenWshTools(container)}
-          title="Utilitários Especializados WSH (Gerador MD5, Checagem de /opt, Rotina 2650)"
+          title="Utilitários do WSH (Atualizar WSH, Gerador MD5, Checagem de /opt, Rotina 2650)"
           className="flex items-center space-x-1 px-2.5 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
         >
           <Key className="w-3.5 h-3.5 text-primary" />
           <span>Utilitários WSH</span>
+        </button>
+      )}
+
+      {isWsh && (
+        <button
+          onClick={() => onOpenWshTools(container, 'update')}
+          title="Baixar uma versão nova do WSH, conferir o WTA e trocar o jar deste container (com backup e volta)"
+          className="flex items-center space-x-1 px-2.5 py-1.5 bg-success/10 hover:bg-success/20 text-success rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 shadow-xs"
+        >
+          <Download className="w-3.5 h-3.5" />
+          <span>Atualizar WSH</span>
         </button>
       )}
     </div>

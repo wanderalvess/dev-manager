@@ -1,12 +1,14 @@
 import React from 'react';
-import { Key } from 'lucide-react';
+import { Download, Key } from 'lucide-react';
 import type { DockerContainerInfo } from '../../../../../shared/types';
 import type { StackTopologyNode } from '../../../utils/dockerContainerUtils';
+import type { WshUtilsTab } from '../../../utils/wshUtilsModalUtils';
+import { TopologyNodeBadge } from './TopologyNodeBadge';
 
 interface TopologyWshNodeProps {
   node: StackTopologyNode;
   containers: DockerContainerInfo[];
-  onOpenWshTools: (container: DockerContainerInfo | null, tab?: 'md5' | 'files' | 'rotina2650') => void;
+  onOpenWshTools: (container: DockerContainerInfo | null, tab?: WshUtilsTab) => void;
 }
 
 /** Nó 4: WSH (Smart Hub). Sem container WSH, as ferramentas abrem no primeiro container da lista. */
@@ -30,15 +32,7 @@ export const TopologyWshNode: React.FC<TopologyWshNodeProps> = ({ node, containe
           <div className="text-sm font-semibold text-foreground font-mono truncate max-w-[120px]">{node.name}</div>
         </div>
       </div>
-      <span
-        className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-          node.running
-            ? 'bg-success/10 text-success'
-            : 'bg-muted text-muted-foreground'
-        }`}
-      >
-        {node.running ? ':8080' : 'OFF'}
-      </span>
+      <TopologyNodeBadge node={node} runningLabel={node.port ? `:${node.port}` : undefined} />
     </div>
 
     <div className="pt-1 flex items-center justify-between gap-1 text-[13px]">
@@ -61,5 +55,19 @@ export const TopologyWshNode: React.FC<TopologyWshNodeProps> = ({ node, containe
         Rotina 2650
       </button>
     </div>
+
+    {node.container && (
+    <button
+      type="button"
+      onClick={() => {
+        onOpenWshTools(node.container, 'update');
+      }}
+      title="Baixar uma versão nova do WSH, conferir o WTA e trocar o jar (com backup e volta)"
+      className="w-full flex items-center justify-center gap-1.5 px-2.5 py-1 bg-success/10 hover:bg-success/20 text-success rounded-lg text-[13px] font-semibold cursor-pointer transition"
+    >
+      <Download className="w-3.5 h-3.5" />
+      Atualizar WSH
+    </button>
+    )}
   </div>
 );
