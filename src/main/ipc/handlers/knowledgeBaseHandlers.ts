@@ -14,6 +14,12 @@ export function registerKnowledgeBaseHandlers(ctx: IpcContext): void {
   ipcMain.handle('kb:divergences', (_, module?: string, limit?: number) =>
     knowledgeBaseService.divergences(module, limit)
   );
+  ipcMain.handle('kb:sync-embeddings', () =>
+    knowledgeBaseService.syncEmbeddings({
+      downloadModel: true,
+      onProgress: (progress) => safeSend(mainWindow, 'kb:embeddings-progress', progress)
+    })
+  );
   ipcMain.handle('kb:import', (_, version?: string) =>
     knowledgeBaseService.importFolder({
       version,

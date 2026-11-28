@@ -6,7 +6,8 @@ import type {
 } from '../../../../shared/knowledgeBaseTypes';
 import type { KbAskParams } from '../../../../main/services/kb/KnowledgeBaseClient';
 import type { KbImportProgress, KbImportSummary } from '../../../../main/services/kb/KnowledgeBaseImportService';
-import type { KbStatus } from '../../../../main/services/kb/KnowledgeBaseService';
+import type { KbEmbeddingsProgress, KbStatus } from '../../../../main/services/kb/KnowledgeBaseService';
+import type { EmbeddingSyncResult } from '../../../../main/services/kb/KnowledgeBaseEmbeddingSync';
 import type { ElectronAPI } from '../../../../preload/index';
 import type { BridgeDeps } from './core';
 
@@ -25,6 +26,9 @@ export function createKnowledgeBaseApi({ apiFetch, wsManager }: BridgeDeps) {
       return apiFetch<KbDivergenceReport>(`/api/knowledge-base/divergences${qs ? `?${qs}` : ''}`);
     },
     kbImport: (version?: string) => post<KbImportSummary>('/api/knowledge-base/import', { version }),
+    kbSyncEmbeddings: () => post<EmbeddingSyncResult>('/api/knowledge-base/sync-embeddings', {}),
+    onKbEmbeddingsProgress: (callback: (progress: KbEmbeddingsProgress) => void) =>
+      wsManager.subscribe('kb:embeddings-progress', callback),
     onKbImportProgress: (callback: (progress: KbImportProgress) => void) =>
       wsManager.subscribe('kb:import-progress', callback)
   } satisfies Partial<ElectronAPI>;

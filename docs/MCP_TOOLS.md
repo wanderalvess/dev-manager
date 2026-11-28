@@ -1,6 +1,6 @@
 # Documentação das Ferramentas MCP (Model Context Protocol)
 
-O Hub Manager expõe **182 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
+O Hub Manager expõe **183 ferramentas (tools)** através de seu servidor MCP embutido. Estas ferramentas permitem que assistentes de Inteligência Artificial (como o próprio Antigravity ou outras IAs conectadas via MCP) leiam contextos, executem automações e gerenciem o ambiente local de desenvolvimento no Windows.
 
 Abaixo, as ferramentas estão categorizadas por domínio, para ajudar você a entender o que a IA pode fazer e como você pode pedir (exemplos de prompts).
 
@@ -122,6 +122,7 @@ Consulta a base central com a documentação das APIs Java (mapeadas do código)
 *   **`kb_search`**: Busca trechos por texto, com filtro por tipo, origem (`code` ou `tdn`) e módulo. Devolve título, caminho do cabeçalho e link da fonte.
 *   **`kb_ask_context`**: Recupera os trechos de uma pergunta e devolve fontes numeradas `[n]`, citações e um prompt pronto. O servidor não chama LLM: a IA que usa a tool escreve a resposta citando `[n]`.
 *   **`kb_list_divergences`**: Lista os pares código x TDN do mais divergente ao menos, com o que existe só em cada lado.
+*   **`kb_sync_embeddings`**: Calcula localmente os vetores dos trechos que o servidor ainda não tem e os envia, até acabarem; com isso a busca fica híbrida (texto + significado). Não baixa o modelo: ele precisa já estar na máquina (botão *Gerar embeddings* do card).
 *   **`kb_import_folder`** (destrutiva): Envia a pasta do prompt-hub configurada para a base; o servidor só grava o que mudou.
 
 **Exemplo de como pedir à IA:**
@@ -376,8 +377,8 @@ Ajuda a saber, na máquina local, em qual ponta da cadeia de integração está 
 O servidor MCP roda via stdio com o mesmo poder do Cockpit na sua máquina, então ele ajuda o cliente a pedir confirmação antes do que é perigoso:
 
 *   **Anotações de risco**: toda tool declara `readOnlyHint` e `destructiveHint`. Consultas (`*_get_*`, `*_list_*`, `db_explain_plan`...) são leitura; ações que apagam dados, executam comando livre ou mudam configuração (`db_execute_query`, `db_restore_backup`, `db_run_backup`, `db_run_restore_drill`, `db_save_backup_config`, `profile_run`, `env_launch_app`, `karaf_exec_command`, `docker_remove_container`, `delphi_build`, `delphi_run_pipeline`, `settings_save`, `logs_clear_file`...) são marcadas como destrutivas, para o cliente (Claude Code, Copilot...) pedir a sua aprovação.
-*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (98 das 182) são registradas. As demais nem aparecem para o cliente. No Claude Code: `claude mcp add dev-manager --scope user -e HUB_MCP_MODE=readonly -- cmd /c C:\DevManager\mcp\dev-manager-mcp.cmd`. Nos arquivos JSON, use o campo `env`.
-*   **Contagem por risco**: das 182 tools, 98 são de leitura, 54 de escrita e 30 destrutivas. Os números ficam em `src/shared/mcpCatalog.ts`, e um teste falha se divergirem das tools registradas.
+*   **Modo somente leitura**: defina `HUB_MCP_MODE=readonly` no ambiente do servidor MCP e só as tools de leitura (98 das 183) são registradas. As demais nem aparecem para o cliente. No Claude Code: `claude mcp add dev-manager --scope user -e HUB_MCP_MODE=readonly -- cmd /c C:\DevManager\mcp\dev-manager-mcp.cmd`. Nos arquivos JSON, use o campo `env`.
+*   **Contagem por risco**: das 183 tools, 98 são de leitura, 55 de escrita e 30 destrutivas. Os números ficam em `src/shared/mcpCatalog.ts`, e um teste falha se divergirem das tools registradas.
 *   **Produção protegida**: `db_execute_query` recusa qualquer comando que não seja de leitura (`SELECT`, `EXPLAIN`, `SHOW`, `DESCRIBE`) em conexão marcada como **produção** no Database Studio, inclusive quando a conexão é informada inline e aponta para o mesmo destino de uma conexão de produção salva.
 *   **Arquivos de log**: `logs_clear_file` só zera arquivos com extensão de log (`.log`, `.out`, `.err`, `.txt`, `.trace`), e nenhuma tool de log lê a pasta de dados do app (onde ficam o `config.json` e a chave de criptografia).
 

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { BookOpen, Eye, EyeOff, FolderOpen, Search, UploadCloud } from 'lucide-react';
+import { BookOpen, Brain, Eye, EyeOff, FolderOpen, Search, UploadCloud } from 'lucide-react';
 import type { AppSettings } from '../../../../../shared/types';
 import type { KnowledgeBaseSettings } from '../../../../../shared/knowledgeBaseTypes';
-import { formatImportSummary, kbKeyPlaceholder, normalizeKbUrl } from '../../../utils/knowledgeBaseView';
+import { formatEmbeddingsProgress, formatImportSummary, friendlyKbError, kbKeyPlaceholder, normalizeKbUrl } from '../../../utils/knowledgeBaseView';
 import { showToast } from '../../ToastHost';
+import { requestConfirm } from '../../ui/confirmService';
 import { SETTINGS_GHOST_BUTTON_CLASS, SETTINGS_INPUT_CLASS } from '../SettingsCard';
 
 interface KnowledgeBaseCardProps {
@@ -17,7 +18,7 @@ const EMPTY: KnowledgeBaseSettings = { enabled: false, baseUrl: '', apiKey: '', 
 export const KnowledgeBaseCard: React.FC<KnowledgeBaseCardProps> = ({ settings, setSettings }) => {
   const kb = settings.knowledgeBase ?? EMPTY;
   const [showKey, setShowKey] = useState(false);
-  const [busy, setBusy] = useState<'test' | 'import' | null>(null);
+  const [busy, setBusy] = useState<'test' | 'import' | 'embeddings' | null>(null);
   const [status, setStatus] = useState('');
 
   const update = (patch: Partial<KnowledgeBaseSettings>) =>
@@ -28,11 +29,33 @@ export const KnowledgeBaseCard: React.FC<KnowledgeBaseCardProps> = ({ settings, 
     if (selected) update({ sourcePath: selected });
   };
 
-  const run = async (kind: 'test' | 'import') => {
+  const run = async (kind: 'test' | 'import' | 'embeddings') => {
+    if (kind === 'embeddings') {
+      const current = await window.electronAPI.kbStatus();
+      if (!current.embeddingModelReady) {
+        const ok = await requestConfirm({
+          title: 'Baixar o modelo de embeddings?',
+          message:
+            'Para calcular os vetores o Hub baixa uma vez o modelo multilíngue paraphrase-multilingual-MiniLM-L12-v2 (cerca de 135 MB, do huggingface.co) para a pasta de dados do app. Depois ele roda offline.',
+          tone: 'primary'
+        });
+        if (!ok) return;
+      }
+    }
     setBusy(kind);
     setStatus('');
     try {
-      if (kind === 'test') {
+      if (kind === 'embeddings') {
+        const unsubscribe = window.electronAPI.onKbEmbeddingsProgress((p) => setStatus(formatEmbeddingsProgress(p)));
+        try {
+          const result = await window.electronAPI.kbSyncEmbeddings();
+          const text = `Embeddings: ${result.updated} trecho(s) atualizado(s)${result.rejected.length ? `, ${result.rejected.length} recusado(s)` : ''}${result.incomplete ? ' (ainda há pendentes)' : ''}.`;
+          setStatus(text);
+          showToast(text);
+        } finally {
+          unsubscribe();
+        }
+      } else if (kind === 'test') {
         const res = await window.electronAPI.kbSearch({ query: 'api', k: 1 });
         setStatus(`Conectado (busca ${res.mode}).`);
       } else {
@@ -47,7 +70,7 @@ export const KnowledgeBaseCard: React.FC<KnowledgeBaseCardProps> = ({ settings, 
         }
       }
     } catch (err) {
-      setStatus(err instanceof Error ? err.message : String(err));
+      setStatus(friendlyKbError(err instanceof Error ? err.message : String(err)));
     } finally {
       setBusy(null);
     }
@@ -120,6 +143,9 @@ export const KnowledgeBaseCard: React.FC<KnowledgeBaseCardProps> = ({ settings, 
         </button>
         <button type="button" className={SETTINGS_GHOST_BUTTON_CLASS} disabled={busy !== null} onClick={() => run('import')}>
           <UploadCloud size={14} /> Importar prompt-hub
+        </button>
+        <button type="button" className={SETTINGS_GHOST_BUTTON_CLASS} disabled={busy !== null} onClick={() => run('embeddings')}>
+          <Brain size={14} /> Gerar embeddings
         </button>
         {status && <span className="text-xs text-muted-foreground" role="status">{status}</span>}
       </div>

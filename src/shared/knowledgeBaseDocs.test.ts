@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { buildExternalId, buildIngestItem, chunkBatches, classifyDocPath, parseFrontmatter } from './knowledgeBaseDocs';
+import {
+  buildExternalId,
+  buildIngestItem,
+  chunkBatches,
+  classifyDocPath,
+  dedentIndentedMarkdown,
+  deriveTitle,
+  parseFrontmatter
+} from './knowledgeBaseDocs';
 
 describe('parseFrontmatter', () => {
   it('lê chaves, listas inline e listas em linhas', () => {
@@ -60,6 +68,42 @@ describe('buildExternalId / buildIngestItem', () => {
   it('frontmatter sobrescreve id, título e versão', () => {
     const item = buildIngestItem('prompts/p.md', '---\nid: meu-id\ntitle: Meu\nversion: v9\n---\ncorpo', 'v1');
     expect(item).toMatchObject({ externalId: 'meu-id', title: 'Meu', version: 'v9' });
+  });
+});
+
+describe('dedentIndentedMarkdown', () => {
+  it('tira a indentação de documentos inteiros indentados e preserva a estrutura interna', () => {
+    const body = '        # Título\n\n        ## Seção\n        ```text\n        A\n          -> B\n        ```\n| a | b |';
+    expect(dedentIndentedMarkdown(body)).toBe('# Título\n\n## Seção\n```text\nA\n  -> B\n```\n| a | b |');
+  });
+
+  it('não mexe em documento normal nem em código indentado no meio', () => {
+    const normal = '# Título\n\n    codigo indentado';
+    expect(dedentIndentedMarkdown(normal)).toBe(normal);
+  });
+
+  it('o título passa a ser detectado em documento indentado', () => {
+    const item = buildIngestItem('docs/Documentações Código/mod/m.md', '        # PUT /a\n\n        texto', 'v1');
+    expect(item?.title).toBe('PUT /a');
+    expect(item?.content.startsWith('# PUT /a')).toBe(true);
+  });
+});
+
+describe('deriveTitle', () => {
+  it('usa o H1 quando ele descreve o documento', () => {
+    expect(deriveTitle('# Diagnóstico do projeto: X\ntexto', 'a.md')).toBe('Diagnóstico do projeto: X');
+  });
+
+  it('com H1 numerado, monta o título pelo método e URL da tabela', () => {
+    const body = '# 1. Definição do Endpoint\n| Campo | Valor |\n| --- | --- |\n| Método HTTP | PUT |\n| URL | `/embalagem/salvar` |';
+    expect(deriveTitle(body, 'mapeamento-api-embalagem-salvar.md')).toBe('Mapeamento da API: PUT /embalagem/salvar');
+  });
+
+  it('sem tabela, usa o nome do arquivo sem o prefixo', () => {
+    expect(deriveTitle('# 1. Definição do Endpoint\nsem tabela', 'mapeamento-api-precos-fixos.md')).toBe(
+      'Mapeamento da API: precos-fixos'
+    );
+    expect(deriveTitle('sem titulo', 'TDN API - Pedido.txt')).toBe('TDN API - Pedido');
   });
 });
 

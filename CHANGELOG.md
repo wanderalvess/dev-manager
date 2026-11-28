@@ -7,7 +7,9 @@ Cada versão abaixo corresponde a um commit específico em `main`, do `v1.0.0` a
 ## [Não lançado]
 ### Adicionado
 - **Base de Conhecimento compartilhada (Agile Space)**: em *Configurações → IA & LLM* informe a URL e a chave de API do servidor e a pasta do clone do prompt-hub. *Testar conexão* confere o acesso e *Importar prompt-hub* envia a documentação das APIs Java, as páginas do TDN, os prompts e as skills em lotes; o servidor só grava o que mudou.
-- **Tools MCP `kb_*`**: `kb_search`, `kb_ask_context` (fontes numeradas e prompt pronto, sem LLM no servidor), `kb_list_divergences` (código x TDN) e `kb_import_folder`. Total de 182 tools.
+- **Busca híbrida com embeddings locais**: o botão *Gerar embeddings* baixa uma vez o modelo multilíngue (paraphrase-multilingual-MiniLM-L12-v2, cerca de 135 MB, do huggingface.co) e calcula, neste computador, os vetores dos trechos que o servidor ainda não tem. Depois disso, `kb_search` e `kb_ask_context` passam a combinar texto e significado, e a pergunta também é vetorizada aqui.
+- **Tools MCP `kb_*`**: `kb_search`, `kb_ask_context` (fontes numeradas e prompt pronto, sem LLM no servidor), `kb_list_divergences` (código x TDN), `kb_sync_embeddings` e `kb_import_folder`. Total de 183 tools.
+- **Importação mais fiel**: documentos gerados inteiros indentados (que o Markdown tratava como bloco de código) são normalizados, e mapeamentos que começam com `1. Definição do Endpoint` passam a ter o título `Mapeamento da API: MÉTODO /url`.
 
 ### Segurança
 - A chave de API da base fica criptografada em repouso como as demais credenciais e nunca volta para a tela; a importação lê só a pasta definida nas configurações, nunca um caminho enviado pela IA.

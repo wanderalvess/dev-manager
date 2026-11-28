@@ -87,10 +87,39 @@ export function buildExternalId(relPath: string, classification: DocClassificati
   return p;
 }
 
+/**
+ * Alguns documentos gerados vêm inteiros indentados (ex.: 8 espaços antes do `# Título`), o que em Markdown vira bloco
+ * de código e esconde títulos e seções. Quando o primeiro conteúdo é um título indentado, tira essa indentação
+ * (no máximo a do título) de cada linha; linhas menos indentadas ficam como estão.
+ */
+export function dedentIndentedMarkdown(body: string): string {
+  const lines = body.split('\n');
+  const first = lines.find((l) => l.trim() !== '');
+  const match = first ? /^( {4,})#/.exec(first) : null;
+  if (!match) return body;
+  const re = new RegExp(`^ {1,${match[1].length}}`);
+  return lines.map((line) => line.replace(re, '')).join('\n');
+}
+
+const NUMBERED_SECTION = /^\d+[.)]\s/;
+const METHOD_ROW = /\|\s*M[eé]todo(?: HTTP)?\s*\|\s*`?([A-Za-z]+)`?\s*\|/;
+const URL_ROW = /\|\s*(?:URL|Endpoint|Rota|Path)\s*\|\s*`?([^|`]+?)`?\s*\|/;
+
+/**
+ * Muitos mapeamentos de API começam com `# 1. Definição do Endpoint`, que não identifica nada. Nesse caso o título vira
+ * "Mapeamento da API: MÉTODO /url", lido da tabela de definição; sem a tabela, usa o nome do arquivo.
+ */
 export function deriveTitle(body: string, fallbackFileName: string): string {
   const h1 = /^#\s+(.+)$/m.exec(body);
-  if (h1) return h1[1].trim();
-  return fallbackFileName.replace(/\.(md|txt)$/i, '');
+  const heading = h1?.[1].trim();
+  if (heading && !NUMBERED_SECTION.test(heading)) return heading;
+
+  const method = METHOD_ROW.exec(body)?.[1]?.toUpperCase();
+  const url = URL_ROW.exec(body)?.[1]?.trim();
+  if (url) return `Mapeamento da API: ${method ? `${method} ` : ''}${url}`;
+
+  const base = fallbackFileName.replace(/\.(md|txt)$/i, '').replace(/^mapeamento-api-/, '');
+  return heading ? `Mapeamento da API: ${base}` : base;
 }
 
 function asList(value: string | string[] | undefined): string[] | undefined {
@@ -107,7 +136,8 @@ export function buildIngestItem(
   const classification = classifyDocPath(relPath);
   if (!classification) return null;
 
-  const { data, body } = parseFrontmatter(rawContent);
+  const { data, body: rawBody } = parseFrontmatter(rawContent);
+  const body = dedentIndentedMarkdown(rawBody);
   const fileName = relPath.replace(/\\/g, '/').split('/').pop() ?? relPath;
   const str = (k: string) => (typeof data[k] === 'string' ? (data[k] as string) : undefined);
 

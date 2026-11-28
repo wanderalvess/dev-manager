@@ -100,6 +100,23 @@ export interface KbAskResponse {
   citations: KbCitation[];
 }
 
+export interface KbPendingChunk {
+  chunkId: string;
+  documentId: string;
+  /** Texto exato que deve virar embedding (título + caminho + trecho). */
+  input: string;
+}
+
+export interface KbEmbeddingFill {
+  chunkId: string;
+  embedding: number[];
+}
+
+export interface KbFillResponse {
+  updated: number;
+  rejected: string[];
+}
+
 export interface KbDocRef {
   id: string;
   externalId: string;

@@ -3,8 +3,11 @@ import type {
   KbAskResponse,
   KbDivergenceReport,
   KbDocType,
+  KbEmbeddingFill,
+  KbFillResponse,
   KbIngestItem,
   KbIngestResponse,
+  KbPendingChunk,
   KbSearchRequest,
   KbSearchResponse,
   KbSource
@@ -73,6 +76,14 @@ export class KnowledgeBaseClient {
 
   ask(params: KbAskParams): Promise<KbAskResponse> {
     return this.request('POST', '/ask', { k: 8, provider: 'none', ...params });
+  }
+
+  pendingChunks(limit = 100): Promise<KbPendingChunk[]> {
+    return this.request('GET', `/chunks/pending?limit=${limit}`);
+  }
+
+  fillEmbeddings(items: KbEmbeddingFill[]): Promise<KbFillResponse> {
+    return this.request('PUT', '/chunks/embeddings', { items });
   }
 
   divergences(module?: string, limit?: number): Promise<KbDivergenceReport> {

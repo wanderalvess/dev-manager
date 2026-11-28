@@ -75,6 +75,17 @@ export function registerKnowledgeBaseTools(
   );
 
   server.registerTool(
+    'kb_sync_embeddings',
+    {
+      title: 'Calcular os embeddings pendentes da Base de Conhecimento',
+      description:
+        'Busca os trechos sem embedding no servidor, calcula aqui com o modelo multilíngue local e devolve os vetores, até acabarem. Com isso a busca passa a ser híbrida (texto + significado). Não baixa o modelo: ele precisa já estar na máquina (botão "Gerar embeddings" no card da Base de Conhecimento do Hub). Devolve quantos foram atualizados e quais o servidor recusou.',
+      inputSchema: {}
+    },
+    async () => run(() => knowledgeBaseService.syncEmbeddings())
+  );
+
+  server.registerTool(
     'kb_import_folder',
     {
       title: 'Importar o prompt-hub para a Base de Conhecimento',

@@ -22,6 +22,11 @@ export function createKnowledgeBaseRouter(
     const limit = Number(req.query.limit) || undefined;
     res.json(await service.divergences(module, limit));
   });
+  router.post('/sync-embeddings', async (_req: Request, res: Response) => {
+    res.json(
+      await service.syncEmbeddings({ downloadModel: true, onProgress: (p) => broadcastWs('kb:embeddings-progress', p) })
+    );
+  });
   router.post('/import', async (req: Request, res: Response) => {
     const version = typeof req.body?.version === 'string' ? req.body.version : undefined;
     res.json(await service.importFolder({ version, onProgress: (p) => broadcastWs('kb:import-progress', p) }));

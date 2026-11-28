@@ -26,6 +26,11 @@ export function getKnowledgeBaseFaq(): FaqItem[] {
             o que o código faz com o que o TDN diz. Se a chave for recusada, confira os escopos; se trocar a URL, digite a chave de novo.
           </p>
           <p>
+            <strong className="text-foreground">Gerar embeddings</strong> deixa a busca mais esperta (entende sinônimos, como &quot;gravar&quot; e
+            &quot;salvar&quot;). Na primeira vez o Hub pergunta e baixa o modelo multilíngue (cerca de 135 MB, do huggingface.co);
+            depois ele roda offline. Clique de novo sempre que importar documentos novos.
+          </p>
+          <p>
             A importação envia documentação de código e do TDN para o servidor configurado. Confirme que o destino está autorizado
             para esse conteúdo antes de importar.
           </p>

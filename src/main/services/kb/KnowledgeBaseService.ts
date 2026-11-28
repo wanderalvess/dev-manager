@@ -1,3 +1,4 @@
+import path from 'path';
 import type { ConfigService } from '../ConfigService';
 import { isSafeLocalPath } from '../../utils/security';
 import type {
@@ -7,6 +8,12 @@ import type {
   KbSearchResponse
 } from '../../../shared/knowledgeBaseTypes';
 import { KnowledgeBaseClient, type KbAskParams } from './KnowledgeBaseClient';
+import { KnowledgeBaseEmbedder, type EmbedderProgress } from './KnowledgeBaseEmbedder';
+import {
+  syncPendingEmbeddings,
+  type EmbeddingSyncProgress,
+  type EmbeddingSyncResult
+} from './KnowledgeBaseEmbeddingSync';
 import { KnowledgeBaseImportService, type KbImportProgress, type KbImportSummary } from './KnowledgeBaseImportService';
 
 export interface KbStatus {
@@ -15,11 +22,26 @@ export interface KbStatus {
   baseUrl: string;
   hasApiKey: boolean;
   sourcePath: string;
+  /** O modelo de embeddings já está na máquina (busca híbrida e cálculo dos pendentes disponíveis). */
+  embeddingModelReady: boolean;
 }
+
+export type KbEmbeddingsProgress =
+  | { phase: 'download'; doneBytes: number; totalBytes: number }
+  | { phase: 'embedding'; done: number; rejected: number };
 
 /** Fachada da Base de Conhecimento: monta o cliente a partir das configurações salvas. */
 export class KnowledgeBaseService {
+  private embedder: KnowledgeBaseEmbedder | null = null;
+
   constructor(private readonly configService: ConfigService) {}
+
+  private getEmbedder(): KnowledgeBaseEmbedder {
+    this.embedder ??= new KnowledgeBaseEmbedder(
+      path.join(path.dirname(this.configService.getConfigFilePath()), 'models', 'kb-multilingual-minilm')
+    );
+    return this.embedder;
+  }
 
   getStatus(): KbStatus {
     const kb = this.configService.getSettings().knowledgeBase;
@@ -28,7 +50,8 @@ export class KnowledgeBaseService {
       configured: Boolean(kb?.baseUrl && kb?.apiKey),
       baseUrl: kb?.baseUrl ?? '',
       hasApiKey: Boolean(kb?.apiKey),
-      sourcePath: kb?.sourcePath ?? ''
+      sourcePath: kb?.sourcePath ?? '',
+      embeddingModelReady: this.getEmbedder().isDownloaded()
     };
   }
 
@@ -38,12 +61,26 @@ export class KnowledgeBaseService {
     return new KnowledgeBaseClient({ baseUrl: kb.baseUrl, apiKey: kb.apiKey ?? '' });
   }
 
-  search(req: KbSearchRequest): Promise<KbSearchResponse> {
-    return this.client().search(req);
+  /** Vetor da pergunta com o modelo local; sem o modelo (ou se falhar) a busca segue só por texto. */
+  private async queryEmbedding(text: string | undefined, given?: number[]): Promise<number[] | undefined> {
+    if (given || !text) return given;
+    const embedder = this.getEmbedder();
+    if (!embedder.isDownloaded()) return undefined;
+    try {
+      return (await embedder.embed([text]))[0];
+    } catch {
+      return undefined;
+    }
   }
 
-  ask(params: KbAskParams): Promise<KbAskResponse> {
-    return this.client().ask(params);
+  async search(req: KbSearchRequest): Promise<KbSearchResponse> {
+    const client = this.client();
+    return client.search({ ...req, embedding: await this.queryEmbedding(req.query, req.embedding) });
+  }
+
+  async ask(params: KbAskParams): Promise<KbAskResponse> {
+    const client = this.client();
+    return client.ask({ ...params, embedding: await this.queryEmbedding(params.question, params.embedding) });
   }
 
   divergences(module?: string, limit?: number): Promise<KbDivergenceReport> {
@@ -58,5 +95,29 @@ export class KnowledgeBaseService {
     if (!root) throw new Error('Informe a pasta do prompt-hub nas configurações da Base de Conhecimento.');
     if (!isSafeLocalPath(root)) throw new Error('Caminho da pasta do prompt-hub inválido ou remoto não permitido.');
     return new KnowledgeBaseImportService(this.client()).importFolder(root, options);
+  }
+
+  /**
+   * Calcula e envia os embeddings dos trechos pendentes. Com `downloadModel`, baixa o modelo antes se faltar
+   * (cerca de 135 MB); sem ele, exige o modelo já presente (é o caso da tool MCP, que não baixa nada sozinha).
+   */
+  async syncEmbeddings(
+    options: { downloadModel?: boolean; onProgress?: (p: KbEmbeddingsProgress) => void } = {}
+  ): Promise<EmbeddingSyncResult> {
+    const client = this.client();
+    const embedder = this.getEmbedder();
+    if (!embedder.isDownloaded()) {
+      if (!options.downloadModel) {
+        throw new Error('O modelo de embeddings ainda não foi baixado. Baixe pelo card da Base de Conhecimento no Hub.');
+      }
+      await embedder.download((p: EmbedderProgress) => {
+        if (p.phase === 'download') {
+          options.onProgress?.({ phase: 'download', doneBytes: p.doneBytes ?? 0, totalBytes: p.totalBytes ?? 0 });
+        }
+      });
+    }
+    return syncPendingEmbeddings(client, embedder, (p: EmbeddingSyncProgress) =>
+      options.onProgress?.({ phase: 'embedding', ...p })
+    );
   }
 }
